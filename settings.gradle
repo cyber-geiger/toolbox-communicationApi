@@ -1,0 +1,3 @@
+rootProject.name = 'toolbox-communicationAPI'
+
+include 'communicationAPI'

@@ -1,3 +1,2 @@
-rootProject.name = 'toolbox-communicationAPI'
-
-include 'communicationAPI'
+rootProject.name = 'toolbox-communicationApi'
+include 'communication'

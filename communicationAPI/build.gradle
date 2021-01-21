@@ -1,0 +1,90 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+}
+
+repositories {
+    jcenter()
+}
+
+configurations {
+    checkstyleConfig
+}
+
+dependencies {
+    compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
+    checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }
+
+    // junit
+    testImplementation("junit:junit:4.13")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.0")
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-jul', version: '2.12.1'
+
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'xml-apis:xml-apis:1.0.b2'
+    }
+}
+
+group = 'ch.fhnw.geiger'
+version = '0.0.2-SNAPSHOT'
+description = 'communication'
+sourceCompatibility = '1.8'
+
+tasks.named('jar') {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Main-Class': 'ch.fhnw.geiger.localstorage.CommandLine'
+        )
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+
+
+
+jar.dependsOn shadowJar
+jar.dependsOn test
+
+check.dependsOn checkstyleMain
+
+/* integrate junit */
+test {
+    systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
+    useJUnitPlatform {
+        // includeTestsMatching "ch.fhnw.geiger.localstorage.Test*"
+    }
+    maxHeapSize = '1G'
+}
+
+checkstyle {
+    toolVersion '8.38'
+    config = resources.text.fromArchiveEntry(configurations.checkstyleConfig, 'google_checks.xml')
+    ignoreFailures = false
+    maxWarnings = 0
+}
+
+compileJava {
+    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
+}
+
+
+java {
+    withSourcesJar()
+}
+

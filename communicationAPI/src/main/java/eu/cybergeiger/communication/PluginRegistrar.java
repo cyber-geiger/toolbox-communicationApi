@@ -2,7 +2,7 @@ package eu.cybergeiger.communication;
 
 import javax.naming.NameNotFoundException;
 
-public interface PluginRegistrar {
+interface PluginRegistrar {
   /***
    * <p>Registers the plugin to the toolbox framework.</p>
    *

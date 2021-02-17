@@ -1,40 +1,13 @@
 package eu.cybergeiger.communication;
 
-import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import javax.naming.NameNotFoundException;
 
 public class LocalApi implements PluginRegistrar {
 
-  private class Secret {
 
-    private static final int DEFAULT_SIZE = 32;
-    private byte[] secret = new byte[0];
-
-    public Secret() {
-      this(DEFAULT_SIZE);
-    }
-
-    public Secret(int size) {
-      secret = new byte[size];
-      new SecureRandom().nextBytes(secret);
-    }
-
-    public byte[] getSecret() {
-      return Arrays.copyOf(secret, secret.length);
-    }
-
-    public byte[] setSecret(byte[] newSecret) {
-      byte[] ret = this.secret;
-      this.secret = Arrays.copyOf(newSecret, newSecret.length);
-      return ret;
-    }
-
-  }
-
-  private static Map<String, Secret> secrets = new HashMap<>(1);
+  private static Map<String, CommunicationSecret> secrets = new HashMap<>(1);
 
   private String id;
 

@@ -1,7 +1,6 @@
 package eu.cybergeiger.communication;
 
 import java.io.Serializable;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class Message implements Serializable {
@@ -10,17 +9,19 @@ public class Message implements Serializable {
 
   private String sourceId;
   private String targetId;
-  private URL action;
+  private MessageType type;
+  private GeigerURL action;
   private String payload = "";
 
-  public Message(String sourceId, String targetId, URL action) {
+  public Message(String sourceId, String targetId, MessageType type, GeigerURL action) {
     this.sourceId = sourceId;
     this.targetId = targetId;
+    this.type = type;
     this.action = action;
   }
 
-  public Message(String sourceId, String targetId, URL action, byte[] payload) {
-    this(sourceId, targetId, action);
+  public Message(String sourceId, String targetId, MessageType type, GeigerURL action, byte[] payload) {
+    this(sourceId, targetId, type, action);
     this.payload = new String(payload, StandardCharsets.UTF_8);
   }
 
@@ -32,7 +33,11 @@ public class Message implements Serializable {
     return this.sourceId;
   }
 
-  URL getAction() {
+  MessageType getType() {
+    return this.type;
+  }
+
+  GeigerURL getAction() {
     return this.action;
   }
 

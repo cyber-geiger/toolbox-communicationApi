@@ -25,19 +25,19 @@ public class Message implements Serializable {
     this.payload = new String(payload, StandardCharsets.UTF_8);
   }
 
-  String getTargetId() {
+  public String getTargetId() {
     return this.targetId;
   }
 
-  String getSourceId() {
+  public String getSourceId() {
     return this.sourceId;
   }
 
-  MessageType getType() {
+  public MessageType getType() {
     return this.type;
   }
 
-  GeigerURL getAction() {
+  public GeigerURL getAction() {
     return this.action;
   }
 

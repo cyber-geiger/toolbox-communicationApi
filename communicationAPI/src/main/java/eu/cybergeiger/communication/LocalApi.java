@@ -3,21 +3,23 @@ package eu.cybergeiger.communication;
 import java.util.HashMap;
 import java.util.Map;
 import javax.naming.NameNotFoundException;
+//import eu.cybergeiger.communication.CommunicationSecret;
 
 public class LocalApi implements PluginRegistrar {
-
 
   private static Map<String, CommunicationSecret> secrets = new HashMap<>(1);
 
   private String id;
 
-  private LocalApi(String id) {
+  protected LocalApi(String id) {
     this.id = id;
   }
 
   @Override
   public void registerPlugin(String id) {
     // TODO missing implementation
+//    CommunicationSecret secret = new CommunicationSecret();
+//    secrets.put(id, secret);
   }
 
   @Override

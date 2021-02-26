@@ -56,8 +56,6 @@ tasks.withType(Checkstyle) {
     }
 }
 
-
-
 jar.dependsOn shadowJar
 jar.dependsOn test
 

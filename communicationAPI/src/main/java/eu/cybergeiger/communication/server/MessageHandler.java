@@ -1,5 +1,8 @@
 package eu.cybergeiger.communication.server;
 
+import eu.cybergeiger.communication.CommunicationException;
+import eu.cybergeiger.communication.LocalApi;
+import eu.cybergeiger.communication.LocalApiFactory;
 import eu.cybergeiger.communication.Message;
 
 import java.io.IOException;
@@ -11,6 +14,7 @@ import java.net.Socket;
 
 public class MessageHandler implements Runnable {
     private Socket socket;
+    private LocalApi localApi;
 
     public MessageHandler(Socket s){
         this.socket = s;
@@ -18,18 +22,16 @@ public class MessageHandler implements Runnable {
 
     @Override
     public void run() {
-        try (ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())) {
+        try (ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
             Message m = (Message) in.readObject();
-
             // Since we only expect one message to be sent over the stream, there is no need for a loop here
             parseType(m);
         } catch (IOException ioe) {
             // TODO handle communications error
-            ioe.printStackTrace();
+            //throw new CommunicationException("Communication Error", ioe);
         } catch (ClassNotFoundException cnfe) {
             // TODO handle wrong objects sent
-            cnfe.printStackTrace();
+            //throw new CommunicationException("Wrong object type received", cnfe);
         }
     }
 
@@ -38,6 +40,7 @@ public class MessageHandler implements Runnable {
      * @param m the message to be parsed
      */
     private void parseType(Message m) {
+        localApi = LocalApiFactory.getLocalApi(m.getSourceId());
         switch(m.getType()) {
             case REGISTER_PLUGIN: {
                 handleRegisterPlugin(m);
@@ -71,6 +74,13 @@ public class MessageHandler implements Runnable {
                 handleStorageEvent(m);
                 break;
             }
+            case PING: {
+                handlePing(m);
+                break;
+            }
+            case PONG: {
+                handlePong(m);
+            }
             default: {
                 // TODO throw/send back communication error or Ignore message?
             }
@@ -88,7 +98,7 @@ public class MessageHandler implements Runnable {
             Socket s = new Socket();
             s.bind(address);
             s.connect(address, 10000);
-            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
             out.writeObject(m);
         } catch (IOException ioe) {
             // TODO
@@ -97,7 +107,7 @@ public class MessageHandler implements Runnable {
 
     private void handleRegisterPlugin(Message m) {
         // TODO
-        throw new UnsupportedOperationException();
+        localApi.registerPlugin(m.getSourceId());
     }
 
     private void handleDeregisterPlugin(Message m) {

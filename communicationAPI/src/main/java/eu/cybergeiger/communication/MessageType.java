@@ -19,7 +19,11 @@ public enum MessageType {
 
   /* internal messages to the API */
 
-  STORAGE_EVENT(1010);
+  STORAGE_EVENT(1010),
+
+  PING(10000),
+
+  PONG(10001);
 
   private int id;
 

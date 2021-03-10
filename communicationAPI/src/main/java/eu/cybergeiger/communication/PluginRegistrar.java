@@ -5,17 +5,14 @@ import javax.naming.NameNotFoundException;
 interface PluginRegistrar {
   /***
    * <p>Registers the plugin to the toolbox framework.</p>
-   *
-   * @param id an id identifying the current plugin
    */
-  void registerPlugin(String id);
+  void registerPlugin();
 
   /***
    * <p>Unregisters an already registered plugin in the toolbox.</p>
    *
-   * @param id The id to deregister
    * @throws NameNotFoundException if the provided id is not available in the current auth database
    */
-  void deregisterPlugin(String id) throws NameNotFoundException;
+  void deregisterPlugin() throws NameNotFoundException;
 
 }

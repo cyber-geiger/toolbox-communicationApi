@@ -1,5 +1,6 @@
 package eu.cybergeiger.communication;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
 import eu.cybergeiger.communication.server.GeigerServer;
@@ -21,15 +22,23 @@ public class TestLocalApi {
         }
     }
 
+    @After
+    public void tearDown() {
+        try {
+            server.stop();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Test
     public void testRegisterPlugin() {
-        GeigerURL testUrl;
+        // TODO
         try {
-            testUrl = new GeigerURL("test");
+            GeigerURL testUrl = new GeigerURL("test");
+            Message ping = new Message("client", "master", MessageType.PING, testUrl);
         } catch(MalformedURLException e) {
             e.printStackTrace();
         }
-
-        Message ping = new Message("client", "master", MessageType.PING, testUrl);
     }
 }

@@ -34,7 +34,7 @@ public class GeigerClient extends GeigerCommunicator {
             // listening for incoming connections
             while(true) {
                 final Socket s = serverSocket.accept();
-                executor.execute(() -> new ClientMessageHandler(s));
+                executor.execute(() -> new MessageHandler(s));
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,5 +1,7 @@
 package eu.cybergeiger.communication;
 
+import jdk.tools.jlink.plugin.Plugin;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +15,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
 
   public static final String MASTER = "__MASTERPLUGIN__";
 
-  private static Map<String, CommunicationSecret> secrets = new HashMap<>(1);
+  private static Map<String, PluginInformation> secrets = new HashMap<>(1);
 
   private Logger log = Logger.getLogger("LocalAPI");
 
@@ -99,7 +101,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param msg the message to be broadcasted
    */
   private void broadcastMessage(Message msg) {
-    for (Map.Entry<String, CommunicationSecret> plugin : secrets.entrySet()) {
+    for (Map.Entry<String, PluginInformation> plugin : secrets.entrySet()) {
       sendMessage(plugin.getKey(), new Message(MASTER, plugin.getKey(), msg.getType(), msg.getAction(), msg.getPayload()));
     }
   }
@@ -154,6 +156,6 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * <p>This call is for the toolbox core only.</p>
    */
   public void scanButtonPressed() {
-    broadcastMessage(new Message(MASTER, null, null, null));
+    broadcastMessage(new Message(MASTER, null, MessageType.SCAN_PRESSED, null));
   }
 }

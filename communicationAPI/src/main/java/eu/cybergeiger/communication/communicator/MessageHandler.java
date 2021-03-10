@@ -1,4 +1,4 @@
-package eu.cybergeiger.communication.server;
+package eu.cybergeiger.communication.communicator;
 
 import eu.cybergeiger.communication.LocalApi;
 import eu.cybergeiger.communication.LocalApiFactory;

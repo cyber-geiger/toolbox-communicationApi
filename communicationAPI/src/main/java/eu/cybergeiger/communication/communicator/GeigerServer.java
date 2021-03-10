@@ -1,4 +1,7 @@
-package eu.cybergeiger.communication.server;
+package eu.cybergeiger.communication.communicator;
+
+import eu.cybergeiger.communication.Message;
+import eu.cybergeiger.communication.PluginInformation;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,9 +9,9 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class GeigerServer {
+public class GeigerServer extends GeigerCommunicator {
     private final ExecutorService executor = Executors.newCachedThreadPool();
-    private final int port = 1234;
+    private static final int port = 1234;
     private ServerSocket serverSocket;
 
     public void start() throws IOException {
@@ -23,5 +26,14 @@ public class GeigerServer {
 
     public void stop() throws IOException{
         serverSocket.close();
+    }
+
+    public static int getDefaultPort() {
+        return port;
+    }
+
+    @Override
+    public void sendMessage(PluginInformation pluginInformation, Message msg) {
+        // TODO
     }
 }

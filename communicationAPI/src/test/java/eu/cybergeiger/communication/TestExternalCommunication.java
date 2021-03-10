@@ -1,10 +1,10 @@
 package eu.cybergeiger.communication;
 
-import eu.cybergeiger.communication.server.GeigerServer;
+import eu.cybergeiger.communication.communicator.GeigerServer;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
-import org.junit.Test;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 

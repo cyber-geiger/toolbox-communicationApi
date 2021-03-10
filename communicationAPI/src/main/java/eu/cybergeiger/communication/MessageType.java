@@ -19,7 +19,7 @@ public enum MessageType {
 
   /* Messages related to out of bound messages */
   SCAN_PRESSED(310),
-  SCAN_COMPLETED(310),
+  SCAN_COMPLETED(320),
 
   /* Messages related to the visual stack control */
   RETURNING_CONTROL(410),

@@ -1,0 +1,3 @@
+[submodule "LocalStorage"]
+	path = LocalStorage
+	url = https://github.com/cyber-geiger/toolbox-storage.git

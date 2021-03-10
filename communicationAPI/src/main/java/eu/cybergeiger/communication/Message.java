@@ -42,7 +42,11 @@ public class Message implements Serializable {
   }
 
   public byte[] getPayload() {
-    return payload.getBytes(StandardCharsets.UTF_8);
+    return getPayloadString().getBytes(StandardCharsets.UTF_8);
+  }
+
+  public String getPayloadString() {
+    return payload;
   }
 
 }

@@ -1,2 +1,5 @@
 rootProject.name = 'toolbox-communicationApi'
-include 'communicationAPI'
+
+include 'communicationAPI', 'localstorage'
+project(':localstorage').projectDir = new File(settingsDir, 'LocalStorage/localstorage')
+

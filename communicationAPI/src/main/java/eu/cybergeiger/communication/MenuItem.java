@@ -1,6 +1,10 @@
 package eu.cybergeiger.communication;
 
-public class MenuItem {
+import java.io.Serializable;
+
+public class MenuItem implements Serializable {
+
+  private static final long serialVersionUID = 481231212L;
 
   private String menu;
   private GeigerURL action;

@@ -13,6 +13,8 @@ configurations {
 }
 
 dependencies {
+    project(':localstorage')
+
     compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
     checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }
 

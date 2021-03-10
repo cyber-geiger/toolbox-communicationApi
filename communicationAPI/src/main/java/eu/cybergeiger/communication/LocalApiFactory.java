@@ -14,10 +14,10 @@ public class LocalApiFactory {
    * @param declaration the privacy declaration
    * @return the instance requested
    */
-  public static LocalApi getLocalApi(String id, Declaration declaration) throws DeclarationMismatchException {
+  public static LocalApi getLocalApi(String executor, String id, Declaration declaration) throws DeclarationMismatchException {
     synchronized (instances) {
       if (!instances.containsKey(id)) {
-        instances.put(id, new LocalApi(id, false, declaration));
+        instances.put(id, new LocalApi(executor, id, false, declaration));
       }
     }
     LocalApi l = instances.get(id);

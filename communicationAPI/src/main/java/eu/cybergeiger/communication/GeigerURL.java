@@ -1,15 +1,16 @@
 package eu.cybergeiger.communication;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
  * <p>GEIGER communication URL object</p>
  */
-public class GeigerURL {
+public class GeigerURL implements Serializable {
 
   private String protocol = "geiger";
-  private String pluginId = "core";
+  private String pluginId = LocalApi.MASTER;
   private String path = "";
 
   public GeigerURL(String spec) throws MalformedURLException {
@@ -32,4 +33,15 @@ public class GeigerURL {
     return sb.toString();
   }
 
+  public String getPlugin() {
+    return pluginId;
+  }
+
+  public String getProtocol() {
+    return protocol;
+  }
+
+  public String getPath() {
+    return path;
+  }
 }

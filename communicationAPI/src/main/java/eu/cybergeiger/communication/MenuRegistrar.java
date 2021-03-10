@@ -1,7 +1,5 @@
 package eu.cybergeiger.communication;
 
-import java.net.URL;
-
 public interface MenuRegistrar {
 
   /**

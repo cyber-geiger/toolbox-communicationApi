@@ -1,13 +1,12 @@
 package eu.cybergeiger.communication;
 
-import org.junit.Test;
-import org.junit.Before;
 import eu.cybergeiger.communication.server.GeigerServer;
-
+import org.junit.Before;
+import org.junit.Test;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
-public class TestLocalApi {
+public class TestExternalCommunication {
     LocalApi localMaster = LocalApiFactory.getLocalApi("master");
     GeigerServer server;
 
@@ -26,10 +25,11 @@ public class TestLocalApi {
         GeigerURL testUrl;
         try {
             testUrl = new GeigerURL("test");
+            Message ping = new Message("client", "master", MessageType.PING, testUrl);
         } catch(MalformedURLException e) {
             e.printStackTrace();
+
         }
 
-        Message ping = new Message("client", "master", MessageType.PING, testUrl);
     }
 }

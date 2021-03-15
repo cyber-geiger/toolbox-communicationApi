@@ -18,11 +18,11 @@ public class PluginInformation implements Serializable {
   }
 
   /**
-   * <p>Constructor for plugin finformation.</p>
+   * <p>Constructor for plugin information.</p>
    *
    * @param executable the string required for platform specific wakeup of a plugin
    * @param port the port of the plugin to be contacted on
-   * @param secret the secret required for communicating (if null a new seccret is generated)
+   * @param secret the secret required for communicating (if null a new secret is generated)
    */
   public PluginInformation(String executable, int port, CommunicationSecret secret) {
     this.executable = executable;

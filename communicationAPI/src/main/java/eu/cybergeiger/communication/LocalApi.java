@@ -1,7 +1,7 @@
 package eu.cybergeiger.communication;
 
-import ch.fhnw.geiger.localstorage.StorageController;
-import ch.fhnw.geiger.localstorage.mapper.GenericController;
+//import ch.fhnw.geiger.localstorage.StorageController;
+//import ch.fhnw.geiger.localstorage.db.GenericController;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
 
   private final Map<MessageType, List<PluginListener>> listeners = new ConcurrentHashMap<>();
 
-  protected LocalApi(String executor, String id, boolean isMaster, Declaration declaration) {
+  public LocalApi(String executor, String id, boolean isMaster, Declaration declaration) {
     this.executor = executor;
     this.id = id;
     this.isMaster = isMaster;
@@ -64,7 +64,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   @Override
   public void registerPlugin() {
     // TODO share secret in a secure paired way....
-    PluginInformation pi = new PluginInformation();
+//    PluginInformation pi = new PluginInformation();
     //CommunicationSecret secret = new CommunicationSecret();
     //secrets.put(id, secret);
   }
@@ -91,7 +91,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     storeState();
   }
 
-  private void registerPlugin(String id, PluginInformation info) {
+  public void registerPlugin(String id, PluginInformation info) {
     // add plugin information to local secrets storage
     // TODO check first if a secret is overridden?
     synchronized (secrets) {
@@ -192,10 +192,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    *
    * @return a generic conroller providing access to the local storage.
    */
-  public StorageController getStorage() {
-    // TODO implementation passthru missing
-    return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE", "sa2", "1234"));
-  }
+//  public StorageController getStorage() {
+//    // TODO implementation passthru missing
+//    return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE", "sa2", "1234"));
+//  }
 
   /**
    * <p>Register an event listener for specific events.</p>

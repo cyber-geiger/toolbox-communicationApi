@@ -79,24 +79,24 @@ public class MessageHandler implements Runnable {
     }
   }
 
-  /**
-   * Transmits message to plugin listening on port
-   *
-   * @param m    message to transmit
-   * @param port port to connect to on localhost
-   */
-  public void transmit(Message m, int port) {
-    try {
-      InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), port);
-      Socket s = new Socket();
-      s.bind(address);
-      s.connect(address, 10000);
-      ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
-      out.writeObject(m);
-    } catch (IOException ioe) {
-      // TODO
-    }
-  }
+//  /**
+//   * Transmits message to plugin listening on port
+//   *
+//   * @param m    message to transmit
+//   * @param port port to connect to on localhost
+//   */
+//  public void transmit(Message m, int port) {
+//    try {
+//      InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), port);
+//      Socket s = new Socket();
+//      s.bind(address);
+//      s.connect(address, 10000);
+//      ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
+//      out.writeObject(m);
+//    } catch (IOException ioe) {
+//      // TODO
+//    }
+//  }
 
   private void handleRegisterPlugin(Message m) {
     // TODO

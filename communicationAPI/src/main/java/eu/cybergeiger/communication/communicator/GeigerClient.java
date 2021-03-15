@@ -1,9 +1,6 @@
 package eu.cybergeiger.communication.communicator;
 
-import eu.cybergeiger.communication.GeigerURL;
-import eu.cybergeiger.communication.Message;
-import eu.cybergeiger.communication.MessageType;
-import eu.cybergeiger.communication.PluginInformation;
+import eu.cybergeiger.communication.*;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -19,6 +16,9 @@ public class GeigerClient extends GeigerCommunicator {
     private static final ExecutorService executor = Executors.newCachedThreadPool();
     private static ServerSocket serverSocket;
     private static int geigerCorePort = GeigerServer.getDefaultPort();
+    private static LocalApi localApi;
+    private static final CommunicationSecret secret = new CommunicationSecret();
+    private static final String id = "plugin1";
 
     public static void main(String[] args) {
         // TODO handle shutdown correctly even when JVM close
@@ -30,7 +30,21 @@ public class GeigerClient extends GeigerCommunicator {
             // get available port
             serverSocket = new ServerSocket(0);
             // register at Geiger Core with new port
-            registerSelf();
+            // TODO get real IDs from somewhere
+            // TODO what is an executor? should it be the executable?
+            // this should already register and activate the plugin
+            try {
+                localApi = LocalApiFactory.getLocalApi(id, id, Declaration.DO_NOT_SHARE_DATA);
+            } catch(DeclarationMismatchException d) {
+                d.printStackTrace();
+            }
+            // TODO get executable from somewhere
+            String executable = "plugin1";
+            PluginInformation pluginInfo = new PluginInformation(executable, serverSocket.getLocalPort(), secret);
+            // TODO only register if first time
+            localApi.registerPlugin(id, pluginInfo);
+            localApi.activatePlugin();
+//            activateSelf();
             // listening for incoming connections
             while(true) {
                 final Socket s = serverSocket.accept();
@@ -42,26 +56,26 @@ public class GeigerClient extends GeigerCommunicator {
     }
 
 
-    private static void registerSelf() {
-        try {
-            // connect to core
-            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), geigerCorePort);
-            Socket s = new Socket();
-            s.bind(address);
-            s.connect(address, 10000);
-            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
-            // TODO get real IDs from somewhere
-            // this sends the current listening port as payload
-            Message m = new Message("plugin1", "masterID", MessageType.REGISTER_PLUGIN,
-                    new GeigerURL(""),
-                    ByteBuffer.allocate(Integer.BYTES).putInt(serverSocket.getLocalPort()).array());
-            out.writeObject(m);
-            out.close();
-            s.close();
-        } catch (IOException ioe) {
-            // TODO
-            ioe.printStackTrace();
-        }
+    private static void activateSelf() {
+//        try {
+//            // connect to core
+//            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), geigerCorePort);
+//            Socket s = new Socket();
+//            s.bind(address);
+//            s.connect(address, 10000);
+//            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
+//
+//
+//            Message m = new Message("plugin1", "__MASTERPLUGIN__", MessageType.REGISTER_PLUGIN,
+//                    new GeigerURL(""),
+//                    ByteBuffer.allocate(Integer.BYTES).putInt(serverSocket.getLocalPort()).array());
+//            out.writeObject(m);
+//            out.close();
+//            s.close();
+//        } catch (IOException ioe) {
+//            // TODO
+//            ioe.printStackTrace();
+//        }
     }
 
     public void stop() throws IOException{
@@ -70,6 +84,18 @@ public class GeigerClient extends GeigerCommunicator {
 
     @Override
     public void sendMessage(PluginInformation pluginInformation, Message msg) {
-        // TODO
+        try {
+            // clients send only to master
+            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), geigerCorePort);
+            Socket s = new Socket();
+            s.bind(address);
+            s.connect(address, 10000);
+            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+            out.writeObject(msg);
+            out.close();
+            s.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 }

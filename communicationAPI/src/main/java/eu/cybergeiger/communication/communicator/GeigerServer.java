@@ -4,6 +4,9 @@ import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.PluginInformation;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +37,17 @@ public class GeigerServer extends GeigerCommunicator {
 
     @Override
     public void sendMessage(PluginInformation pluginInformation, Message msg) {
-        // TODO
+        try {
+            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), pluginInformation.getPort());
+            Socket s = new Socket();
+            s.bind(address);
+            s.connect(address, 10000);
+            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+            out.writeObject(msg);
+            out.close();
+            s.close();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
 }

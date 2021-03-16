@@ -15,11 +15,11 @@ public enum MessageType {
   MENU_PRESSED(220),        // Menu item selected by user
   MENU_ACTIVE(221),         // Menu entry is active (a user may select it)
   MENU_INACTIVE(222),       // Menu entry is inactive (a user may not select
-  DEREGISTER_MENU(230),     //
+  DEREGISTER_MENU(230),     // der-register a registered menu entry
 
   /* Messages related to out of bound messages */
-  SCAN_PRESSED(310),
-  SCAN_COMPLETED(320),
+  SCAN_PRESSED(310),        // Scan Button is pressed
+  SCAN_COMPLETED(320),      // Scan has been finished by the plugin
 
   /* Messages related to the visual stack control */
   RETURNING_CONTROL(410),

@@ -13,7 +13,7 @@ configurations {
 }
 
 dependencies {
-    project(':localstorage')
+    implementation 'eu.cyber-geiger:toolbox-storage:0.2.0'
 
     compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
     checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }

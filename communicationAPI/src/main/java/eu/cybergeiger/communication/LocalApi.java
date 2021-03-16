@@ -1,7 +1,8 @@
 package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.localstorage.StorageController;
-import ch.fhnw.geiger.localstorage.mapper.GenericController;
+import ch.fhnw.geiger.localstorage.db.GenericController;
+import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   @Override
   public void registerPlugin() {
     // TODO share secret in a secure paired way....
-    PluginInformation pi = new PluginInformation();
+    //PluginInformation pi = new PluginInformation();
     //CommunicationSecret secret = new CommunicationSecret();
     //secrets.put(id, secret);
   }

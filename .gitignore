@@ -25,3 +25,4 @@ hs_err_pid*
 /communicationAPI/build
 /.idea
 /.gradle
+/build/tmp/jar

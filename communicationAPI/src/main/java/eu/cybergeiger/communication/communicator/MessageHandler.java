@@ -10,6 +10,9 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+/**
+ * <p> Gets called from a GeigerCommunicator and handles the received messages.</p>
+ */
 public class MessageHandler implements Runnable {
   private Socket socket;
   private LocalApi localApi;
@@ -22,7 +25,8 @@ public class MessageHandler implements Runnable {
   public void run() {
     try (ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
       Message m = (Message) in.readObject();
-      // Since we only expect one message to be sent over the stream, there is no need for a loop here
+      // Since we only expect one message to be sent over the stream,
+      // there is no need for a loop here
       parseType(m);
     } catch (IOException ioe) {
       // TODO handle communications error
@@ -34,7 +38,7 @@ public class MessageHandler implements Runnable {
   }
 
   /**
-   * parses the message type and relays the message to the corresponding handler
+   * <p>Parses the message type and relays the message to the corresponding handler.</p>
    *
    * @param m the message to be parsed
    */
@@ -80,7 +84,7 @@ public class MessageHandler implements Runnable {
   }
 
   /**
-   * Transmits message to plugin listening on port
+   * <p>Transmits message to plugin listening on port.</p>
    *
    * @param m    message to transmit
    * @param port port to connect to on localhost

@@ -250,7 +250,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   private void sendMessage(String pluginId, Message msg) {
     // TODO: reimplement for communication version
     LocalApi api = LocalApiFactory.getLocalApi(pluginId);
-    api.receivedMessage(new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
+    api.receivedMessage(PluginInformationFactory.getPluginInformation(id),new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
   }
 
   /**
@@ -290,8 +290,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         deregisterPlugin(msg.getPayloadString());
         break;
       case REGISTER_PLUGIN:
-        PluginInformation info = (PluginInformation) (toObject(msg.getPayload()));
-        registerPlugin(msg.getSourceId(), info);
+        registerPlugin(msg.getSourceId(), (PluginInformation) (toObject(msg.getPayload())));
         break;
     }
     for (MessageType mt : new MessageType[]{MessageType.ALL_EVENTS, msg.getType()}) {

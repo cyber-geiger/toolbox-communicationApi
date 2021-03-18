@@ -24,7 +24,7 @@ public class PluginInformation implements Serializable {
    * @param port the port of the plugin to be contacted on
    * @param secret the secret required for communicating (if null a new seccret is generated)
    */
-  public PluginInformation(String executable, int port, CommunicationSecret secret) {
+  PluginInformation(String executable, int port, CommunicationSecret secret) {
     this.executable = executable;
     this.port = port;
     this.secret = secret;

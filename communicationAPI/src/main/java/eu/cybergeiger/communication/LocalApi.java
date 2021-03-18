@@ -264,7 +264,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     }
   }
 
-  private void receivedMessage(Message msg) {
+  private void receivedMessage(PluginInformation info, Message msg) {
     MenuItem i;
     switch (msg.getType()) {
       case MENU_ACTIVE:

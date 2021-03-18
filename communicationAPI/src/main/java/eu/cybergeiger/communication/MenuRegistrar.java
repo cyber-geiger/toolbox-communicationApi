@@ -1,5 +1,8 @@
 package eu.cybergeiger.communication;
 
+/**
+ * <p>Registrar interface for Menus.</p>
+ */
 public interface MenuRegistrar {
 
   /**
@@ -11,7 +14,7 @@ public interface MenuRegistrar {
    * @param menu    menu string depicting menu hierarchy
    * @param action  action URL to be triggered
    */
-  void registerMenu(String menu, GeigerURL action);
+  void registerMenu(String menu, GeigerUrl action);
 
   /**
    * <p>Enable a previously registered menu.</p>

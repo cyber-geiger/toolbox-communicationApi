@@ -3,6 +3,9 @@ package eu.cybergeiger.communication;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * <p>A factory class to create plugin information entries.</p>
+ */
 public class PluginInformationFactory {
 
   private static Map<String, PluginInformation> store = new HashMap<>();
@@ -16,7 +19,8 @@ public class PluginInformationFactory {
    * @param secret   the communication secret
    * @return returns the information object or null if not available
    */
-  public static PluginInformation getPluginInformation(String id, String executor, int port, CommunicationSecret secret) {
+  public static PluginInformation getPluginInformation(String id, String executor, int port,
+                                                       CommunicationSecret secret) {
     PluginInformation info = store.get(id.toLowerCase());
     if (info == null) {
       info = new PluginInformation(executor, port, secret);

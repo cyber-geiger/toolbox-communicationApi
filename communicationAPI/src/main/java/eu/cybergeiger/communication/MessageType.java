@@ -1,5 +1,8 @@
 package eu.cybergeiger.communication;
 
+/**
+ * <p>The type of message transferred.</p>
+ */
 public enum MessageType {
 
   /* Events related to plugin registration */

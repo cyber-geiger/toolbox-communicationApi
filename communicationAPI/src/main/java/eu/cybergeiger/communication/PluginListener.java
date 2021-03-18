@@ -1,5 +1,8 @@
 package eu.cybergeiger.communication;
 
+/**
+ * <p>Interface for plugins listening for events.</p>
+ */
 public interface PluginListener {
 
   /**
@@ -7,9 +10,9 @@ public interface PluginListener {
    *
    * <p>Any plugin must register for such events and </p>
    *
-   * @param url
-   * @param msg
+   * @param url the url the message was sent to
+   * @param msg the message
    */
-  void pluginEvent(GeigerURL url, Message msg);
+  void pluginEvent(GeigerUrl url, Message msg);
 
 }

@@ -1,6 +1,6 @@
 package eu.cybergeiger.communication.communicator;
 
-import eu.cybergeiger.communication.GeigerURL;
+import eu.cybergeiger.communication.GeigerUrl;
 import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.MessageType;
 import eu.cybergeiger.communication.PluginInformation;
@@ -53,7 +53,7 @@ public class GeigerClient extends GeigerCommunicator {
             // TODO get real IDs from somewhere
             // this sends the current listening port as payload
             Message m = new Message("plugin1", "masterID", MessageType.REGISTER_PLUGIN,
-                    new GeigerURL(""),
+                    new GeigerUrl(""),
                     ByteBuffer.allocate(Integer.BYTES).putInt(serverSocket.getLocalPort()).array());
             out.writeObject(m);
             out.close();

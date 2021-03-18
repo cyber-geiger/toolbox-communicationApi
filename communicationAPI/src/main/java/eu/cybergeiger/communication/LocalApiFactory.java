@@ -17,7 +17,12 @@ public class LocalApiFactory {
   public static LocalApi getLocalApi(String executor, String id, Declaration declaration) throws DeclarationMismatchException {
     synchronized (instances) {
       if (!instances.containsKey(id)) {
-        instances.put(id, new LocalApi(executor, id, false, declaration));
+        if (LocalApi.MASTER.equals(id)) {
+          // create master
+          instances.put(id, new LocalApi(executor, id, true, declaration));
+        } else {
+          instances.put(id, new LocalApi(executor, id, false, declaration));
+        }
       }
     }
     LocalApi l = instances.get(id);

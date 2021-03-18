@@ -34,6 +34,7 @@ public class GeigerClient extends GeigerCommunicator {
             // TODO what is an executor? should it be the executable?
             // this should already register and activate the plugin
             try {
+                // TODO define executor
                 localApi = LocalApiFactory.getLocalApi(id, id, Declaration.DO_NOT_SHARE_DATA);
             } catch(DeclarationMismatchException d) {
                 d.printStackTrace();
@@ -42,8 +43,9 @@ public class GeigerClient extends GeigerCommunicator {
             String executable = "plugin1";
             PluginInformation pluginInfo = new PluginInformation(executable, serverSocket.getLocalPort(), secret);
             // TODO only register if first time
-            localApi.registerPlugin(id, pluginInfo);
-            localApi.activatePlugin();
+            localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.REGISTER_PLUGIN,
+                    null, ByteBuffer.allocate(4).putInt(serverSocket.getLocalPort()).array()));
+            //localApi.activatePlugin();
 //            activateSelf();
             // listening for incoming connections
             while(true) {

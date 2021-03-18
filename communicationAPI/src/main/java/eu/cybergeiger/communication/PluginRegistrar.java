@@ -6,7 +6,7 @@ interface PluginRegistrar {
   /***
    * <p>Registers the plugin to the toolbox framework.</p>
    */
-  void registerPlugin();
+  void registerPlugin(Message m);
 
   /***
    * <p>Unregisters an already registered plugin in the toolbox.</p>

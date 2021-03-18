@@ -1,14 +1,14 @@
 package eu.cybergeiger.communication.communicator;
 
-import eu.cybergeiger.communication.LocalApi;
-import eu.cybergeiger.communication.LocalApiFactory;
-import eu.cybergeiger.communication.Message;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import eu.cybergeiger.communication.*;
+
+import javax.naming.NameNotFoundException;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 
 public class MessageHandler implements Runnable {
   private Socket socket;
@@ -39,34 +39,91 @@ public class MessageHandler implements Runnable {
    * @param m the message to be parsed
    */
   private void parseType(Message m) {
-    localApi = LocalApiFactory.getLocalApi(m.getSourceId());
+    if (null == LocalApiFactory.getLocalApi(m.getTargetId())) {
+      // no localapi has been created
+      if(LocalApi.MASTER.equals(m.getTargetId())) {
+        try {
+          localApi = LocalApiFactory.getLocalApi(LocalApi.MASTER, LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
+        } catch(DeclarationMismatchException e) {
+          e.printStackTrace();
+        }
+      } else {
+        // we must be in a client
+        try {
+          localApi = LocalApiFactory.getLocalApi(null, m.getTargetId(), Declaration.DO_NOT_SHARE_DATA);
+        } catch (DeclarationMismatchException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
     switch (m.getType()) {
       case REGISTER_PLUGIN: {
-        handleRegisterPlugin(m);
+        localApi.registerPlugin(m);
         break;
       }
       case DEREGISTER_PLUGIN: {
-        handleDeregisterPlugin(m);
+        try {
+        localApi.deregisterPlugin();
+        } catch(NameNotFoundException e) {
+        // TODO
+        e.printStackTrace();
+        }
         break;
       }
       case REGISTER_MENU: {
-        handleRegisterMenu(m);
+        localApi.registerMenu(m.getPayloadString(), m.getAction());
+        break;
+      }
+      case ACTIVATE_PLUGIN: {
+        localApi.activatePlugin();
+        //localApi.activatePlugin(ByteBuffer.wrap(m.getPayload()).getInt());
+        //localApi.activatePlugin(Integer.parseInt(m.getPayloadString()));
+        break;
+      }
+      case DEACTIVATE_PLUGIN: {
+        localApi.deactivatePlugin();
         break;
       }
       case MENU_PRESSED: {
-        handleMenuPressed(m);
+        localApi.menuPressed(m.getAction());
+        break;
+      }
+      case MENU_ACTIVE: {
+        localApi.enableMenu(m.getPayloadString());
+        break;
+      }
+      case MENU_INACTIVE: {
+        localApi.disableMenu(m.getPayloadString());
         break;
       }
       case DEREGISTER_MENU: {
-        handleDeregisterMenu(m);
+        localApi.deregisterMenu(m.getPayloadString());
         break;
       }
       case SCAN_PRESSED: {
-        handleScanPressed(m);
+        localApi.scanButtonPressed();
+        break;
+      }
+      case SCAN_COMPLETED: {
+        // TODO
+        //localApi.scanComplete();
         break;
       }
       case RETURNING_CONTROL: {
         handleReturningControl(m);
+        break;
+      }
+      case ALL_EVENTS: {
+        handleAllEvents();
+        break;
+      }
+      case PING: {
+        handlePing(m);
+        break;
+      }
+      case PONG: {
+        handlePong();
         break;
       }
       case STORAGE_EVENT: {
@@ -98,36 +155,6 @@ public class MessageHandler implements Runnable {
 //    }
 //  }
 
-  private void handleRegisterPlugin(Message m) {
-    // TODO
-    localApi.registerPlugin();
-  }
-
-  private void handleDeregisterPlugin(Message m) {
-    // TODO
-    throw new UnsupportedOperationException();
-  }
-
-  private void handleRegisterMenu(Message m) {
-    // TODO
-    throw new UnsupportedOperationException();
-  }
-
-  private void handleMenuPressed(Message m) {
-    // TODO
-    throw new UnsupportedOperationException();
-  }
-
-  private void handleDeregisterMenu(Message m) {
-    // TODO
-    throw new UnsupportedOperationException();
-  }
-
-  private void handleScanPressed(Message m) {
-    // TODO
-    throw new UnsupportedOperationException();
-  }
-
   private void handleReturningControl(Message m) {
     // TODO
     throw new UnsupportedOperationException();
@@ -136,5 +163,25 @@ public class MessageHandler implements Runnable {
   private void handleStorageEvent(Message m) {
     // TODO
     throw new UnsupportedOperationException();
+  }
+  private void handleAllEvents() {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
+
+  private void handlePing(Message m) {
+    // TODO send PONG
+    localApi.sendMessage(m.getSourceId(), new Message(m.getTargetId(), m.getSourceId(), MessageType.PONG, null, new byte[0]));
+  }
+
+  private void handlePong() {
+    // TODO what todo on PONG?
+    File messageOutput = new File("messageOutput.txt");
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(messageOutput))) {
+      writer.write("PONG received");
+    } catch (IOException i) {
+      i.printStackTrace();
+    }
+    System.out.println("PONG received");
   }
 }

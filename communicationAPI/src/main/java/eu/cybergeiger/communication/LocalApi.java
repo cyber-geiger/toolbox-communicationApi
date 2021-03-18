@@ -2,12 +2,19 @@ package eu.cybergeiger.communication;
 
 //import ch.fhnw.geiger.localstorage.StorageController;
 //import ch.fhnw.geiger.localstorage.db.GenericController;
+import eu.cybergeiger.communication.communicator.GeigerCommunicator;
+import eu.cybergeiger.communication.communicator.GeigerServer;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,12 +50,12 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     this.isMaster = isMaster;
     this.declaration = declaration;
 
-    restoreState();
+//    restoreState();
 
-    if (!isMaster) {
-      registerPlugin();
-      activatePlugin();
-    }
+//    if (!isMaster) {
+//      registerPlugin();
+//      activatePlugin();
+//    }
 
   }
 
@@ -62,11 +69,11 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   }
 
   @Override
-  public void registerPlugin() {
+  public void registerPlugin(Message msg) {
     // TODO share secret in a secure paired way....
-//    PluginInformation pi = new PluginInformation();
+    PluginInformation pi = new PluginInformation(msg.getAction().toString(), Integer.parseInt(msg.getPayloadString()), new CommunicationSecret());
     //CommunicationSecret secret = new CommunicationSecret();
-    //secrets.put(id, secret);
+    secrets.put(msg.getSourceId(), pi);
   }
 
   @Override
@@ -246,10 +253,42 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param pluginId The plugin id to be contacted
    * @param msg the message to be sent
    */
-  private void sendMessage(String pluginId, Message msg) {
+  public void sendMessage(String pluginId, Message msg) {
     // TODO: reimplement for communication version
-    LocalApi api = LocalApiFactory.getLocalApi(pluginId);
-    api.receivedMessage(new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
+    //LocalApi api = LocalApiFactory.getLocalApi(pluginId);
+    //api.receivedMessage(new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
+    if(MASTER.equals(msg.getTargetId())) {
+      try {
+            // connect to core
+            InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), GeigerServer.getDefaultPort());
+            Socket s = new Socket();
+            s.bind(address);
+            s.connect(address, 10000);
+            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
+            out.writeObject(msg);
+            out.close();
+            s.close();
+        } catch (IOException ioe) {
+            // TODO
+            ioe.printStackTrace();
+        }
+    } else {
+      // its not the master
+      try {
+        // connect to core
+        InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), secrets.get(msg.getTargetId()).getPort());
+        Socket s = new Socket();
+        s.bind(address);
+        s.connect(address, 10000);
+        ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
+        out.writeObject(msg);
+        out.close();
+        s.close();
+      } catch (IOException ioe) {
+        // TODO
+        ioe.printStackTrace();
+      }
+    }
   }
 
   /**

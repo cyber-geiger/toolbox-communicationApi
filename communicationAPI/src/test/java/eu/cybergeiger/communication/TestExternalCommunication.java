@@ -1,38 +1,54 @@
 package eu.cybergeiger.communication;
 
 import eu.cybergeiger.communication.communicator.GeigerServer;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.Before;
-
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Files;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
+/**
+ * <p>Testing non local communication.</p>
+ */
 public class TestExternalCommunication {
-    LocalApi localMaster;
-    GeigerServer server;
+  LocalApi localMaster = LocalApiFactory.getLocalApi("master");
+  GeigerServer server;
 
-    @Before
-    public void setup() {
-        // TODO get LocalAPI Master
+  /**
+   * <p>Start new server listener.</p>
+   */
+  @Before
+  public void setup() {
+    server = new GeigerServer();
+    try {
+      server.start();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    @After
-    public void tearDown() {
-        // TODO stop localAPi Master
+  /**
+   * <p>stop server listener.</p>
+   */
+  @After
+  public void tearDown() {
+    try {
+      server.stop();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Test
-    public void testCommunication() {
-        // TODO start plugin
-        // TODO check if plugin registered
-        // TODO check if plugin activated
-        // TODO send PING from Master -> plugin
-        // TODO check if PONG received
+  @Ignore
+  @Test
+  public void testRegisterPlugin() {
+    // TODO
+    try {
+      GeigerUrl testUrl = new GeigerUrl("test");
+      Message ping = new Message("client", "master", MessageType.PING, testUrl);
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
     }
+  }
 }

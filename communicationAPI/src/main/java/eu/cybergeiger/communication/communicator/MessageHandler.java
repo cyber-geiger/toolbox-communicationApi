@@ -1,15 +1,18 @@
 package eu.cybergeiger.communication.communicator;
 
-import eu.cybergeiger.communication.*;
-
-import javax.naming.NameNotFoundException;
-import java.io.*;
+import eu.cybergeiger.communication.LocalApi;
+import eu.cybergeiger.communication.LocalApiFactory;
+import eu.cybergeiger.communication.Message;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 
+/**
+ * <p> Gets called from a GeigerCommunicator and handles the received messages.</p>
+ */
 public class MessageHandler implements Runnable {
   private Socket socket;
   private LocalApi localApi;
@@ -22,7 +25,8 @@ public class MessageHandler implements Runnable {
   public void run() {
     try (ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
       Message m = (Message) in.readObject();
-      // Since we only expect one message to be sent over the stream, there is no need for a loop here
+      // Since we only expect one message to be sent over the stream,
+      // there is no need for a loop here
       parseType(m);
     } catch (IOException ioe) {
       // TODO handle communications error
@@ -34,96 +38,39 @@ public class MessageHandler implements Runnable {
   }
 
   /**
-   * parses the message type and relays the message to the corresponding handler
+   * <p>Parses the message type and relays the message to the corresponding handler.</p>
    *
    * @param m the message to be parsed
    */
   private void parseType(Message m) {
-    if (null == LocalApiFactory.getLocalApi(m.getTargetId())) {
-      // no localapi has been created
-      if(LocalApi.MASTER.equals(m.getTargetId())) {
-        try {
-          localApi = LocalApiFactory.getLocalApi(LocalApi.MASTER, LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
-        } catch(DeclarationMismatchException e) {
-          e.printStackTrace();
-        }
-      } else {
-        // we must be in a client
-        try {
-          localApi = LocalApiFactory.getLocalApi(null, m.getTargetId(), Declaration.DO_NOT_SHARE_DATA);
-        } catch (DeclarationMismatchException e) {
-          e.printStackTrace();
-        }
-      }
-    }
-
+    localApi = LocalApiFactory.getLocalApi(m.getSourceId());
     switch (m.getType()) {
       case REGISTER_PLUGIN: {
-        localApi.registerPlugin(m);
+        handleRegisterPlugin(m);
         break;
       }
       case DEREGISTER_PLUGIN: {
-        try {
-        localApi.deregisterPlugin();
-        } catch(NameNotFoundException e) {
-        // TODO
-        e.printStackTrace();
-        }
+        handleDeregisterPlugin(m);
         break;
       }
       case REGISTER_MENU: {
-        localApi.registerMenu(m.getPayloadString(), m.getAction());
-        break;
-      }
-      case ACTIVATE_PLUGIN: {
-        localApi.activatePlugin();
-        //localApi.activatePlugin(ByteBuffer.wrap(m.getPayload()).getInt());
-        //localApi.activatePlugin(Integer.parseInt(m.getPayloadString()));
-        break;
-      }
-      case DEACTIVATE_PLUGIN: {
-        localApi.deactivatePlugin();
+        handleRegisterMenu(m);
         break;
       }
       case MENU_PRESSED: {
-        localApi.menuPressed(m.getAction());
-        break;
-      }
-      case MENU_ACTIVE: {
-        localApi.enableMenu(m.getPayloadString());
-        break;
-      }
-      case MENU_INACTIVE: {
-        localApi.disableMenu(m.getPayloadString());
+        handleMenuPressed(m);
         break;
       }
       case DEREGISTER_MENU: {
-        localApi.deregisterMenu(m.getPayloadString());
+        handleDeregisterMenu(m);
         break;
       }
       case SCAN_PRESSED: {
-        localApi.scanButtonPressed();
-        break;
-      }
-      case SCAN_COMPLETED: {
-        // TODO
-        //localApi.scanComplete();
+        handleScanPressed(m);
         break;
       }
       case RETURNING_CONTROL: {
         handleReturningControl(m);
-        break;
-      }
-      case ALL_EVENTS: {
-        handleAllEvents();
-        break;
-      }
-      case PING: {
-        handlePing(m);
-        break;
-      }
-      case PONG: {
-        handlePong();
         break;
       }
       case STORAGE_EVENT: {
@@ -136,24 +83,54 @@ public class MessageHandler implements Runnable {
     }
   }
 
-//  /**
-//   * Transmits message to plugin listening on port
-//   *
-//   * @param m    message to transmit
-//   * @param port port to connect to on localhost
-//   */
-//  public void transmit(Message m, int port) {
-//    try {
-//      InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), port);
-//      Socket s = new Socket();
-//      s.bind(address);
-//      s.connect(address, 10000);
-//      ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
-//      out.writeObject(m);
-//    } catch (IOException ioe) {
-//      // TODO
-//    }
-//  }
+  /**
+   * <p>Transmits message to plugin listening on port.</p>
+   *
+   * @param m    message to transmit
+   * @param port port to connect to on localhost
+   */
+  public void transmit(Message m, int port) {
+    try {
+      InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), port);
+      Socket s = new Socket();
+      s.bind(address);
+      s.connect(address, 10000);
+      ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
+      out.writeObject(m);
+    } catch (IOException ioe) {
+      // TODO
+    }
+  }
+
+  private void handleRegisterPlugin(Message m) {
+    // TODO
+    localApi.registerPlugin();
+  }
+
+  private void handleDeregisterPlugin(Message m) {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
+
+  private void handleRegisterMenu(Message m) {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
+
+  private void handleMenuPressed(Message m) {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
+
+  private void handleDeregisterMenu(Message m) {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
+
+  private void handleScanPressed(Message m) {
+    // TODO
+    throw new UnsupportedOperationException();
+  }
 
   private void handleReturningControl(Message m) {
     // TODO
@@ -163,25 +140,5 @@ public class MessageHandler implements Runnable {
   private void handleStorageEvent(Message m) {
     // TODO
     throw new UnsupportedOperationException();
-  }
-  private void handleAllEvents() {
-    // TODO
-    throw new UnsupportedOperationException();
-  }
-
-  private void handlePing(Message m) {
-    // TODO send PONG
-    localApi.sendMessage(m.getSourceId(), new Message(m.getTargetId(), m.getSourceId(), MessageType.PONG, null, new byte[0]));
-  }
-
-  private void handlePong() {
-    // TODO what todo on PONG?
-    File messageOutput = new File("messageOutput.txt");
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(messageOutput))) {
-      writer.write("PONG received");
-    } catch (IOException i) {
-      i.printStackTrace();
-    }
-    System.out.println("PONG received");
   }
 }

@@ -2,7 +2,7 @@ package eu.cybergeiger.communication;
 
 import java.io.Serializable;
 import java.net.MalformedURLException;
-import java.net.URL;
+import totalcross.net.URI;
 
 /**
  * <p>GEIGER communication URL object.</p>
@@ -14,8 +14,9 @@ public class GeigerUrl implements Serializable {
   private String path = "";
 
   public GeigerUrl(String spec) throws MalformedURLException {
-    URL url = new URL(spec);
-    init(url.getHost(), url.getPath());
+    // TODO java.net.URL is not compatible, changed to totalcross.net.URI
+    URI url = new URI(spec);
+    init(url.host.toString(), url.path.toString());
   }
 
   public GeigerUrl(String pluginId, String path) {

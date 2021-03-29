@@ -1,14 +1,15 @@
 package eu.cybergeiger.communication;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 /**
  * <p>Implements a singleton pattern for local API.</p>
  */
 public class LocalApiFactory {
 
-  private static Map<String, LocalApi> instances = new ConcurrentHashMap<>();
+  // TODO check for threadsafety as concurrenthashmap is not supported
+  private static Map<String, LocalApi> instances = new HashMap<>();
 
   /**
    * <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be

@@ -1,8 +1,8 @@
 package eu.cybergeiger.communication;
 
-import ch.fhnw.geiger.localstorage.StorageController;
-import ch.fhnw.geiger.localstorage.db.GenericController;
-import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
+//import ch.fhnw.geiger.localstorage.StorageController;
+//import ch.fhnw.geiger.localstorage.db.GenericController;
+//import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import eu.cybergeiger.communication.communicator.GeigerClient;
 import eu.cybergeiger.communication.communicator.GeigerCommunicator;
 import eu.cybergeiger.communication.communicator.GeigerServer;
@@ -215,11 +215,13 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    *
    * @return a generic controller providing access to the local storage
    */
-  public StorageController getStorage() {
-    // TODO implementation passthru missing
-    return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
-        "sa2", "1234"));
-  }
+  // TODO at least on my machine the localstorage is not visible for Maven
+  // so this has to be commented to do a totalcross build for now
+//  public StorageController getStorage() {
+//    // TODO implementation passthru missing
+//    return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
+//        "sa2", "1234"));
+//  }
 
   /**
    * <p>Register an event listener for specific events.</p>

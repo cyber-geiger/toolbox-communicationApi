@@ -1,8 +1,9 @@
 package eu.cybergeiger.communication;
 
 import java.io.Serializable;
-import java.security.SecureRandom;
 import java.util.Arrays;
+import totalcross.util.Random;
+
 
 /**
  * <p>Encapsulates secret parameters for communication and provides methods to employ them.</p>
@@ -26,7 +27,15 @@ public class CommunicationSecret implements Serializable {
    */
   public CommunicationSecret(int size) {
     secret = new byte[size];
-    new SecureRandom().nextBytes(secret);
+    // TODO integrate size
+    // TODO get proper randomization, secureRandom() does not exists in totalcross
+    int value = new Random().nextInt(Integer.MAX_VALUE);
+    secret = new byte[] {
+        (byte) (value >>> 24),
+        (byte) (value >>> 16),
+        (byte) (value >>> 8),
+        (byte) value
+      };
   }
 
   /**

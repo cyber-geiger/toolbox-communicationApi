@@ -1,82 +1,82 @@
 package eu.cybergeiger.communication.communicator;
 
-import eu.cybergeiger.communication.GeigerUrl;
 import eu.cybergeiger.communication.Message;
-import eu.cybergeiger.communication.MessageType;
 import eu.cybergeiger.communication.PluginInformation;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import totalcross.io.IOException;
+import totalcross.net.ServerSocket;
+import totalcross.net.Socket;
+import totalcross.util.concurrent.ThreadPool;
 
 /**
- *  <p>Communicator client to be used by GEIGER plugins.</p>
+ * Communicator for Geiger-Plugins.
  */
 public class GeigerClient extends GeigerCommunicator {
-  private static final ExecutorService executor = Executors.newCachedThreadPool();
-  private static ServerSocket serverSocket;
-  private static int geigerCorePort = GeigerServer.getDefaultPort();
+  // TODO find a way to get number of cores/threads available
+  private final ThreadPool executor = new ThreadPool(4);
+  private ServerSocket serverSocket;
+  int port;
+  Thread client;
+  Boolean shutdown;
 
   /**
-   * <p>Starts the serversocket to listen for connections after registering itself at MASTER.</p>
+   * Start the GeigerClient.
    *
-   * @param args the first arg is the GEIGER toolboxcore port if it is different from default.
+   * @throws IOException if GeigerClient could not be started
    */
-  public static void main(String[] args) {
+  public void start() throws IOException {
     // TODO handle shutdown correctly even when JVM close
-    // if GeigerCorePort is not default, it should be sent as first argument
-    if (args.length > 0) {
-      geigerCorePort = Integer.parseInt(args[0]);
-    }
-    try {
-      // get available port
-      serverSocket = new ServerSocket(0);
-      // register at Geiger Core with new port
-      registerSelf();
-      // listening for incoming connections
-      while (true) {
-        final Socket s = serverSocket.accept();
-        executor.execute(() -> new MessageHandler(s));
+    shutdown = false;
+    client = new Thread(() -> {
+      try {
+        serverSocket = new ServerSocket(0);
+        port = serverSocket.getLocalPort();
+        while (true) {
+          final Socket s = serverSocket.accept();
+          executor.execute(() -> new MessageHandler(s, getListener()));
+        }
+      } catch (IOException e) {
+        // TODO exception handling
+        e.printStackTrace();
       }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    });
+    client.start();
   }
 
-
-  private static void registerSelf() {
-    try {
-      // connect to core
-      InetSocketAddress address = new InetSocketAddress(InetAddress.getLocalHost(), geigerCorePort);
-      Socket s = new Socket();
-      s.bind(address);
-      s.connect(address, 10000);
-      ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream()); // TODO close
-      // TODO get real IDs from somewhere
-      // this sends the current listening port as payload
-      Message m = new Message("plugin1", "masterID", MessageType.REGISTER_PLUGIN,
-          new GeigerUrl(""),
-          ByteBuffer.allocate(Integer.BYTES).putInt(serverSocket.getLocalPort()).array());
-      out.writeObject(m);
-      out.close();
-      s.close();
-    } catch (IOException ioe) {
-      // TODO
-      ioe.printStackTrace();
-    }
-  }
-
+  /**
+   * Stop the GeigerClient.
+   *
+   * @throws IOException if client could not be stopped
+   */
   public void stop() throws IOException {
-    serverSocket.close();
+    shutdown = true;
+    Socket s = new Socket("127.0.0.1", port);
+    s.close();
   }
 
   @Override
   public void sendMessage(PluginInformation pluginInformation, Message msg) {
-    // TODO
+    // Plugin information is ignored as clients only write to master
+    try {
+      Socket s = new Socket("127.0.0.1", GeigerServer.getDefaultPort());
+      // ObjectOutputStream ou = new ObjectOutputStream(s.asOutputStream());
+      OutputStream out = s.asOutputStream();
+      // write all objects in the format: int size, String
+      ArrayList<byte[]> messageByte = messageToByteArrays(msg);
+      for (byte[] b : messageByte) {
+        out.write(b);
+      }
+      out.close();
+      s.close();
+    } catch (java.io.IOException e) {
+      e.printStackTrace();
+    }
   }
+
+  @Override
+  public int getPort() {
+    return port;
+  }
+
 }

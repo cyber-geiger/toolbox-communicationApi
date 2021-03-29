@@ -3,23 +3,17 @@ package eu.cybergeiger.communication;
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.db.GenericController;
 import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import eu.cybergeiger.communication.communicator.GeigerClient;
+import eu.cybergeiger.communication.communicator.GeigerCommunicator;
+import eu.cybergeiger.communication.communicator.GeigerServer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.naming.NameNotFoundException;
+import totalcross.util.HashMap4D;
+import totalcross.util.Logger;
 
 
 /**
@@ -29,17 +23,20 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
 
   public static final String MASTER = "__MASTERPLUGIN__";
 
-  private static Map<String, PluginInformation> secrets = new HashMap<>(1);
-  private static Map<String, MenuItem> menuItems = new HashMap<>(0);
+  private static final Map<String, PluginInformation> plugins = new HashMap<>(1);
+  private static final Map<String, MenuItem> menuItems = new HashMap<>(0);
 
-  private static Logger log = Logger.getLogger("LocalAPI");
+  private static final Logger log = Logger.getLogger("LocalAPI");
 
-  private String executor;
-  private String id;
-  private boolean isMaster;
+  private final String executor;
+  private final String id;
+  private final boolean isMaster;
   private Declaration declaration;
 
-  private final Map<MessageType, List<PluginListener>> listeners = new ConcurrentHashMap<>();
+  private final Map<MessageType, List<PluginListener>> listeners
+      = Collections.synchronizedMap(new HashMap4D<>());
+
+  private final GeigerCommunicator geigerCommunicator;
 
   /**
    * <p>Constructor called by LocalApiFactory.</p>
@@ -55,11 +52,20 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     this.isMaster = isMaster;
     this.declaration = declaration;
 
-    restoreState();
+    // TODO reactivate after implementation
+    //restoreState();
+
+    // TODO state store/restore
+    //restoreState();
 
     if (!isMaster) {
+      // it is a plugin
+      geigerCommunicator = new GeigerClient();
       registerPlugin();
-      activatePlugin();
+      activatePlugin(geigerCommunicator.getPort());
+    } else {
+      // it is master
+      geigerCommunicator = new GeigerServer();
     }
 
   }
@@ -86,9 +92,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   }
 
   @Override
-  public void deregisterPlugin() throws NameNotFoundException {
-    if (secrets.get(id) == null) {
-      throw new NameNotFoundException("no communication secret found for id \"" + id + "\"");
+  public void deregisterPlugin() {
+    if (plugins.get(id) == null) {
+      // TODO javax.NameNotFoundException does not exists in totalcross
+      //throw new NameNotFoundException("no communication secret found for id \"" + id + "\"");
     }
     deactivatePlugin();
     zapState();
@@ -111,9 +118,9 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     }
 
     // remove plugin secret
-    secrets.remove(id);
+    plugins.remove(id);
 
-    storeState();
+    //storeState();
   }
 
   /**
@@ -123,72 +130,75 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     synchronized (menuItems) {
       menuItems.clear();
     }
-    synchronized (secrets) {
-      secrets.clear();
+    synchronized (plugins) {
+      plugins.clear();
     }
-    storeState();
+    // TODO reactivate after implementation
+    //storeState();
   }
 
-  private void storeState() {
-    // store plugin state
-    try (ObjectOutputStream out = new ObjectOutputStream(
-        Files.newOutputStream(Paths.get("LocalAPI." + id + ".state"))
-    )
-    ) {
-      synchronized (secrets) {
-        out.writeInt(secrets.size());
-        for (Map.Entry<String, PluginInformation> e : secrets.entrySet()) {
-          out.writeObject(e.getKey());
-          out.writeObject(e.getValue());
-        }
-      }
-      synchronized (menuItems) {
-        out.writeInt(menuItems.size());
-        for (Map.Entry<String, MenuItem> e : menuItems.entrySet()) {
-          out.writeObject(e.getKey());
-          out.writeObject(e.getValue());
-        }
-      }
-    } catch (IOException ioe) {
-      log.log(Level.SEVERE, "persisting LocalAPI state", ioe);
-    }
-  }
-
-  private void restoreState() {
-    try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(
-        Paths.get("LocalAPI." + id + ".state")
-    ))) {
-      // restoring plugin information
-      int mapSize = in.readInt();
-      Map<String, PluginInformation> l = new HashMap<>(mapSize);
-      for (int i = 0; i < mapSize; i++) {
-        l.put((String) (in.readObject()), (PluginInformation) (in.readObject()));
-      }
-      synchronized (secrets) {
-        secrets.clear();
-        secrets.putAll(l);
-      }
-
-      // restoring menu information
-      mapSize = in.readInt();
-      Map<String, MenuItem> l2 = new HashMap<>(mapSize);
-      for (int i = 0; i < mapSize; i++) {
-        l2.put((String) (in.readObject()), (MenuItem) (in.readObject()));
-      }
-      synchronized (menuItems) {
-        menuItems.clear();
-        menuItems.putAll(l2);
-      }
-    } catch (IOException | ClassNotFoundException e) {
-      log.log(Level.SEVERE, "persisting LocalAPI state", e);
-    }
-  }
+  // TODO rewrite storeState and restoreState with totalcross classes
+//  private void storeState() {
+//    // store plugin state
+//    try (ObjectOutputStream out = new ObjectOutputStream(
+//        Files.newOutputStream(Paths.get("LocalAPI." + id + ".state"))
+//    )
+//    ) {
+//      synchronized (secrets) {
+//        out.writeInt(secrets.size());
+//        for (Map.Entry<String, PluginInformation> e : secrets.entrySet()) {
+//          out.writeObject(e.getKey());
+//          out.writeObject(e.getValue());
+//        }
+//      }
+//      synchronized (menuItems) {
+//        out.writeInt(menuItems.size());
+//        for (Map.Entry<String, MenuItem> e : menuItems.entrySet()) {
+//          out.writeObject(e.getKey());
+//          out.writeObject(e.getValue());
+//        }
+//      }
+//    } catch (IOException ioe) {
+//      log.log(Level.SEVERE, "persisting LocalAPI state", ioe);
+//    }
+//  }
+//
+//  private void restoreState() {
+//    try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(
+//        Paths.get("LocalAPI." + id + ".state")
+//    ))) {
+//      // restoring plugin information
+//      int mapSize = in.readInt();
+//      Map<String, PluginInformation> l = new HashMap<>(mapSize);
+//      for (int i = 0; i < mapSize; i++) {
+//        l.put((String) (in.readObject()), (PluginInformation) (in.readObject()));
+//      }
+//      synchronized (secrets) {
+//        secrets.clear();
+//        secrets.putAll(l);
+//      }
+//
+//      // restoring menu information
+//      mapSize = in.readInt();
+//      Map<String, MenuItem> l2 = new HashMap<>(mapSize);
+//      for (int i = 0; i < mapSize; i++) {
+//        l2.put((String) (in.readObject()), (MenuItem) (in.readObject()));
+//      }
+//      synchronized (menuItems) {
+//        menuItems.clear();
+//        menuItems.putAll(l2);
+//      }
+//    } catch (IOException | ClassNotFoundException e) {
+//      log.log(Level.SEVERE, "persisting LocalAPI state", e);
+//    }
+//  }
 
   /**
    * <p>Activates the plugin and sets up communication.</p>
    */
-  public void activatePlugin() {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.ACTIVATE_PLUGIN, null));
+  public void activatePlugin(int port) {
+    sendMessage(MASTER, new Message(id, MASTER, MessageType.ACTIVATE_PLUGIN, null,
+        String.valueOf(port).getBytes(StandardCharsets.UTF_8)));
   }
 
   /**
@@ -263,9 +273,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    */
   private void sendMessage(String pluginId, Message msg) {
     // TODO: reimplement for communication version
-    LocalApi api = LocalApiFactory.getLocalApi(pluginId);
-    api.receivedMessage(PluginInformationFactory.getPluginInformation(id),
-        new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
+//    LocalApi api = LocalApiFactory.getLocalApi(pluginId);
+//    api.receivedMessage(PluginInformationFactory.getPluginInformation(id),
+//        new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
+    geigerCommunicator.sendMessage(plugins.get(pluginId), msg);
   }
 
   /**
@@ -274,13 +285,14 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param msg the message to be broadcasted
    */
   private void broadcastMessage(Message msg) {
-    for (Map.Entry<String, PluginInformation> plugin : secrets.entrySet()) {
+    for (Map.Entry<String, PluginInformation> plugin : plugins.entrySet()) {
       sendMessage(plugin.getKey(),
           new Message(MASTER, plugin.getKey(), msg.getType(), msg.getAction(), msg.getPayload()));
     }
   }
 
   private void receivedMessage(PluginInformation info, Message msg) {
+    // TODO other messagetypes
     MenuItem i;
     switch (msg.getType()) {
       case MENU_ACTIVE:
@@ -324,26 +336,26 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
 
   @Override
   public void registerMenu(String menu, GeigerUrl action) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_MENU,
-        null, toByteArray(new MenuItem(menu, action))));
+    //sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_MENU,
+    // null, toByteArray(new MenuItem(menu, action))));
   }
 
   @Override
   public void enableMenu(String menu) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_ACTIVE,
-        null, menu.getBytes(StandardCharsets.UTF_8)));
+    //sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_ACTIVE,
+    // null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
   public void disableMenu(String menu) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_INACTIVE,
-        null, menu.getBytes(StandardCharsets.UTF_8)));
+    //sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_INACTIVE,
+    // null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
   public void deregisterMenu(String menu) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.DEREGISTER_MENU,
-        null, menu.getBytes(StandardCharsets.UTF_8)));
+    //sendMessage(MASTER, new Message(id, MASTER, MessageType.DEREGISTER_MENU,
+    // null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   /**
@@ -382,6 +394,8 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param object the object to be serialized
    * @return the byte array representation of the object
    */
+  // TODO reimplement serialization
+  /*
   public static byte[] toByteArray(Serializable object) {
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
          ObjectOutputStream out = new ObjectOutputStream(bos);) {
@@ -394,6 +408,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     }
     return null;
   }
+  */
 
   /**
    * <p>Convenience function to deserialize a byte array back to an object.</p>
@@ -402,12 +417,15 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @return the deserialized object
    */
   public static Object toObject(byte[] arr) {
+    // TODO reimplement serialization
+    /*
     try (ByteArrayInputStream bis = new ByteArrayInputStream(arr);
          ObjectInputStream in = new ObjectInputStream(bis);) {
       return in.readObject();
     } catch (IOException | ClassNotFoundException e) {
       log.log(Level.SEVERE, "Error serializing object", e);
     }
+    */
     return null;
   }
 }

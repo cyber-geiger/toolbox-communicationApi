@@ -6,6 +6,13 @@ plugins {
 
 repositories {
     jcenter()
+    maven {
+        url = uri('http://maven.totalcross.com/artifactory/repo1')
+    }
+
+    maven {
+        url = uri('http://repo.maven.apache.org/maven2')
+    }
 }
 
 configurations {
@@ -14,6 +21,7 @@ configurations {
 
 dependencies {
     implementation 'eu.cyber-geiger:toolbox-storage:0.2.0'
+    implementation 'com.totalcross:totalcross-sdk:7.0.3'
 
     compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
     checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }
@@ -88,3 +96,9 @@ java {
     withSourcesJar()
 }
 
+// TODO totalcross plugin implementation
+//totalcross {
+//    name = description
+//    platforms = new String[]{'android', 'win32'};
+//    activationkey = '5443444B5AAEEB90306B00E4'
+//}

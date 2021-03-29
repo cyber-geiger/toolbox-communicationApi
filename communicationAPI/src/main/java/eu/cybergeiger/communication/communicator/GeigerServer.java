@@ -3,41 +3,62 @@ package eu.cybergeiger.communication.communicator;
 import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.PluginInformation;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import totalcross.net.ServerSocket;
+import totalcross.net.Socket;
+import totalcross.util.concurrent.ThreadPool;
 
 /**
- * <p>Communication server for GeigerToolbox Master.</p>
+ * Communicator for Geiger Core.
  */
 public class GeigerServer extends GeigerCommunicator {
-  private final ExecutorService executor = Executors.newCachedThreadPool();
+  // TODO find a way to get number of cores
+  private final ThreadPool executor = new ThreadPool(1);
   private static final int port = 1234;
   private ServerSocket serverSocket;
+  Thread server;
+  Boolean shutdown;
 
   /**
-   * <p>Server starts listening for connections on port.</p>
+   * Start the GeigerServer.
    *
-   * @throws IOException if an I/O error occurs when waiting for connections
+   * @throws IOException if server could not be started
    */
   public void start() throws IOException {
     // TODO handle shutdown correctly even when JVM close
-    serverSocket = new ServerSocket(port);
+    shutdown = false;
+    server = new Thread(() -> {
+      try {
+        serverSocket = new ServerSocket(port);
 
-    while (true) {
-      final Socket s = serverSocket.accept();
-      executor.execute(() -> new MessageHandler(s));
-    }
+        while (!shutdown) {
+          final Socket s = serverSocket.accept();
+          executor.execute(() -> new MessageHandler(s, getListener()));
+        }
+      } catch (IOException e) {
+        // TODO
+        e.printStackTrace();
+      }
+    });
+    server.start();
   }
 
   /**
-   * <p>The server stops listening for connections on port.</p>
+   * Stop the Geigerserver.
    *
-   * @throws IOException if an I/O error occurs on closing
+   * @throws IOException if server could not be closed
    */
   public void stop() throws IOException {
-    serverSocket.close();
+    // TODO server stop
+    shutdown = true;
+    Socket s = new Socket("127.0.0.1", port);
+    s.close();
+  }
+
+  @Override
+  public int getPort() {
+    return port;
   }
 
   public static int getDefaultPort() {
@@ -46,6 +67,18 @@ public class GeigerServer extends GeigerCommunicator {
 
   @Override
   public void sendMessage(PluginInformation pluginInformation, Message msg) {
-    // TODO
+    try {
+      Socket s = new Socket("127.0.0.1", pluginInformation.getPort());
+      OutputStream out = s.asOutputStream();
+      ArrayList<byte[]> messageByte = messageToByteArrays(msg);
+      for (byte[] b : messageByte) {
+        out.write(b);
+      }
+      out.close();
+      s.close();
+    } catch (IOException e) {
+      // TODO if host unknown then try to start the host and resend message
+      e.printStackTrace();
+    }
   }
 }

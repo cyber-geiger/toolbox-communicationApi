@@ -19,54 +19,20 @@ public class TestExternalCommunication {
 
     @Before
     public void setup() {
-        try {
-            localMaster = LocalApiFactory.getLocalApi(LocalApi.MASTER, LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
-        } catch (DeclarationMismatchException e) {
-            e.printStackTrace();
-        }
-        server = new GeigerServer();
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    server.start();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        // TODO get LocalAPI Master
     }
 
     @After
     public void tearDown() {
-        try {
-            server.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // TODO stop localAPi Master
     }
 
     @Test
-    public void testRegisterPlugin() {
-        // TODO get path dynamically
-        //String executable = TestExternalCommunication.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String path = "C:\\Users\\Sacha\\Desktop\\IMVS\\projekte\\GEIGER\\toolbox-communicationApi\\communicationAPI\\src\\test\\resources\\communicationApi.jar";
-        ProcessBuilder pb = new ProcessBuilder("java", "-cp", path, "eu.cybergeiger.communication.communicator.GeigerClient");
-        try {
-            Process p = pb.start();
-            // wait for registration
-            Thread.sleep(1000);
-            // send Ping
-            localMaster.sendMessage("plugin1", new Message(LocalApi.MASTER, "plugin1", MessageType.PING, null, new byte[0]));
-            // wait for answer
-            Thread.sleep(1000);
-            // check output
-            String line = Files.readAllLines(new File(getClass().getResource("messageOutput.txt").getPath()).toPath()).get(0);
-            assertEquals("PONG received", line);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-        }
+    public void testCommunication() {
+        // TODO start plugin
+        // TODO check if plugin registered
+        // TODO check if plugin activated
+        // TODO send PING from Master -> plugin
+        // TODO check if PONG received
     }
 }

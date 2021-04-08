@@ -1,13 +1,17 @@
 package eu.cybergeiger.communication;
 
-import java.io.Serializable;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import totalcross.net.URI;
 
 /**
  * <p>GEIGER communication URL object.</p>
  */
-public class GeigerUrl implements Serializable {
+public class GeigerUrl implements Serializer {
+
+  private static final long serialVersionUID = 32411423L;
 
   private String protocol = "geiger";
   private String pluginId = LocalApi.MASTER;
@@ -17,6 +21,7 @@ public class GeigerUrl implements Serializable {
     // TODO java.net.URL is not compatible, changed to totalcross.net.URI
     URI url = new URI(spec);
     init(url.host.toString(), url.path.toString());
+    this.protocol = url.getProtocol();
   }
 
   public GeigerUrl(String pluginId, String path) {
@@ -64,5 +69,20 @@ public class GeigerUrl implements Serializable {
    */
   public String getPath() {
     return path;
+  }
+
+  @Override
+  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+    SerializerHelper.writeLong(out,serialVersionUID);
+    SerializerHelper.writeString(out,protocol);
+    SerializerHelper.writeString(out,pluginId);
+    SerializerHelper.writeString(out,path);
+}
+
+  static public GeigerUrl fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+    if(SerializerHelper.readLong(in)!=serialVersionUID) {
+      throw new ClassCastException();
+    }
+    return new GeigerUrl(SerializerHelper.readString(in)+"://"+SerializerHelper.readString(in)+"/"+SerializerHelper.readString(in));
   }
 }

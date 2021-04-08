@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public interface Serializer<T> {
+public interface Serializer {
 
   static Object fromByteArrayStream(ByteArrayInputStream out) throws IOException {
     throw new IOException("Not implemented... ");
@@ -16,6 +16,4 @@ public interface Serializer<T> {
    */
   void toByteArrayStream(ByteArrayOutputStream out) throws IOException;
 
-
-  static Object fromByteArrayStream(ByteArrayInputStream out) throws IOException;
 }

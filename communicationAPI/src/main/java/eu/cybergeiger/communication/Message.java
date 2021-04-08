@@ -1,12 +1,14 @@
 package eu.cybergeiger.communication;
 
-import java.io.Serializable;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Representation of a message.</p>
  */
-public class Message implements Serializable {
+public class Message implements Serializer {
 
   private static final long serialVersionUID = 143287432L;
 
@@ -100,4 +102,20 @@ public class Message implements Serializable {
     return payload;
   }
 
+  public static Message fromByteArray(ByteArrayInputStream in) throws IOException {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
+      throw new ClassCastException();
+    }
+    return new Message(SerializerHelper.readString(in),SerializerHelper.readString(in),MessageType.getById(SerializerHelper.readInt(in)),GeigerUrl.fromByteArrayStream(in),SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Override
+  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+    SerializerHelper.writeLong(out,serialVersionUID);
+    SerializerHelper.writeString(out,sourceId);
+    SerializerHelper.writeString(out,targetId);
+    SerializerHelper.writeInt(out,type.getId());
+    action.toByteArrayStream(out);
+    SerializerHelper.writeString(out,payload);
+  }
 }

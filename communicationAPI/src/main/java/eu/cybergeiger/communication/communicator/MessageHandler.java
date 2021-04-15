@@ -20,6 +20,7 @@ public class MessageHandler implements Runnable {
 
   @Override
   public void run() {
+    // bytearrayinputstreams
     try (InputStream in = socket.asInputStream()) {
       // TODO deserialization
       ArrayList<byte[]> input = new ArrayList<>();

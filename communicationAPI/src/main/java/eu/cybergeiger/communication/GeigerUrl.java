@@ -21,7 +21,7 @@ public class GeigerUrl implements Serializer {
     // TODO java.net.URL is not compatible, changed to totalcross.net.URI
     URI url = new URI(spec);
     init(url.host.toString(), url.path.toString());
-    this.protocol = url.getProtocol();
+    //this.protocol = url.getProtocol();
   }
 
   public GeigerUrl(String pluginId, String path) {

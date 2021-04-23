@@ -21,28 +21,11 @@ public class MessageHandler implements Runnable {
   @Override
   public void run() {
     // bytearrayinputstreams
+    Message msg;
     try (InputStream in = socket.asInputStream()) {
-      // TODO deserialization
-      ArrayList<byte[]> input = new ArrayList<>();
-      for (int i = 0; i < 5; ++i) {
-        // read int
-        byte[] b = new byte[4];
-        int len;
-        if (in.read(b, 0, 4) > 0) {
-          len = GeigerCommunicator.byteArrayToInt(b);
-          input.add(b);
-        } else {
-          throw new IOException("Could not read message");
-        }
-        // read value
-        byte[] val = new byte[len];
-        if (in.read(val, 0, len) > 0) {
-          input.add(val);
-        } else {
-          throw new IOException("Could not read message value");
-        }
-      }
-      Message msg = GeigerCommunicator.byteArrayToMessage(input);
+      // TODO deserialize
+      //msg = Message.fromByteArray(in);
+      msg = null;
       listener.gotMessage(socket.getPort(), msg);
     } catch (IOException ioe) {
       // TODO handle communications error

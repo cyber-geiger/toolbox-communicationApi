@@ -6,12 +6,23 @@ plugins {
 
 repositories {
     jcenter()
+    mavenCentral()
     maven {
         url = uri('http://maven.totalcross.com/artifactory/repo1')
     }
 
     maven {
         url = uri('http://repo.maven.apache.org/maven2')
+        mavenContent {
+            releasesOnly()
+        }
+    }
+
+    maven {
+        url = uri('https://oss.sonatype.org/content/repositories/snapshots/')
+        mavenContent {
+            snapshotsOnly()
+        }
     }
 }
 
@@ -20,7 +31,7 @@ configurations {
 }
 
 dependencies {
-    implementation 'eu.cyber-geiger:toolbox-storage:0.2.0'
+    implementation 'eu.cyber-geiger:toolbox-storage:0.3.0-SNAPSHOT'
     implementation 'com.totalcross:totalcross-sdk:7.0.3'
 
     compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
@@ -101,4 +112,5 @@ task totalcrossMavenBuild(type: Exec) {
     // as the tests already run in gradle there is no need to rerun in maven
     workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI"
     commandLine 'cmd', '/c', 'mvn package -Dmaven.test.skip=true'
+//    commandLine 'mvn', 'package -Dmaven.test.skip=true'
 }

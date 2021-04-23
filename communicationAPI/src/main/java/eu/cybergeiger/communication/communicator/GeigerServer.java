@@ -70,10 +70,8 @@ public class GeigerServer extends GeigerCommunicator {
     try {
       Socket s = new Socket("127.0.0.1", pluginInformation.getPort());
       OutputStream out = s.asOutputStream();
-      ArrayList<byte[]> messageByte = messageToByteArrays(msg);
-      for (byte[] b : messageByte) {
-        out.write(b);
-      }
+      // TODO serialization
+      //msg.toByteArrayStream(out);
       out.close();
       s.close();
     } catch (IOException e) {

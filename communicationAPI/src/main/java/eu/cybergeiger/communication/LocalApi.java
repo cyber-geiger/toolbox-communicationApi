@@ -273,7 +273,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param pluginId The plugin id to be contacted
    * @param msg      the message to be sent
    */
-  private void sendMessage(String pluginId, Message msg) {
+  public void sendMessage(String pluginId, Message msg) {
     // TODO: reimplement for communication version
 //    LocalApi api = LocalApiFactory.getLocalApi(pluginId);
 //    api.receivedMessage(PluginInformationFactory.getPluginInformation(id),

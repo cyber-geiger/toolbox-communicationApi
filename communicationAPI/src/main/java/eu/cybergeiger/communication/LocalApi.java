@@ -3,17 +3,27 @@ package eu.cybergeiger.communication;
 //import ch.fhnw.geiger.localstorage.StorageController;
 //import ch.fhnw.geiger.localstorage.db.GenericController;
 //import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
+import ch.fhnw.geiger.localstorage.StorageController;
+import ch.fhnw.geiger.localstorage.StorageException;
+import ch.fhnw.geiger.localstorage.db.GenericController;
+import ch.fhnw.geiger.localstorage.db.data.Node;
+import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
+import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
+import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
+import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.communication.communicator.GeigerClient;
 import eu.cybergeiger.communication.communicator.GeigerCommunicator;
 import eu.cybergeiger.communication.communicator.GeigerServer;
+
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import totalcross.util.HashMap4D;
 import totalcross.util.Logger;
+
+import javax.sound.sampled.FloatControl;
 
 
 /**
@@ -66,6 +76,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     } else {
       // it is master
       geigerCommunicator = new GeigerServer();
+      // TODO storagEventHandler als Listener für StorageEvents
     }
 
   }
@@ -215,13 +226,15 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    *
    * @return a generic controller providing access to the local storage
    */
-  // TODO at least on my machine the localstorage is not visible for Maven
-  // so this has to be commented to do a totalcross build for now
-//  public StorageController getStorage() {
-//    // TODO implementation passthru missing
-//    return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
-//        "sa2", "1234"));
-//  }
+  public StorageController getStorage() {
+    if(isMaster) {
+      // TODO remove hardcoded DB information
+      return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
+          "sa2", "1234"));
+    } else {
+      return new PasstroughController(this, id);
+    }
+  }
 
   /**
    * <p>Register an event listener for specific events.</p>

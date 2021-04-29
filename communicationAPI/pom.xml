@@ -11,7 +11,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <totalcross.activation_key>5443444B5AAEEB90306B00E4</totalcross.activation_key>
+<!--        <totalcross.activation_key>5443444B5AAEEB90306B00E4</totalcross.activation_key>-->
     </properties>
 
     <dependencies>
@@ -26,6 +26,11 @@
             <version>4.13</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>eu.cyber-geiger</groupId>
+            <artifactId>toolbox-storage</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -33,6 +38,11 @@
             <id>totalcross-repo</id>
             <name>ip-172-31-40-140-releases</name>
             <url>http://maven.totalcross.com/artifactory/repo1</url>
+        </repository>
+        <repository>
+            <id>cyber-geiger-repo</id>
+            <name>cyber-geiger-snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
 

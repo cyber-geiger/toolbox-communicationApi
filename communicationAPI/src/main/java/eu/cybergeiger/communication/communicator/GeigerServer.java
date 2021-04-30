@@ -2,6 +2,8 @@ package eu.cybergeiger.communication.communicator;
 
 import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.PluginInformation;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -70,7 +72,11 @@ public class GeigerServer extends GeigerCommunicator {
     try {
       Socket s = new Socket("127.0.0.1", pluginInformation.getPort());
       OutputStream out = s.asOutputStream();
-      // TODO serialization
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      msg.toByteArrayStream(bos);
+      out.write(bos.toByteArray());
+      // TODO maybe an easier way if conversion allows for this
+      //ByteArrayOutputStream out = s.asOutputStream();
       //msg.toByteArrayStream(out);
       out.close();
       s.close();

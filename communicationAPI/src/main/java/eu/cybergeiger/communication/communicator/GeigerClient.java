@@ -1,9 +1,13 @@
 package eu.cybergeiger.communication.communicator;
 
+//import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import java.io.ByteArrayOutputStream;
 import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.PluginInformation;
 import java.io.OutputStream;
 import java.util.ArrayList;
+
+import totalcross.io.ByteArrayStream;
 import totalcross.io.IOException;
 import totalcross.net.ServerSocket;
 import totalcross.net.Socket;
@@ -60,14 +64,16 @@ public class GeigerClient extends GeigerCommunicator {
     // Plugin information is ignored as clients only write to master
     try {
       Socket s = new Socket("127.0.0.1", GeigerServer.getDefaultPort());
-      // ObjectOutputStream ou = new ObjectOutputStream(s.asOutputStream());
       OutputStream out = s.asOutputStream();
-      // write all objects in the format: int size, String
-      ArrayList<byte[]> messageByte = messageToByteArrays(msg);
-      for (byte[] b : messageByte) {
-        out.write(b);
-      }
-      out.close();
+      //ByteArrayOutputStream bso = new ByteArrayOutputStream(s.asOutputStream());
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      msg.toByteArrayStream(bos);
+      out.write(bos.toByteArray());
+      // TODO maybe an easier way if conversion allows for this
+      //ByteArrayOutputStream out = s.asOutputStream();
+      //msg.toByteArrayStream(out);
+
+      //out.close();
       s.close();
     } catch (java.io.IOException e) {
       e.printStackTrace();

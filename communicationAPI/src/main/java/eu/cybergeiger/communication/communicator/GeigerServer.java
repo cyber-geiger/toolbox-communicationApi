@@ -2,11 +2,9 @@ package eu.cybergeiger.communication.communicator;
 
 import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.PluginInformation;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import totalcross.net.ServerSocket;
 import totalcross.net.Socket;
 import totalcross.util.concurrent.ThreadPool;

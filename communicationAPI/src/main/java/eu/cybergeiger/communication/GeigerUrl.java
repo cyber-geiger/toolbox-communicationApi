@@ -17,6 +17,12 @@ public class GeigerUrl implements Serializer {
   private String pluginId = LocalApi.MASTER;
   private String path = "";
 
+  /**
+   * <p>GeigerUrl constructor.</p>
+   *
+   * @param spec a well formed URI
+   * @throws MalformedURLException if a malformed URL was received
+   */
   public GeigerUrl(String spec) throws MalformedURLException {
     // TODO java.net.URL is not compatible, changed to totalcross.net.URI
     URI url = new URI(spec);
@@ -73,16 +79,24 @@ public class GeigerUrl implements Serializer {
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeLong(out,serialVersionUID);
-    SerializerHelper.writeString(out,protocol);
-    SerializerHelper.writeString(out,pluginId);
-    SerializerHelper.writeString(out,path);
-}
+    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, protocol);
+    SerializerHelper.writeString(out, pluginId);
+    SerializerHelper.writeString(out, path);
+  }
 
-  static public GeigerUrl fromByteArrayStream(ByteArrayInputStream in) throws IOException {
-    if(SerializerHelper.readLong(in)!=serialVersionUID) {
+  /**
+   * <p>Convert ByteArrayInputStream to GeigerUrl.</p>
+   *
+   * @param in ByteArrayInputStream to read from
+   * @return the converted GeigerUrl
+   * @throws IOException if GeigerUrl cannot be read
+   */
+  public static GeigerUrl fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-    return new GeigerUrl(SerializerHelper.readString(in)+"://"+SerializerHelper.readString(in)+"/"+SerializerHelper.readString(in));
+    return new GeigerUrl(SerializerHelper.readString(in) + "://"
+        + SerializerHelper.readString(in) + "/" + SerializerHelper.readString(in));
   }
 }

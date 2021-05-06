@@ -102,20 +102,31 @@ public class Message implements Serializer {
     return payload;
   }
 
+  /**
+   * <p>Convert ByteArrayInputStream to Message.</p>
+   *
+   * @param in the ByteArrayInputStream to use
+   * @return the converted Message
+   * @throws IOException if bytes cannot be read
+   */
   public static Message fromByteArray(ByteArrayInputStream in) throws IOException {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-    return new Message(SerializerHelper.readString(in),SerializerHelper.readString(in),MessageType.getById(SerializerHelper.readInt(in)),GeigerUrl.fromByteArrayStream(in),SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8));
+    return new Message(SerializerHelper.readString(in),
+        SerializerHelper.readString(in),
+        MessageType.getById(SerializerHelper.readInt(in)),
+        GeigerUrl.fromByteArrayStream(in),
+        SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeLong(out,serialVersionUID);
-    SerializerHelper.writeString(out,sourceId);
-    SerializerHelper.writeString(out,targetId);
-    SerializerHelper.writeInt(out,type.getId());
+    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, sourceId);
+    SerializerHelper.writeString(out, targetId);
+    SerializerHelper.writeInt(out, type.getId());
     action.toByteArrayStream(out);
-    SerializerHelper.writeString(out,payload);
+    SerializerHelper.writeString(out, payload);
   }
 }

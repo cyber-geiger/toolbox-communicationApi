@@ -4,26 +4,18 @@ package eu.cybergeiger.communication;
 //import ch.fhnw.geiger.localstorage.db.GenericController;
 //import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import ch.fhnw.geiger.localstorage.StorageController;
-import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.GenericController;
-import ch.fhnw.geiger.localstorage.db.data.Node;
-import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
-import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
-import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.communication.communicator.GeigerClient;
 import eu.cybergeiger.communication.communicator.GeigerCommunicator;
 import eu.cybergeiger.communication.communicator.GeigerServer;
-
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import totalcross.util.HashMap4D;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 import totalcross.util.Logger;
-
-import javax.sound.sampled.FloatControl;
 
 
 /**
@@ -44,9 +36,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   private Declaration declaration;
 
   private final Map<MessageType, List<PluginListener>> listeners
-      = Collections.synchronizedMap(new HashMap4D<>());
+      = Collections.synchronizedMap(new HashMap<>());
 
   private final GeigerCommunicator geigerCommunicator;
+  private final PluginListener storageEventHandler;
 
   /**
    * <p>Constructor called by LocalApiFactory.</p>
@@ -73,10 +66,13 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
       geigerCommunicator = new GeigerClient();
       registerPlugin();
       activatePlugin(geigerCommunicator.getPort());
+      storageEventHandler = null;
     } else {
       // it is master
       geigerCommunicator = new GeigerServer();
       // TODO storagEventHandler als Listener für StorageEvents
+      storageEventHandler = new StorageEventHandler(this, getStorage());
+      deregisterListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler);
     }
 
   }
@@ -149,60 +145,61 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   }
 
   // TODO rewrite storeState and restoreState with totalcross classes
-//  private void storeState() {
-//    // store plugin state
-//    try (ObjectOutputStream out = new ObjectOutputStream(
-//        Files.newOutputStream(Paths.get("LocalAPI." + id + ".state"))
-//    )
-//    ) {
-//      synchronized (secrets) {
-//        out.writeInt(secrets.size());
-//        for (Map.Entry<String, PluginInformation> e : secrets.entrySet()) {
-//          out.writeObject(e.getKey());
-//          out.writeObject(e.getValue());
-//        }
-//      }
-//      synchronized (menuItems) {
-//        out.writeInt(menuItems.size());
-//        for (Map.Entry<String, MenuItem> e : menuItems.entrySet()) {
-//          out.writeObject(e.getKey());
-//          out.writeObject(e.getValue());
-//        }
-//      }
-//    } catch (IOException ioe) {
-//      log.log(Level.SEVERE, "persisting LocalAPI state", ioe);
-//    }
-//  }
-//
-//  private void restoreState() {
-//    try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(
-//        Paths.get("LocalAPI." + id + ".state")
-//    ))) {
-//      // restoring plugin information
-//      int mapSize = in.readInt();
-//      Map<String, PluginInformation> l = new HashMap<>(mapSize);
-//      for (int i = 0; i < mapSize; i++) {
-//        l.put((String) (in.readObject()), (PluginInformation) (in.readObject()));
-//      }
-//      synchronized (secrets) {
-//        secrets.clear();
-//        secrets.putAll(l);
-//      }
-//
-//      // restoring menu information
-//      mapSize = in.readInt();
-//      Map<String, MenuItem> l2 = new HashMap<>(mapSize);
-//      for (int i = 0; i < mapSize; i++) {
-//        l2.put((String) (in.readObject()), (MenuItem) (in.readObject()));
-//      }
-//      synchronized (menuItems) {
-//        menuItems.clear();
-//        menuItems.putAll(l2);
-//      }
-//    } catch (IOException | ClassNotFoundException e) {
-//      log.log(Level.SEVERE, "persisting LocalAPI state", e);
-//    }
-//  }
+
+  //  private void storeState() {
+  //    // store plugin state
+  //    try (ObjectOutputStream out = new ObjectOutputStream(
+  //        Files.newOutputStream(Paths.get("LocalAPI." + id + ".state"))
+  //    )
+  //    ) {
+  //      synchronized (secrets) {
+  //        out.writeInt(secrets.size());
+  //        for (Map.Entry<String, PluginInformation> e : secrets.entrySet()) {
+  //          out.writeObject(e.getKey());
+  //          out.writeObject(e.getValue());
+  //        }
+  //      }
+  //      synchronized (menuItems) {
+  //        out.writeInt(menuItems.size());
+  //        for (Map.Entry<String, MenuItem> e : menuItems.entrySet()) {
+  //          out.writeObject(e.getKey());
+  //          out.writeObject(e.getValue());
+  //        }
+  //      }
+  //    } catch (IOException ioe) {
+  //      log.log(Level.SEVERE, "persisting LocalAPI state", ioe);
+  //    }
+  //  }
+  //
+  //  private void restoreState() {
+  //    try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(
+  //        Paths.get("LocalAPI." + id + ".state")
+  //    ))) {
+  //      // restoring plugin information
+  //      int mapSize = in.readInt();
+  //      Map<String, PluginInformation> l = new HashMap<>(mapSize);
+  //      for (int i = 0; i < mapSize; i++) {
+  //        l.put((String) (in.readObject()), (PluginInformation) (in.readObject()));
+  //      }
+  //      synchronized (secrets) {
+  //        secrets.clear();
+  //        secrets.putAll(l);
+  //      }
+  //
+  //      // restoring menu information
+  //      mapSize = in.readInt();
+  //      Map<String, MenuItem> l2 = new HashMap<>(mapSize);
+  //      for (int i = 0; i < mapSize; i++) {
+  //        l2.put((String) (in.readObject()), (MenuItem) (in.readObject()));
+  //      }
+  //      synchronized (menuItems) {
+  //        menuItems.clear();
+  //        menuItems.putAll(l2);
+  //      }
+  //    } catch (IOException | ClassNotFoundException e) {
+  //      log.log(Level.SEVERE, "persisting LocalAPI state", e);
+  //    }
+  //  }
 
   /**
    * <p>Activates the plugin and sets up communication.</p>
@@ -227,7 +224,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @return a generic controller providing access to the local storage
    */
   public StorageController getStorage() {
-    if(isMaster) {
+    if (isMaster) {
       // TODO remove hardcoded DB information
       return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
           "sa2", "1234"));
@@ -288,9 +285,9 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    */
   public void sendMessage(String pluginId, Message msg) {
     // TODO: reimplement for communication version
-//    LocalApi api = LocalApiFactory.getLocalApi(pluginId);
-//    api.receivedMessage(PluginInformationFactory.getPluginInformation(id),
-//        new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
+    // LocalApi api = LocalApiFactory.getLocalApi(pluginId);
+    // api.receivedMessage(PluginInformationFactory.getPluginInformation(id),
+    // new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
     geigerCommunicator.sendMessage(plugins.get(pluginId), msg);
   }
 
@@ -403,13 +400,13 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     broadcastMessage(new Message(MASTER, null, MessageType.SCAN_PRESSED, null));
   }
 
-  /**
-   * <p>Convenience function to convert a serializable object to a byte array.</p>
-   *
-   * @param object the object to be serialized
-   * @return the byte array representation of the object
-   */
-  // TODO reimplement serialization
+  ///**
+  // * <p>Convenience function to convert a serializable object to a byte array.</p>
+  // *
+  // * @param object the object to be serialized
+  // * @return the byte array representation of the object
+  // */
+  //// TODO reimplement serialization
   /*
   public static byte[] toByteArray(Serializable object) {
     try (ByteArrayOutputStream bos = new ByteArrayOutputStream();

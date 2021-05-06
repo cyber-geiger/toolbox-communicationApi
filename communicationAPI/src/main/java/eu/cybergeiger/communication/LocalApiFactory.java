@@ -1,7 +1,7 @@
 package eu.cybergeiger.communication;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>Implements a singleton pattern for local API.</p>

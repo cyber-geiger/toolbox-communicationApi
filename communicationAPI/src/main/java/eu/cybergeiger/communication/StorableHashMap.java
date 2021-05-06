@@ -6,7 +6,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StorableHashMap<K extends Serializer, V extends Serializer> extends HashMap<K, V> implements Serializer {
+/**
+ * Serializable Hashmap.
+ *
+ * @param <K> Keytype
+ * @param <V> Valuetype
+ */
+public class StorableHashMap<K extends Serializer, V extends Serializer>
+    extends HashMap<K, V> implements Serializer {
 
   private static final long serialVersionUID = 14231491232L;
 
@@ -30,7 +37,15 @@ public class StorableHashMap<K extends Serializer, V extends Serializer> extends
     }
   }
 
-  public static void fromByteArrayStream(ByteArrayInputStream in, StorableHashMap map) throws IOException {
+  /**
+   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+   *
+   * @param in ByteArrayInputStream to be used
+   * @param map Map to store objects
+   * @throws IOException if value cannot be read
+   */
+  public static void fromByteArrayStream(ByteArrayInputStream in, StorableHashMap map)
+      throws IOException {
     synchronized (map) {
       map.clear();
       int size = SerializerHelper.readInt(in);

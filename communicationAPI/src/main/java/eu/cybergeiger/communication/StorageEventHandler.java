@@ -9,28 +9,25 @@ import ch.fhnw.geiger.localstorage.db.data.NodeValue;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * StorageEventHandler processes StorageEvents accordingly.
+ * the GeigerUrl of a response has the form protocol://targetId/command/identifier/result
+ * where result is either success or error in all cases
  */
-public class StorageEventHandler {
+public class StorageEventHandler implements PluginListener {
 
-  private LocalApi localApi;
-  private StorageController storageController;
-  private Map<String, Object> storedObjects;
-  private Message msg;
+  private final LocalApi localApi;
+  private final StorageController storageController;
   boolean isMaster = false;
 
-  public StorageEventHandler(LocalApi api, StorageController sc, Map<String, Object> so) {
+  public StorageEventHandler(LocalApi api, StorageController sc) {
     this.localApi = api;
     this.storageController = sc;
-    this.storedObjects = so;
   }
 
   /**
@@ -39,7 +36,7 @@ public class StorageEventHandler {
    * @param msg the received message to process
    */
   public void storageEventParser(Message msg) {
-    if(LocalApi.MASTER.equals(msg.getTargetId())) {
+    if (LocalApi.MASTER.equals(msg.getTargetId())) {
       isMaster = true;
     }
     // parse GeigerUrl
@@ -91,9 +88,6 @@ public class StorageEventHandler {
       case "zap":
         zap(msg, identifier, optionalArgs);
         break;
-      case "storageException":
-        storageException(msg, identifier, optionalArgs);
-        break;
       default:
         // TODO no valid action, throw Storage Exception?
         break;
@@ -101,11 +95,10 @@ public class StorageEventHandler {
   }
 
   /**
-   * Either calls getNode on the GenericController and sends the Node back to the caller,
-   * or stores the received Node in the storageEventObject map.
+   * Calls getNode on the GenericController and sends the Node back to the caller.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void getNode(Message msg, String identifier, String[] optionalArgs) {
@@ -119,19 +112,27 @@ public class StorageEventHandler {
       byte[] payload = bos.toByteArray();
       localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
           MessageType.STORAGE_EVENT,
-          new GeigerUrl(msg.getTargetId(), "getNode/" + identifier + "/" + path), payload));
+          new GeigerUrl(msg.getSourceId(), "getNode/" + identifier + "/" + path), payload));
     } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not get Node" + path, e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "getNode/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls addNode on the GenericController or throws StorageException,
-   * because addNode is never appropriate within a Plugin
+   * Calls addNode on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void addNode(Message msg, String identifier, String[] optionalArgs) {
@@ -140,52 +141,54 @@ public class StorageEventHandler {
     try {
       node = NodeImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
       storageController.add(node);
-    } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      String nodePath = (node == null) ? "null" : node.getPath();
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + nodePath + "/faileToAddNode")));
+    } catch (Exception e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not add Node", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "addNode/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls updateNode on the GenericController or throws StorageException,
-   * because updateNode is never appropriate within a Plugin
+   * Calls updateNode on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void updateNode(Message msg, String identifier, String[] optionalArgs) {
-      // msg is a request without response
-      Node node = null;
+    // msg is a request without response
+    Node node = null;
+    try {
+      node = NodeImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
+      storageController.update(node);
+    } catch (Exception e) {
       try {
-        node = NodeImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
-        storageController.update(node);
-      } catch (IOException e) {
         // TODO error handling
-        e.printStackTrace();
-      } catch (StorageException se) {
-        // TODO relay storageexception back to plugin
-        // TODO how to throw Storageexception if other side is not waiting on response?
-        String nodePath = (node == null) ? "null" : node.getPath();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not update Node", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-            "storageException/" + nodePath + "/failedToUpdateNode")));
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "updateNode/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
       }
+    }
   }
 
   /**
-   * Either calls removeNode on the GenericController and sends the Node back to the caller,
-   * or stores the received Node in the storageEventObject map.
+   * Calls removeNode on the GenericController and sends the Node back to the caller.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void deleteNode(Message msg, String identifier, String[] optionalArgs) {
@@ -207,24 +210,26 @@ public class StorageEventHandler {
             MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
             "deleteNode/" + identifier)));
       }
-    } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + optionalArgs[0] + "/failedToRemoveNode")));
+    } catch (Exception e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not delete Node", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "deleteNode/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls getValue on the GenericController and sends the NodeValue back to the caller,
-   * or stores the received NodeValue in the storageEventObject map.
+   * Calls getValue on the GenericController and sends the NodeValue back to the caller.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void getValue(Message msg, String identifier, String[] optionalArgs) {
@@ -245,24 +250,26 @@ public class StorageEventHandler {
             MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
             "getValue/" + identifier)));
       }
-    } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + optionalArgs[0] + "/failedToGetNodeValue")));
+    } catch (Exception e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not get NodeValue", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "getValue/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls addValue on the GenericController or throws StorageException,
-   * because addValue is never appropriate within a Plugin
+   * Calls addValue on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void addValue(Message msg, String identifier, String[] optionalArgs) {
@@ -271,24 +278,26 @@ public class StorageEventHandler {
     try {
       nodeValue = NodeValueImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
       storageController.addValue(optionalArgs[0], nodeValue);
-    } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + optionalArgs[0] + "/failedToAddNodeValue")));
+    } catch (Exception e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not add NodeValue", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "addValue/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls updateValue on the GenericController or throws StorageException,
-   * because updateValue is never appropriate within a Plugin
+   * UpdateValue on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void updateValue(Message msg, String identifier, String[] optionalArgs) {
@@ -297,15 +306,18 @@ public class StorageEventHandler {
     try {
       nodeValue = NodeValueImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
       storageController.updateValue(optionalArgs[0], nodeValue);
-    } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + optionalArgs[0] + "/failedToUpdateNodeValue")));
+    } catch (Exception e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not update NodeValue", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "updateValue/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
@@ -313,8 +325,8 @@ public class StorageEventHandler {
    * Either calls removeValue on the GenericController and sends the NodeValue back to the caller,
    * or stores the received NodeValue in the storageEventObject map.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void deleteValue(Message msg, String identifier, String[] optionalArgs) {
@@ -322,44 +334,51 @@ public class StorageEventHandler {
     try {
       // TODO sanity checks for path? see storageEventParser, handling of path arguments
       // TODO change to deleteValue after storagecontroller interface changed
-      NodeValue nodeValue = storageController.removeValue(optionalArgs[0], optionalArgs[1]);
+      NodeValue nodeValue = storageController.deleteValue(optionalArgs[0], optionalArgs[1]);
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       nodeValue.toByteArrayStream(bos);
       byte[] payload = bos.toByteArray();
       localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
           MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
           "deleteNodeValue/" + identifier), payload));
-    } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + optionalArgs[0] + "/" +
-              optionalArgs[1] + "/failedToRemoveNodeValue")));
+    } catch (Exception e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not delete NodeValue", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "deleteValue/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls rename on the GenericController or throws StorageException,
-   * because rename is never appropriate within a Plugin
+   * Calls rename on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void rename(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request without response
     try {
       storageController.rename(optionalArgs[0], optionalArgs[1]);
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + optionalArgs[0] + "/failedToRenameNode")));
+    } catch (StorageException e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not rename Node", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "rename/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
@@ -367,8 +386,8 @@ public class StorageEventHandler {
    * Either calls search on the GenericController and sends the List of Nodes back to the caller,
    * or stores the received List of Nodes in the storageEventObject map.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void search(Message msg, String identifier, String[] optionalArgs) {
@@ -378,7 +397,7 @@ public class StorageEventHandler {
       // deserialize searchCriteria
       SearchCriteria searchCriteria = new SearchCriteria();
       List<Node> nodes = storageController.search(searchCriteria);
-      if(nodes.size() > 0) {
+      if (nodes.size() > 0) {
         // TODO cleaner list serialization?
         byte[] payload;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -394,92 +413,101 @@ public class StorageEventHandler {
             MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
             "search/" + identifier)));
       }
-    } catch (IOException e) {
-      // TODO error handling
-      e.printStackTrace();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + "failedToSearchNodes")));
+    } catch (Exception e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not search Node", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "search/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls close on the GenericController or throws StorageException,
-   * because close is never appropriate within a Plugin
+   * Calls close on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void close(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request without response
     try {
       storageController.close();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + "/failedToCloseDatabaseConnections")));
+    } catch (StorageException e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not close", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "close/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls flush on the GenericController or throws StorageException,
-   * because flush is never appropriate within a Plugin
+   * Calls flush on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void flush(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request without response
     try {
       storageController.flush();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + "/failedToFlushDatabaseContent")));
+    } catch (StorageException e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not flush", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "flush/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
   /**
-   * Either calls zap on the GenericController or throws StorageException,
-   * because zap is never appropriate within a Plugin
+   * Calls zap on the GenericController or throws StorageException.
    *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
+   * @param msg          received message to process
+   * @param identifier   used to identify return objects inside the caller
    * @param optionalArgs string arguments used for the called method
    */
   private void zap(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request without response
     try {
       storageController.zap();
-    } catch (StorageException se) {
-      // TODO relay storageexception back to plugin
-      // TODO how to throw Storageexception if other side is not waiting on response?
-      localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
-          "storageException/" + "/failedToClearDatabase")));
+    } catch (StorageException e) {
+      try {
+        // TODO error handling
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new StorageException("Could not zap", e).toByteArrayStream(bos);
+        byte[] payload = bos.toByteArray();
+        localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.STORAGE_EVENT,
+            new GeigerUrl(msg.getSourceId(), "zap/" + identifier + "/error"), payload));
+      } catch (IOException ioe) {
+        // TODO what to do if an error occurs durin serialization of the exception?
+      }
     }
   }
 
-  /**
-   * Returns StorageException to the caller.
-   *
-   * @param msg received message to process
-   * @param identifier used to identify return objects inside the caller
-   * @param optionalArgs string arguments used for the called method
-   */
-  private void storageException(Message msg, String identifier, String[] optionalArgs) {
-    // TODO throw exception
-    // TODO how to handle these exceptions thrown with the plugin?
+  @Override
+  public void pluginEvent(GeigerUrl url, Message msg) {
+    storageEventParser(msg);
   }
-
-
 }

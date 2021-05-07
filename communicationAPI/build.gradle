@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'checkstyle'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id "com.github.dkorotych.gradle-maven-exec" version "2.2.1"
 }
 
 repositories {
@@ -111,10 +112,24 @@ java {
     withSourcesJar()
 }
 
-task totalcrossMavenBuild(type: Exec) {
-    // executes mvn package -Dmaven.test.skip=true
-    // as the tests already run in gradle there is no need to rerun in maven
-    workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI"
-    commandLine 'cmd', '/c', 'mvn package -Dmaven.test.skip=true'
-//    commandLine 'mvn', 'package -Dmaven.test.skip=true'
+task packageTotalcross {
+    doLast {
+        mavenexec {
+            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+            goals '-DskipTests', 'package'
+        }
+    }
 }
+
+jar.dependsOn packageTotalcross
+
+task testTotalcross {
+    doLast {
+        mavenexec {
+            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+            goals 'test'
+        }
+    }
+}
+
+check.dependsOn testTotalcross

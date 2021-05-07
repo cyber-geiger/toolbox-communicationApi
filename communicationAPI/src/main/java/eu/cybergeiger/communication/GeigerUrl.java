@@ -6,7 +6,8 @@ import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import totalcross.net.URI;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>GEIGER communication URL object.</p>
@@ -19,6 +20,8 @@ public class GeigerUrl implements Serializer {
   private String pluginId = LocalApi.MASTER;
   private String path = "";
 
+  private static final Pattern urlPattern = Pattern.compile("(.*)://([^/]*)/(.*)");
+
   /**
    * <p>GeigerUrl constructor.</p>
    *
@@ -26,10 +29,17 @@ public class GeigerUrl implements Serializer {
    * @throws MalformedURLException if a malformed URL was received
    */
   public GeigerUrl(String spec) throws MalformedURLException {
-    // TODO java.net.URL is not compatible, changed to totalcross.net.URI
-    URI url = new URI(spec);
-    init(url.host.toString(), url.path.toString());
-    //this.protocol = url.getProtocol();
+    try {
+      Matcher m = urlPattern.matcher(spec);
+      if (!m.matches()) {
+        throw new MalformedURLException("Matcher was unable to match the string \"" + spec
+            + "\" to regexp " + urlPattern.pattern());
+      }
+      init(m.group(2), m.group(3));
+    } catch (IllegalStateException e) {
+      throw new MalformedURLException("Matcher was unable to match the string \"" + spec
+          + "\" to regexp " + urlPattern.pattern());
+    }
   }
 
   public GeigerUrl(String pluginId, String path) {

@@ -22,15 +22,15 @@ public class PasstroughController implements StorageController, PluginListener {
 
   private final LocalApi localApi;
   private final String id;
+  private final Object comm = new Object();
 
-  private Map<String, Object> storageEventObjects = new HashMap<>();
-  //private StorageEventHandler storageEventHandler = new StorageEventHandler();
+  private Map<String, Message> receivedMessages = new HashMap<>();
 
   /**
    * <p>Constructor for passtrouhgcontroller.</p>
    *
    * @param api the LocalApi it belongs to
-   * @param id the PluginId it belongs to
+   * @param id  the PluginId it belongs to
    */
   public PasstroughController(LocalApi api, String id) {
     this.localApi = api;
@@ -39,18 +39,18 @@ public class PasstroughController implements StorageController, PluginListener {
   }
 
   private Message waitForResult(String command, String identifier) {
-    while (storageEventObjects.get(identifier) == null) {
-      // TODO how to appropriatly wait for this?
-      // wait
+    String token = command + "/" + identifier;
+    while (receivedMessages.get(token) == null) {
+      // wait for the apropriate message
       try {
-        Thread.sleep(10);
+        synchronized (comm) {
+          comm.wait(1000);
+        }
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
     }
-    // TODO how and when to handle exceptions thrown in storage?
-    // should it be checked in each method individually?
-    return (Message) storageEventObjects.get(identifier);
+    return receivedMessages.get(token);
   }
 
   @Override
@@ -390,7 +390,11 @@ public class PasstroughController implements StorageController, PluginListener {
   @Override
   public void pluginEvent(GeigerUrl url, Message msg) {
     // create the needed objects
-    // TODO when event is received, then it must be a callback
-    // maybe this needs to be connected to the waitForResult
+    synchronized (receivedMessages) {
+      receivedMessages.put(url.getPath(), msg);
+    }
+    synchronized (comm) {
+      comm.notifyAll();
+    }
   }
 }

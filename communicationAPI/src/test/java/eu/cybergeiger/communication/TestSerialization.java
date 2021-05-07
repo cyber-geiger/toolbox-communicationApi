@@ -12,12 +12,12 @@ import org.junit.Test;
  */
 public class TestSerialization {
 
-  @Test
   /**
    * <p>Tests the serialization of the ParameterList object.</p>
    */
+  @Test
   public void parameterListSerializationTest() throws IOException {
-    ParameterList p = new ParameterList("test",null,"Test","null");
+    ParameterList p = new ParameterList("test", null, "Test", "null");
 
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     p.toByteArrayStream(bout);

@@ -328,19 +328,19 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   @Override
   public void enableMenu(String menu) {
     sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_ACTIVE,
-     null, menu.getBytes(StandardCharsets.UTF_8)));
+        null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
   public void disableMenu(String menu) {
     sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_INACTIVE,
-     null, menu.getBytes(StandardCharsets.UTF_8)));
+        null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
   public void deregisterMenu(String menu) {
     sendMessage(MASTER, new Message(id, MASTER, MessageType.DEREGISTER_MENU,
-     null, menu.getBytes(StandardCharsets.UTF_8)));
+        null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   /**

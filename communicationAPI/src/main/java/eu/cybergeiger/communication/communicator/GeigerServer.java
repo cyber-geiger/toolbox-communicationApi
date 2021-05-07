@@ -69,17 +69,16 @@ public class GeigerServer extends GeigerCommunicator {
   public void sendMessage(PluginInformation pluginInformation, Message msg) {
     try {
       Socket s = new Socket("127.0.0.1", pluginInformation.getPort());
+
       OutputStream out = s.asOutputStream();
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       msg.toByteArrayStream(bos);
       out.write(bos.toByteArray());
-      // TODO maybe an easier way if conversion allows for this
-      //ByteArrayOutputStream out = s.asOutputStream();
-      //msg.toByteArrayStream(out);
+
       out.close();
       s.close();
     } catch (IOException e) {
-      // TODO if host unknown then try to start the host and resend message
+      // TODO if plugin unknown then try to start the plugin and resend message
       e.printStackTrace();
     }
   }

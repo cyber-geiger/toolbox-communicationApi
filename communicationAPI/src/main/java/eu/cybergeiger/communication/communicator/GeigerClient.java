@@ -60,18 +60,16 @@ public class GeigerClient extends GeigerCommunicator {
     // Plugin information is ignored as clients only write to master
     try {
       Socket s = new Socket("127.0.0.1", GeigerServer.getDefaultPort());
+
       OutputStream out = s.asOutputStream();
-      //ByteArrayOutputStream bso = new ByteArrayOutputStream(s.asOutputStream());
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       msg.toByteArrayStream(bos);
       out.write(bos.toByteArray());
-      // TODO maybe an easier way if conversion allows for this
-      //ByteArrayOutputStream out = s.asOutputStream();
-      //msg.toByteArrayStream(out);
 
-      //out.close();
+      out.close();
       s.close();
     } catch (java.io.IOException e) {
+      // TODO if master unknown try to start master and send again
       e.printStackTrace();
     }
   }

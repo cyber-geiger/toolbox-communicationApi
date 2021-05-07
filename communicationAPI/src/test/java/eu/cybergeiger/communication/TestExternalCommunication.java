@@ -42,13 +42,12 @@ public class TestExternalCommunication {
 
   @Ignore
   @Test
-  public void testRegisterPlugin() {
+  public void testPluginCore() {
     // TODO
-    try {
-      GeigerUrl testUrl = new GeigerUrl("test");
-      Message ping = new Message("client", "master", MessageType.PING, testUrl);
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
+    // idea create LocalApi for plugin, localApi fore core
+    // use plugin.sendMessage Ping
+
+    // systemlistener for Ping?
+
   }
 }

@@ -83,6 +83,40 @@ public class ParameterList implements Serializer {
       throw new ClassCastException();
     }
 
+    // reading size
+    int size = SerializerHelper.readInt(in);
+
+    // reading parameter list elements
+    for( int i=0;i<size;i++) {
+      l.add(SerializerHelper.readString(in));
+    }
+
+    // reading end of list marker
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
+      throw new ClassCastException();
+    }
+
     return new ParameterList(l);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append('[');
+    boolean first=true;
+    for (String p : args) {
+      if( !first) {
+        sb.append(',');
+      } else {
+        first=false;
+      }
+      if(p==null) {
+        sb.append("null");
+      } else {
+        sb.append('"').append(p).append('"');
+      }
+    }
+    sb.append(']');
+    return sb.toString();
   }
 }

@@ -1,9 +1,8 @@
 package eu.cybergeiger.communication.communicator;
 
-//import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.PluginInformation;
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import totalcross.io.IOException;
 import totalcross.net.ServerSocket;

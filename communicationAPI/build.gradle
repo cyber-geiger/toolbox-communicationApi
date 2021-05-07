@@ -26,12 +26,16 @@ repositories {
     }
 }
 
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 60, 'seconds'
+}
+
 configurations {
     checkstyleConfig
 }
 
 dependencies {
-    implementation 'eu.cyber-geiger:toolbox-storage:0.3.1-SNAPSHOT'
+    implementation 'eu.cyber-geiger:toolbox-storage:0.3.3-SNAPSHOT'
     implementation 'com.totalcross:totalcross-sdk:7.0.3'
 
     compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'

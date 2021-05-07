@@ -1,7 +1,9 @@
 package eu.cybergeiger.communication;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import ch.fhnw.geiger.serialization.Serializer;
+import ch.fhnw.geiger.serialization.SerializerHelper;
+import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
+import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import totalcross.net.URI;

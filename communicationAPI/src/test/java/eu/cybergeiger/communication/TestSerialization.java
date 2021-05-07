@@ -33,7 +33,6 @@ public class TestSerialization {
   @Test
   public void geigerUrlSerializationTest() throws IOException {
     GeigerUrl p = new GeigerUrl("id", "path");
-
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     p.toByteArrayStream(bout);
     ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());

@@ -35,7 +35,7 @@ configurations {
 }
 
 dependencies {
-    implementation 'eu.cyber-geiger:toolbox-storage:0.3.3-SNAPSHOT'
+    implementation 'eu.cyber-geiger:toolbox-storage:0.3.3a-SNAPSHOT'
     implementation 'com.totalcross:totalcross-sdk:7.0.3'
 
     compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'

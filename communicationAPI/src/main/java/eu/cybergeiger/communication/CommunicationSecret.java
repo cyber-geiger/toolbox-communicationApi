@@ -1,6 +1,11 @@
 package eu.cybergeiger.communication;
 
-import java.io.Serializable;
+import ch.fhnw.geiger.serialization.Serializer;
+import ch.fhnw.geiger.serialization.SerializerHelper;
+import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
+import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import totalcross.util.Random;
 
@@ -8,7 +13,9 @@ import totalcross.util.Random;
 /**
  * <p>Encapsulates secret parameters for communication and provides methods to employ them.</p>
  */
-public class CommunicationSecret implements Serializable {
+public class CommunicationSecret implements Serializer {
+
+  private static final long serialVersionUID = 8901230L;
 
   private static final int DEFAULT_SIZE = 32;
   private byte[] secret = new byte[0];
@@ -26,16 +33,29 @@ public class CommunicationSecret implements Serializable {
    * @param size the size of the secret in bytes
    */
   public CommunicationSecret(int size) {
+    setRandomSecret(size);
+  }
+
+  private void setRandomSecret(int size) {
     secret = new byte[size];
-    // TODO integrate size
     // TODO get proper randomization, secureRandom() does not exists in totalcross
-    int value = new Random().nextInt(Integer.MAX_VALUE);
-    secret = new byte[] {
-        (byte) (value >>> 24),
-        (byte) (value >>> 16),
-        (byte) (value >>> 8),
-        (byte) value
-      };
+    for (int i = 0; i < size; i++) {
+      int value = new Random().nextInt(Integer.MAX_VALUE);
+      secret[i] = (byte) (value);
+    }
+  }
+
+  /**
+   * <p>Creates a secret which is already known.</p>
+   *
+   * @param secret the already known secret
+   */
+  public CommunicationSecret(byte[] secret) {
+    if (secret == null || secret.length == 0) {
+      setRandomSecret(DEFAULT_SIZE);
+    } else {
+      this.secret = secret;
+    }
   }
 
   /**
@@ -59,4 +79,31 @@ public class CommunicationSecret implements Serializable {
     return ret;
   }
 
+  @Override
+  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, new String(secret, StandardCharsets.UTF_8));
+    SerializerHelper.writeLong(out, serialVersionUID);
+  }
+
+
+  /**
+   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+   *
+   * @param in ByteArrayInputStream to be used
+   * @return the deserialized Storable String
+   * @throws IOException if value cannot be read
+   */
+  public static CommunicationSecret fromByteArrayStream(ByteArrayInputStream in)
+      throws IOException {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
+      throw new ClassCastException();
+    }
+    CommunicationSecret ret = new CommunicationSecret(SerializerHelper.readString(in)
+        .getBytes(StandardCharsets.UTF_8));
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
+      throw new ClassCastException();
+    }
+    return ret;
+  }
 }

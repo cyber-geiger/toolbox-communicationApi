@@ -1,14 +1,15 @@
 package eu.cybergeiger.communication;
 
-//import ch.fhnw.geiger.localstorage.StorageController;
-//import ch.fhnw.geiger.localstorage.db.GenericController;
-//import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.db.GenericController;
 import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
+import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
+import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.communication.communicator.GeigerClient;
 import eu.cybergeiger.communication.communicator.GeigerCommunicator;
 import eu.cybergeiger.communication.communicator.GeigerServer;
+import eu.cybergeiger.totalcross.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,8 +26,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
 
   public static final String MASTER = "__MASTERPLUGIN__";
 
-  private static final Map<String, PluginInformation> plugins = new HashMap<>(1);
-  private static final Map<String, MenuItem> menuItems = new HashMap<>(0);
+  private static final StorableHashMap<StorableString, PluginInformation> plugins =
+      new StorableHashMap<>();
+  private static final StorableHashMap<StorableString, MenuItem> menuItems =
+      new StorableHashMap<>();
 
   private static final Logger log = Logger.getLogger("LocalAPI");
 
@@ -55,11 +58,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     this.isMaster = isMaster;
     this.declaration = declaration;
 
-    // TODO reactivate after implementation
-    //restoreState();
-
-    // TODO state store/restore
-    //restoreState();
+    restoreState();
 
     if (!isMaster) {
       // it is a plugin
@@ -95,14 +94,15 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   }
 
   private void registerPlugin(String id, PluginInformation info) {
-    // TODO write!
+    if (!plugins.containsKey(id)) {
+      plugins.put(new StorableString(id), info);
+    }
   }
 
   @Override
-  public void deregisterPlugin() {
+  public void deregisterPlugin() throws IllegalArgumentException {
     if (plugins.get(id) == null) {
-      // TODO javax.NameNotFoundException does not exists in totalcross
-      //throw new NameNotFoundException("no communication secret found for id \"" + id + "\"");
+      throw new IllegalArgumentException("no communication secret found for id \"" + id + "\"");
     }
     deactivatePlugin();
     zapState();
@@ -113,9 +113,9 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     if (isMaster) {
       synchronized (menuItems) {
         List<String> l = new Vector<>();
-        for (Map.Entry<String, MenuItem> i : menuItems.entrySet()) {
+        for (Map.Entry<StorableString, MenuItem> i : menuItems.entrySet()) {
           if (i.getValue().getAction().equals(id)) {
-            l.add(i.getKey());
+            l.add(i.getKey().toString());
           }
         }
         for (String key : l) {
@@ -127,7 +127,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     // remove plugin secret
     plugins.remove(id);
 
-    //storeState();
+    storeState();
   }
 
   /**
@@ -140,66 +140,42 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     synchronized (plugins) {
       plugins.clear();
     }
-    // TODO reactivate after implementation
-    //storeState();
+    storeState();
   }
 
-  // TODO rewrite storeState and restoreState with totalcross classes
+  private void storeState() {
+    // store plugin state
+    try {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      synchronized (plugins) {
+        plugins.toByteArrayStream(out);
+      }
+      synchronized (menuItems) {
+        menuItems.toByteArrayStream(out);
+      }
+      new File().writeAllBytes("LocalAPI." + id + ".state", out.toByteArray());
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+  }
 
-  //  private void storeState() {
-  //    // store plugin state
-  //    try (ObjectOutputStream out = new ObjectOutputStream(
-  //        Files.newOutputStream(Paths.get("LocalAPI." + id + ".state"))
-  //    )
-  //    ) {
-  //      synchronized (secrets) {
-  //        out.writeInt(secrets.size());
-  //        for (Map.Entry<String, PluginInformation> e : secrets.entrySet()) {
-  //          out.writeObject(e.getKey());
-  //          out.writeObject(e.getValue());
-  //        }
-  //      }
-  //      synchronized (menuItems) {
-  //        out.writeInt(menuItems.size());
-  //        for (Map.Entry<String, MenuItem> e : menuItems.entrySet()) {
-  //          out.writeObject(e.getKey());
-  //          out.writeObject(e.getValue());
-  //        }
-  //      }
-  //    } catch (IOException ioe) {
-  //      log.log(Level.SEVERE, "persisting LocalAPI state", ioe);
-  //    }
-  //  }
-  //
-  //  private void restoreState() {
-  //    try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(
-  //        Paths.get("LocalAPI." + id + ".state")
-  //    ))) {
-  //      // restoring plugin information
-  //      int mapSize = in.readInt();
-  //      Map<String, PluginInformation> l = new HashMap<>(mapSize);
-  //      for (int i = 0; i < mapSize; i++) {
-  //        l.put((String) (in.readObject()), (PluginInformation) (in.readObject()));
-  //      }
-  //      synchronized (secrets) {
-  //        secrets.clear();
-  //        secrets.putAll(l);
-  //      }
-  //
-  //      // restoring menu information
-  //      mapSize = in.readInt();
-  //      Map<String, MenuItem> l2 = new HashMap<>(mapSize);
-  //      for (int i = 0; i < mapSize; i++) {
-  //        l2.put((String) (in.readObject()), (MenuItem) (in.readObject()));
-  //      }
-  //      synchronized (menuItems) {
-  //        menuItems.clear();
-  //        menuItems.putAll(l2);
-  //      }
-  //    } catch (IOException | ClassNotFoundException e) {
-  //      log.log(Level.SEVERE, "persisting LocalAPI state", e);
-  //    }
-  //  }
+  private void restoreState() {
+    try {
+      ByteArrayInputStream in = new ByteArrayInputStream(
+          new File().readAllBytes("LocalAPI." + id + ".state")
+      );
+      // restoring plugin information
+      synchronized (plugins) {
+        StorableHashMap.fromByteArrayStream(in, plugins);
+      }
+      // restoring menu information
+      synchronized (menuItems) {
+        StorableHashMap.fromByteArrayStream(in, menuItems);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 
   /**
    * <p>Activates the plugin and sets up communication.</p>
@@ -284,10 +260,6 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param msg      the message to be sent
    */
   public void sendMessage(String pluginId, Message msg) {
-    // TODO: reimplement for communication version
-    // LocalApi api = LocalApiFactory.getLocalApi(pluginId);
-    // api.receivedMessage(PluginInformationFactory.getPluginInformation(id),
-    // new Message(id, pluginId, msg.getType(), msg.getAction(), msg.getPayload()));
     geigerCommunicator.sendMessage(plugins.get(pluginId), msg);
   }
 
@@ -297,9 +269,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param msg the message to be broadcasted
    */
   private void broadcastMessage(Message msg) {
-    for (Map.Entry<String, PluginInformation> plugin : plugins.entrySet()) {
-      sendMessage(plugin.getKey(),
-          new Message(MASTER, plugin.getKey(), msg.getType(), msg.getAction(), msg.getPayload()));
+    for (Map.Entry<StorableString, PluginInformation> plugin : plugins.entrySet()) {
+      sendMessage(plugin.getKey().toString(),
+          new Message(MASTER, plugin.getKey().toString(), msg.getType(), msg.getAction(),
+              msg.getPayload()));
     }
   }
 
@@ -320,8 +293,8 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         }
         break;
       case REGISTER_MENU:
-        i = (MenuItem) (toObject(msg.getPayload()));
-        menuItems.put(i.getMenu(), i);
+        i = MenuItem.fromByteArray(msg.getPayload());
+        menuItems.put(new StorableString(i.getMenu()), i);
         break;
       case DEREGISTER_MENU:
         menuItems.remove(msg.getPayloadString());
@@ -330,7 +303,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         deregisterPlugin(msg.getPayloadString());
         break;
       case REGISTER_PLUGIN:
-        registerPlugin(msg.getSourceId(), (PluginInformation) (toObject(msg.getPayload())));
+        registerPlugin(msg.getSourceId(), PluginInformation.fromByteArray(msg.getPayload()));
         break;
       default:
         // all other messages are not handled internally
@@ -348,26 +321,26 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
 
   @Override
   public void registerMenu(String menu, GeigerUrl action) {
-    //sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_MENU,
-    // null, toByteArray(new MenuItem(menu, action))));
+    sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_MENU,
+        null, new MenuItem(menu, action).toByteArray()));
   }
 
   @Override
   public void enableMenu(String menu) {
-    //sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_ACTIVE,
-    // null, menu.getBytes(StandardCharsets.UTF_8)));
+    sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_ACTIVE,
+     null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
   public void disableMenu(String menu) {
-    //sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_INACTIVE,
-    // null, menu.getBytes(StandardCharsets.UTF_8)));
+    sendMessage(MASTER, new Message(id, MASTER, MessageType.MENU_INACTIVE,
+     null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Override
   public void deregisterMenu(String menu) {
-    //sendMessage(MASTER, new Message(id, MASTER, MessageType.DEREGISTER_MENU,
-    // null, menu.getBytes(StandardCharsets.UTF_8)));
+    sendMessage(MASTER, new Message(id, MASTER, MessageType.DEREGISTER_MENU,
+     null, menu.getBytes(StandardCharsets.UTF_8)));
   }
 
   /**
@@ -400,44 +373,4 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     broadcastMessage(new Message(MASTER, null, MessageType.SCAN_PRESSED, null));
   }
 
-  ///**
-  // * <p>Convenience function to convert a serializable object to a byte array.</p>
-  // *
-  // * @param object the object to be serialized
-  // * @return the byte array representation of the object
-  // */
-  //// TODO reimplement serialization
-  /*
-  public static byte[] toByteArray(Serializable object) {
-    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-         ObjectOutputStream out = new ObjectOutputStream(bos);) {
-      out.writeObject(object);
-      out.flush();
-      out.close();
-      return bos.toByteArray();
-    } catch (IOException ioe) {
-      log.log(Level.SEVERE, "Error serializing object", ioe);
-    }
-    return null;
-  }
-  */
-
-  /**
-   * <p>Convenience function to deserialize a byte array back to an object.</p>
-   *
-   * @param arr the byte array representing the serialized object
-   * @return the deserialized object
-   */
-  public static Object toObject(byte[] arr) {
-    // TODO reimplement serialization
-    /*
-    try (ByteArrayInputStream bis = new ByteArrayInputStream(arr);
-         ObjectInputStream in = new ObjectInputStream(bis);) {
-      return in.readObject();
-    } catch (IOException | ClassNotFoundException e) {
-      log.log(Level.SEVERE, "Error serializing object", e);
-    }
-    */
-    return null;
-  }
 }

@@ -87,7 +87,7 @@ public class ParameterList implements Serializer {
     int size = SerializerHelper.readInt(in);
 
     // reading parameter list elements
-    for( int i=0;i<size;i++) {
+    for (int i = 0; i < size; i++) {
       l.add(SerializerHelper.readString(in));
     }
 
@@ -103,14 +103,14 @@ public class ParameterList implements Serializer {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append('[');
-    boolean first=true;
+    boolean first = true;
     for (String p : args) {
-      if( !first) {
+      if (!first) {
         sb.append(',');
       } else {
-        first=false;
+        first = false;
       }
-      if(p==null) {
+      if (p == null) {
         sb.append("null");
       } else {
         sb.append('"').append(p).append('"');

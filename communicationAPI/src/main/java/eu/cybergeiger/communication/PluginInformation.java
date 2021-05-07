@@ -1,11 +1,16 @@
 package eu.cybergeiger.communication;
 
+import ch.fhnw.geiger.serialization.Serializer;
+import ch.fhnw.geiger.serialization.SerializerHelper;
+import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
+import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 
 /**
  * <p>Object for storing vital plugin information.</p>
  */
-public class PluginInformation implements Serializable {
+public class PluginInformation implements Serializer {
 
   private static final long serialVersionUID = 48032940912340L;
 
@@ -59,5 +64,68 @@ public class PluginInformation implements Serializable {
   public CommunicationSecret getSecret() {
     return this.secret;
   }
+
+  @Override
+  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, executable);
+    SerializerHelper.writeInt(out, port);
+    secret.toByteArrayStream(out);
+    SerializerHelper.writeLong(out, serialVersionUID);
+  }
+
+  /**
+   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+   *
+   * @param in ByteArrayInputStream to be used
+   * @return the deserialized Storable String
+   * @throws IOException if value cannot be read
+   */
+  public static PluginInformation fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
+      throw new ClassCastException();
+    }
+
+    String executable = SerializerHelper.readString(in);
+    int port = SerializerHelper.readInt(in);
+    CommunicationSecret secret = CommunicationSecret.fromByteArrayStream(in);
+
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
+      throw new ClassCastException();
+    }
+
+    return new PluginInformation(executable, port, secret);
+
+  }
+
+  /**
+   * <p>Wrapper function to simplify serialization.</p>
+   *
+   * @return the serializer object as byte array
+   */
+  public byte[] toByteArray() {
+    try {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      toByteArrayStream(out);
+      return out.toByteArray();
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
+  /**
+   * <p>Wrapper function to simplify deserialization.</p>
+   *
+   * @param buf the buffer to be read
+   * @return the deserialized object
+   */
+  public static PluginInformation fromByteArray(byte[] buf) {
+    try {
+      return (PluginInformation) (Serializer.fromByteArray(buf));
+    } catch (IOException ioe) {
+      return null;
+    }
+  }
+
 
 }

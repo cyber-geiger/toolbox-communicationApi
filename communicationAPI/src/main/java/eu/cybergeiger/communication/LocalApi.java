@@ -172,7 +172,8 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
       synchronized (menuItems) {
         StorableHashMap.fromByteArrayStream(in, menuItems);
       }
-    } catch (IOException e) {
+    } catch (IOException |IllegalArgumentException e) {
+      // error when restoring state
       e.printStackTrace();
     }
   }
@@ -260,7 +261,13 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param msg      the message to be sent
    */
   public void sendMessage(String pluginId, Message msg) {
-    geigerCommunicator.sendMessage(plugins.get(pluginId), msg);
+    if (id.equals(pluginId)) {
+      // communicate locally
+      receivedMessage(plugins.get(this.id), msg);
+    } else {
+      // communicate with foreign plugin
+      geigerCommunicator.sendMessage(plugins.get(pluginId), msg);
+    }
   }
 
   /**

@@ -1,54 +1,26 @@
 package eu.cybergeiger.communication;
 
-import eu.cybergeiger.communication.communicator.GeigerServer;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * <p>Testing non local communication.</p>
  */
 public class TestExternalCommunication {
-  LocalApi localMaster = LocalApiFactory.getLocalApi("master");
-  GeigerServer server;
 
-  /**
-   * <p>Start new server listener.</p>
-   */
-  @Before
-  public void setup() {
-    server = new GeigerServer();
-    try {
-      server.start();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  /**
-   * <p>stop server listener.</p>
-   */
-  @After
-  public void tearDown() {
-    try {
-      server.stop();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  @Ignore
   @Test
-  public void testRegisterPlugin() {
-    // TODO
-    try {
-      GeigerUrl testUrl = new GeigerUrl("test");
-      Message ping = new Message("client", "master", MessageType.PING, testUrl);
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
+  public void testRegisterPlugin() throws Exception, DeclarationMismatchException {
+    LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
+    GeigerUrl testUrl = new GeigerUrl("geiger://master/test");
+    Message ping = new Message(LocalApi.MASTER, LocalApi.MASTER, MessageType.PING, testUrl, "payload".getBytes(StandardCharsets.UTF_8));
+    Message reply = CommunicationHelper.sendAndWait(localMaster, ping,
+        (Message msg) -> Arrays.equals(msg.getPayload(), ping.getPayload()) && msg.getType() == MessageType.PONG
+    );
+    Assert.assertEquals("comparing payloads", ping.getPayload(), reply.getPayload());
+    Assert.assertEquals("checking message type", MessageType.PONG, reply.getType());
+    Assert.assertEquals("checking recipient of reply", ping.getSourceId(), reply.getTargetId());
+    Assert.assertEquals("checking sender of reply", ping.getTargetId(), reply.getSourceId());
   }
 }

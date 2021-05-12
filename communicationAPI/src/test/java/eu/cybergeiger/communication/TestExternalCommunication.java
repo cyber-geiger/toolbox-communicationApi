@@ -1,8 +1,7 @@
 package eu.cybergeiger.communication;
 
-import eu.cybergeiger.communication.communicator.GeigerServer;
 import java.io.IOException;
-import java.net.MalformedURLException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -20,7 +19,7 @@ public class TestExternalCommunication {
    */
   @Before
   public void setup() {
-    server = new GeigerServer();
+    //server = new GeigerServer();
     try {
       server.start();
     } catch (IOException e) {

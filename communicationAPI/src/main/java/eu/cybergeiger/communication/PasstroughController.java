@@ -9,7 +9,6 @@ import ch.fhnw.geiger.localstorage.db.data.NodeValue;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-import eu.cybergeiger.communication.communicator.GeigerCommunicator;
 
 import java.io.IOException;
 import java.util.*;

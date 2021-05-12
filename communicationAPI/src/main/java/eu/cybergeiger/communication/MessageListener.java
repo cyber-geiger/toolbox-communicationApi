@@ -1,4 +1,4 @@
-package eu.cybergeiger.communication.communicator;
+package eu.cybergeiger.communication;
 
 import eu.cybergeiger.communication.Message;
 

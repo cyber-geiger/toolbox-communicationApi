@@ -1,8 +1,7 @@
-package eu.cybergeiger.communication.communicator;
+package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-import eu.cybergeiger.communication.Message;
-import eu.cybergeiger.communication.PluginInformation;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import totalcross.net.ServerSocket;
@@ -17,8 +16,13 @@ public class GeigerServer extends GeigerCommunicator {
   private final ThreadPool executor = new ThreadPool(1);
   private static final int port = 1234;
   private ServerSocket serverSocket;
+  private final LocalApi localApi;
   Thread server;
   Boolean shutdown;
+
+  public GeigerServer(LocalApi api) {
+    this.localApi = api;
+  }
 
   /**
    * Start the GeigerServer.
@@ -34,10 +38,10 @@ public class GeigerServer extends GeigerCommunicator {
 
         while (!shutdown) {
           final Socket s = serverSocket.accept();
-          executor.execute(() -> new MessageHandler(s, getListener()));
+          executor.execute(() -> new MessageHandler(s, localApi));
         }
       } catch (IOException e) {
-        // TODO
+        // TODO error handling
         e.printStackTrace();
       }
     });

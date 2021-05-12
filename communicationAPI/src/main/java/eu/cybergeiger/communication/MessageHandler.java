@@ -1,8 +1,8 @@
-package eu.cybergeiger.communication.communicator;
+package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-import eu.cybergeiger.communication.Message;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -14,11 +14,11 @@ import totalcross.net.Socket;
  */
 public class MessageHandler implements Runnable {
   private final Socket socket;
-  private final MessageListener listener;
+  private final LocalApi localApi;
 
-  public MessageHandler(Socket s, MessageListener listener) {
+  public MessageHandler(Socket s, LocalApi api) {
     this.socket = s;
-    this.listener = listener;
+    this.localApi = api;
   }
 
   @Override
@@ -37,7 +37,9 @@ public class MessageHandler implements Runnable {
 
       ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer.toByteArray());
       msg = Message.fromByteArray(byteArrayInputStream);
-      listener.gotMessage(socket.getPort(), msg);
+
+      PluginInformation pluginInformation = new PluginInformation(null, socket.getPort());
+      localApi.receivedMessage(pluginInformation, msg);
     } catch (IOException ioe) {
       // TODO handle communications error
       //throw new CommunicationException("Communication Error", ioe);

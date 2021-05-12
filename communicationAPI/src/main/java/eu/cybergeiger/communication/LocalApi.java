@@ -5,9 +5,6 @@ import ch.fhnw.geiger.localstorage.db.GenericController;
 import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-import eu.cybergeiger.communication.communicator.GeigerClient;
-import eu.cybergeiger.communication.communicator.GeigerCommunicator;
-import eu.cybergeiger.communication.communicator.GeigerServer;
 import eu.cybergeiger.totalcross.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +38,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   private final Map<MessageType, List<PluginListener>> listeners
       = Collections.synchronizedMap(new HashMap<>());
 
-  private final GeigerCommunicator geigerCommunicator;
+  private GeigerCommunicator geigerCommunicator;
   private final PluginListener storageEventHandler;
 
   /**
@@ -62,18 +59,30 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
 
     if (!isMaster) {
       // it is a plugin
-      geigerCommunicator = new GeigerClient();
-      registerPlugin();
-      activatePlugin(geigerCommunicator.getPort());
-      storageEventHandler = null;
+      try {
+        geigerCommunicator = new GeigerClient(this);
+        geigerCommunicator.start();
+        registerPlugin();
+        activatePlugin(geigerCommunicator.getPort());
+      } catch (IOException e) {
+        // TODO error handling
+        e.printStackTrace();
+      }
+      // TODO should the passtroughcontroller be listener?
+      storageEventHandler = new PasstroughController(this, id);
+
     } else {
       // it is master
-      geigerCommunicator = new GeigerServer();
-      // TODO storagEventHandler als Listener für StorageEvents
+      try {
+        geigerCommunicator = new GeigerServer(this);
+        geigerCommunicator.start();
+      } catch (IOException e) {
+        // TODO error handling
+        e.printStackTrace();
+      }
       storageEventHandler = new StorageEventHandler(this, getStorage());
-      deregisterListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler);
     }
-
+    registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler);
   }
 
   /**
@@ -276,7 +285,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     }
   }
 
-  private void receivedMessage(PluginInformation info, Message msg) {
+  void receivedMessage(PluginInformation info, Message msg) {
     // TODO other messagetypes
     MenuItem i;
     switch (msg.getType()) {
@@ -305,6 +314,31 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
       case REGISTER_PLUGIN:
         registerPlugin(msg.getSourceId(), PluginInformation.fromByteArray(msg.getPayload()));
         break;
+      case ACTIVATE_PLUGIN: {
+        // get and remove old info
+        PluginInformation pluginInfo = plugins.get(new StorableString(msg.getSourceId()));
+        plugins.remove(new StorableString(msg.getSourceId()));
+        // put new info
+        plugins.put(new StorableString(msg.getSourceId()),
+            new PluginInformation(pluginInfo.getExecutable(),
+                GeigerCommunicator.byteArrayToInt(msg.getPayload())));
+        break;
+      }
+      case DEACTIVATE_PLUGIN: {
+        // simply remove port from plugin info
+        // get and remove old info
+        PluginInformation pluginInfo = plugins.get(new StorableString(msg.getSourceId()));
+        plugins.remove(new StorableString(msg.getSourceId()));
+        // put new info
+        plugins.put(new StorableString(msg.getSourceId()),
+            new PluginInformation(pluginInfo.getExecutable(), 0));
+        break;
+      }
+      case PING: {
+        // answer with PONG
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.PONG, new GeigerUrl(msg.getSourceId(), ""), msg.getPayload()));
+      }
       default:
         // all other messages are not handled internally
         break;

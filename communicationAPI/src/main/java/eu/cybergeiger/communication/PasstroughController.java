@@ -9,11 +9,9 @@ import ch.fhnw.geiger.localstorage.db.data.NodeValue;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 /**
  * <p>Class for handling storage events in Plugins.</p>
@@ -295,8 +293,7 @@ public class PasstroughController implements StorageController, PluginListener {
       byte[] payload = bos.toByteArray();
 
       Message m = new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
-          new GeigerUrl(id, command + "/" + identifier));
-      // TODO add searchCriteria as payload
+          new GeigerUrl(id, command + "/" + identifier), payload);
       localApi.sendMessage(LocalApi.MASTER, m);
 
       // get response
@@ -308,11 +305,17 @@ public class PasstroughController implements StorageController, PluginListener {
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
         // it was a success
-        List<Node> nodes = null;
-        // TODO read multiple nodes (does frombyteArrayStream work in a for loop?)
-        // loop until exception?
-        Node node = NodeImpl.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-        nodes.add(node);
+        byte[] receivedPayload = response.getPayload();
+        // get number of nodes
+        int nNodes = GeigerCommunicator
+            .byteArrayToInt(Arrays.copyOfRange(receivedPayload, 0, 4));
+        // create bytearray containing only the sent nodes
+        byte[] receivedNodes = Arrays.copyOfRange(receivedPayload, 5, receivedPayload.length);
+        // retrieve nodes and add to list
+        List<Node> nodes = new ArrayList<>();
+        for (int i = 0; i < nNodes; ++i) {
+          nodes.add(NodeImpl.fromByteArrayStream(new ByteArrayInputStream(response.getPayload())));
+        }
         return nodes;
       }
     } catch (IOException e) {

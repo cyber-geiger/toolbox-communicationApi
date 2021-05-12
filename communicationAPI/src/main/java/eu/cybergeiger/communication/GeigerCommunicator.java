@@ -1,12 +1,7 @@
-package eu.cybergeiger.communication.communicator;
+package eu.cybergeiger.communication;
 
-import eu.cybergeiger.communication.GeigerUrl;
-import eu.cybergeiger.communication.Message;
-import eu.cybergeiger.communication.MessageType;
-import eu.cybergeiger.communication.PluginInformation;
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 
 /**
  * Abstract class to define common methods for GeigerCommunicators.
@@ -19,6 +14,8 @@ public abstract class GeigerCommunicator {
   }
 
   public abstract void sendMessage(PluginInformation pluginInformation, Message msg);
+
+  public abstract void start() throws IOException;
 
   /**
    * Convenience function to convert int to bytearray.

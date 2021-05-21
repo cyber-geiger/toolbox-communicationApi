@@ -5,3 +5,5 @@ hs_err_pid*
 /.idea
 **/.gradle
 **/target
+/communicationAPI-totalcross/communicationAPI-totalcross.iml
+/communicationAPI-totalcross/testdb.mv.db

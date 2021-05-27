@@ -46,6 +46,7 @@ public class TestApiCallSequences {
     // plugin
     // check corelocalApi plugins map if plugin available and vice versa
     // how to check the map if its private?
+    fail("not implemented");
   }
 
   @Test
@@ -54,6 +55,7 @@ public class TestApiCallSequences {
     // create plugin localApi
     // should register automatically and activate automatically
     // check if plugin activated
+    fail("not implemented");
   }
 
   @Test
@@ -63,6 +65,7 @@ public class TestApiCallSequences {
     // should register and activate automatically
     // deactivate plugin
     // check if deactivated in core
+    fail("not implemented");
   }
 
   @Test

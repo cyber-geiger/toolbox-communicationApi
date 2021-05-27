@@ -5,6 +5,8 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.junit.Assert.fail;
+
 /**
  * <p>Testing non local communication.</p>
  */
@@ -53,36 +55,37 @@ public class TestExternalCommunication {
   @Test
   public void testActivatePlugin() {
     // TODO is there an answer?
+    fail("not implemented");
   }
 
   @Test
   public void testRegisterListener() {
-
+    fail("not implemented");
   }
 
   @Test
   public void testRegisterMenu() {
-
+    fail("not implemented");
   }
 
   @Test
   public void testEnableMenu() {
-
+    fail("not implemented");
   }
 
   @Test
   public void testMenuPressed() {
-
+    fail("not implemented");
   }
 
   @Test
   public void testGetMenuList() {
-
+    fail("not implemented");
   }
 
   @Test
   public void testScanButtonPressed() {
-
+    fail("not implemented");
   }
 
 

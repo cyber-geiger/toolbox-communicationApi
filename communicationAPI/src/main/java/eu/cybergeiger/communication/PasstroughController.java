@@ -33,7 +33,8 @@ public class PasstroughController implements StorageController, PluginListener {
   public PasstroughController(LocalApi api, String id) {
     this.localApi = api;
     this.id = id;
-    localApi.registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, this);
+    localApi.registerListener(new MessageType[]{MessageType.STORAGE_EVENT,
+        MessageType.STORAGE_SUCCESS, MessageType.STORAGE_ERROR}, this);
   }
 
   private Message waitForResult(String command, String identifier) {

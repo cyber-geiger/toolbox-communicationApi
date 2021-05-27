@@ -111,7 +111,7 @@ public class StorageEventHandler implements PluginListener {
       node.toByteArrayStream(bos);
       byte[] payload = bos.toByteArray();
       localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT,
+          MessageType.STORAGE_SUCCESS,
           new GeigerUrl(msg.getSourceId(), "getNode/" + identifier + "/" + path), payload));
     } catch (IOException e) {
       try {
@@ -120,8 +120,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not get Node" + path, e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "getNode/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "getNode/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -148,10 +148,10 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not add Node", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "addNode/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "addNode/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -176,8 +176,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not update Node", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "updateNode/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "updateNode/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -203,11 +203,11 @@ public class StorageEventHandler implements PluginListener {
         node.toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
+            MessageType.STORAGE_SUCCESS, new GeigerUrl(msg.getTargetId(),
             "deleteNode/" + identifier), payload));
       } else {
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
+            MessageType.STORAGE_SUCCESS, new GeigerUrl(msg.getTargetId(),
             "deleteNode/" + identifier)));
       }
     } catch (Exception e) {
@@ -217,8 +217,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not delete Node", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "deleteNode/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "deleteNode/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -243,11 +243,11 @@ public class StorageEventHandler implements PluginListener {
         nodeValue.toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
+            MessageType.STORAGE_SUCCESS, new GeigerUrl(msg.getTargetId(),
             "getValue/" + identifier), payload));
       } else {
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
+            MessageType.STORAGE_SUCCESS, new GeigerUrl(msg.getTargetId(),
             "getValue/" + identifier)));
       }
     } catch (Exception e) {
@@ -257,8 +257,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not get NodeValue", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "getValue/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "getValue/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -285,8 +285,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not add NodeValue", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "addValue/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "addValue/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -313,8 +313,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not update NodeValue", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "updateValue/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "updateValue/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -339,7 +339,7 @@ public class StorageEventHandler implements PluginListener {
       nodeValue.toByteArrayStream(bos);
       byte[] payload = bos.toByteArray();
       localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-          MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
+          MessageType.STORAGE_SUCCESS, new GeigerUrl(msg.getTargetId(),
           "deleteNodeValue/" + identifier), payload));
     } catch (Exception e) {
       try {
@@ -348,8 +348,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not delete NodeValue", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "deleteValue/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "deleteValue/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -374,8 +374,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not rename Node", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "rename/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "rename/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -406,11 +406,11 @@ public class StorageEventHandler implements PluginListener {
         }
         payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
+            MessageType.STORAGE_SUCCESS, new GeigerUrl(msg.getTargetId(),
             "search/" + identifier), payload));
       } else {
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT, new GeigerUrl(msg.getTargetId(),
+            MessageType.STORAGE_SUCCESS, new GeigerUrl(msg.getTargetId(),
             "search/" + identifier)));
       }
     } catch (Exception e) {
@@ -420,8 +420,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not search Node", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "search/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "search/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -446,8 +446,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not close", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "close/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "close/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -472,8 +472,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not flush", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "flush/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "flush/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }
@@ -498,8 +498,8 @@ public class StorageEventHandler implements PluginListener {
         new StorageException("Could not zap", e).toByteArrayStream(bos);
         byte[] payload = bos.toByteArray();
         localApi.sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.STORAGE_EVENT,
-            new GeigerUrl(msg.getSourceId(), "zap/" + identifier + "/error"), payload));
+            MessageType.STORAGE_ERROR,
+            new GeigerUrl(msg.getSourceId(), "zap/" + identifier), payload));
       } catch (IOException ioe) {
         // TODO what to do if an error occurs durin serialization of the exception?
       }

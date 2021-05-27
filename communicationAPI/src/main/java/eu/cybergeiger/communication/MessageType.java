@@ -35,7 +35,10 @@ public enum MessageType {
   PING(10000),
   PONG(10001),
 
-  STORAGE_EVENT(20000);
+  STORAGE_EVENT(20000),
+  STORAGE_SUCCESS(20100),
+
+  COMAPI_SUCCESS(30000);
 
   private int id;
 

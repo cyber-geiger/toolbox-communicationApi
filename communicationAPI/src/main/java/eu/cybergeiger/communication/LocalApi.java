@@ -100,6 +100,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     //PluginInformation pi = new PluginInformation();
     //CommunicationSecret secret = new CommunicationSecret();
     //secrets.put(id, secret);
+
+    // request to register at Master
+    sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+        MessageType.REGISTER_PLUGIN, new GeigerUrl(id, "registerPlugin")));
   }
 
   private void registerPlugin(String id, PluginInformation info) {
@@ -301,25 +305,37 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         if (i != null) {
           i.setEnabled(true);
         }
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "activateMenu")));
         break;
       case MENU_INACTIVE:
         i = menuItems.get(msg.getPayloadString());
         if (i != null) {
           i.setEnabled(false);
         }
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "inactivateMenu")));
         break;
       case REGISTER_MENU:
         i = MenuItem.fromByteArray(msg.getPayload());
         menuItems.put(new StorableString(i.getMenu()), i);
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "registerMenu")));
         break;
       case DEREGISTER_MENU:
         menuItems.remove(msg.getPayloadString());
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "deregisterMenu")));
         break;
       case DEREGISTER_PLUGIN:
         deregisterPlugin(msg.getPayloadString());
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "deregisterPlugin")));
         break;
       case REGISTER_PLUGIN:
         registerPlugin(msg.getSourceId(), PluginInformation.fromByteArray(msg.getPayload()));
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "registerPlugin")));
         break;
       case ACTIVATE_PLUGIN: {
         // get and remove old info
@@ -329,6 +345,8 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         plugins.put(new StorableString(msg.getSourceId()),
             new PluginInformation(pluginInfo.getExecutable(),
                 GeigerCommunicator.byteArrayToInt(msg.getPayload())));
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "activatePlugin")));
         break;
       }
       case DEACTIVATE_PLUGIN: {
@@ -339,12 +357,15 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         // put new info
         plugins.put(new StorableString(msg.getSourceId()),
             new PluginInformation(pluginInfo.getExecutable(), 0));
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(), MessageType.COMAPI_SUCCESS,
+            new GeigerUrl(msg.getSourceId(), "deactivatePlugin")));
         break;
       }
       case PING: {
         // answer with PONG
         sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
             MessageType.PONG, new GeigerUrl(msg.getSourceId(), ""), msg.getPayload()));
+        break;
       }
       default:
         // all other messages are not handled internally
@@ -402,6 +423,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @return the list of currently registered menus
    */
   public List<MenuItem> getMenuList() {
+    // TODO
     return new Vector<>();
   }
 

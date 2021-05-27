@@ -62,11 +62,8 @@ public class PasstroughController implements StorageController, PluginListener {
 
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
-
     try {
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
@@ -92,9 +89,7 @@ public class PasstroughController implements StorageController, PluginListener {
 
       // get response
       Message response = waitForResult(command, identifier);
-      String url = response.getAction().getPath();
-      String result = url.substring(url.lastIndexOf("/") + 1);
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       }
@@ -118,9 +113,7 @@ public class PasstroughController implements StorageController, PluginListener {
 
       // get response
       Message response = waitForResult(command, identifier);
-      String url = response.getAction().getPath();
-      String result = url.substring(url.lastIndexOf("/") + 1);
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       }
@@ -140,10 +133,8 @@ public class PasstroughController implements StorageController, PluginListener {
 
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
     try {
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
@@ -165,10 +156,8 @@ public class PasstroughController implements StorageController, PluginListener {
 
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
     try {
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
@@ -195,9 +184,7 @@ public class PasstroughController implements StorageController, PluginListener {
 
       // get response
       Message response = waitForResult(command, identifier);
-      String url = response.getAction().getPath();
-      String result = url.substring(url.lastIndexOf("/") + 1);
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       }
@@ -222,9 +209,7 @@ public class PasstroughController implements StorageController, PluginListener {
 
       // get response
       Message response = waitForResult(command, identifier);
-      String url = response.getAction().getPath();
-      String result = url.substring(url.lastIndexOf("/") + 1);
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       }
@@ -244,10 +229,8 @@ public class PasstroughController implements StorageController, PluginListener {
 
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
     try {
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
@@ -270,10 +253,7 @@ public class PasstroughController implements StorageController, PluginListener {
 
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
-
-    if ("error".equals(result)) {
+    if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -299,9 +279,7 @@ public class PasstroughController implements StorageController, PluginListener {
 
       // get response
       Message response = waitForResult(command, identifier);
-      String url = response.getAction().getPath();
-      String result = url.substring(url.lastIndexOf("/") + 1);
-      if ("error".equals(result)) {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
@@ -333,10 +311,7 @@ public class PasstroughController implements StorageController, PluginListener {
     localApi.sendMessage(LocalApi.MASTER, m);
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
-
-    if ("error".equals(result)) {
+    if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -356,9 +331,7 @@ public class PasstroughController implements StorageController, PluginListener {
     localApi.sendMessage(LocalApi.MASTER, m);
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
-    if ("error".equals(result)) {
+    if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -378,9 +351,7 @@ public class PasstroughController implements StorageController, PluginListener {
     localApi.sendMessage(LocalApi.MASTER, m);
     // get response
     Message response = waitForResult(command, identifier);
-    String url = response.getAction().getPath();
-    String result = url.substring(url.lastIndexOf("/") + 1);
-    if ("error".equals(result)) {
+    if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw StorageException
             .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));

@@ -7,6 +7,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import totalcross.util.Random;
 
 
@@ -82,7 +83,7 @@ public class CommunicationSecret implements Serializer {
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
-    SerializerHelper.writeString(out, new String(secret, StandardCharsets.UTF_8));
+    SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(secret));
     SerializerHelper.writeLong(out, serialVersionUID);
   }
 
@@ -97,13 +98,18 @@ public class CommunicationSecret implements Serializer {
   public static CommunicationSecret fromByteArrayStream(ByteArrayInputStream in)
       throws IOException {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException();
+      throw new ClassCastException("Reading start marker fails");
     }
-    CommunicationSecret ret = new CommunicationSecret(SerializerHelper.readString(in)
-        .getBytes(StandardCharsets.UTF_8));
+    byte[] secret = Base64.getDecoder().decode(SerializerHelper.readString(in));
+    CommunicationSecret ret = new CommunicationSecret(secret);
     if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException();
+      throw new ClassCastException("Reading end marker fails");
     }
     return ret;
+  }
+
+  @Override
+  public String toString() {
+    return "" + (new String(secret, StandardCharsets.UTF_8)).hashCode();
   }
 }

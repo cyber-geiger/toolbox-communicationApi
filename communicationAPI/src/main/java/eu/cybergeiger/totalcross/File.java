@@ -16,9 +16,10 @@ public class File implements TcFile {
     public byte[] readAllBytes(String fname) throws IOException {
       try {
         Class cls = Class.forName("totalcross.io.File");
+        int mode = cls.getField("READ_ONLY").getInt(cls);
+        Object[] arglist = new Object[]{fname, mode};
         Class[] partypes = new Class[]{String.class, int.class};
         Constructor ct = cls.getConstructor(partypes);
-        Object[] arglist = new Object[]{fname, cls.getField("READ_ONLY")};
         Object obj = (ct.newInstance(arglist));
         return (byte[]) (cls.getMethod("readAndClose").invoke(obj));
       } catch (InvocationTargetException | IllegalAccessException | InstantiationException

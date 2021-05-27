@@ -1,5 +1,7 @@
 package eu.cybergeiger.communication;
 
+import static org.junit.Assert.fail;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import org.junit.Assert;
@@ -18,7 +20,8 @@ public class TestExternalCommunication {
     Message reply = CommunicationHelper.sendAndWait(localMaster, ping,
         (Message msg) -> Arrays.equals(msg.getPayload(), ping.getPayload()) && msg.getType() == MessageType.PONG
     );
-    Assert.assertEquals("comparing payloads", ping.getPayload(), reply.getPayload());
+    Assert.assertEquals("comparing payloads",
+        new String(ping.getPayload(),StandardCharsets.UTF_8), new String(reply.getPayload(),StandardCharsets.UTF_8));
     Assert.assertEquals("checking message type", MessageType.PONG, reply.getType());
     Assert.assertEquals("checking recipient of reply", ping.getSourceId(), reply.getTargetId());
     Assert.assertEquals("checking sender of reply", ping.getTargetId(), reply.getSourceId());
@@ -32,7 +35,6 @@ public class TestExternalCommunication {
     Message request = new Message(LocalApi.MASTER, LocalApi.MASTER, MessageType.REGISTER_PLUGIN, testUrl, info.toByteArray());
     Message reply = CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) -> msg.getType() == MessageType.COMAPI_SUCCESS);
-    // TODO fix infinite loop
     Assert.assertEquals("checking URl", "registerPlugin", reply.getAction().getPath());
     Assert.assertEquals("checking message type", MessageType.COMAPI_SUCCESS, reply.getType());
     Assert.assertEquals("checking recipient of reply", request.getSourceId(), reply.getTargetId());
@@ -40,14 +42,18 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testRegisterExternalPlugin() throws Exception, DeclarationMismatchException {
-    // create Master
-    LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
+  public void testRegisterExternalPlugin() {
+    try {
+      // create Master
+      LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
 
-    // create plugin, this registers and activates the plugin automatically
-    LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
+      // create plugin, this registers and activates the plugin automatically
+      LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
 
-    // TODO how to test for registration?
+      // TODO how to test for registration?
+    }catch(DeclarationMismatchException e) {
+      fail();
+    }
   }
 
   @Test

@@ -5,7 +5,6 @@ import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 
 /**
  * <p>Object for storing vital plugin information.</p>
@@ -121,11 +120,17 @@ public class PluginInformation implements Serializer {
    */
   public static PluginInformation fromByteArray(byte[] buf) {
     try {
-      return (PluginInformation) (Serializer.fromByteArray(buf));
+      ByteArrayInputStream in = new ByteArrayInputStream(buf);
+      return fromByteArrayStream(in);
     } catch (IOException ioe) {
+      ioe.printStackTrace();
       return null;
     }
   }
 
+  @Override
+  public int hashCode() {
+    return (executable+":"+port+":"+secret.toString()).hashCode();
+  }
 
 }

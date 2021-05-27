@@ -6,6 +6,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 /**
  * <p>Representation of a message.</p>
@@ -18,7 +19,7 @@ public class Message implements Serializer {
   private String targetId;
   private MessageType type;
   private GeigerUrl action;
-  private String payload = "";
+  private String payloadString = "";
 
   /**
    * <p>A message object transported through the local communication api.</p>
@@ -47,7 +48,7 @@ public class Message implements Serializer {
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action,
                  byte[] payload) {
     this(sourceId, targetId, type, action);
-    this.payload = new String(payload, StandardCharsets.UTF_8);
+    this.payloadString =  Base64.getEncoder().encodeToString(payload);
   }
 
   /**
@@ -92,7 +93,7 @@ public class Message implements Serializer {
    * @return a byte array representing the payload
    */
   public byte[] getPayload() {
-    return getPayloadString().getBytes(StandardCharsets.UTF_8);
+    return Base64.getDecoder().decode(getPayloadString());
   }
 
   /**
@@ -101,7 +102,7 @@ public class Message implements Serializer {
    * @return a string representing the payload
    */
   public String getPayloadString() {
-    return payload;
+    return payloadString;
   }
 
   /**
@@ -119,7 +120,7 @@ public class Message implements Serializer {
         SerializerHelper.readString(in),
         MessageType.getById(SerializerHelper.readInt(in)),
         GeigerUrl.fromByteArrayStream(in),
-        SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8));
+        SerializerHelper.readInt(in)==1?SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8):null);
   }
 
   @Override
@@ -128,7 +129,12 @@ public class Message implements Serializer {
     SerializerHelper.writeString(out, sourceId);
     SerializerHelper.writeString(out, targetId);
     SerializerHelper.writeInt(out, type.getId());
-    action.toByteArrayStream(out);
-    SerializerHelper.writeString(out, payload);
+    if(action==null) {
+      SerializerHelper.writeInt(out, 0);
+    } else {
+      SerializerHelper.writeInt(out, 1);
+      action.toByteArrayStream(out);
+    }
+    SerializerHelper.writeString(out, payloadString);
   }
 }

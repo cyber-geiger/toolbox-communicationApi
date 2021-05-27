@@ -7,6 +7,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.totalcross.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -185,9 +186,9 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
       synchronized (menuItems) {
         StorableHashMap.fromByteArrayStream(in, menuItems);
       }
-    } catch (IOException |IllegalArgumentException e) {
-      // error when restoring state
-      e.printStackTrace();
+    } catch (Exception e) {
+      // error when restoring state (safe to ignore)
+      // e.printStackTrace();
     }
   }
 

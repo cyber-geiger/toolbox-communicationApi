@@ -140,11 +140,7 @@ public class MenuItem implements Serializer {
    * @return the deserialized object
    */
   public static MenuItem fromByteArray(byte[] buf) {
-    try {
-      return (MenuItem) (Serializer.fromByteArray(buf));
-    } catch (IOException ioe) {
-      return null;
-    }
+    return (MenuItem) (Serializer.fromByteArray(buf));
   }
 
 

@@ -50,6 +50,10 @@ dependencies {
     compile group: 'org.apache.logging.log4j', name: 'log4j-jul', version: '2.12.1'
 
 }
+// no caching for modules
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 
 configurations.all {
     resolutionStrategy {
@@ -66,7 +70,6 @@ tasks.named('jar') {
     manifest {
         attributes('Implementation-Title': project.name,
                 'Implementation-Version': project.version,
-                'Main-Class': 'ch.fhnw.geiger.localstorage.CommandLine'
         )
     }
 }
@@ -112,16 +115,16 @@ java {
     withSourcesJar()
 }
 
-task packageTotalcross {
-    doLast {
-        mavenexec {
-            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
-            goals '-DskipTests', 'package'
-        }
-    }
-}
+//task packageTotalcross {
+//    doLast {
+//        mavenexec {
+//            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+//            goals '-DskipTests', 'package'
+//        }
+//    }
+//}
 
-jar.dependsOn packageTotalcross
+//jar.dependsOn packageTotalcross
 
 task testTotalcross {
     doLast {

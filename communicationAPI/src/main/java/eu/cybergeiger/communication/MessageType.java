@@ -16,8 +16,8 @@ public enum MessageType {
   /* Events related to menu items */
   REGISTER_MENU(210),       // Register a new menu entry
   MENU_PRESSED(220),        // Menu item selected by user
-  MENU_ACTIVE(221),         // Menu entry is active (a user may select it)
-  MENU_INACTIVE(222),       // Menu entry is inactive (a user may not select
+  ENABLE_MENU(221),         // Menu entry is active (a user may select it)
+  DISABLE_MENU(222),       // Menu entry is inactive (a user may not select it)
   DEREGISTER_MENU(230),     // der-register a registered menu entry
 
   /* Messages related to out of bound messages */

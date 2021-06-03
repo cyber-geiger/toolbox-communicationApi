@@ -26,7 +26,7 @@ public class MessageHandler implements Runnable {
     Message msg;
     try (InputStream in = socket.asInputStream()) {
       // read bytes
-      byte[] inputData = new byte[2048];
+      byte[] inputData = new byte[4096];
       int nRead;
       ByteArrayOutputStream buffer = new ByteArrayOutputStream();
       while((nRead = in.read(inputData, 0, inputData.length)) != -1) {
@@ -38,7 +38,7 @@ public class MessageHandler implements Runnable {
       ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer.toByteArray());
       msg = Message.fromByteArray(byteArrayInputStream);
 
-      PluginInformation pluginInformation = new PluginInformation(null, socket.getPort());
+      PluginInformation pluginInformation = new PluginInformation(null, 0);
       localApi.receivedMessage(pluginInformation, msg);
     } catch (IOException ioe) {
       // TODO handle communications error

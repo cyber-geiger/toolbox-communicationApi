@@ -38,7 +38,9 @@ public class GeigerServer extends GeigerCommunicator {
 
         while (!shutdown) {
           final Socket s = serverSocket.accept();
-          executor.execute(() -> new MessageHandler(s, localApi));
+          // TODO This is only for debugging purposes use lambda for production
+          (new MessageHandler(s,localApi)).run();
+          //executor.execute(() -> new MessageHandler(s, localApi));
         }
       } catch (IOException e) {
         // TODO error handling
@@ -80,7 +82,7 @@ public class GeigerServer extends GeigerCommunicator {
       out.write(bos.toByteArray());
 
       out.close();
-      s.close();
+      //s.close();
     } catch (IOException e) {
       // TODO if plugin unknown then try to start the plugin and resend message
       e.printStackTrace();

@@ -94,8 +94,8 @@ public class Message implements Serializer {
    * @return a byte array representing the payload
    */
   public byte[] getPayload() {
-    String pl =this.payloadString;
-    if (pl==null) {
+    String pl = this.payloadString;
+    if (pl == null) {
       return null;
     }
     return Base64.getDecoder().decode(pl);
@@ -108,7 +108,7 @@ public class Message implements Serializer {
    * @return the previously set payload
    */
   public void setPayload(byte[] payload) {
-    this.payloadString = payload==null?null:Base64.getEncoder().encodeToString(payload);
+    this.payloadString = payload == null ? null : Base64.getEncoder().encodeToString(payload);
   }
 
 

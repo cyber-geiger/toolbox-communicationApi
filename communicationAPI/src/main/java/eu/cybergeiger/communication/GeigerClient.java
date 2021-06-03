@@ -34,7 +34,7 @@ public class GeigerClient extends GeigerCommunicator {
     shutdown = false;
     client = new Thread(() -> {
       try {
-        serverSocket = new ServerSocket(0);
+        serverSocket = new ServerSocket(8444);
         port = serverSocket.getLocalPort();
         while (true) {
           final Socket s = serverSocket.accept();
@@ -71,7 +71,7 @@ public class GeigerClient extends GeigerCommunicator {
       out.write(bos.toByteArray());
 
       out.close();
-      s.close();
+      //s.close();
     } catch (java.io.IOException e) {
       // TODO if master unknown try to start master and send again
       e.printStackTrace();

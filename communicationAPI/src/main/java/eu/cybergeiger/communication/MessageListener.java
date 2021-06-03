@@ -1,7 +1,5 @@
 package eu.cybergeiger.communication;
 
-import eu.cybergeiger.communication.Message;
-
 /**
  * Defines a Messagelistener.
  */

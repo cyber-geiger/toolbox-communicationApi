@@ -49,11 +49,7 @@ public class Message implements Serializer {
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action,
                  byte[] payload) {
     this(sourceId, targetId, type, action);
-    if (payload != null) {
-      this.payloadString = Base64.getEncoder().encodeToString(payload);
-    } else {
-      this.payloadString = null;
-    }
+    setPayload(payload);
   }
 
   /**
@@ -98,8 +94,23 @@ public class Message implements Serializer {
    * @return a byte array representing the payload
    */
   public byte[] getPayload() {
-    return Base64.getDecoder().decode(getPayloadString());
+    String pl =this.payloadString;
+    if (pl==null) {
+      return null;
+    }
+    return Base64.getDecoder().decode(pl);
   }
+
+  /**
+   * <p>sets payload as byte array.</p>
+   *
+   * @param payload the payload to be set
+   * @return the previously set payload
+   */
+  public void setPayload(byte[] payload) {
+    this.payloadString = payload==null?null:Base64.getEncoder().encodeToString(payload);
+  }
+
 
   /**
    * <p>Returns the payload as a string.</p>
@@ -107,7 +118,18 @@ public class Message implements Serializer {
    * @return a string representing the payload
    */
   public String getPayloadString() {
-    return payloadString;
+    return this.payloadString;
+  }
+
+  /**
+   * <p>Sets the payload as a string.</p>
+   *
+   * @return a string representing the payload
+   */
+  public String setPayloadString(String value) {
+    String ret = this.payloadString;
+    this.payloadString = value;
+    return ret;
   }
 
   /**
@@ -121,11 +143,13 @@ public class Message implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-    return new Message(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
+    Message m =  new Message(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
         SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
         SerializerHelper.readInt(in) == 1 ? MessageType.getById(SerializerHelper.readInt(in)) : null,
-        SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null,
-        SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8) : null);
+        SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null
+    );
+    m.setPayloadString(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null);
+    return m;
   }
 
   @Override

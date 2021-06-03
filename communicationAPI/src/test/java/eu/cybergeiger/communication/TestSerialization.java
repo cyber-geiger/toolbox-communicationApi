@@ -7,6 +7,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import org.junit.Test;
 
 /**
@@ -126,7 +127,8 @@ public class TestSerialization {
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id","path2"), new byte[0]),
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id",null), new byte[0]),
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl(null,null), new byte[0]),
-            new Message("src", "target", null, null, new byte[0])
+            new Message("src", "target", null, null, new byte[0]),
+            new Message("src", "target", null, null, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))
         }
     ) {
       ByteArrayOutputStream bout = new ByteArrayOutputStream();

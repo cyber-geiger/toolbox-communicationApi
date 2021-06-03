@@ -169,17 +169,17 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         menuItems.toByteArrayStream(out);
       }
       new File().writeAllBytes("LocalAPI." + id + ".state", out.toByteArray());
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
+    } catch (Throwable ioe) {
+      //System.out.println("===============================================U");
+      //ioe.printStackTrace();
+      //System.out.println("===============================================L");
     }
   }
 
   private void restoreState() {
+    String fname = "LocalAPI." + id + ".state";
     try {
-      // check if file exists
-      ByteArrayInputStream in = new ByteArrayInputStream(
-          new File().readAllBytes("LocalAPI." + id + ".state")
-      );
+      ByteArrayInputStream in = new ByteArrayInputStream(new File().readAllBytes(fname));
       // restoring plugin information
       synchronized (plugins) {
         StorableHashMap.fromByteArrayStream(in, plugins);
@@ -188,9 +188,8 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
       synchronized (menuItems) {
         StorableHashMap.fromByteArrayStream(in, menuItems);
       }
-    } catch (Exception e) {
-      // error when restoring state (safe to ignore)
-      //e.printStackTrace();
+    } catch (Throwable e) {
+      storeState();
     }
   }
 

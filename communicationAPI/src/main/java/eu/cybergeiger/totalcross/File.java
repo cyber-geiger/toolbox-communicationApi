@@ -25,7 +25,6 @@ public class File implements TcFile {
       } catch (InvocationTargetException | IllegalAccessException | InstantiationException
           | NoSuchMethodException | NoSuchFieldException | ClassNotFoundException e) {
         // FIXME insert proper logging/error handling (but should not be called)
-        e.printStackTrace();
       }
       return null;
     }
@@ -42,8 +41,12 @@ public class File implements TcFile {
       } catch (InvocationTargetException | IllegalAccessException | InstantiationException
           | NoSuchMethodException | NoSuchFieldException | ClassNotFoundException e) {
         // FIXME insert proper logging/error handling (but should not be called)
-        e.printStackTrace();
       }
+    }
+
+    @Override
+    public void close() throws Exception {
+      // empty as we do not implement any methods leaving resources open
     }
   }
 
@@ -59,7 +62,6 @@ public class File implements TcFile {
         return (byte[]) (ct.invoke(null, path));
       } catch (Exception e) {
         // FIXME insert proper logging/error handling (but should not be called)
-        e.printStackTrace();
       }
       return null;
     }
@@ -74,10 +76,13 @@ public class File implements TcFile {
         ct.invoke(null, path, buf);
       } catch (Exception e) {
         // FIXME insert proper logging/error handling (but should not be called)
-        e.printStackTrace();
       }
     }
 
+    @Override
+    public void close() throws Exception {
+      // empty as we do not implement any methods leaving resources open
+    }
   }
 
   TcFile file;
@@ -94,13 +99,21 @@ public class File implements TcFile {
   }
 
   @Override
-  public byte[] readAllBytes(String fname) throws IOException {
-    return file.readAllBytes(fname);
+  public byte[] readAllBytes(String fname) throws Throwable {
+    try {
+      return file.readAllBytes(fname);
+    } catch (Exception e) {
+      throw (e.getCause() != null ?e.getCause():e);
+    }
   }
 
   @Override
-  public void writeAllBytes(String fname, byte[] buf) throws IOException {
-    file.writeAllBytes(fname, buf);
+  public void writeAllBytes(String fname, byte[] buf) throws Throwable {
+    try {
+      file.writeAllBytes(fname, buf);
+    } catch (Exception e) {
+      throw (e.getCause() != null ?e.getCause():e);
+    }
   }
 
   /**
@@ -117,5 +130,8 @@ public class File implements TcFile {
     }
   }
 
-
+  @Override
+  public void close() throws Exception {
+    // empty as we do not implement any methods leaving resources open
+  }
 }

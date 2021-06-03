@@ -82,13 +82,13 @@ public class TestSerialization {
    */
   @Test
   public void communicationSecretSerializationTest() throws IOException {
-    CommunicationSecret[] comsec = new CommunicationSecret[] {
+    CommunicationSecret[] comsec = new CommunicationSecret[]{
         new CommunicationSecret("Hello".getBytes(StandardCharsets.UTF_8)),
         new CommunicationSecret(),
         new CommunicationSecret(1024)
     };
 
-    for(CommunicationSecret p:comsec) {
+    for (CommunicationSecret p : comsec) {
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
       p.toByteArrayStream(bout);
       ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
@@ -109,9 +109,33 @@ public class TestSerialization {
     hm.toByteArrayStream(bout);
     ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
     StorableHashMap hm2 = new StorableHashMap();
-    StorableHashMap.fromByteArrayStream(bin,hm2);
+    StorableHashMap.fromByteArrayStream(bin, hm2);
     assertNotNull("deserialized object (stream) is null", hm2);
     assertEquals("Cloned Plugininformation using stream are not equal", hm.toString(), hm2.toString());
+  }
+
+  /**
+   * <p>Tests the serialization of the a serializable Hashmap object.</p>
+   */
+  @Test
+  public void messageSerializationTest() throws IOException {
+    for (Message m :
+        new Message[]{
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("geiger:///path1"), null),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, null, new byte[0]),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id","path2"), new byte[0]),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id",null), new byte[0]),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl(null,null), new byte[0]),
+            new Message("src", "target", null, null, new byte[0])
+        }
+    ) {
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      m.toByteArrayStream(bout);
+      ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+      Message m2 = Message.fromByteArray(bin);
+      assertNotNull("deserialized object (stream) is null", m2);
+      assertEquals("Cloned Plugininformation using stream are not equal", m, m2);
+    }
   }
 
 }

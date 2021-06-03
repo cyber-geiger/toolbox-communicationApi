@@ -6,6 +6,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,11 @@ public class GeigerUrl implements Serializer {
 
   public GeigerUrl(String pluginId, String path) {
     init(pluginId, path);
+  }
+
+  public GeigerUrl(String protocol, String pluginId, String path) {
+    init(pluginId, path);
+    this.protocol = protocol;
   }
 
   private final void init(String pluginId, String path) {
@@ -92,9 +98,24 @@ public class GeigerUrl implements Serializer {
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
-    SerializerHelper.writeString(out, protocol);
-    SerializerHelper.writeString(out, pluginId);
-    SerializerHelper.writeString(out, path);
+    if (protocol == null) {
+      SerializerHelper.writeInt(out, 0);
+    } else {
+      SerializerHelper.writeInt(out, 1);
+      SerializerHelper.writeString(out, protocol);
+    }
+    if (pluginId == null) {
+      SerializerHelper.writeInt(out, 0);
+    } else {
+      SerializerHelper.writeInt(out, 1);
+      SerializerHelper.writeString(out, pluginId);
+    }
+    if (path == null) {
+      SerializerHelper.writeInt(out, 0);
+    } else {
+      SerializerHelper.writeInt(out, 1);
+      SerializerHelper.writeString(out, path);
+    }
   }
 
   /**
@@ -108,7 +129,23 @@ public class GeigerUrl implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-    return new GeigerUrl(SerializerHelper.readString(in) + "://"
-        + SerializerHelper.readString(in) + "/" + SerializerHelper.readString(in));
+    return new GeigerUrl(
+        (SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null),
+        (SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null),
+        (SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null)
+    );
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    GeigerUrl geigerUrl = (GeigerUrl) o;
+    return Objects.equals(protocol, geigerUrl.protocol) && Objects.equals(pluginId, geigerUrl.pluginId) && Objects.equals(path, geigerUrl.path);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(protocol, pluginId, path);
   }
 }

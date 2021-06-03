@@ -7,6 +7,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Objects;
 
 /**
  * <p>Representation of a message.</p>
@@ -48,7 +49,11 @@ public class Message implements Serializer {
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action,
                  byte[] payload) {
     this(sourceId, targetId, type, action);
-    this.payloadString =  Base64.getEncoder().encodeToString(payload);
+    if (payload != null) {
+      this.payloadString = Base64.getEncoder().encodeToString(payload);
+    } else {
+      this.payloadString = null;
+    }
   }
 
   /**
@@ -116,25 +121,58 @@ public class Message implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-    return new Message(SerializerHelper.readString(in),
-        SerializerHelper.readString(in),
-        MessageType.getById(SerializerHelper.readInt(in)),
-        GeigerUrl.fromByteArrayStream(in),
-        SerializerHelper.readInt(in)==1?SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8):null);
+    return new Message(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
+        SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
+        SerializerHelper.readInt(in) == 1 ? MessageType.getById(SerializerHelper.readInt(in)) : null,
+        SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null,
+        SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in).getBytes(StandardCharsets.UTF_8) : null);
   }
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
-    SerializerHelper.writeString(out, sourceId);
-    SerializerHelper.writeString(out, targetId);
-    SerializerHelper.writeInt(out, type.getId());
-    if(action==null) {
+    if (sourceId != null) {
+      SerializerHelper.writeInt(out, 1);
+      SerializerHelper.writeString(out, sourceId);
+    } else {
+      SerializerHelper.writeInt(out, 0);
+    }
+    if (targetId != null) {
+      SerializerHelper.writeInt(out, 1);
+      SerializerHelper.writeString(out, targetId);
+    } else {
+      SerializerHelper.writeInt(out, 0);
+    }
+    if (type != null) {
+      SerializerHelper.writeInt(out, 1);
+      SerializerHelper.writeInt(out, type.getId());
+    } else {
+      SerializerHelper.writeInt(out, 0);
+    }
+    if (action == null) {
       SerializerHelper.writeInt(out, 0);
     } else {
       SerializerHelper.writeInt(out, 1);
       action.toByteArrayStream(out);
     }
-    SerializerHelper.writeString(out, payloadString);
+    if (payloadString == null) {
+      SerializerHelper.writeInt(out, 0);
+    } else {
+      SerializerHelper.writeInt(out, 1);
+      SerializerHelper.writeString(out, payloadString);
+    }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Message message = (Message) o;
+    return Objects.equals(sourceId, message.sourceId) && Objects.equals(targetId, message.targetId) && type == message.type && Objects.equals(action, message.action) && Objects.equals(payloadString, message.payloadString);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(sourceId, targetId, type, action, payloadString);
   }
 }

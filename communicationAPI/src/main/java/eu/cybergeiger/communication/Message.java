@@ -105,7 +105,6 @@ public class Message implements Serializer {
    * <p>sets payload as byte array.</p>
    *
    * @param payload the payload to be set
-   * @return the previously set payload
    */
   public void setPayload(byte[] payload) {
     this.payloadString = payload == null ? null : Base64.getEncoder().encodeToString(payload);
@@ -143,9 +142,11 @@ public class Message implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-    Message m =  new Message(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
+    Message m =  new Message(SerializerHelper.readInt(in) == 1
+        ? SerializerHelper.readString(in) : null,
         SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
-        SerializerHelper.readInt(in) == 1 ? MessageType.getById(SerializerHelper.readInt(in)) : null,
+        SerializerHelper.readInt(in) == 1
+            ? MessageType.getById(SerializerHelper.readInt(in)) : null,
         SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null
     );
     m.setPayloadString(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null);
@@ -189,10 +190,17 @@ public class Message implements Serializer {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     Message message = (Message) o;
-    return Objects.equals(sourceId, message.sourceId) && Objects.equals(targetId, message.targetId) && type == message.type && Objects.equals(action, message.action) && Objects.equals(payloadString, message.payloadString);
+    return Objects.equals(sourceId, message.sourceId)
+        && Objects.equals(targetId, message.targetId)
+        && type == message.type && Objects.equals(action, message.action)
+        && Objects.equals(payloadString, message.payloadString);
   }
 
   @Override

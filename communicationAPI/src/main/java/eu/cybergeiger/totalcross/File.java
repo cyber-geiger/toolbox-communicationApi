@@ -103,7 +103,7 @@ public class File implements TcFile {
     try {
       return file.readAllBytes(fname);
     } catch (Exception e) {
-      throw (e.getCause() != null ?e.getCause():e);
+      throw (e.getCause() != null ? e.getCause() : e);
     }
   }
 
@@ -112,7 +112,7 @@ public class File implements TcFile {
     try {
       file.writeAllBytes(fname, buf);
     } catch (Exception e) {
-      throw (e.getCause() != null ?e.getCause():e);
+      throw (e.getCause() != null ? e.getCause() : e);
     }
   }
 

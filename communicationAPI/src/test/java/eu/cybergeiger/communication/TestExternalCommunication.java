@@ -55,11 +55,13 @@ public class TestExternalCommunication {
       MockListener masterListener = new MockListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
       Thread.sleep(1000);
+
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
       MockListener pluginListener = new MockListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
       Thread.sleep(1000);
+
       // check master
       ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
       assertEquals(2, receivedEventsMaster.size());

@@ -1,7 +1,6 @@
 package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-
 import java.io.OutputStream;
 import totalcross.io.IOException;
 import totalcross.net.ServerSocket;

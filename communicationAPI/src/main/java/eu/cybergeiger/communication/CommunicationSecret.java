@@ -7,7 +7,8 @@ import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
+//import java.util.Base64;
+import totalcross.net.Base64;
 import totalcross.util.Random;
 
 
@@ -83,7 +84,9 @@ public class CommunicationSecret implements Serializer {
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
-    SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(secret));
+    // totalcross adaption
+    SerializerHelper.writeString(out, Base64.encode(secret));
+    //SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(secret));
     SerializerHelper.writeLong(out, serialVersionUID);
   }
 
@@ -100,7 +103,9 @@ public class CommunicationSecret implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException("Reading start marker fails");
     }
-    byte[] secret = Base64.getDecoder().decode(SerializerHelper.readString(in));
+    // totalcross adaption
+    byte[] secret = Base64.decode(SerializerHelper.readString(in));
+    //byte[] secret = Base64.getDecoder().decode(SerializerHelper.readString(in));
     CommunicationSecret ret = new CommunicationSecret(secret);
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException("Reading end marker fails");

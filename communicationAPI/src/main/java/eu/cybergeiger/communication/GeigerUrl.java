@@ -138,10 +138,16 @@ public class GeigerUrl implements Serializer {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     GeigerUrl geigerUrl = (GeigerUrl) o;
-    return Objects.equals(protocol, geigerUrl.protocol) && Objects.equals(pluginId, geigerUrl.pluginId) && Objects.equals(path, geigerUrl.path);
+    return Objects.equals(protocol, geigerUrl.protocol)
+        && Objects.equals(pluginId, geigerUrl.pluginId)
+        && Objects.equals(path, geigerUrl.path);
   }
 
   @Override

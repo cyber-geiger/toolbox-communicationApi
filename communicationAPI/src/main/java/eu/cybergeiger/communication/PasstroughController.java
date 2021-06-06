@@ -9,9 +9,13 @@ import ch.fhnw.geiger.localstorage.db.data.NodeValue;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * <p>Class for handling storage events in Plugins.</p>
@@ -286,13 +290,13 @@ public class PasstroughController implements StorageController, PluginListener {
         // it was a success
         byte[] receivedPayload = response.getPayload();
         // get number of nodes
-        int nNodes = GeigerCommunicator
+        int numNodes = GeigerCommunicator
             .byteArrayToInt(Arrays.copyOfRange(receivedPayload, 0, 4));
         // create bytearray containing only the sent nodes
         byte[] receivedNodes = Arrays.copyOfRange(receivedPayload, 5, receivedPayload.length);
         // retrieve nodes and add to list
         List<Node> nodes = new ArrayList<>();
-        for (int i = 0; i < nNodes; ++i) {
+        for (int i = 0; i < numNodes; ++i) {
           nodes.add(NodeImpl.fromByteArrayStream(new ByteArrayInputStream(response.getPayload())));
         }
         return nodes;

@@ -115,16 +115,16 @@ java {
     withSourcesJar()
 }
 
-//task packageTotalcross {
-//    doLast {
-//        mavenexec {
-//            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
-//            goals '-DskipTests', 'package'
-//        }
-//    }
-//}
+task packageTotalcross {
+    doLast {
+        mavenexec {
+            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+            goals '-DskipTests', 'package'
+        }
+    }
+}
 
-//jar.dependsOn packageTotalcross
+jar.dependsOn packageTotalcross
 
 task testTotalcross {
     doLast {

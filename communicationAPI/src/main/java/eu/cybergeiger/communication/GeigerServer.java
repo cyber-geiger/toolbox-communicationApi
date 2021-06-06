@@ -1,7 +1,6 @@
 package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import totalcross.net.ServerSocket;
@@ -38,9 +37,9 @@ public class GeigerServer extends GeigerCommunicator {
 
         while (!shutdown) {
           final Socket s = serverSocket.accept();
-          // TODO This is only for debugging purposes use lambda for production
-          (new MessageHandler(s,localApi)).run();
-          //executor.execute(() -> new MessageHandler(s, localApi));
+          // This is only for debugging purposes use lambda for production
+          //(new MessageHandler(s, localApi)).run();
+          executor.execute(() -> new MessageHandler(s, localApi));
         }
       } catch (IOException e) {
         // TODO error handling

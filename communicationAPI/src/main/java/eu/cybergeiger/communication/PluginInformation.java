@@ -130,7 +130,7 @@ public class PluginInformation implements Serializer {
 
   @Override
   public int hashCode() {
-    return (executable+":"+port+":"+secret.toString()).hashCode();
+    return (executable + ":" + port + ":" + secret.toString()).hashCode();
   }
 
 }

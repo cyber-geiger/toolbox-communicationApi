@@ -2,11 +2,9 @@ package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-
 import totalcross.net.Socket;
 
 /**
@@ -27,11 +25,11 @@ public class MessageHandler implements Runnable {
     try (InputStream in = socket.asInputStream()) {
       // read bytes
       byte[] inputData = new byte[4096];
-      int nRead;
+      int numRead;
       ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-      while((nRead = in.read(inputData, 0, inputData.length)) != -1) {
+      while ((numRead = in.read(inputData, 0, inputData.length)) != -1) {
         // shorten to the written data, TODO maybe not needed?
-        byte[] convert = Arrays.copyOfRange(inputData, 0, nRead);
+        byte[] convert = Arrays.copyOfRange(inputData, 0, numRead);
         buffer.write(convert);
       }
 

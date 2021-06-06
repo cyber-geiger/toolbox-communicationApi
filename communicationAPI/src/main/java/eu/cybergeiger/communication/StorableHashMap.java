@@ -55,9 +55,10 @@ public class StorableHashMap<K extends Serializer, V extends Serializer>
 
   @Override
   public String toString() {
-    StringBuilder sb= new StringBuilder();
-    for(Map.Entry e:entrySet()) {
-      sb.append(e.getKey().toString()).append('=').append(e.getValue()).append(System.lineSeparator());
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry e : entrySet()) {
+      sb.append(e.getKey().toString()).append('=').append(e.getValue())
+          .append(System.lineSeparator());
     }
     return sb.toString();
   }

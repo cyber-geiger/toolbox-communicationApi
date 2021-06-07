@@ -3,6 +3,8 @@ plugins {
     id 'checkstyle'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
     id "com.github.dkorotych.gradle-maven-exec" version "2.2.1"
+    id 'maven-publish'
+    id 'signing'
 }
 
 repositories {
@@ -113,6 +115,7 @@ compileJava {
 
 java {
     withSourcesJar()
+    withJavadocJar()
 }
 
 task packageTotalcross {
@@ -136,3 +139,89 @@ task testTotalcross {
 }
 
 check.dependsOn testTotalcross
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+def gitBranch() {
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    branch
+}
+
+publishing {
+    repositories {
+        // The repository to publish to, Sonatype/MavenCentral
+        maven {
+            // This is an arbitrary name, you may also use "mavencentral" or
+            // any other name that's descriptive for you
+            name = "sonatype"
+
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = (gitBranch() == "main") ? releasesRepoUrl : snapshotsRepoUrl
+
+            credentials {
+                username findProperty('ossrhUsername')
+                password findProperty('ossrhPassword')
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'toolbox-communicationApi'
+            from components.java
+
+            version = gitBranch() == "main" ? version : version + '-SNAPSHOT'
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'toolbox-communicationApi'
+                description = 'The communication API required for interlinking independent plugins'
+                url = 'https://github.com/cyber-geiger/toolbox-communicationAPI'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'mgwerder'
+                        name = 'Martin Gwerder'
+                        email = 'martin.gwerder@fhnw.ch'
+                    }
+                    developer {
+                        id = 'sleemann'
+                        name = 'Sacha Leemann'
+                        email = 'sacha.leemann@fhnw.ch'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/cyber-geiger/toolbox-communicationAPI.git'
+                    developerConnection = 'scm:git:ssh://github.com/cyber-geiger/toolbox-communicationAPI.git'
+                    url = 'http://github.com/cyber-geiger/toolbox-communicationAPI'
+                }
+            }
+
+        }
+
+    }
+
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+

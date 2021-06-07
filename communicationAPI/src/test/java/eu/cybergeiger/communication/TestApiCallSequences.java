@@ -1,5 +1,6 @@
 package eu.cybergeiger.communication;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Random;
@@ -39,6 +40,7 @@ public class TestApiCallSequences {
   }
 
   @Test
+  @Ignore
   public void testDeRegisterSequence() {
     // create core localApi
     // create plugin localApi
@@ -50,6 +52,7 @@ public class TestApiCallSequences {
   }
 
   @Test
+  @Ignore
   public void testActivateSequence() {
     // create core localApi
     // create plugin localApi
@@ -59,6 +62,7 @@ public class TestApiCallSequences {
   }
 
   @Test
+  @Ignore
   public void testDeactivateSequence() {
     // create core localApi
     // create plugin localApi
@@ -69,6 +73,7 @@ public class TestApiCallSequences {
   }
 
   @Test
+  @Ignore
   public void testPING() {
     LocalApi masterApi = null;
     LocalApi pluginApi = null;

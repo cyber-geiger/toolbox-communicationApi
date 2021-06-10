@@ -91,7 +91,7 @@ public class File implements TcFile {
    * Creates either a TotalCross-wrapper or a Java-wrapper.
    */
   public File() {
-    if (isTotalCross()) {
+    if (Detector.isTotalCross()) {
       file = new File.TcWrapper();
     } else {
       file = new File.JavaWrapper();
@@ -113,20 +113,6 @@ public class File implements TcFile {
       file.writeAllBytes(fname, buf);
     } catch (Exception e) {
       throw (e.getCause() != null ? e.getCause() : e);
-    }
-  }
-
-  /**
-   * Checks if it runs inside a TotalCross environment.
-   *
-   * @return true if it is a TotalCross environment, false otherwise
-   */
-  public static boolean isTotalCross() {
-    try {
-      Class.forName("totalcross.io.ByteArrayStream");
-      return true;
-    } catch (Exception e) {
-      return false;
     }
   }
 

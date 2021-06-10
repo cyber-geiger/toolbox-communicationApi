@@ -7,7 +7,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import ch.fhnw.geiger.totalcross.System;
 
 /**
  * Serializable Hashmap.

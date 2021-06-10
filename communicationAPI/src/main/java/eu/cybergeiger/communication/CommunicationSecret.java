@@ -4,12 +4,11 @@ import ch.fhnw.geiger.serialization.Serializer;
 import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import eu.cybergeiger.totalcross.Base64;
+import eu.cybergeiger.totalcross.Random;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-//import java.util.Base64;
-import totalcross.net.Base64;
-import totalcross.util.Random;
 
 
 /**
@@ -85,7 +84,7 @@ public class CommunicationSecret implements Serializer {
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
     // totalcross adaption
-    SerializerHelper.writeString(out, Base64.encode(secret));
+    SerializerHelper.writeString(out, Base64.encodeToString(secret));
     //SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(secret));
     SerializerHelper.writeLong(out, serialVersionUID);
   }

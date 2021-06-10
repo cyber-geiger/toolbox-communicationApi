@@ -4,11 +4,10 @@ import ch.fhnw.geiger.serialization.Serializer;
 import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import eu.cybergeiger.totalcross.MalformedURLException;
+import eu.cybergeiger.totalcross.Matcher;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * <p>GEIGER communication URL object.</p>
@@ -21,7 +20,7 @@ public class GeigerUrl implements Serializer {
   private String pluginId = LocalApi.MASTER;
   private String path = "";
 
-  private static final Pattern urlPattern = Pattern.compile("(.*)://([^/]*)/(.*)");
+  private static final Matcher urlPattern = Matcher.compile("(.*)://([^/]*)/(.*)");
 
   /**
    * <p>GeigerUrl constructor.</p>

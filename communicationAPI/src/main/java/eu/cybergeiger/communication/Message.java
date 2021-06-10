@@ -4,9 +4,8 @@ import ch.fhnw.geiger.serialization.Serializer;
 import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import eu.cybergeiger.totalcross.Base64;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Objects;
 
 /**
@@ -98,7 +97,7 @@ public class Message implements Serializer {
     if (pl == null) {
       return null;
     }
-    return Base64.getDecoder().decode(pl);
+    return Base64.decode(pl);
   }
 
   /**
@@ -107,7 +106,7 @@ public class Message implements Serializer {
    * @param payload the payload to be set
    */
   public void setPayload(byte[] payload) {
-    this.payloadString = payload == null ? null : Base64.getEncoder().encodeToString(payload);
+    this.payloadString = payload == null ? null : Base64.encodeToString(payload);
   }
 
 

@@ -63,9 +63,9 @@ configurations.all {
     }
 }
 
-group = 'ch.fhnw.geiger'
-version = '0.0.2-SNAPSHOT'
-description = 'communication'
+group = 'eu.cyber-geiger'
+version = '0.0.2'
+description = 'communication API for GEIGER toolbox'
 sourceCompatibility = '1.8'
 
 tasks.named('jar') {

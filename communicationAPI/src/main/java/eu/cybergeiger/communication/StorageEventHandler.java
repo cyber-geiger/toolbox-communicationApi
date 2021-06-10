@@ -94,6 +94,17 @@ public class StorageEventHandler implements PluginListener {
     }
   }
 
+  private static String join(String delimiter,String[] args) {
+    StringBuilder ret=new StringBuilder();
+    for (String arg:args) {
+      if(ret.length()>0) {
+        ret.append(delimiter);
+      }
+      ret.append(arg);
+    }
+    return ret.toString();
+  }
+
   /**
    * Calls getNode on the GenericController and sends the Node back to the caller.
    *
@@ -102,8 +113,8 @@ public class StorageEventHandler implements PluginListener {
    * @param optionalArgs string arguments used for the called method
    */
   private void getNode(Message msg, String identifier, String[] optionalArgs) {
-    // This uses Arrays stream, because string.join does not exists in TotalCross
-    String path = Arrays.stream(optionalArgs).collect(Collectors.joining("/"));
+    // This uses an own joiner for compatibility with TotalCross
+    String path = join("/",optionalArgs);
     // msg is a request -> create response
     try {
       Node node = storageController.get(path);

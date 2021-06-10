@@ -106,8 +106,8 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     PluginInformation pluginInformation = new PluginInformation(this.executor,
         geigerCommunicator.getPort());
     sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
-         MessageType.REGISTER_PLUGIN, new GeigerUrl(MASTER, "registerPlugin"),
-         pluginInformation.toByteArray()));
+        MessageType.REGISTER_PLUGIN, new GeigerUrl(MASTER, "registerPlugin"),
+        pluginInformation.toByteArray()));
   }
 
   private void registerPlugin(String id, PluginInformation info) {
@@ -182,7 +182,11 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   private void restoreState() {
     String fname = "LocalAPI." + id + ".state";
     try {
-      ByteArrayInputStream in = new ByteArrayInputStream(new File().readAllBytes(fname));
+      byte[] buff = new File().readAllBytes(fname);
+      if (buff == null) {
+        buff = new byte[0];
+      }
+      ByteArrayInputStream in = new ByteArrayInputStream(buff);
       // restoring plugin information
       synchronized (plugins) {
         StorableHashMap.fromByteArrayStream(in, plugins);

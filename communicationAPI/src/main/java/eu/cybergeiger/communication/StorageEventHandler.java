@@ -1,8 +1,6 @@
 package eu.cybergeiger.communication;
 
-import ch.fhnw.geiger.localstorage.SearchCriteria;
-import ch.fhnw.geiger.localstorage.StorageController;
-import ch.fhnw.geiger.localstorage.StorageException;
+import ch.fhnw.geiger.localstorage.*;
 import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValue;
@@ -79,6 +77,9 @@ public class StorageEventHandler implements PluginListener {
       case "search":
         search(msg, identifier, optionalArgs);
         break;
+      case "registerChangeListener":
+        registerChangeListener(msg, identifier, optionalArgs);
+        break;
       case "close":
         close(msg, identifier, optionalArgs);
         break;
@@ -134,7 +135,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "getNode/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -190,7 +191,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "updateNode/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -231,7 +232,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "deleteNode/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -271,7 +272,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "getValue/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -299,7 +300,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "addValue/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -327,7 +328,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "updateValue/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -362,7 +363,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "deleteValue/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -388,14 +389,13 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "rename/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
 
   /**
-   * Either calls search on the GenericController and sends the List of Nodes back to the caller,
-   * or stores the received List of Nodes in the storageEventObject map.
+   * Calls search on the GenericController and sends the List of Nodes back to the caller.
    *
    * @param msg          received message to process
    * @param identifier   used to identify return objects inside the caller
@@ -404,9 +404,7 @@ public class StorageEventHandler implements PluginListener {
   private void search(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request -> create response
     try {
-      // TODO searchCriteria serialization
-      // deserialize searchCriteria
-      SearchCriteria searchCriteria = new SearchCriteria();
+      SearchCriteria searchCriteria = SearchCriteria.fromByteArray(msg.getPayload());
       List<Node> nodes = storageController.search(searchCriteria);
       if (nodes.size() > 0) {
         // TODO cleaner list serialization?
@@ -434,7 +432,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "search/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -460,7 +458,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "close/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -486,7 +484,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "flush/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -512,7 +510,7 @@ public class StorageEventHandler implements PluginListener {
             MessageType.STORAGE_ERROR,
             new GeigerUrl(msg.getSourceId(), "zap/" + identifier), payload));
       } catch (IOException ioe) {
-        // TODO what to do if an error occurs durin serialization of the exception?
+        // TODO what to do if an error occurs during serialization of the exception?
       }
     }
   }
@@ -520,5 +518,28 @@ public class StorageEventHandler implements PluginListener {
   @Override
   public void pluginEvent(GeigerUrl url, Message msg) {
     storageEventParser(msg);
+  }
+
+  @Override
+  public byte[] toByteArray() {
+    // TODO Serialization
+    return new byte[0];
+  }
+
+  public void registerChangeListener(Message msg, String identifier, String[] optionalArgs) {
+    // TODO
+    msg.getPayload();
+    // TODO after StorageListener serialization
+    StorageListener listener = null;
+    //StorageListener listener = StorageListener.fromByteArray(msg.getPayload());
+    SearchCriteria criteria = SearchCriteria.fromByteArray(msg.getPayload());
+    // TODO storageController add changeREgistrar
+    // storageController.registerChangeListener(listener, criteria);
+
+  }
+
+  public SearchCriteria[] deregisterChangeListener(StorageListener listener) {
+    // TODO
+    return new SearchCriteria[0];
   }
 }

@@ -7,7 +7,7 @@ public enum MessageType {
 
   /* Events related to plugin registration */
   REGISTER_PLUGIN(100),
-  DEREGISTER_PLUGIN(110),
+  DEREGISTER_PLUGIN(130),
 
   /* Activate plugin events */
   ACTIVATE_PLUGIN(150),
@@ -27,6 +27,10 @@ public enum MessageType {
   /* Messages related to the visual stack control */
   RETURNING_CONTROL(410),
 
+  /* Messages related to listeners*/
+  REGISTER_LISTENER(500),
+  DEREGISTER_LISTENER(530),
+
   /* internal messages to the API */
 
   ALL_EVENTS(1000),
@@ -35,11 +39,14 @@ public enum MessageType {
   PING(10000),
   PONG(10001),
 
+  /* Messages related to the storage */
   STORAGE_EVENT(20000),
   STORAGE_SUCCESS(20100),
   STORAGE_ERROR(20400),
 
-  COMAPI_SUCCESS(30000);
+  /* response messages*/
+  COMAPI_SUCCESS(30000),
+  COMAPI_ERROR(30200);
 
   private int id;
 

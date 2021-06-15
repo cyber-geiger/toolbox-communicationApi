@@ -122,7 +122,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     if (plugins.get(new StorableString(id)) == null) {
       throw new IllegalArgumentException("no communication secret found for id \"" + id + "\"");
     }
+    // first deactivate, then deregister at Master, before deleting my own entries.
     deactivatePlugin();
+    sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+        MessageType.DEREGISTER_PLUGIN, new GeigerUrl(MASTER, "deregisterPlugin")));
     zapState();
   }
 
@@ -233,26 +236,43 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   }
 
   /**
-   * <p>Register an event listener for specific events.</p>
+   * <p>Register an event listener for specific events on the Master.</p>
    *
    * @param events   list of events for which messages should be received. Use MessageType.
    *                 ALL_EVENTS to register for all messages.
    * @param listener the listener to be registered
    */
   public void registerListener(MessageType[] events, PluginListener listener) {
-    for (MessageType e : events) {
-      synchronized (listeners) {
-        List<PluginListener> l = listeners.get(e);
-        if (l == null) {
-          l = new Vector<>();
-          listeners.put(e, l);
-        }
-        if (e.getId() < 10000) {
-          l.add(listener);
-        }
-      }
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    for(MessageType event : events) {
+      out.write(GeigerCommunicator.intToByteArray(event.ordinal()));
     }
+    out.write(listener.toByteArray());
+    sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_LISTENER,
+        new GeigerUrl(LocalApi.MASTER, "registerListener"), out.toByteArray()));
   }
+
+//  /**
+//   * <p>Register an event listener for specific events.</p>
+//   *
+//   * @param events   list of events for which messages should be received. Use MessageType.
+//   *                 ALL_EVENTS to register for all messages.
+//   * @param listener the listener to be registered
+//   */
+//  private void registerListener(MessageType[] events, PluginListener listener) {
+//    for (MessageType e : events) {
+//      synchronized (listeners) {
+//        List<PluginListener> l = listeners.get(e);
+//        if (l == null) {
+//          l = new Vector<>();
+//          listeners.put(e, l);
+//        }
+//        if (e.getId() < 10000) {
+//          l.add(listener);
+//        }
+//      }
+//    }
+//  }
 
   /**
    * <p>Remove a listener waiting for Events.</p>
@@ -347,15 +367,15 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
       case MENU_PRESSED:
         // TODO
         break;
-      case DEREGISTER_PLUGIN:
-        deregisterPlugin(msg.getPayloadString());
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterPlugin")));
-        break;
       case REGISTER_PLUGIN:
         registerPlugin(msg.getSourceId(), PluginInformation.fromByteArray(msg.getPayload()));
         sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
             MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "registerPlugin")));
+        break;
+      case DEREGISTER_PLUGIN:
+        deregisterPlugin(msg.getPayloadString());
+        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterPlugin")));
         break;
       case ACTIVATE_PLUGIN: {
         // get and remove old info
@@ -380,6 +400,26 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
             MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deactivatePlugin")));
         break;
+      }
+      case REGISTER_LISTENER: {
+        // TODO after pluginListener serialization
+//        Pluginlistener listener msg.getPayload()
+//        for (MessageType e : events) {
+//          synchronized (listeners) {
+//            List<PluginListener> l = listeners.get(e);
+//            if (l == null) {
+//              l = new Vector<>();
+//              listeners.put(e, l);
+//            }
+//            if (e.getId() < 10000) {
+//              l.add(listener);
+//            }
+//          }
+//        }
+      }
+      case DEREGISTER_LISTENER: {
+        // TODO after PluginListener serialization
+        // remove listener from list if it is in list
       }
       case SCAN_PRESSED:
         if (isMaster) {
@@ -449,8 +489,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @return the list of currently registered menus
    */
   public List<MenuItem> getMenuList() {
-    // TODO
-    return new Vector<>();
+    return new Vector<>(menuItems.values());
   }
 
   /**

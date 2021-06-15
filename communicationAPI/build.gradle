@@ -45,7 +45,10 @@ dependencies {
     checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }
 
     // junit
+    //testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.0'
+    //testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.0'
     testImplementation("junit:junit:4.13")
+    //testImplementation "org.mockito:mockito-core:3.+"
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.0")
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'

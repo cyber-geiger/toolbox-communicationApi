@@ -47,13 +47,19 @@ public class CommunicationHelper {
       }
     }
 
+    @Override
+    public byte[] toByteArray() {
+      // TODO
+      return new byte[0];
+    }
+
     public void dispose() {
       api.deregisterListener(new MessageType[]{MessageType.ALL_EVENTS}, this);
     }
 
     public Message waitForResult(long timeout) throws InvalidDateException {
-      long starttime = (new Time()).getTime();
-      //long starttime = System.currentTimeMillis();
+      //long starttime = (new Time()).getTime();
+      long starttime = System.currentTimeMillis();
       while (msg == null && (timeout < 0 || (new Time()).getTime() - starttime < timeout)) {
         try {
           synchronized (obj) {

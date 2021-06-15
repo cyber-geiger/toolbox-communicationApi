@@ -15,4 +15,5 @@ public interface PluginListener {
    */
   void pluginEvent(GeigerUrl url, Message msg);
 
+  public byte[] toByteArray();
 }

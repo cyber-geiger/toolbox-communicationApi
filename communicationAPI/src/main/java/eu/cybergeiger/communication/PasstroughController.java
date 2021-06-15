@@ -1,8 +1,6 @@
 package eu.cybergeiger.communication;
 
-import ch.fhnw.geiger.localstorage.SearchCriteria;
-import ch.fhnw.geiger.localstorage.StorageController;
-import ch.fhnw.geiger.localstorage.StorageException;
+import ch.fhnw.geiger.localstorage.*;
 import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValue;
@@ -20,7 +18,7 @@ import java.util.Random;
 /**
  * <p>Class for handling storage events in Plugins.</p>
  */
-public class PasstroughController implements StorageController, PluginListener {
+public class PasstroughController implements StorageController, PluginListener, ChangeRegistrar {
 
   private final LocalApi localApi;
   private final String id;
@@ -374,6 +372,67 @@ public class PasstroughController implements StorageController, PluginListener {
     }
     synchronized (comm) {
       comm.notifyAll();
+    }
+  }
+
+  @Override
+  public byte[] toByteArray() {
+    // TODO serialization
+    return new byte[0];
+  }
+
+  @Override
+  public void registerChangeListener(StorageListener listener, SearchCriteria criteria) {
+    String command = "registerChangeListener";
+    String identifier = String.valueOf(new Random().nextInt());
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    // Storagelistener Serialization,
+    //byteArrayOutputStream.write(listener)
+    byteArrayOutputStream.write(criteria.toByteArray());
+
+    Message m = new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+        new GeigerUrl(LocalApi.MASTER, command + "/" + identifier), byteArrayOutputStream.toByteArray());
+    localApi.sendMessage(LocalApi.MASTER, m);
+
+    // get response
+    Message response = waitForResult(command, identifier);
+    if (response.getType() == MessageType.STORAGE_ERROR) {
+      try {
+        throw StorageException
+            .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+      } catch (IOException e) {
+        throw new StorageException("Could not rename Node", e);
+      }
+    }
+  }
+
+  @Override
+  public SearchCriteria[] deregisterChangeListener(StorageListener listener) {
+    String command = "deregisterChangeListener";
+    String identifier = String.valueOf(new Random().nextInt());
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    // Storagelistener Serialization,
+    //byteArrayOutputStream.write(listener)
+
+    Message m = new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+        new GeigerUrl(LocalApi.MASTER, command + "/" + identifier), byteArrayOutputStream.toByteArray());
+    localApi.sendMessage(LocalApi.MASTER, m);
+
+    // get response
+    Message response = waitForResult(command, identifier);
+    if (response.getType() == MessageType.STORAGE_ERROR) {
+      try {
+        throw StorageException
+            .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+      } catch (IOException e) {
+        throw new StorageException("Could not rename Node", e);
+      }
+    } else {
+      SearchCriteria.fromByteArray(response.getPayload());
+      // TODO return directly if no array is needed
+      return new SearchCriteria[0];
     }
   }
 }

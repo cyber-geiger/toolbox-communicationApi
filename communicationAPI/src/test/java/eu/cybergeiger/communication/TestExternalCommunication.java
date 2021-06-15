@@ -1,14 +1,17 @@
 package eu.cybergeiger.communication;
 
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import mocks.SimpleEventListener;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+//import static org.mockito.Mockito.*;
 
 /**
  * <p>Testing non local communication.</p>
@@ -54,13 +57,13 @@ public class TestExternalCommunication {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
       // create listener
-      MockListener masterListener = new MockListener();
+      SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
       Thread.sleep(1000);
 
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
-      MockListener pluginListener = new MockListener();
+      SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
       Thread.sleep(1000);
 
@@ -94,12 +97,12 @@ public class TestExternalCommunication {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
       // create listener
-      MockListener masterListener = new MockListener();
+      SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
-      MockListener pluginListener = new MockListener();
+      SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
       // check master
@@ -132,12 +135,12 @@ public class TestExternalCommunication {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
       // create listener
-      MockListener masterListener = new MockListener();
+      SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
-      MockListener pluginListener = new MockListener();
+      SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
       // deregister
@@ -178,12 +181,12 @@ public class TestExternalCommunication {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
       // create listener
-      MockListener masterListener = new MockListener();
+      SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
-      MockListener pluginListener = new MockListener();
+      SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
       // register Menu
@@ -222,12 +225,12 @@ public class TestExternalCommunication {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
       // create listener
-      MockListener masterListener = new MockListener();
+      SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
-      MockListener pluginListener = new MockListener();
+      SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
       // register and disable Menu
@@ -266,12 +269,12 @@ public class TestExternalCommunication {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
       // create listener
-      MockListener masterListener = new MockListener();
+      SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1", Declaration.DO_NOT_SHARE_DATA);
-      MockListener pluginListener = new MockListener();
+      SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
       // register and disable Menu
@@ -315,5 +318,12 @@ public class TestExternalCommunication {
     fail("not implemented");
   }
 
+  @Test
+  public void mockedRegisterPluginTest() {
+    // Create a mocked socket
+    // TODO
+    //ServerSocket mockServerSocket = mock(ServerSocket.class);
+
+  }
 
 }

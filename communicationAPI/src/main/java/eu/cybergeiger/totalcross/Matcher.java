@@ -3,11 +3,14 @@ package eu.cybergeiger.totalcross;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * Wrapper class to work with java and totalcross Matcher class.
+ */
 public class Matcher implements TcMatcher {
 
   private final IntMatcher matcher;
   private final String pattern;
-  private final String s;
+  private final String string;
 
   interface IntMatcher {
 
@@ -54,7 +57,8 @@ public class Matcher implements TcMatcher {
         mobj = (m.invoke(null, new Object[]{pattern}));
         m = pcls.getMethod("matcher", new Class[]{String.class});
         mobj = m.invoke(mobj, new Object[]{s});
-      } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+      } catch (ClassNotFoundException | InvocationTargetException
+          | NoSuchMethodException | IllegalAccessException e) {
         throw new RuntimeException("OOPS! That is bad", e);
       }
     }
@@ -72,7 +76,8 @@ public class Matcher implements TcMatcher {
         mobj = (m.invoke(null, new Object[]{pattern}));
         m = pcls.getMethod("matcher", new Class[]{String.class});
         mobj = m.invoke(mobj, new Object[]{s});
-      } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+      } catch (ClassNotFoundException | InvocationTargetException
+          | NoSuchMethodException | IllegalAccessException e) {
         throw new RuntimeException("OOPS! That is bad", e);
       }
     }
@@ -82,13 +87,14 @@ public class Matcher implements TcMatcher {
   private Matcher(String pattern) {
     this.matcher = null;
     this.pattern = pattern;
-    this.s = null;
+    this.string = null;
   }
 
   private Matcher(String pattern, String s) {
-    this.matcher = Detector.isTotalCross() ? new TotalCrossWrapper(pattern, s) : new JavaWrapper(pattern, s);
+    this.matcher = Detector.isTotalCross() ? new TotalCrossWrapper(pattern, s)
+        : new JavaWrapper(pattern, s);
     this.pattern = pattern;
-    this.s = s;
+    this.string = s;
   }
 
   public static Matcher compile(String pattern) {
@@ -102,12 +108,12 @@ public class Matcher implements TcMatcher {
 
   @Override
   public boolean matches() {
-    return s == null && this.matcher != null ? false : matcher.matches();
+    return string == null && this.matcher != null ? false : matcher.matches();
   }
 
   @Override
   public String group(int num) {
-    return s == null && this.matcher != null ? null : matcher.group(num);
+    return string == null && this.matcher != null ? null : matcher.group(num);
   }
 
   @Override

@@ -1,6 +1,10 @@
 package eu.cybergeiger.communication;
 
-import ch.fhnw.geiger.localstorage.*;
+import ch.fhnw.geiger.localstorage.ChangeRegistrar;
+import ch.fhnw.geiger.localstorage.SearchCriteria;
+import ch.fhnw.geiger.localstorage.StorageController;
+import ch.fhnw.geiger.localstorage.StorageException;
+import ch.fhnw.geiger.localstorage.StorageListener;
 import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValue;
@@ -392,7 +396,8 @@ public class PasstroughController implements StorageController, PluginListener, 
     byteArrayOutputStream.write(criteria.toByteArray());
 
     Message m = new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
-        new GeigerUrl(LocalApi.MASTER, command + "/" + identifier), byteArrayOutputStream.toByteArray());
+        new GeigerUrl(LocalApi.MASTER, command + "/" + identifier),
+        byteArrayOutputStream.toByteArray());
     localApi.sendMessage(LocalApi.MASTER, m);
 
     // get response
@@ -417,7 +422,8 @@ public class PasstroughController implements StorageController, PluginListener, 
     //byteArrayOutputStream.write(listener)
 
     Message m = new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
-        new GeigerUrl(LocalApi.MASTER, command + "/" + identifier), byteArrayOutputStream.toByteArray());
+        new GeigerUrl(LocalApi.MASTER, command + "/" + identifier),
+        byteArrayOutputStream.toByteArray());
     localApi.sendMessage(LocalApi.MASTER, m);
 
     // get response

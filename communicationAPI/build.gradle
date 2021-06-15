@@ -121,27 +121,27 @@ java {
     withJavadocJar()
 }
 
-task packageTotalcross {
-    doLast {
-        mavenexec {
-            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
-            goals '-DskipTests', 'package'
-        }
-    }
-}
+//task packageTotalcross {
+//    doLast {
+//        mavenexec {
+//            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+//            goals '-DskipTests', 'package'
+//        }
+//    }
+//}
 
-jar.dependsOn packageTotalcross
-
-task testTotalcross {
-    doLast {
-        mavenexec {
-            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
-            goals 'test'
-        }
-    }
-}
-
-check.dependsOn testTotalcross
+//jar.dependsOn packageTotalcross
+//
+//task testTotalcross {
+//    doLast {
+//        mavenexec {
+//            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+//            goals 'test'
+//        }
+//    }
+//}
+//
+//check.dependsOn testTotalcross
 
 artifacts {
     archives javadocJar, sourcesJar

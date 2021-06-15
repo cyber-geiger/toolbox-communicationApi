@@ -4,10 +4,10 @@ import ch.fhnw.geiger.serialization.Serializer;
 import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import ch.fhnw.geiger.totalcross.System;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import ch.fhnw.geiger.totalcross.System;
 
 /**
  * Serializable Hashmap.

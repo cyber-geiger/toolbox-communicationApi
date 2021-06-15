@@ -1,5 +1,8 @@
 package eu.cybergeiger.totalcross;
 
+/**
+ * Class to detect if program runs inside Totalcross.
+ */
 public class Detector {
   /**
    * Checks if it runs inside a TotalCross environment.

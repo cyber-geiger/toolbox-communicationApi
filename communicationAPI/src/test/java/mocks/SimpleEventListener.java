@@ -3,9 +3,11 @@ package mocks;
 import eu.cybergeiger.communication.GeigerUrl;
 import eu.cybergeiger.communication.Message;
 import eu.cybergeiger.communication.PluginListener;
-
 import java.util.ArrayList;
 
+/**
+ * A Pluginlistener for test purposes that allows to get all messages received.
+ */
 public class SimpleEventListener implements PluginListener {
 
   ArrayList<Message> events;

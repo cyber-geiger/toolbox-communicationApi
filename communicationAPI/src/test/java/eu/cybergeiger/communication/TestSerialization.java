@@ -73,8 +73,10 @@ public class TestSerialization {
     assertNotNull(p);
     assertNotNull("deserialized object (stream) is null", p2);
     assertNotNull("deserialized object (array) is null", p3);
-    assertEquals("Cloned Plugininformation using stream are not equal", p.hashCode(), p2.hashCode());
-    assertEquals("Cloned Plugininformation using array are not equal", p.hashCode(), p3.hashCode());
+    assertEquals("Cloned Plugininformation using stream are not equal",
+        p.hashCode(), p2.hashCode());
+    assertEquals("Cloned Plugininformation using array are not equal",
+        p.hashCode(), p3.hashCode());
 
   }
 
@@ -87,7 +89,7 @@ public class TestSerialization {
         new CommunicationSecret("Hello".getBytes(StandardCharsets.UTF_8)),
         new CommunicationSecret(),
         new CommunicationSecret(1024)
-    };
+      };
 
     for (CommunicationSecret p : comsec) {
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -96,7 +98,8 @@ public class TestSerialization {
       CommunicationSecret p2 = CommunicationSecret.fromByteArrayStream(bin);
       assertNotNull(p);
       assertNotNull("deserialized object (stream) is null", p2);
-      assertEquals("Cloned Plugininformation using stream are not equal", p.toString(), p2.toString());
+      assertEquals("Cloned Plugininformation using stream are not equal",
+          p.toString(), p2.toString());
     }
   }
 
@@ -112,7 +115,8 @@ public class TestSerialization {
     StorableHashMap hm2 = new StorableHashMap();
     StorableHashMap.fromByteArrayStream(bin, hm2);
     assertNotNull("deserialized object (stream) is null", hm2);
-    assertEquals("Cloned Plugininformation using stream are not equal", hm.toString(), hm2.toString());
+    assertEquals("Cloned Plugininformation using stream are not equal",
+        hm.toString(), hm2.toString());
   }
 
   /**
@@ -122,14 +126,20 @@ public class TestSerialization {
   public void messageSerializationTest() throws IOException {
     for (Message m :
         new Message[]{
-            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("geiger:///path1"), null),
-            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, null, new byte[0]),
-            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id","path2"), new byte[0]),
-            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id",null), new byte[0]),
-            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl(null,null), new byte[0]),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
+                new GeigerUrl("geiger:///path1"), null),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
+                null, new byte[0]),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
+                new GeigerUrl("id", "path2"), new byte[0]),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
+                new GeigerUrl("id", null), new byte[0]),
+            new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
+                new GeigerUrl(null, null), new byte[0]),
             new Message("src", "target", null, null, new byte[0]),
-            new Message("src", "target", null, null, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))
-        }
+            new Message("src", "target", null, null,
+                UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))
+          }
     ) {
       ByteArrayOutputStream bout = new ByteArrayOutputStream();
       m.toByteArrayStream(bout);

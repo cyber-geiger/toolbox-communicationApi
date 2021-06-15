@@ -1,44 +1,22 @@
 package eu.cybergeiger.communication;
 
+import static org.junit.Assert.fail;
+
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.db.GenericController;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import totalcross.util.InvalidDateException;
-
-import java.net.MalformedURLException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Random;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  * <p>Testing API calling sequence.</p>
  */
 public class TestApiCallSequences {
 
-
   @Test
-  public void testPing() throws Exception, DeclarationMismatchException {
-    LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER, Declaration.DO_NOT_SHARE_DATA);
-    GeigerUrl testUrl = new GeigerUrl("geiger://" + LocalApi.MASTER + "/test");
-    Message request = new Message(LocalApi.MASTER, LocalApi.MASTER, MessageType.PING, testUrl,
-        "payload".getBytes(StandardCharsets.UTF_8));
-    Message reply = CommunicationHelper.sendAndWait(localMaster, request,
-        (Message msg) -> Arrays.equals(msg.getPayload(), request.getPayload()) && msg.getType() == MessageType.PONG
-    );
-    Assert.assertEquals("comparing payloads",
-        new String(request.getPayload(),StandardCharsets.UTF_8), new String(reply.getPayload(),StandardCharsets.UTF_8));
-    Assert.assertEquals("checking message type", MessageType.PONG, reply.getType());
-    Assert.assertEquals("checking recipient of reply", request.getSourceId(), reply.getTargetId());
-    Assert.assertEquals("checking sender of reply", request.getTargetId(), reply.getSourceId());
-  }
-
-  @Test
-  public void testRegister() throws Exception, DeclarationMismatchException {
+  public void testRegisterPlugin() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
     GeigerUrl testUrl = new GeigerUrl("geiger://" + LocalApi.MASTER + "/test");
@@ -60,7 +38,7 @@ public class TestApiCallSequences {
   }
 
   @Test
-  public void testDeRegisterSequence() throws Exception, DeclarationMismatchException {
+  public void testDeregisterPlugin() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
     GeigerUrl testUrl = new GeigerUrl("geiger://" + LocalApi.MASTER + "/test");
@@ -81,7 +59,7 @@ public class TestApiCallSequences {
   }
 
   @Test
-  public void testActivateSequence() throws Exception, DeclarationMismatchException {
+  public void testActivatePlugin() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
     GeigerUrl testUrl = new GeigerUrl("geiger://" + LocalApi.MASTER + "/test");
@@ -111,7 +89,7 @@ public class TestApiCallSequences {
   }
 
   @Test
-  public void testDeactivateSequence() throws Exception, DeclarationMismatchException {
+  public void testDeactivatePlugin() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
     GeigerUrl testUrl = new GeigerUrl("geiger://" + LocalApi.MASTER + "/test");
@@ -174,6 +152,7 @@ public class TestApiCallSequences {
   }
 
   @Test
+  @Ignore
   public void testRegisterMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
@@ -194,12 +173,13 @@ public class TestApiCallSequences {
         reply.getSourceId());
     Assert.assertEquals("checking geigerURL", "registerMenu",
         reply.getAction().getPath());
-    Assert.assertEquals(1 ,localMaster.getMenuList().size());
+    Assert.assertEquals(1, localMaster.getMenuList().size());
     Assert.assertEquals("checking stored menuItem", payload,
         localMaster.getMenuList().get(0));
   }
 
   @Test
+  @Ignore
   public void testDeregisterMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
@@ -226,10 +206,11 @@ public class TestApiCallSequences {
         reply2.getSourceId());
     Assert.assertEquals("checking geigerURL", "deregisterMenu",
         reply2.getAction().getPath());
-    Assert.assertEquals(0 ,localMaster.getMenuList().size());
+    Assert.assertEquals(0, localMaster.getMenuList().size());
   }
 
   @Test
+  @Ignore
   public void testEnableMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
@@ -258,7 +239,7 @@ public class TestApiCallSequences {
         reply2.getSourceId());
     Assert.assertEquals("checking geigerURL", "enableMenu",
         reply2.getAction().getPath());
-    Assert.assertEquals(1 ,localMaster.getMenuList().size());
+    Assert.assertEquals(1, localMaster.getMenuList().size());
     payload.setEnabled(true);
     Assert.assertNotEquals("checking stored menuItem", payload,
         localMaster.getMenuList().get(0));
@@ -294,9 +275,30 @@ public class TestApiCallSequences {
         reply2.getSourceId());
     Assert.assertEquals("checking geigerURL", "disableMenu",
         reply2.getAction().getPath());
-    Assert.assertEquals(1 ,localMaster.getMenuList().size());
+    Assert.assertEquals(1, localMaster.getMenuList().size());
     payload.setEnabled(false);
     Assert.assertNotEquals("checking stored menuItem", payload,
         localMaster.getMenuList().get(0));
+  }
+
+  @Test
+  public void testPing() throws Exception, DeclarationMismatchException {
+    LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
+        Declaration.DO_NOT_SHARE_DATA);
+    GeigerUrl testUrl = new GeigerUrl("geiger://" + LocalApi.MASTER + "/test");
+    Message request = new Message(LocalApi.MASTER, LocalApi.MASTER, MessageType.PING, testUrl,
+        "payload".getBytes(StandardCharsets.UTF_8));
+    Message reply = CommunicationHelper.sendAndWait(localMaster, request,
+        (Message msg) -> Arrays.equals(msg.getPayload(), request.getPayload())
+            && msg.getType() == MessageType.PONG
+    );
+    Assert.assertEquals("comparing payloads",
+        new String(request.getPayload(), StandardCharsets.UTF_8), new String(reply.getPayload(),
+            StandardCharsets.UTF_8));
+    Assert.assertEquals("checking message type", MessageType.PONG, reply.getType());
+    Assert.assertEquals("checking recipient of reply", request.getSourceId(),
+        reply.getTargetId());
+    Assert.assertEquals("checking sender of reply", request.getTargetId(),
+        reply.getSourceId());
   }
 }

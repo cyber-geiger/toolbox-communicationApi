@@ -8,6 +8,7 @@ import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.totalcross.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -243,36 +244,31 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param listener the listener to be registered
    */
   public void registerListener(MessageType[] events, PluginListener listener) {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    for(MessageType event : events) {
-      out.write(GeigerCommunicator.intToByteArray(event.ordinal()));
+    if (isMaster) {
+      for (MessageType e : events) {
+        synchronized (listeners) {
+          List<PluginListener> l = listeners.get(e);
+          if (l == null) {
+            l = new Vector<>();
+            listeners.put(e, l);
+          }
+          if (e.getId() < 10000) {
+            l.add(listener);
+          }
+        }
+      }
+    } else {
+      // format: int number of events -> events -> listener
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      out.write(GeigerCommunicator.intToByteArray(events.length));
+      for (MessageType event : events) {
+        out.write(GeigerCommunicator.intToByteArray(event.ordinal()));
+      }
+      out.write(listener.toByteArray());
+      sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_LISTENER,
+          new GeigerUrl(LocalApi.MASTER, "registerListener"), out.toByteArray()));
     }
-    out.write(listener.toByteArray());
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_LISTENER,
-        new GeigerUrl(LocalApi.MASTER, "registerListener"), out.toByteArray()));
   }
-
-//  /**
-//   * <p>Register an event listener for specific events.</p>
-//   *
-//   * @param events   list of events for which messages should be received. Use MessageType.
-//   *                 ALL_EVENTS to register for all messages.
-//   * @param listener the listener to be registered
-//   */
-//  private void registerListener(MessageType[] events, PluginListener listener) {
-//    for (MessageType e : events) {
-//      synchronized (listeners) {
-//        List<PluginListener> l = listeners.get(e);
-//        if (l == null) {
-//          l = new Vector<>();
-//          listeners.put(e, l);
-//        }
-//        if (e.getId() < 10000) {
-//          l.add(listener);
-//        }
-//      }
-//    }
-//  }
 
   /**
    * <p>Remove a listener waiting for Events.</p>
@@ -365,7 +361,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
             MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterMenu")));
         break;
       case MENU_PRESSED:
-        // TODO
+        // TODO parse which plugin is responsible and send message to this plugin
         break;
       case REGISTER_PLUGIN:
         registerPlugin(msg.getSourceId(), PluginInformation.fromByteArray(msg.getPayload()));
@@ -403,23 +399,36 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
       }
       case REGISTER_LISTENER: {
         // TODO after pluginListener serialization
-//        Pluginlistener listener msg.getPayload()
-//        for (MessageType e : events) {
-//          synchronized (listeners) {
-//            List<PluginListener> l = listeners.get(e);
-//            if (l == null) {
-//              l = new Vector<>();
-//              listeners.put(e, l);
-//            }
-//            if (e.getId() < 10000) {
-//              l.add(listener);
-//            }
-//          }
-//        }
+        byte[] payload = msg.getPayload();
+        byte[] intRange = Arrays.copyOfRange(payload, 0, 4);
+        byte[] inputRange = Arrays.copyOfRange(payload, 4, payload.length);
+        int length = GeigerCommunicator.byteArrayToInt(intRange);
+        ByteArrayInputStream in = new ByteArrayInputStream(inputRange);
+        MessageType[] events = new MessageType[length];
+        for (int j = 0; j < length; ++j) {
+          // TODO deserialize messagetypes
+
+        }
+        // TODO deserialize Pluginlistener
+        PluginListener listener = null;
+        for (MessageType e : events) {
+          synchronized (listeners) {
+            List<PluginListener> l = listeners.get(e);
+            if (l == null) {
+              l = new Vector<>();
+              listeners.put(e, l);
+            }
+            if (e.getId() < 10000) {
+              l.add(listener);
+            }
+          }
+        }
+        break;
       }
       case DEREGISTER_LISTENER: {
         // TODO after PluginListener serialization
         // remove listener from list if it is in list
+        break;
       }
       case SCAN_PRESSED:
         if (isMaster) {

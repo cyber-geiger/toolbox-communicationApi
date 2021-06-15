@@ -1,6 +1,9 @@
 package eu.cybergeiger.communication;
 
-import ch.fhnw.geiger.localstorage.*;
+import ch.fhnw.geiger.localstorage.SearchCriteria;
+import ch.fhnw.geiger.localstorage.StorageController;
+import ch.fhnw.geiger.localstorage.StorageException;
+import ch.fhnw.geiger.localstorage.StorageListener;
 import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValue;
@@ -10,7 +13,6 @@ import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * StorageEventHandler processes StorageEvents accordingly.
@@ -95,10 +97,10 @@ public class StorageEventHandler implements PluginListener {
     }
   }
 
-  private static String join(String delimiter,String[] args) {
-    StringBuilder ret=new StringBuilder();
-    for (String arg:args) {
-      if(ret.length()>0) {
+  private static String join(String delimiter, String[] args) {
+    StringBuilder ret = new StringBuilder();
+    for (String arg : args) {
+      if (ret.length() > 0) {
         ret.append(delimiter);
       }
       ret.append(arg);
@@ -115,7 +117,7 @@ public class StorageEventHandler implements PluginListener {
    */
   private void getNode(Message msg, String identifier, String[] optionalArgs) {
     // This uses an own joiner for compatibility with TotalCross
-    String path = join("/",optionalArgs);
+    String path = join("/", optionalArgs);
     // msg is a request -> create response
     try {
       Node node = storageController.get(path);
@@ -526,6 +528,13 @@ public class StorageEventHandler implements PluginListener {
     return new byte[0];
   }
 
+  /**
+   * Registers a StorageListener.
+   *
+   * @param msg the received message
+   * @param identifier the method identifier
+   * @param optionalArgs other arguments from GeigerUrl
+   */
   public void registerChangeListener(Message msg, String identifier, String[] optionalArgs) {
     // TODO
     msg.getPayload();

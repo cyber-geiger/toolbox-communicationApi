@@ -1,8 +1,8 @@
 package eu.cybergeiger.communication;
 
-import totalcross.sys.Time;
-import totalcross.util.InvalidDateException;
 //import java.util.concurrent.TimeoutException;
+
+import java.io.IOException;
 
 /**
  * A helper class for sending and waiting on Messages.
@@ -57,10 +57,11 @@ public class CommunicationHelper {
       api.deregisterListener(new MessageType[]{MessageType.ALL_EVENTS}, this);
     }
 
-    public Message waitForResult(long timeout) throws InvalidDateException {
+    public Message waitForResult(long timeout) throws IOException {
       //long starttime = (new Time()).getTime();
-      long starttime = System.currentTimeMillis();
-      while (msg == null && (timeout < 0 || (new Time()).getTime() - starttime < timeout)) {
+      long starttime = ch.fhnw.geiger.totalcross.System.currentTimeMillis();
+      while (msg == null && (timeout < 0
+          || (ch.fhnw.geiger.totalcross.System.currentTimeMillis() - starttime < timeout))) {
         try {
           synchronized (obj) {
             obj.wait(100);
@@ -70,7 +71,7 @@ public class CommunicationHelper {
         }
       }
       if (msg == null) {
-        throw new InvalidDateException();
+        throw new IOException("timeout reached");
       }
       return msg;
     }
@@ -79,13 +80,13 @@ public class CommunicationHelper {
   /**
    * <p>Sends a message and waits for the first message matching the provided message filter.</p>
    *
-   * @param api     the API to be used as communication endpoint
-   * @param msg     the message to be sent
-   * @param filter  the filter matching the expected reply
+   * @param api    the API to be used as communication endpoint
+   * @param msg    the message to be sent
+   * @param filter the filter matching the expected reply
    * @return the response Message
    */
   public static Message sendAndWait(LocalApi api, Message msg, MessageFilter filter)
-      throws InvalidDateException {
+      throws IOException {
     return sendAndWait(api, msg, filter, 10000);
   }
 
@@ -99,7 +100,7 @@ public class CommunicationHelper {
    * @return the response Message
    */
   public static Message sendAndWait(LocalApi api, Message msg, MessageFilter filter, long timeout)
-      throws InvalidDateException {
+      throws IOException {
     Listener l = new Listener(api, filter);
     api.sendMessage(msg.getTargetId(), msg);
     Message result = l.waitForResult(timeout);

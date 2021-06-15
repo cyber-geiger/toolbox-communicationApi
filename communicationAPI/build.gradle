@@ -38,7 +38,9 @@ configurations {
 }
 
 dependencies {
-    implementation 'eu.cyber-geiger:toolbox-storage:0.3.3a-SNAPSHOT'
+    implementation  ('eu.cyber-geiger:toolbox-storage:0.3.3b-SNAPSHOT'){
+        changing=true
+    }
     implementation 'com.totalcross:totalcross-sdk:7.0.3'
 
     compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
@@ -58,9 +60,6 @@ dependencies {
 // no caching for modules
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
-
-configurations.all {
     resolutionStrategy {
         force 'xml-apis:xml-apis:1.0.b2'
     }

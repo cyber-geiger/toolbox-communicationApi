@@ -152,7 +152,6 @@ public class TestApiCallSequences {
   }
 
   @Test
-  @Ignore
   public void testRegisterMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);

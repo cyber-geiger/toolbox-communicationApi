@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import totalcross.sys.Vm;
-import totalcross.util.Logger;
 
 
 /**
@@ -30,7 +28,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
   private static final StorableHashMap<StorableString, MenuItem> menuItems =
       new StorableHashMap<>();
 
-  private static final Logger log = Logger.getLogger("LocalAPI");
+  //private static final Logger log = Logger.getLogger("LocalAPI");
 
   private final String executor;
   private final String id;
@@ -527,6 +525,6 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     // for intents)
     // It is the responsibility of the plugin to send the correct string/path according to the
     // current operating system
-    Vm.exec(pluginInformation.getExecutable(), null, 0, true);
+    //Vm.exec(pluginInformation.getExecutable(), null, 0, true);
   }
 }

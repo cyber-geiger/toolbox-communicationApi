@@ -38,8 +38,8 @@ public class Matcher implements TcMatcher {
     @Override
     public String group(int num) {
       try {
-        Method m = mcls.getMethod("group", new Class[]{});
-        return (String) (m.invoke(mobj, new Object[]{}));
+        Method m = mcls.getMethod("group", new Class[]{int.class});
+        return (String) (m.invoke(mobj, new Object[]{num}));
       } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
         throw new RuntimeException("OOBS! That is bad", e);
       }
@@ -72,10 +72,18 @@ public class Matcher implements TcMatcher {
       try {
         Class pcls = Class.forName("totalcross.util.regex.Pattern");
         this.mcls = Class.forName("totalcross.util.regex.Matcher");
+        // compile regex
         Method m = pcls.getMethod("compile", new Class[]{String.class});
-        mobj = (m.invoke(null, new Object[]{pattern}));
-        m = pcls.getMethod("matcher", new Class[]{String.class});
-        mobj = m.invoke(mobj, new Object[]{s});
+        Object pobj = (m.invoke(null, new Object[]{pattern}));
+        // get the matcher
+        m = pcls.getMethod("matcher", new Class[]{});
+        mobj = (m.invoke(pobj, new Object[]{}));
+        // set the target string
+        m = mcls.getMethod("setTarget", new Class[]{String.class});
+        m.invoke(mobj, new Object[]{s});
+        // do the matching
+        m = mcls.getMethod("matches", new Class[]{});
+        m.invoke(mobj, new Object[]{});
       } catch (ClassNotFoundException | InvocationTargetException
           | NoSuchMethodException | IllegalAccessException e) {
         throw new RuntimeException("OOPS! That is bad", e);
@@ -108,12 +116,12 @@ public class Matcher implements TcMatcher {
 
   @Override
   public boolean matches() {
-    return string == null && this.matcher != null ? false : matcher.matches();
+    return this.string == null && this.matcher != null ? false : matcher.matches();
   }
 
   @Override
   public String group(int num) {
-    return string == null && this.matcher != null ? null : matcher.group(num);
+    return this.string == null && this.matcher != null ? null : matcher.group(num);
   }
 
   @Override

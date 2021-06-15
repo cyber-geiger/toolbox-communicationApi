@@ -5,6 +5,7 @@ import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * <p>Represents a menu item for a list of items.</p>
@@ -116,6 +117,19 @@ public class MenuItem implements Serializer {
   @Override
   public String toString() {
     return '"' + menu + "\"->" + action + "(" + (enabled ? "enabled" : "disabled") + ")";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    MenuItem menuItem = (MenuItem) o;
+    return enabled == menuItem.enabled && Objects.equals(menu, menuItem.menu) && Objects.equals(action, menuItem.action);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(menu, action, enabled);
   }
 
   /**

@@ -4,7 +4,7 @@ import ch.fhnw.geiger.serialization.Serializer;
 import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
-import eu.cybergeiger.totalcross.MalformedURLException;
+import eu.cybergeiger.totalcross.MalformedUrlException;
 import eu.cybergeiger.totalcross.Matcher;
 import java.io.IOException;
 import java.util.Objects;
@@ -26,18 +26,18 @@ public class GeigerUrl implements Serializer {
    * <p>GeigerUrl constructor.</p>
    *
    * @param spec a well formed URI
-   * @throws MalformedURLException if a malformed URL was received
+   * @throws MalformedUrlException if a malformed URL was received
    */
-  public GeigerUrl(String spec) throws MalformedURLException {
+  public GeigerUrl(String spec) throws MalformedUrlException {
     try {
       Matcher m = urlPattern.matcher(spec);
       if (!m.matches()) {
-        throw new MalformedURLException("Matcher was unable to match the string \"" + spec
+        throw new MalformedUrlException("Matcher was unable to match the string \"" + spec
             + "\" to regexp " + urlPattern.pattern());
       }
       init(m.group(2), m.group(3));
     } catch (IllegalStateException e) {
-      throw new MalformedURLException("Matcher was unable to match the string \"" + spec
+      throw new MalformedUrlException("Matcher was unable to match the string \"" + spec
           + "\" to regexp " + urlPattern.pattern());
     }
   }

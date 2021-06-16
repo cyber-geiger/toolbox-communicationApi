@@ -1,13 +1,10 @@
 package eu.cybergeiger.communication;
 
-import static org.junit.Assert.fail;
-
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.db.GenericController;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -140,18 +137,6 @@ public class TestApiCallSequences {
   }
 
   @Test
-  @Ignore
-  public void testRegisterListener() throws Exception, DeclarationMismatchException {
-    fail("not implemented");
-  }
-
-  @Test
-  @Ignore
-  public void testDeregisterListener() throws Exception, DeclarationMismatchException {
-    fail("not implemented");
-  }
-
-  @Test
   public void testRegisterMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
@@ -178,7 +163,6 @@ public class TestApiCallSequences {
   }
 
   @Test
-  @Ignore
   public void testDeregisterMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
@@ -209,7 +193,6 @@ public class TestApiCallSequences {
   }
 
   @Test
-  @Ignore
   public void testEnableMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
@@ -245,7 +228,6 @@ public class TestApiCallSequences {
   }
 
   @Test
-  @Ignore
   public void testDisableMenu() throws Exception, DeclarationMismatchException {
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);

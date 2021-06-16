@@ -1,7 +1,5 @@
 package eu.cybergeiger.communication;
 
-//import java.util.concurrent.TimeoutException;
-
 import java.io.IOException;
 
 /**

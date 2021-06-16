@@ -48,7 +48,7 @@ public class GeigerUrl implements Serializer {
   /**
    * <p>Constructor to create a GEIGER url from id and path.</p>
    *
-   * @param pluginId the plugin id name
+   * @param pluginId the plugin id name, may not be null nor empty
    * @param path     the path to call the respective function
    * @throws MalformedUrlException if the resulting URL is not fulfilling the minimum requirements
    */
@@ -59,8 +59,8 @@ public class GeigerUrl implements Serializer {
   /**
    * <p>Constructor to create a GEIGER url from id and path.</p>
    *
-   * @param protocol the protocol name
-   * @param pluginId the plugin id name
+   * @param protocol the protocol name, may not be null nor empty
+   * @param pluginId the plugin id name, may not be null nor empty
    * @param path     the path to call the respective function
    * @throws MalformedUrlException if the resulting URL is not fulfilling the minimum requirements
    */

@@ -32,10 +32,8 @@ public class TestMessage {
     Assert.assertEquals("checking targetId", targetId, msg.getTargetId());
     Assert.assertEquals("checking message type", messageType, msg.getType());
     Assert.assertEquals("checking GeigerUrl", url, msg.getAction());
-    Assert.assertEquals("checking payloadString", null, msg.getPayloadString());
-    // TODO what to do in this case?
-    //Assert.assertEquals("checking payload", Base64.decode(""),
-    //    msg.getPayload());
+    Assert.assertNull("checking payloadString", msg.getPayloadString());
+    Assert.assertEquals("checking payload", null, msg.getPayload());
 
     byte[] payload = "payload".getBytes(StandardCharsets.UTF_8);
     Message msg2 = new Message(sourceId, targetId, messageType, url, payload);
@@ -45,12 +43,12 @@ public class TestMessage {
     Assert.assertEquals("checking GeigerUrl", url, msg2.getAction());
     Assert.assertEquals("checking payloadString", Base64.encodeToString(payload),
         msg2.getPayloadString());
-    Assert.assertEquals("checking payload", payload,
+    Assert.assertArrayEquals("checking payload", payload,
         msg2.getPayload());
 
     byte[] payload2 = "payload2".getBytes(StandardCharsets.UTF_8);
     msg2.setPayload(payload2);
-    Assert.assertEquals("checker setter for payload",  payload2, msg2.getPayload());
+    Assert.assertArrayEquals("checker setter for payload",  payload2, msg2.getPayload());
 
     msg2.setPayloadString("payload3");
     Assert.assertEquals("checking setter for payloadString", "payload3",
@@ -93,8 +91,32 @@ public class TestMessage {
   }
 
   @Test
-  @Ignore
   public void testHashCode() {
-    fail("not implemented");
+    String sourceId = "sourceId";
+    String targetId = "targetId";
+    MessageType messageType = MessageType.ALL_EVENTS;
+    GeigerUrl url = null;
+    byte[] payload = "payload".getBytes(StandardCharsets.UTF_8);
+    try {
+      url = new GeigerUrl("geiger://plugin/path");
+    } catch (MalformedUrlException e) {
+      fail("MalformedUrlException thrown");
+      e.printStackTrace();
+    }
+
+    // without payload
+    Message msg = new Message(sourceId, targetId, messageType, url);
+    Message msg2 = new Message(sourceId, targetId, messageType, url);
+    Assert.assertEquals(msg.hashCode(), msg2.hashCode());
+
+    // with payload
+    Message msg3 = new Message(sourceId, targetId, messageType, url, payload);
+    Message msg4 = new Message(sourceId, targetId, messageType, url, payload);
+    Assert.assertEquals(msg3.hashCode(), msg4.hashCode());
+
+    // negative tests
+    Assert.assertNotEquals(msg.hashCode(), msg3.hashCode());
+    Message msg5 = new Message(targetId, sourceId, messageType, url);
+    Assert.assertNotEquals(msg.hashCode(), msg5.hashCode());
   }
 }

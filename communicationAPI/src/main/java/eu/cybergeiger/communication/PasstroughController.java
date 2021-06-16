@@ -416,7 +416,13 @@ public class PasstroughController implements StorageController, PluginListener {
     }
   }
 
-  @Override
+  /**
+   * Register a StorageListener for a Node defined by SearchCriteria.
+   *
+   * @param listener StorageListener to be registered
+   * @param criteria SearchCriteria to search for the Node
+   * @throws StorageException if the listener could not be registered
+   */
   public void registerChangeListener(StorageListener listener, SearchCriteria criteria)
       throws StorageException {
     String command = "registerChangeListener";
@@ -448,7 +454,13 @@ public class PasstroughController implements StorageController, PluginListener {
     }
   }
 
-  @Override
+  /**
+   * Deregister a StorageListener from the Storage.
+   *
+   * @param listener the listener to Deregister
+   * @return the SearchCriteria that were deregistered
+   * @throws StorageException if listener could not be deregistered
+   */
   public SearchCriteria[] deregisterChangeListener(StorageListener listener)
       throws StorageException {
     String command = "deregisterChangeListener";

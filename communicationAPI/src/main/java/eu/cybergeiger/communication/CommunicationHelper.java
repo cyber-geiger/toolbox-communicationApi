@@ -45,12 +45,6 @@ public class CommunicationHelper {
       }
     }
 
-    @Override
-    public byte[] toByteArray() {
-      // TODO
-      return new byte[0];
-    }
-
     public void dispose() {
       api.deregisterListener(new MessageType[]{MessageType.ALL_EVENTS}, this);
     }

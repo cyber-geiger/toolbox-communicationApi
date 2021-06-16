@@ -21,13 +21,8 @@ public class SimpleEventListener implements PluginListener {
     events.add(msg);
   }
 
-  @Override
-  public byte[] toByteArray() {
-    // TODO
-    return new byte[0];
-  }
-
   public ArrayList<Message> getEvents() {
     return new ArrayList<>(events);
   }
+
 }

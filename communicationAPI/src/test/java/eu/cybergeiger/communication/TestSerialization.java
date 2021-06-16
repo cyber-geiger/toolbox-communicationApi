@@ -127,7 +127,7 @@ public class TestSerialization {
     for (Message m :
         new Message[]{
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
-                new GeigerUrl("geiger:///path1"), null),
+                new GeigerUrl("geiger://id1/path1"), null),
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
                 null, new byte[0]),
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
@@ -135,7 +135,7 @@ public class TestSerialization {
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
                 new GeigerUrl("id", null), new byte[0]),
             new Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
-                new GeigerUrl(null, null), new byte[0]),
+                new GeigerUrl("id1", null), new byte[0]),
             new Message("src", "target", null, null, new byte[0]),
             new Message("src", "target", null, null,
                 UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))

@@ -8,7 +8,6 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-
 /**
  * Class to test the GeigerUrl implementation.
  */
@@ -56,7 +55,8 @@ public class TestGeigerUrl {
     Assert.assertThrows(MalformedUrlException.class, () ->
         new GeigerUrl("://" + plugin + "/" + path));
     // missing plugin + path
-    Assert.assertThrows(MalformedUrlException.class, () -> new GeigerUrl(protocol + "://"));
+    Assert.assertThrows(MalformedUrlException.class, () ->
+        new GeigerUrl(protocol + "://"));
   }
 
   @Test

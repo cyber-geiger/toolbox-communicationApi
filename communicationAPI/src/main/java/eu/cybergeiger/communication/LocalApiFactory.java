@@ -16,7 +16,7 @@ public class LocalApiFactory {
    * <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be
    * private.</p>
    *
-   * @param id the id of the API to be retrieved
+   * @param id          the id of the API to be retrieved
    * @param declaration the privacy declaration
    * @return the instance requested
    */

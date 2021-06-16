@@ -6,6 +6,7 @@ import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.totalcross.File;
+import eu.cybergeiger.totalcross.PluginStarter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -19,7 +20,7 @@ import java.util.Vector;
 /**
  * <p>Offers an API for all plugins to access the local toolbox.</p>
  */
-public class LocalApi implements PluginRegistrar, MenuRegistrar {
+public class LocalApi implements CommunicatorApi {
 
   public static final String MASTER = "__MASTERPLUGIN__";
 
@@ -202,19 +203,13 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     }
   }
 
-  /**
-   * <p>Activates the plugin and sets up communication.</p>
-   */
+  @Override
   public void activatePlugin(int port) {
     sendMessage(MASTER, new Message(id, MASTER, MessageType.ACTIVATE_PLUGIN, null,
         GeigerCommunicator.intToByteArray(port)));
   }
 
-  /**
-   * <p>deactivates the plugin and makes sure that a plugin is started immediately if contacted.</p>
-   *
-   * <p>If a plugin is properly deactivated no timeout is reached before contacting a plugin.</p>
-   */
+  @Override
   public void deactivatePlugin() {
     sendMessage(MASTER, new Message(id, MASTER, MessageType.DEACTIVATE_PLUGIN, null));
   }
@@ -234,13 +229,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     }
   }
 
-  /**
-   * <p>Register an event listener for specific events on the Master.</p>
-   *
-   * @param events   list of events for which messages should be received. Use MessageType.
-   *                 ALL_EVENTS to register for all messages.
-   * @param listener the listener to be registered
-   */
+  @Override
   public void registerListener(MessageType[] events, PluginListener listener) {
     if (isMaster) {
       for (MessageType e : events) {
@@ -288,14 +277,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
     }
   }
 
-  /**
-   * <p>Send a custom message to a plugin.</p>
-   *
-   * <p>Mainly used for internal purposes. Plugins may only send messages to the toolbox core.</p>
-   *
-   * @param pluginId The plugin id to be contacted
-   * @param msg      the message to be sent
-   */
+  @Override
   public void sendMessage(String pluginId, Message msg) {
     if (id.equals(pluginId)) {
       // communicate locally
@@ -478,32 +460,18 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
         new GeigerUrl(MASTER, "deregisterMenu"), menu.getBytes(StandardCharsets.UTF_8)));
   }
 
-  /**
-   * <p>notify plugin about a menu entry pressed.</p>
-   *
-   * @param url the GeigerURL associated with the menu entry
-   */
+  @Override
   public void menuPressed(GeigerUrl url) {
     sendMessage(url.getPlugin(), new Message(MASTER, url.getPlugin(),
         MessageType.MENU_PRESSED, url, null));
   }
 
-  /**
-   * <p>Returns the List of currently registered menu.</p>
-   *
-   * <p>This call is for the toolbox core only.</p>
-   *
-   * @return the list of currently registered menus
-   */
+  @Override
   public List<MenuItem> getMenuList() {
     return new Vector<>(menuItems.values());
   }
 
-  /**
-   * <p>Notify all plugins about the event that a scan button has been pressed.</p>
-   *
-   * <p>This call is for the toolbox core only.</p>
-   */
+  @Override
   public void scanButtonPressed() {
     // TODO
     if (!isMaster) {
@@ -520,6 +488,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param pluginInformation the Information of the plugin to start
    */
   private void startPlugin(PluginInformation pluginInformation) {
+    PluginStarter.startPlugin(pluginInformation);
     // TODO check how this behaves on different operating systems
     // For android the executable should be the classname of the plugin (which usually is also used
     // for intents)

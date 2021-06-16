@@ -1,12 +1,15 @@
 package eu.cybergeiger.communication;
 
+import static junit.framework.TestCase.fail;
+
 import eu.cybergeiger.totalcross.MalformedUrlException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static junit.framework.TestCase.fail;
-
+/**
+ * Class to test the MenuItem implementation.
+ */
 public class TestMenuItem {
 
   @Test

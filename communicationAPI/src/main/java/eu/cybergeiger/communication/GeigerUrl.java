@@ -45,10 +45,18 @@ public class GeigerUrl implements Serializer {
     }
   }
 
-  public GeigerUrl(String pluginId, String path) throws MalformedUrlException{
+  public GeigerUrl(String pluginId, String path) throws MalformedUrlException {
     init(pluginId, path);
   }
 
+  /**
+   * Constructor to define every part of a GeigerUrl.
+   *
+   * @param protocol the name of the protocol
+   * @param pluginId the name of the receiving plugin
+   * @param path the path denoting the action and any other arguments
+   * @throws MalformedUrlException if protocol or plugin is null
+   */
   public GeigerUrl(String protocol, String pluginId, String path) throws MalformedUrlException {
     if (protocol == null || "".equals(protocol)) {
       throw new MalformedUrlException("protocol cannot be null nor empty");

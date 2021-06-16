@@ -19,7 +19,7 @@ public class Message implements Serializer {
   private String targetId;
   private MessageType type;
   private GeigerUrl action;
-  private String payloadString = "";
+  private String payloadString = null;
 
   /**
    * <p>A message object transported through the local communication api.</p>

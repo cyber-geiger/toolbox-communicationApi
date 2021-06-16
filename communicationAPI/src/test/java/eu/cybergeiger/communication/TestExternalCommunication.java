@@ -3,11 +3,10 @@ package eu.cybergeiger.communication;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import ch.fhnw.geiger.localstorage.StorageException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import eu.cybergeiger.totalcross.MalformedUrlException;
 import mocks.SimpleEventListener;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testRegisterExternalPlugin() {
+  public void testRegisterExternalPlugin() throws StorageException {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
@@ -99,7 +98,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testActivatePlugin() {
+  public void testActivatePlugin() throws StorageException {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,

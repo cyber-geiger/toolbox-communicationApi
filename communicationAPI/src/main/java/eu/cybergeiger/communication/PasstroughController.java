@@ -12,7 +12,6 @@ import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.totalcross.MalformedUrlException;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +23,7 @@ import java.util.Random;
 /**
  * <p>Class for handling storage events in Plugins.</p>
  */
-public class PasstroughController implements StorageController, PluginListener, ChangeRegistrar {
+public class PasstroughController implements StorageController, PluginListener {
 
   private final LocalApi localApi;
   private final String id;
@@ -65,7 +64,8 @@ public class PasstroughController implements StorageController, PluginListener, 
     String command = "getNode";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier + "/" + path)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -140,7 +140,8 @@ public class PasstroughController implements StorageController, PluginListener, 
     String command = "deleteNode";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier + "/" + path)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -162,11 +163,12 @@ public class PasstroughController implements StorageController, PluginListener, 
   }
 
   @Override
-  public NodeValue getValue(String path, String key) {
+  public NodeValue getValue(String path, String key) throws StorageException {
     String command = "getValue";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -243,7 +245,8 @@ public class PasstroughController implements StorageController, PluginListener, 
     String command = "deleteValue";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -271,7 +274,7 @@ public class PasstroughController implements StorageController, PluginListener, 
     try {
       localApi.sendMessage(LocalApi.MASTER,
           new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
-          new GeigerUrl(id, command + "/" + identifier + "/"
+              new GeigerUrl(id, command + "/" + identifier + "/"
               + oldPath + "/" + newPathOrName)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -329,11 +332,12 @@ public class PasstroughController implements StorageController, PluginListener, 
   }
 
   @Override
-  public void close() {
+  public void close() throws StorageException {
     String command = "close";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -353,11 +357,12 @@ public class PasstroughController implements StorageController, PluginListener, 
   }
 
   @Override
-  public void flush() {
+  public void flush() throws StorageException {
     String command = "flush";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -377,11 +382,12 @@ public class PasstroughController implements StorageController, PluginListener, 
   }
 
   @Override
-  public void zap() {
+  public void zap() throws StorageException {
     String command = "zap";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier)));
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
@@ -417,8 +423,15 @@ public class PasstroughController implements StorageController, PluginListener, 
     return new byte[0];
   }
 
-  @Override
-  public void registerChangeListener(StorageListener listener, SearchCriteria criteria) {
+  /**
+   * Register a StorageListener for a Node defined by SearchCriteria.
+   *
+   * @param listener StorageListener to be registered
+   * @param criteria SearchCriteria to search for the Node
+   * @throws StorageException if the listener could not be registered
+   */
+  public void registerChangeListener(StorageListener listener, SearchCriteria criteria)
+      throws StorageException {
     String command = "registerChangeListener";
     String identifier = String.valueOf(new Random().nextInt());
 
@@ -448,8 +461,15 @@ public class PasstroughController implements StorageController, PluginListener, 
     }
   }
 
-  @Override
-  public SearchCriteria[] deregisterChangeListener(StorageListener listener) {
+  /**
+   * Deregister a StorageListener from the Storage.
+   *
+   * @param listener the listener to Deregister
+   * @return the SearchCriteria that were deregistered
+   * @throws StorageException if listener could not be deregistered
+   */
+  public SearchCriteria[] deregisterChangeListener(StorageListener listener)
+      throws StorageException {
     String command = "deregisterChangeListener";
     String identifier = String.valueOf(new Random().nextInt());
 

@@ -1,6 +1,7 @@
 package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.localstorage.StorageController;
+import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.GenericController;
 import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
@@ -8,7 +9,6 @@ import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.totalcross.Base64;
 import eu.cybergeiger.totalcross.File;
 import eu.cybergeiger.totalcross.MalformedUrlException;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -51,8 +51,10 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    * @param id          the id of the plugin
    * @param isMaster    true if the current API should denote a master
    * @param declaration declaration of data sharing
+   * @throws StorageException if the StorageController could not be initialized
    */
-  protected LocalApi(String executor, String id, boolean isMaster, Declaration declaration) {
+  protected LocalApi(String executor, String id, boolean isMaster, Declaration declaration)
+      throws StorageException {
     this.executor = executor;
     this.id = id;
     this.isMaster = isMaster;
@@ -237,7 +239,7 @@ public class LocalApi implements PluginRegistrar, MenuRegistrar {
    *
    * @return a generic controller providing access to the local storage
    */
-  public StorageController getStorage() {
+  public StorageController getStorage() throws StorageException {
     if (isMaster) {
       // TODO remove hardcoded DB information
       return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",

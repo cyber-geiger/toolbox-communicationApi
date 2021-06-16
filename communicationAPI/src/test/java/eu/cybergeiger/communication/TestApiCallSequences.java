@@ -1,6 +1,7 @@
 package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.localstorage.StorageController;
+import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.GenericController;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -122,7 +123,7 @@ public class TestApiCallSequences {
   }
 
   @Test
-  public void testGetStorage() throws DeclarationMismatchException {
+  public void testGetStorage() throws DeclarationMismatchException, StorageException {
     // check master
     LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);

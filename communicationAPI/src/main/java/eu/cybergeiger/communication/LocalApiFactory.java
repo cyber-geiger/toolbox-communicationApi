@@ -1,5 +1,6 @@
 package eu.cybergeiger.communication;
 
+import ch.fhnw.geiger.localstorage.StorageException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,7 +21,7 @@ public class LocalApiFactory {
    * @return the instance requested
    */
   public static LocalApi getLocalApi(String executor, String id, Declaration declaration)
-      throws DeclarationMismatchException {
+      throws DeclarationMismatchException, StorageException {
     synchronized (instances) {
       if (!instances.containsKey(id)) {
         if (LocalApi.MASTER.equals(id)) {

@@ -1,8 +1,12 @@
 package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.localstorage.StorageController;
+import ch.fhnw.geiger.localstorage.StorageException;
 import java.util.List;
 
+/**
+ * <p>The API provided by all communicator interfaces.</p>
+ */
 public interface CommunicatorApi extends PluginRegistrar, MenuRegistrar {
 
   /**
@@ -21,8 +25,10 @@ public interface CommunicatorApi extends PluginRegistrar, MenuRegistrar {
    * <p>Obtain controller to access the storage.</p>
    *
    * @return a generic controller providing access to the local storage
+   *
+   * @throws StorageException in case allocation of storage backed fails
    */
-  StorageController getStorage();
+  StorageController getStorage() throws StorageException;
 
   /**
    * <p>Register an event listener for specific events on the Master.</p>

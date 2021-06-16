@@ -1,5 +1,6 @@
 package eu.cybergeiger.communication;
 
+import ch.fhnw.geiger.localstorage.StorageException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,12 +16,12 @@ public class LocalApiFactory {
    * <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be
    * private.</p>
    *
-   * @param id the id of the API to be retrieved
+   * @param id          the id of the API to be retrieved
    * @param declaration the privacy declaration
    * @return the instance requested
    */
   public static LocalApi getLocalApi(String executor, String id, Declaration declaration)
-      throws DeclarationMismatchException {
+      throws DeclarationMismatchException, StorageException {
     synchronized (instances) {
       if (!instances.containsKey(id)) {
         if (LocalApi.MASTER.equals(id)) {

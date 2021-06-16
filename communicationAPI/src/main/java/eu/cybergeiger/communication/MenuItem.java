@@ -121,10 +121,15 @@ public class MenuItem implements Serializer {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     MenuItem menuItem = (MenuItem) o;
-    return enabled == menuItem.enabled && Objects.equals(menu, menuItem.menu) && Objects.equals(action, menuItem.action);
+    return enabled == menuItem.enabled && Objects.equals(menu, menuItem.menu)
+        && Objects.equals(action, menuItem.action);
   }
 
   @Override

@@ -9,6 +9,9 @@ import ch.fhnw.geiger.totalcross.System;
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ * <p>A Demo plugin providing dummy data.</p>
+ */
 public class DemoPlugin {
 
   public static UUID UUID = new UUID(0x1111111122223333L, 0x4444555555555555L);
@@ -25,7 +28,8 @@ public class DemoPlugin {
 
     public DemoPluginRunner(long features) throws IOException {
       try {
-        comm = LocalApiFactory.getLocalApi("still undefined", "DemoPlugin", Declaration.DO_NOT_SHARE_DATA);
+        comm = LocalApiFactory.getLocalApi("still undefined", "DemoPlugin",
+            Declaration.DO_NOT_SHARE_DATA);
         store = comm.getStorage();
       } catch (DeclarationMismatchException dme) {
         throw new IOException("OOPS! that should not happen... please contact developer", dme);
@@ -39,17 +43,27 @@ public class DemoPlugin {
       // make sure that this is always a daemon thread and not keeping the app from shutting down
       setDaemon(true);
 
-      // get user node
-      String userUuid = store.getValue(":Local", "currentUser").getValue();
+      String userUuid = null;
+      String deviceUuid = null;
+      try {
+        // get user node
+        userUuid = store.getValue(":Local", "currentUser").getValue();
 
-      // get device node
-      String deviceUuid = store.getValue(":Local", "currentDevice").getValue();
+        // get device node
+        deviceUuid = store.getValue(":Local", "currentDevice").getValue();
 
+      } catch (StorageException se) {
+        throw new RuntimeException("OOPS! ... mandatory keys in storage are missing. "
+            + "s should not happen. Contact developer", se);
+      }
       // create plugin nodes
-      for (Node n : new Node[]{
-          new NodeImpl(":Users:" + userUuid + ":" + UUID),
-          new NodeImpl(":Devices:" + deviceUuid + ":" + UUID)
-      }) {
+      for (Node n :
+          new Node[]
+            {
+              new NodeImpl(":Users:" + userUuid + ":" + UUID),
+              new NodeImpl(":Devices:" + deviceUuid + ":" + UUID)
+            }
+      ) {
         try {
           store.add(n);
         } catch (StorageException ioe) {
@@ -61,14 +75,19 @@ public class DemoPlugin {
       while (!shutdown) {
         try {
           // update heartbeat
-          if(DemoPluginFeatures.FEATURE_HEARTBEAT.containsFeature(features)) {
-            Node n = store.get(":Devices:" + deviceUuid + ":" + UUID);
-            n.updateValue(new NodeValueImpl("heartbeat", "" + System.currentTimeMillis()));
+          if (DemoPluginFeatures.FEATURE_HEARTBEAT.containsFeature(features)) {
+            try {
+              Node n = store.get(":Devices:" + deviceUuid + ":" + UUID);
+              n.updateValue(new NodeValueImpl("heartbeat", "" + System.currentTimeMillis()));
+            } catch (StorageException se) {
+              throw new RuntimeException("OOPS! ... mandatory keys in storage are missing. "
+                  + "s should not happen. Contact developer", se);
+            }
           }
 
           // implement scan states
-          if(DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
-
+          if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
+            // FIXME waiting for spec here
           }
 
           // wait for some time
@@ -105,10 +124,19 @@ public class DemoPlugin {
 
   private Thread runner = null;
 
+  /**
+   * <p>Create an instance of the plugin demo.</p>
+   *
+   * @param features the features to be enabled
+   *                 (xor'ed list of ids from DemoPluginFeatures)
+   */
   public DemoPlugin(long features) {
     this.features = features;
   }
 
+  /**
+   * <p>start the data provider.</p>
+   */
   public void start() {
     // check if heartbeat exists
     // FIXME
@@ -116,13 +144,16 @@ public class DemoPlugin {
       // check if threat not already running
       // FIXME
       synchronized (runner) {
-
+        // FIXME
       }
     }
     // start thread
 
   }
 
+  /**
+   * <p>Stop the data provider.</p>
+   */
   public void stop() {
     // stop thread
     // remove heartbeat node

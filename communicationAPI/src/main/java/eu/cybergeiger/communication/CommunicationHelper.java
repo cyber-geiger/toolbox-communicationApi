@@ -1,7 +1,5 @@
 package eu.cybergeiger.communication;
 
-//import java.util.concurrent.TimeoutException;
-
 import java.io.IOException;
 
 /**
@@ -45,12 +43,6 @@ public class CommunicationHelper {
           obj.notifyAll();
         }
       }
-    }
-
-    @Override
-    public byte[] toByteArray() {
-      // TODO
-      return new byte[0];
     }
 
     public void dispose() {

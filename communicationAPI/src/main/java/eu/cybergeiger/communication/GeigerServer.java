@@ -87,4 +87,14 @@ public class GeigerServer extends GeigerCommunicator {
       e.printStackTrace();
     }
   }
+
+  @Override
+  public void startPlugin(PluginInformation pluginInformation) {
+    // TODO check how this behaves on different operating systems
+    // For android the executable should be the classname of the plugin (which usually is also used
+    // for intents)
+    // It is the responsibility of the plugin to send the correct string/path according to the
+    // current operating system
+    //Vm.exec(pluginInformation.getExecutable(), null, 0, true);
+  }
 }

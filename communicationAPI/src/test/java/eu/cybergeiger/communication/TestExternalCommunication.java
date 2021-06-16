@@ -3,6 +3,7 @@ package eu.cybergeiger.communication;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import ch.fhnw.geiger.localstorage.StorageException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +56,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testRegisterExternalPlugin() {
+  public void testRegisterExternalPlugin() throws StorageException {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
@@ -97,7 +98,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testActivatePlugin() {
+  public void testActivatePlugin() throws StorageException {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
@@ -137,7 +138,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testDeactivatePlugin() {
+  public void testDeactivatePlugin() throws Exception {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
@@ -185,7 +186,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testRegisterMenu() {
+  public void testRegisterMenu() throws Exception {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
@@ -231,7 +232,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testDisableMenu() {
+  public void testDisableMenu() throws Exception {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
@@ -277,7 +278,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testMenuPressed() {
+  public void testMenuPressed() throws Exception {
     try {
       // create Master
       LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,

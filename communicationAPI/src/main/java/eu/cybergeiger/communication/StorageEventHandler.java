@@ -522,12 +522,6 @@ public class StorageEventHandler implements PluginListener {
     storageEventParser(msg);
   }
 
-  @Override
-  public byte[] toByteArray() {
-    // TODO Serialization
-    return new byte[0];
-  }
-
   /**
    * Registers a StorageListener.
    *

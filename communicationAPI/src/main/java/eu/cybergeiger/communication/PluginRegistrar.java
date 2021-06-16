@@ -6,13 +6,13 @@ interface PluginRegistrar {
   /***
    * <p>Registers the plugin to the toolbox framework.</p>
    */
-  void registerPlugin();
+  void registerPlugin() throws CommunicationException;
 
   /***
    * <p>Unregisters an already registered plugin in the toolbox.</p>
    *
    * @throws NameNotFoundException if the provided id is not available in the current auth database
    */
-  void deregisterPlugin() throws NameNotFoundException;
+  void deregisterPlugin() throws CommunicationException;
 
 }

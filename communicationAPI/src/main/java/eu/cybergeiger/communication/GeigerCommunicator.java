@@ -60,4 +60,12 @@ public abstract class GeigerCommunicator {
   }
 
   public abstract int getPort();
+
+  /**
+   * <p>Start a plugin by using the stored executable String.</p>
+   *
+   * @param pluginInformation the Information of the plugin to start
+   */
+  public abstract void startPlugin(PluginInformation pluginInformation);
+
 }

@@ -1,11 +1,14 @@
 package eu.cybergeiger.communication;
 
 import ch.fhnw.geiger.localstorage.StorageController;
+import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.GenericController;
 import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import eu.cybergeiger.totalcross.Base64;
 import eu.cybergeiger.totalcross.File;
+import eu.cybergeiger.totalcross.MalformedUrlException;
 import eu.cybergeiger.totalcross.PluginStarter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -50,7 +53,8 @@ public class LocalApi implements CommunicatorApi {
    * @param isMaster    true if the current API should denote a master
    * @param declaration declaration of data sharing
    */
-  protected LocalApi(String executor, String id, boolean isMaster, Declaration declaration) {
+  protected LocalApi(String executor, String id, boolean isMaster, Declaration declaration)
+      throws StorageException {
     this.executor = executor;
     this.id = id;
     this.isMaster = isMaster;
@@ -105,9 +109,14 @@ public class LocalApi implements CommunicatorApi {
     // request to register at Master
     PluginInformation pluginInformation = new PluginInformation(this.executor,
         geigerCommunicator.getPort());
-    sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
-        MessageType.REGISTER_PLUGIN, new GeigerUrl(MASTER, "registerPlugin"),
-        pluginInformation.toByteArray()));
+    try {
+      sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.REGISTER_PLUGIN, new GeigerUrl(MASTER, "registerPlugin"),
+          pluginInformation.toByteArray()));
+    } catch (MalformedUrlException e) {
+      // TODO proper handling
+      // this should never occur
+    }
   }
 
   private void registerPlugin(String id, PluginInformation info) {
@@ -124,8 +133,13 @@ public class LocalApi implements CommunicatorApi {
     }
     // first deactivate, then deregister at Master, before deleting my own entries.
     deactivatePlugin();
-    sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
-        MessageType.DEREGISTER_PLUGIN, new GeigerUrl(MASTER, "deregisterPlugin")));
+    try {
+      sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.DEREGISTER_PLUGIN, new GeigerUrl(MASTER, "deregisterPlugin")));
+    } catch (MalformedUrlException e) {
+      // TODO proper error handling
+      // this should never occur
+    }
     zapState();
   }
 
@@ -219,7 +233,7 @@ public class LocalApi implements CommunicatorApi {
    *
    * @return a generic controller providing access to the local storage
    */
-  public StorageController getStorage() {
+  public StorageController getStorage() throws StorageException {
     if (isMaster) {
       // TODO remove hardcoded DB information
       return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
@@ -251,9 +265,14 @@ public class LocalApi implements CommunicatorApi {
       for (MessageType event : events) {
         out.write(GeigerCommunicator.intToByteArray(event.ordinal()));
       }
-      out.write(listener.toByteArray());
-      sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_LISTENER,
-          new GeigerUrl(LocalApi.MASTER, "registerListener"), out.toByteArray()));
+      // out.write(listener.toByteArray());
+      try {
+        sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_LISTENER,
+            new GeigerUrl(LocalApi.MASTER, "registerListener"), out.toByteArray()));
+      } catch (MalformedUrlException e) {
+        // TODO proper handling
+        // this should never occur
+      }
     }
   }
 
@@ -289,7 +308,7 @@ public class LocalApi implements CommunicatorApi {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInformation.getPort() > 0)) {
           // is inactive -> start plugin
-          startPlugin(pluginInformation);
+          geigerCommunicator.startPlugin(pluginInformation);
         }
       }
       geigerCommunicator.sendMessage(pluginInformation, msg);
@@ -318,40 +337,68 @@ public class LocalApi implements CommunicatorApi {
         if (i != null) {
           i.setEnabled(true);
         }
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "activateMenu")));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "enableMenu")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       case DISABLE_MENU:
         i = menuItems.get(new StorableString(msg.getPayloadString()));
         if (i != null) {
           i.setEnabled(false);
         }
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "disableMenu")));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "disableMenu")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       case REGISTER_MENU:
         i = MenuItem.fromByteArray(msg.getPayload());
         menuItems.put(new StorableString(i.getMenu()), i);
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "registerMenu")));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "registerMenu")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       case DEREGISTER_MENU:
-        menuItems.remove(new StorableString(msg.getPayloadString()));
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterMenu")));
-        break;
-      case MENU_PRESSED:
-        // TODO parse which plugin is responsible and send message to this plugin
+        String menuString = new String(Base64.decode(msg.getPayloadString()));
+        menuItems.remove(new StorableString(menuString));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterMenu")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       case REGISTER_PLUGIN:
         registerPlugin(msg.getSourceId(), PluginInformation.fromByteArray(msg.getPayload()));
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "registerPlugin")));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "registerPlugin")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       case DEREGISTER_PLUGIN:
         deregisterPlugin(msg.getPayloadString());
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterPlugin")));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterPlugin")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       case ACTIVATE_PLUGIN: {
         // get and remove old info
@@ -361,8 +408,13 @@ public class LocalApi implements CommunicatorApi {
         int port = GeigerCommunicator.byteArrayToInt(msg.getPayload());
         plugins.put(new StorableString(msg.getSourceId()),
             new PluginInformation(pluginInfo.getExecutable(), port));
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "activatePlugin")));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "activatePlugin")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       }
       case DEACTIVATE_PLUGIN: {
@@ -373,8 +425,14 @@ public class LocalApi implements CommunicatorApi {
         // put new info
         plugins.put(new StorableString(msg.getSourceId()),
             new PluginInformation(pluginInfo.getExecutable(), 0));
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deactivatePlugin")));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.COMAPI_SUCCESS,
+              new GeigerUrl(msg.getSourceId(), "deactivatePlugin")));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       }
       case REGISTER_LISTENER: {
@@ -418,8 +476,13 @@ public class LocalApi implements CommunicatorApi {
         break;
       case PING: {
         // answer with PONG
-        sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
-            MessageType.PONG, new GeigerUrl(msg.getSourceId(), ""), msg.getPayload()));
+        try {
+          sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
+              MessageType.PONG, new GeigerUrl(msg.getSourceId(), ""), msg.getPayload()));
+        } catch (MalformedUrlException e) {
+          // TODO proper Error handling
+          // this should never occur
+        }
         break;
       }
       default:
@@ -438,26 +501,46 @@ public class LocalApi implements CommunicatorApi {
 
   @Override
   public void registerMenu(String menu, GeigerUrl action) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_MENU,
-        new GeigerUrl(MASTER, "registerMenu"), new MenuItem(menu, action).toByteArray()));
+    try {
+      sendMessage(MASTER, new Message(id, MASTER, MessageType.REGISTER_MENU,
+          new GeigerUrl(MASTER, "registerMenu"), new MenuItem(menu, action).toByteArray()));
+    } catch (MalformedUrlException e) {
+      // TODO proper Error handling
+      // this should never occur
+    }
   }
 
   @Override
   public void enableMenu(String menu) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.ENABLE_MENU,
-        new GeigerUrl(MASTER, "enableMenu"), menu.getBytes(StandardCharsets.UTF_8)));
+    try {
+      sendMessage(MASTER, new Message(id, MASTER, MessageType.ENABLE_MENU,
+          new GeigerUrl(MASTER, "enableMenu"), menu.getBytes(StandardCharsets.UTF_8)));
+    } catch (MalformedUrlException e) {
+      // TODO proper Error handling
+      // this should never occur
+    }
   }
 
   @Override
   public void disableMenu(String menu) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.DISABLE_MENU,
-        new GeigerUrl(MASTER, "disableMenu"), menu.getBytes(StandardCharsets.UTF_8)));
+    try {
+      sendMessage(MASTER, new Message(id, MASTER, MessageType.DISABLE_MENU,
+          new GeigerUrl(MASTER, "disableMenu"), menu.getBytes(StandardCharsets.UTF_8)));
+    } catch (MalformedUrlException e) {
+      // TODO proper Error handling
+      // this should never occur
+    }
   }
 
   @Override
   public void deregisterMenu(String menu) {
-    sendMessage(MASTER, new Message(id, MASTER, MessageType.DEREGISTER_MENU,
-        new GeigerUrl(MASTER, "deregisterMenu"), menu.getBytes(StandardCharsets.UTF_8)));
+    try {
+      sendMessage(MASTER, new Message(id, MASTER, MessageType.DEREGISTER_MENU,
+          new GeigerUrl(MASTER, "deregisterMenu"), menu.getBytes(StandardCharsets.UTF_8)));
+    } catch (MalformedUrlException e) {
+      // TODO proper Error handling
+      // this should never occur
+    }
   }
 
   @Override
@@ -475,8 +558,13 @@ public class LocalApi implements CommunicatorApi {
   public void scanButtonPressed() {
     // TODO
     if (!isMaster) {
-      sendMessage(MASTER, new Message(id, MASTER, MessageType.SCAN_PRESSED,
-          new GeigerUrl(MASTER, "scanPressed")));
+      try {
+        sendMessage(MASTER, new Message(id, MASTER, MessageType.SCAN_PRESSED,
+            new GeigerUrl(MASTER, "scanPressed")));
+      } catch (MalformedUrlException e) {
+        // TODO proper Error handling
+        // this should never occur
+      }
     } else {
       broadcastMessage(new Message(MASTER, null, MessageType.SCAN_PRESSED, null));
     }
@@ -489,11 +577,5 @@ public class LocalApi implements CommunicatorApi {
    */
   private void startPlugin(PluginInformation pluginInformation) {
     PluginStarter.startPlugin(pluginInformation);
-    // TODO check how this behaves on different operating systems
-    // For android the executable should be the classname of the plugin (which usually is also used
-    // for intents)
-    // It is the responsibility of the plugin to send the correct string/path according to the
-    // current operating system
-    //Vm.exec(pluginInformation.getExecutable(), null, 0, true);
   }
 }

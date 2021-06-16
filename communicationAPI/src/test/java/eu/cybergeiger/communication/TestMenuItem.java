@@ -86,9 +86,23 @@ public class TestMenuItem {
   }
 
   @Test
-  @Ignore
   public void testHashCode() {
-    fail("not implemented");
+    try {
+      String menuName = "testMenu";
+      GeigerUrl url = new GeigerUrl("geiger://plugin/path");
+      MenuItem menu = new MenuItem(menuName, url);
+      MenuItem menu2 = new MenuItem(menuName, url);
+      Assert.assertEquals(menu.hashCode(), menu2.hashCode());
+
+      MenuItem menu3 = new MenuItem(menuName, url, true);
+      MenuItem menu4 = new MenuItem(menuName, url, false);
+      Assert.assertNotEquals(menu3.hashCode(), menu4.hashCode());
+      menu3.setEnabled(false);
+      Assert.assertEquals(menu3.hashCode(), menu4.hashCode());
+    } catch (MalformedUrlException e) {
+      fail("MalformedUrlException thrown");
+      e.printStackTrace();
+    }
   }
 
 }

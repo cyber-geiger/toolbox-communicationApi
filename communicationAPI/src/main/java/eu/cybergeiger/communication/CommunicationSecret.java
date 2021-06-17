@@ -37,15 +37,6 @@ public class CommunicationSecret implements Serializer {
     setRandomSecret(size);
   }
 
-  private void setRandomSecret(int size) {
-    secret = new byte[size];
-    // TODO get proper randomization, secureRandom() does not exists in totalcross
-    for (int i = 0; i < size; i++) {
-      int value = new Random().nextInt(Integer.MAX_VALUE);
-      secret[i] = (byte) (value);
-    }
-  }
-
   /**
    * <p>Creates a secret which is already known.</p>
    *
@@ -69,14 +60,36 @@ public class CommunicationSecret implements Serializer {
   }
 
   /**
+   * <p>Sets a new Secret with size.</p>
+   *
+   * @param size the size of the new secret
+   */
+  private void setRandomSecret(int size) {
+    if (size <= 0) {
+      throw new IllegalArgumentException("size must be greater than 0");
+    }
+    secret = new byte[size];
+    // TODO get proper randomization, secureRandom() does not exists in totalcross
+    for (int i = 0; i < size; i++) {
+      int value = Random.nextInt(Integer.MAX_VALUE);
+      secret[i] = (byte) (value);
+    }
+  }
+
+  /**
    * <p>Sets the secret.</p>
+   * If new secret is null or its length is 0 a random secret is generated
    *
    * @param newSecret the new secret bytes
    * @return the previously set secret
    */
   public byte[] setSecret(byte[] newSecret) {
     byte[] ret = this.secret;
-    this.secret = Arrays.copyOf(newSecret, newSecret.length);
+    if (newSecret == null || newSecret.length == 0) {
+      setRandomSecret(DEFAULT_SIZE);
+    } else {
+      this.secret = Arrays.copyOf(newSecret, newSecret.length);
+    }
     return ret;
   }
 

@@ -6,8 +6,9 @@ import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.System;
+import ch.fhnw.geiger.totalcross.UUID;
 import java.io.IOException;
-import java.util.UUID;
+
 
 /**
  * <p>A Demo plugin providing dummy data.</p>

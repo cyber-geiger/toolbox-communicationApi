@@ -11,7 +11,7 @@ public class PluginInformationFactory {
   private static Map<String, PluginInformation> store = new HashMap<>();
 
   /**
-   * <p>Retrieves plugin information fo a plugin.</p>
+   * <p>Retrieves plugin information for a plugin.</p>
    *
    * @param id the id of the the plugin
    * @param executor the executor string required to run the plugin
@@ -30,7 +30,7 @@ public class PluginInformationFactory {
   }
 
   /**
-   * <p>Retrieves plugin information fo a plugin.</p>
+   * <p>Retrieves plugin information for a plugin.</p>
    *
    * @param id the id of the the plugin
    * @return returns the information object or null if not available

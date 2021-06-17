@@ -22,7 +22,7 @@ public enum Declaration {
   DO_SHARE_DATA("This plugin does share device, company, or user related "
       + "data with consent a other apps or parties within or outside this device.");
 
-  private String declaration;
+  private final String declaration;
 
   Declaration(String declaration) {
     this.declaration = declaration;

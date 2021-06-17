@@ -28,7 +28,7 @@ public class PasstroughController implements StorageController, PluginListener {
   private final String id;
   private final Object comm = new Object();
 
-  private Map<String, Message> receivedMessages = new HashMap<>();
+  private final Map<String, Message> receivedMessages = new HashMap<>();
 
   /**
    * <p>Constructor for passtrouhgcontroller.</p>
@@ -46,7 +46,7 @@ public class PasstroughController implements StorageController, PluginListener {
   private Message waitForResult(String command, String identifier) {
     String token = command + "/" + identifier;
     while (receivedMessages.get(token) == null) {
-      // wait for the apropriate message
+      // wait for the appropriate message
       try {
         synchronized (comm) {
           comm.wait(1000);
@@ -321,7 +321,7 @@ public class PasstroughController implements StorageController, PluginListener {
         // retrieve nodes and add to list
         List<Node> nodes = new ArrayList<>();
         for (int i = 0; i < numNodes; ++i) {
-          nodes.add(NodeImpl.fromByteArrayStream(new ByteArrayInputStream(response.getPayload())));
+          nodes.add(NodeImpl.fromByteArrayStream(new ByteArrayInputStream(receivedNodes)));
         }
         return nodes;
       }

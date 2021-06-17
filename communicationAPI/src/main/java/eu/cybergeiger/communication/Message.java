@@ -15,10 +15,10 @@ public class Message implements Serializer {
 
   private static final long serialVersionUID = 143287432L;
 
-  private String sourceId;
-  private String targetId;
-  private MessageType type;
-  private GeigerUrl action;
+  private final String sourceId;
+  private final String targetId;
+  private final MessageType type;
+  private final GeigerUrl action;
   private String payloadString = null;
 
   /**

@@ -42,7 +42,7 @@ public class TestApiCallSequences {
     GeigerUrl testUrl = new GeigerUrl("geiger://" + LocalApi.MASTER + "/test");
     Message request = new Message(LocalApi.MASTER, LocalApi.MASTER, MessageType.DEREGISTER_PLUGIN,
         testUrl);
-    Message reply = CommunicationHelper.sendAndWait(localMaster, request,
+    Message reply = CommunicationHelper.  sendAndWait(localMaster, request,
         (Message msg) -> msg.getType() == MessageType.COMAPI_SUCCESS
             && msg.getAction().getPath().equals("deregisterPlugin")
     );

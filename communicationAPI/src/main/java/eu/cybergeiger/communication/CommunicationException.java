@@ -5,8 +5,6 @@ import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.Vector;
 
 // FIXME This exception shares large portions of code with Storage Exception.
 //       Should have a common Ancestor Serializable Exception in storage
@@ -20,8 +18,8 @@ public class CommunicationException extends IOException implements Serializer {
 
     private static final long serialversionUID = 2314567434567L;
 
-    private String exceptionName;
-    private String message;
+    private final String exceptionName;
+    private final String message;
 
     public SerializedException(Throwable t) {
       super(t.getCause());
@@ -163,7 +161,7 @@ public class CommunicationException extends IOException implements Serializer {
     StackTraceElement[] ste = SerializerHelper.readStackTraces(in);
 
     // deserialize Throwable
-    List<Throwable> tv = new Vector<>();
+    //List<Throwable> tv = new Vector<>();
     Throwable t = null;
 
     if (SerializerHelper.readInt(in) == 1) {

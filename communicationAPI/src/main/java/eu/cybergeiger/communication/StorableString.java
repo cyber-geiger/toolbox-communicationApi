@@ -13,7 +13,7 @@ public class StorableString implements Serializer {
 
   private static final long serialVersionUID = 142314912322198374L;
 
-  private String value;
+  private final String value;
 
   public StorableString() {
     value = "";

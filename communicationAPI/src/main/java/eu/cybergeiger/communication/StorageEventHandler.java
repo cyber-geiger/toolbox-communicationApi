@@ -151,7 +151,7 @@ public class StorageEventHandler implements PluginListener {
    */
   private void addNode(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request -> create response
-    Node node = null;
+    Node node;
     try {
       node = NodeImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
       storageController.add(node);
@@ -179,7 +179,7 @@ public class StorageEventHandler implements PluginListener {
    */
   private void updateNode(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request without response
-    Node node = null;
+    Node node;
     try {
       node = NodeImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
       storageController.update(node);
@@ -209,7 +209,7 @@ public class StorageEventHandler implements PluginListener {
     // TODO has path argument, returns Node
     // msg is a request -> create response
     try {
-      // TODO sanity checks for Nodepath? see storageEventParser, handling of path arguments
+      // TODO sanity checks for NodePath? see storageEventParser, handling of path arguments
       Node node = storageController.delete(optionalArgs[0]);
       // node may be null
       if (node != null) {
@@ -288,7 +288,7 @@ public class StorageEventHandler implements PluginListener {
    */
   private void addValue(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request without response
-    NodeValue nodeValue = null;
+    NodeValue nodeValue;
     try {
       nodeValue = NodeValueImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
       storageController.addValue(optionalArgs[0], nodeValue);
@@ -316,7 +316,7 @@ public class StorageEventHandler implements PluginListener {
    */
   private void updateValue(Message msg, String identifier, String[] optionalArgs) {
     // msg is a request without response
-    NodeValue nodeValue = null;
+    NodeValue nodeValue;
     try {
       nodeValue = NodeValueImpl.fromByteArrayStream(new ByteArrayInputStream(msg.getPayload()));
       storageController.updateValue(optionalArgs[0], nodeValue);
@@ -347,7 +347,7 @@ public class StorageEventHandler implements PluginListener {
     // msg is a request -> create response
     try {
       // TODO sanity checks for path? see storageEventParser, handling of path arguments
-      // TODO change to deleteValue after storagecontroller interface changed
+      // TODO change to deleteValue after StorageController interface changed
       NodeValue nodeValue = storageController.deleteValue(optionalArgs[0], optionalArgs[1]);
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       nodeValue.toByteArrayStream(bos);
@@ -536,7 +536,7 @@ public class StorageEventHandler implements PluginListener {
     StorageListener listener = null;
     //StorageListener listener = StorageListener.fromByteArray(msg.getPayload());
     SearchCriteria criteria = SearchCriteria.fromByteArray(msg.getPayload());
-    // TODO storageController add changeREgistrar
+    // TODO storageController add changeRegistrar
     // storageController.registerChangeListener(listener, criteria);
 
   }

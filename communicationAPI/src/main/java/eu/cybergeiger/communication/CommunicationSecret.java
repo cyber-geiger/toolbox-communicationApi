@@ -69,7 +69,7 @@ public class CommunicationSecret implements Serializer {
       throw new IllegalArgumentException("size must be greater than 0");
     }
     secret = new byte[size];
-    // TODO get proper randomization, secureRandom() does not exists in totalcross
+    // TODO get proper randomization, secureRandom() does not exists in TotalCross
     for (int i = 0; i < size; i++) {
       int value = Random.nextInt(Integer.MAX_VALUE);
       secret[i] = (byte) (value);
@@ -96,7 +96,7 @@ public class CommunicationSecret implements Serializer {
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
-    // totalcross adaption
+    // TotalCross adaption
     SerializerHelper.writeString(out, Base64.encodeToString(secret));
     //SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(secret));
     SerializerHelper.writeLong(out, serialVersionUID);
@@ -115,7 +115,7 @@ public class CommunicationSecret implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException("Reading start marker fails");
     }
-    // totalcross adaption
+    // TotalCross adaption
     byte[] secret = Base64.decode(SerializerHelper.readString(in));
     //byte[] secret = Base64.getDecoder().decode(SerializerHelper.readString(in));
     CommunicationSecret ret = new CommunicationSecret(secret);

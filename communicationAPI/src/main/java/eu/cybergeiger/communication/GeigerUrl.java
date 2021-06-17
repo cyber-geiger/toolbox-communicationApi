@@ -72,7 +72,7 @@ public class GeigerUrl implements Serializer {
     this.protocol = protocol;
   }
 
-  private final void init(String pluginId, String path) throws MalformedUrlException {
+  private void init(String pluginId, String path) throws MalformedUrlException {
     if (pluginId == null || pluginId.equals("")) {
       throw new MalformedUrlException("pluginId cannot be null nor empty");
     }
@@ -90,9 +90,7 @@ public class GeigerUrl implements Serializer {
    * @return the string representation
    */
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append(protocol).append("://").append(pluginId).append('/').append(path);
-    return sb.toString();
+    return protocol + "://" + pluginId + '/' + path;
   }
 
   /**

@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public class PluginInformationFactory {
 
-  private static Map<String, PluginInformation> store = new HashMap<>();
+  private static final Map<String, PluginInformation> store = new HashMap<>();
 
   /**
    * <p>Retrieves plugin information for a plugin.</p>

@@ -1,5 +1,6 @@
 package eu.cybergeiger.communication;
 
+import ch.fhnw.geiger.totalcross.System;
 import java.io.IOException;
 
 /**
@@ -11,14 +12,14 @@ public class CommunicationHelper {
   /**
    * Interface to denote a MessageFilter.
    */
-  public static interface MessageFilter {
+  public interface MessageFilter {
     boolean filter(Message msg);
   }
 
   private static class Listener implements PluginListener {
 
-    private MessageFilter filter;
-    private LocalApi api;
+    private final MessageFilter filter;
+    private final LocalApi api;
     private final Object obj = new Object();
     private Message msg = null;
 
@@ -50,10 +51,9 @@ public class CommunicationHelper {
     }
 
     public Message waitForResult(long timeout) throws IOException {
-      //long starttime = (new Time()).getTime();
-      long starttime = ch.fhnw.geiger.totalcross.System.currentTimeMillis();
+      long startTime = System.currentTimeMillis();
       while (msg == null && (timeout < 0
-          || (ch.fhnw.geiger.totalcross.System.currentTimeMillis() - starttime < timeout))) {
+          || (ch.fhnw.geiger.totalcross.System.currentTimeMillis() - startTime < timeout))) {
         try {
           synchronized (obj) {
             obj.wait(100);
@@ -88,7 +88,7 @@ public class CommunicationHelper {
    * @param api     the API to be used as communication endpoint
    * @param msg     the message to be sent
    * @param filter  the filter matching the expected reply
-   * @param timeout the timeout in miliseconds (-1 for infinite)
+   * @param timeout the timeout in milliseconds (-1 for infinite)
    * @return the response Message
    */
   public static Message sendAndWait(LocalApi api, Message msg, MessageFilter filter, long timeout)

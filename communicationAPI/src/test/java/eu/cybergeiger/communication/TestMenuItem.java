@@ -4,7 +4,6 @@ import static junit.framework.TestCase.fail;
 
 import eu.cybergeiger.totalcross.MalformedUrlException;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -36,6 +35,25 @@ public class TestMenuItem {
       menu3.setEnabled(false);
       Assert.assertFalse(menu3.isEnabled());
 
+      // negative Tests
+      // menuName is null or empty
+      Assert.assertThrows(IllegalArgumentException.class, () -> new MenuItem(null, url));
+      Assert.assertThrows(IllegalArgumentException.class,
+          () -> new MenuItem(null, url, false));
+      Assert.assertThrows(IllegalArgumentException.class,
+          () -> new MenuItem(null, url, true));
+      Assert.assertThrows(IllegalArgumentException.class, () -> new MenuItem("", url));
+      Assert.assertThrows(IllegalArgumentException.class,
+          () -> new MenuItem("", url, false));
+      Assert.assertThrows(IllegalArgumentException.class,
+          () -> new MenuItem("", url, true));
+
+      // action is null
+      Assert.assertThrows(IllegalArgumentException.class, () -> new MenuItem(menuName, null));
+      Assert.assertThrows(IllegalArgumentException.class,
+          () -> new MenuItem(menuName, null, false));
+      Assert.assertThrows(IllegalArgumentException.class,
+          () -> new MenuItem(menuName, null, true));
     } catch (MalformedUrlException e) {
       fail("MalformedUrlException thrown");
       e.printStackTrace();

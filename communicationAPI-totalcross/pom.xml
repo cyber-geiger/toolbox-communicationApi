@@ -131,7 +131,7 @@
         </plugins>
         <resources>
             <resource>
-                <directory>../totalcrossAPI/src/main/java</directory>
+                <directory>../communicationAPI/src/main/java</directory>
                 <includes>
                     <include> **/*</include>
                 </includes>

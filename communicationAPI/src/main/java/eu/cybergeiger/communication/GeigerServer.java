@@ -50,7 +50,7 @@ public class GeigerServer extends GeigerCommunicator {
   }
 
   /**
-   * Stop the Geigerserver.
+   * Stop the GeigerServer.
    *
    * @throws IOException if server could not be closed
    */

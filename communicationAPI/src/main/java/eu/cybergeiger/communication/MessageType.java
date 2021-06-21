@@ -48,7 +48,7 @@ public enum MessageType {
   COMAPI_SUCCESS(30000),
   COMAPI_ERROR(30200);
 
-  private int id;
+  private final int id;
 
   MessageType(int id) {
     this.id = id;

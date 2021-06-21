@@ -10,7 +10,7 @@ import java.util.Map;
 public class LocalApiFactory {
 
   // TODO check for threadsafety as concurrenthashmap is not supported
-  private static Map<String, LocalApi> instances = new HashMap<>();
+  private static final Map<String, LocalApi> instances = new HashMap<>();
 
   /**
    * <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be

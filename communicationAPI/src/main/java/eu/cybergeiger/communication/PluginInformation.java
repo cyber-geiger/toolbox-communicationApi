@@ -13,8 +13,8 @@ public class PluginInformation implements Serializer {
 
   private static final long serialVersionUID = 48032940912340L;
 
-  private String executable;
-  private int port;
+  private final String executable;
+  private final int port;
   private CommunicationSecret secret;
 
   public PluginInformation(String executable, int port) {
@@ -22,11 +22,11 @@ public class PluginInformation implements Serializer {
   }
 
   /**
-   * <p>Constructor for plugin finformation.</p>
+   * <p>Constructor for plugin information.</p>
    *
    * @param executable the string required for platform specific wakeup of a plugin
    * @param port       the port of the plugin to be contacted on
-   * @param secret     the secret required for communicating (if null a new seccret is generated)
+   * @param secret     the secret required for communicating (if null a new secret is generated)
    */
   PluginInformation(String executable, int port, CommunicationSecret secret) {
     this.executable = executable;

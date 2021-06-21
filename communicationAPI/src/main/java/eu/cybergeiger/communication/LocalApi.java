@@ -37,13 +37,12 @@ public class LocalApi implements CommunicatorApi {
   private final String executor;
   private final String id;
   private final boolean isMaster;
-  private Declaration declaration;
+  private final Declaration declaration;
 
   private final Map<MessageType, List<PluginListener>> listeners
       = Collections.synchronizedMap(new HashMap<>());
 
   private GeigerCommunicator geigerCommunicator;
-  private final PluginListener storageEventHandler;
 
   /**
    * <p>Constructor called by LocalApiFactory.</p>
@@ -52,7 +51,7 @@ public class LocalApi implements CommunicatorApi {
    * @param id          the id of the plugin
    * @param isMaster    true if the current API should denote a master
    * @param declaration declaration of data sharing
-   * @throws StorageException in case registration fails
+   * @throws StorageException if the StorageController could not be initialized
    */
   protected LocalApi(String executor, String id, boolean isMaster, Declaration declaration)
       throws StorageException {
@@ -63,6 +62,7 @@ public class LocalApi implements CommunicatorApi {
 
     restoreState();
 
+    PluginListener storageEventHandler;
     if (!isMaster) {
       // it is a plugin
       try {
@@ -150,18 +150,18 @@ public class LocalApi implements CommunicatorApi {
       synchronized (menuItems) {
         List<String> l = new Vector<>();
         for (Map.Entry<StorableString, MenuItem> i : menuItems.entrySet()) {
-          if (i.getValue().getAction().equals(id)) {
+          if (i.getValue().getAction().getPlugin().equals(id)) {
             l.add(i.getKey().toString());
           }
         }
         for (String key : l) {
-          menuItems.remove(key);
+          menuItems.remove(new StorableString(key));
         }
       }
     }
 
     // remove plugin secret
-    plugins.remove(id);
+    plugins.remove(new StorableString(id));
 
     storeState();
   }
@@ -250,6 +250,7 @@ public class LocalApi implements CommunicatorApi {
       for (MessageType e : events) {
         synchronized (listeners) {
           List<PluginListener> l = listeners.get(e);
+          // The short form computeIfAbsent is not available in TotalCross
           if (l == null) {
             l = new Vector<>();
             listeners.put(e, l);
@@ -319,7 +320,7 @@ public class LocalApi implements CommunicatorApi {
   /**
    * <p>broadcasts a message to all known plugins.</p>
    *
-   * @param msg the message to be broadcasted
+   * @param msg the message to be broadcast
    */
   private void broadcastMessage(Message msg) {
     for (Map.Entry<StorableString, PluginInformation> plugin : plugins.entrySet()) {
@@ -392,7 +393,7 @@ public class LocalApi implements CommunicatorApi {
         }
         break;
       case DEREGISTER_PLUGIN:
-        deregisterPlugin(msg.getPayloadString());
+        deregisterPlugin(msg.getSourceId());
         try {
           sendMessage(msg.getSourceId(), new Message(msg.getTargetId(), msg.getSourceId(),
               MessageType.COMAPI_SUCCESS, new GeigerUrl(msg.getSourceId(), "deregisterPlugin")));
@@ -453,6 +454,7 @@ public class LocalApi implements CommunicatorApi {
         for (MessageType e : events) {
           synchronized (listeners) {
             List<PluginListener> l = listeners.get(e);
+            // short form with computeIfAbsent is not available in TotalCross
             if (l == null) {
               l = new Vector<>();
               listeners.put(e, l);

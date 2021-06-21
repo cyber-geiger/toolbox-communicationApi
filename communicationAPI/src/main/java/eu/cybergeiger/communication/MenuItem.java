@@ -15,8 +15,8 @@ public class MenuItem implements Serializer {
 
   private static final long serialVersionUID = 481231212L;
 
-  private String menu;
-  private GeigerUrl action;
+  private final String menu;
+  private final GeigerUrl action;
   private boolean enabled;
 
   /**
@@ -38,6 +38,12 @@ public class MenuItem implements Serializer {
    * @param enabled is the menu entry currently enabled
    */
   public MenuItem(String menu, GeigerUrl action, boolean enabled) {
+    if (menu == null || "".equals(menu)) {
+      throw new IllegalArgumentException("menu may not be null nor empty");
+    }
+    if (action == null) {
+      throw new IllegalArgumentException("action may not be null");
+    }
     this.menu = menu;
     this.action = action;
     this.enabled = enabled;

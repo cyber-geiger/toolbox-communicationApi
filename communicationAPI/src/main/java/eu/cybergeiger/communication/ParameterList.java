@@ -5,6 +5,7 @@ import ch.fhnw.geiger.serialization.SerializerHelper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 
@@ -23,9 +24,7 @@ public class ParameterList implements Serializer {
    * @param args The parameters to be added
    */
   public ParameterList(String... args) {
-    for (String s : args) {
-      this.args.add(s);
-    }
+    this.args.addAll(Arrays.asList(args));
   }
 
   /**

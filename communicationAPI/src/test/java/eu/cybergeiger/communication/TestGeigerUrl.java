@@ -218,7 +218,6 @@ public class TestGeigerUrl {
   }
 
   @Test
-  @Ignore
   public void testHashCode() {
     try {
       for (String protocol : protocols) {
@@ -231,7 +230,7 @@ public class TestGeigerUrl {
             }
             String expectedFormat = protocol + "://" + plugin + "/" + path;
             GeigerUrl url2 = new GeigerUrl(expectedFormat);
-            Assert.assertEquals(Objects.hash(url), url2.hashCode());
+            Assert.assertEquals(url.hashCode(), url2.hashCode());
           }
         }
       }
@@ -246,22 +245,22 @@ public class TestGeigerUrl {
           }
           String expectedFormat = "geiger://" + plugin + "/" + path;
           GeigerUrl url2 = new GeigerUrl(expectedFormat);
-          Assert.assertEquals(Objects.hash(url), url2.hashCode());
+          Assert.assertEquals(url.hashCode(), url2.hashCode());
         }
       }
       // Negative tests
       // varying protocol
       GeigerUrl url = new GeigerUrl("geiger://plugin/path");
       GeigerUrl url2 = new GeigerUrl("gei-ger://plugin/path");
-      Assert.assertNotEquals(Objects.hash(url), url2.hashCode());
+      Assert.assertNotEquals(url.hashCode(), url2.hashCode());
       // varying plugin
       GeigerUrl url3 = new GeigerUrl("geiger://plugin/path");
       GeigerUrl url4 = new GeigerUrl("geiger://plug-in/path");
-      Assert.assertNotEquals(Objects.hash(url3), url4.hashCode());
+      Assert.assertNotEquals(url.hashCode(), url4.hashCode());
       // varying path
       GeigerUrl url5 = new GeigerUrl("geiger://plugin/path");
       GeigerUrl url6 = new GeigerUrl("geiger://plugin/path/something/else");
-      Assert.assertNotEquals(Objects.hash(url5), url6.hashCode());
+      Assert.assertNotEquals(url.hashCode(), url6.hashCode());
     } catch (MalformedUrlException e) {
       fail("MalformerUrlException was thrown");
       e.printStackTrace();

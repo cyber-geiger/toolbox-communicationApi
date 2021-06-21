@@ -29,7 +29,7 @@ public class PasstroughController implements StorageController, PluginListener, 
   private final String id;
   private final Object comm = new Object();
 
-  private Map<String, Message> receivedMessages = new HashMap<>();
+  private final Map<String, Message> receivedMessages = new HashMap<>();
 
   /**
    * <p>Constructor for PasstroughController.</p>
@@ -376,7 +376,7 @@ public class PasstroughController implements StorageController, PluginListener, 
         // retrieve nodes and add to list
         List<Node> nodes = new ArrayList<>();
         for (int i = 0; i < numNodes; ++i) {
-          nodes.add(NodeImpl.fromByteArrayStream(new ByteArrayInputStream(response.getPayload())));
+          nodes.add(NodeImpl.fromByteArrayStream(new ByteArrayInputStream(receivedNodes)));
         }
         return nodes;
       }
@@ -393,7 +393,6 @@ public class PasstroughController implements StorageController, PluginListener, 
       localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
           MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier)));
-
     } catch (MalformedUrlException e) {
       // TODO proper Error handling
       // this should never occur
@@ -441,8 +440,7 @@ public class PasstroughController implements StorageController, PluginListener, 
     String command = "zap";
     String identifier = String.valueOf(new Random().nextInt());
     try {
-      localApi.sendMessage(LocalApi.MASTER, new Message(id,
-          LocalApi.MASTER,
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
           MessageType.STORAGE_EVENT,
           new GeigerUrl(id, command + "/" + identifier)));
     } catch (MalformedUrlException e) {
@@ -473,7 +471,13 @@ public class PasstroughController implements StorageController, PluginListener, 
     }
   }
 
-  @Override
+  /**
+   * Register a StorageListener for a Node defined by SearchCriteria.
+   *
+   * @param listener StorageListener to be registered
+   * @param criteria SearchCriteria to search for the Node
+   * @throws StorageException if the listener could not be registered
+   */
   public void registerChangeListener(StorageListener listener, SearchCriteria criteria)
       throws StorageException {
     String command = "registerChangeListener";
@@ -505,7 +509,13 @@ public class PasstroughController implements StorageController, PluginListener, 
     }
   }
 
-  @Override
+  /**
+   * Deregister a StorageListener from the Storage.
+   *
+   * @param listener the listener to Deregister
+   * @return the SearchCriteria that were deregistered
+   * @throws StorageException if listener could not be deregistered
+   */
   public SearchCriteria[] deregisterChangeListener(StorageListener listener)
       throws StorageException {
     String command = "deregisterChangeListener";

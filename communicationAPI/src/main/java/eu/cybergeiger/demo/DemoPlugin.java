@@ -10,8 +10,9 @@ import eu.cybergeiger.communication.CommunicatorApi;
 import eu.cybergeiger.communication.Declaration;
 import eu.cybergeiger.communication.DeclarationMismatchException;
 import eu.cybergeiger.communication.LocalApiFactory;
+import ch.fhnw.geiger.totalcross.UUID;
 import java.io.IOException;
-import java.util.UUID;
+
 
 /**
  * <p>A Demo plugin providing dummy data.</p>

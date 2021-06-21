@@ -43,7 +43,7 @@ dependencies {
     checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }
 
     // junit
-    //testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.0'
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.0'
     //testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.0'
     testImplementation("junit:junit:4.13")
     //testImplementation "org.mockito:mockito-core:3.+"

@@ -18,44 +18,6 @@ import org.junit.Test;
 public class TestExternalCommunication {
 
   @Test
-  public void testPing() throws Exception, DeclarationMismatchException {
-    LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
-        Declaration.DO_NOT_SHARE_DATA);
-    GeigerUrl testUrl = new GeigerUrl("geiger://master/test");
-    Message ping = new Message(LocalApi.MASTER, LocalApi.MASTER, MessageType.PING, testUrl,
-        "payload".getBytes(StandardCharsets.UTF_8));
-    Message reply = CommunicationHelper.sendAndWait(localMaster, ping,
-        (Message msg) -> Arrays.equals(msg.getPayload(), ping.getPayload())
-            && msg.getType() == MessageType.PONG
-    );
-    assertEquals("comparing payloads",
-        new String(ping.getPayload(), StandardCharsets.UTF_8),
-        new String(reply.getPayload(), StandardCharsets.UTF_8));
-    assertEquals("checking message type", MessageType.PONG, reply.getType());
-    assertEquals("checking recipient of reply", ping.getSourceId(), reply.getTargetId());
-    assertEquals("checking sender of reply", ping.getTargetId(), reply.getSourceId());
-  }
-
-  @Test
-  public void testRegisterPlugin() throws Exception, DeclarationMismatchException {
-    LocalApi localMaster = LocalApiFactory.getLocalApi("", LocalApi.MASTER,
-        Declaration.DO_NOT_SHARE_DATA);
-    //MockListener masterListener = new MockListener();
-    //localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
-    GeigerUrl testUrl = new GeigerUrl("geiger://master/test");
-    PluginInformation info = new PluginInformation("./plugin1", 4321);
-    Message request = new Message(LocalApi.MASTER, LocalApi.MASTER, MessageType.REGISTER_PLUGIN,
-        testUrl, info.toByteArray());
-    Message reply = CommunicationHelper.sendAndWait(localMaster, request,
-        (Message msg) -> msg.getType() == MessageType.COMAPI_SUCCESS);
-    //ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
-    assertEquals("checking URl", "registerPlugin", reply.getAction().getPath());
-    assertEquals("checking message type", MessageType.COMAPI_SUCCESS, reply.getType());
-    assertEquals("checking recipient of reply", request.getSourceId(), reply.getTargetId());
-    assertEquals("checking sender of reply", request.getTargetId(), reply.getSourceId());
-  }
-
-  @Test
   public void testRegisterExternalPlugin() throws StorageException {
     try {
       // create Master

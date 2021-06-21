@@ -17,7 +17,7 @@ public class GeigerServer extends GeigerCommunicator {
   private ServerSocket serverSocket;
   private final LocalApi localApi;
   Thread server;
-  Boolean shutdown;
+  boolean shutdown;
 
   public GeigerServer(LocalApi api) {
     this.localApi = api;

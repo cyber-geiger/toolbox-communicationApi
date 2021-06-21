@@ -49,7 +49,7 @@ public class CommunicationHelper {
       api.deregisterListener(new MessageType[]{MessageType.ALL_EVENTS}, this);
     }
 
-    public Message waitForResult(long timeout) throws IOException {
+    public Message waitForResult(long timeout) throws CommunicationException {
       //long starttime = (new Time()).getTime();
       long starttime = ch.fhnw.geiger.totalcross.System.currentTimeMillis();
       while (msg == null && (timeout < 0
@@ -63,7 +63,7 @@ public class CommunicationHelper {
         }
       }
       if (msg == null) {
-        throw new IOException("timeout reached");
+        throw new CommunicationException("timeout reached");
       }
       return msg;
     }
@@ -76,9 +76,10 @@ public class CommunicationHelper {
    * @param msg    the message to be sent
    * @param filter the filter matching the expected reply
    * @return the response Message
+   * @throws CommunicationException if communication with master fails
    */
   public static Message sendAndWait(LocalApi api, Message msg, MessageFilter filter)
-      throws IOException {
+      throws CommunicationException {
     return sendAndWait(api, msg, filter, 10000);
   }
 
@@ -90,9 +91,10 @@ public class CommunicationHelper {
    * @param filter  the filter matching the expected reply
    * @param timeout the timeout in miliseconds (-1 for infinite)
    * @return the response Message
+   * @throws CommunicationException if communication with master fails
    */
   public static Message sendAndWait(LocalApi api, Message msg, MessageFilter filter, long timeout)
-      throws IOException {
+      throws CommunicationException {
     Listener l = new Listener(api, filter);
     api.sendMessage(msg.getTargetId(), msg);
     Message result = l.waitForResult(timeout);

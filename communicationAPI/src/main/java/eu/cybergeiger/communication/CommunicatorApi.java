@@ -11,6 +11,8 @@ public interface CommunicatorApi extends PluginRegistrar, MenuRegistrar {
 
   /**
    * <p>Activates the plugin and sets up communication.</p>
+   *
+   * @param port the port to be occupied
    */
   void activatePlugin(int port);
 

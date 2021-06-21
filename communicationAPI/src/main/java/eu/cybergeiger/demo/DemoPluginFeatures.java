@@ -1,4 +1,4 @@
-package eu.cybergeiger.communication;
+package eu.cybergeiger.demo;
 
 /**
  * <p>Enumeration providing selectable features from DemoPlugin.</p>

@@ -1,4 +1,4 @@
-package eu.cybergeiger.communication;
+package eu.cybergeiger.demo;
 
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.StorageException;
@@ -6,6 +6,10 @@ import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.System;
+import eu.cybergeiger.communication.CommunicatorApi;
+import eu.cybergeiger.communication.Declaration;
+import eu.cybergeiger.communication.DeclarationMismatchException;
+import eu.cybergeiger.communication.LocalApiFactory;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -26,6 +30,10 @@ public class DemoPlugin {
     private CommunicatorApi comm;
     private StorageController store;
 
+    private final String userUuid;
+    private final String deviceUuid;
+    private final String pluginUuid = UUID.toString();
+
     public DemoPluginRunner(long features) throws IOException {
       try {
         comm = LocalApiFactory.getLocalApi("still undefined", "DemoPlugin",
@@ -35,16 +43,6 @@ public class DemoPlugin {
         throw new IOException("OOPS! that should not happen... please contact developer", dme);
       }
       this.features = features;
-      setState(0);
-    }
-
-    @Override
-    public void run() {
-      // make sure that this is always a daemon thread and not keeping the app from shutting down
-      setDaemon(true);
-
-      String userUuid = null;
-      String deviceUuid = null;
       try {
         // get user node
         userUuid = store.getValue(":Local", "currentUser").getValue();
@@ -56,7 +54,15 @@ public class DemoPlugin {
         throw new RuntimeException("OOPS! ... mandatory keys in storage are missing. "
             + "s should not happen. Contact developer", se);
       }
-      // create plugin nodes
+      setState(0);
+    }
+
+    @Override
+    public void run() {
+      // make sure that this is always a daemon thread and not keeping the app from shutting down
+      setDaemon(true);
+
+      // initially create plugin nodes
       for (Node n :
           new Node[]
             {

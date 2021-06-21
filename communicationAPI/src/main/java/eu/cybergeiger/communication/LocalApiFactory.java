@@ -16,9 +16,13 @@ public class LocalApiFactory {
    * <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be
    * private.</p>
    *
+   * @param executor    the executor string required to run the plugin (may be platform dependant)
    * @param id          the id of the API to be retrieved
    * @param declaration the privacy declaration
    * @return the instance requested
+   * @throws DeclarationMismatchException if the plugin has been registered previously and the
+   *                                      declaration does not match
+   * @throws StorageException             if registration failed
    */
   public static LocalApi getLocalApi(String executor, String id, Declaration declaration)
       throws DeclarationMismatchException, StorageException {

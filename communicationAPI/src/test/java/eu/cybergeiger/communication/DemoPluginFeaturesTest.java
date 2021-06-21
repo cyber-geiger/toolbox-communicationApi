@@ -1,5 +1,6 @@
 package eu.cybergeiger.communication;
 
+import eu.cybergeiger.demo.DemoPluginFeatures;
 import org.junit.Assert;
 import org.junit.Test;
 

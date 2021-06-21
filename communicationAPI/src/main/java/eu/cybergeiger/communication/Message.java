@@ -122,6 +122,8 @@ public class Message implements Serializer {
   /**
    * <p>Sets the payload as a string.</p>
    *
+   * @param value the string to be used as payload
+   *
    * @return a string representing the payload
    */
   public String setPayloadString(String value) {

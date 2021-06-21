@@ -1,5 +1,6 @@
 package eu.cybergeiger.communication;
 
+import ch.fhnw.geiger.localstorage.ChangeRegistrar;
 import ch.fhnw.geiger.localstorage.SearchCriteria;
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.StorageException;
@@ -22,7 +23,7 @@ import java.util.Random;
 /**
  * <p>Class for handling storage events in Plugins.</p>
  */
-public class PasstroughController implements StorageController, PluginListener {
+public class PasstroughController implements StorageController, PluginListener, ChangeRegistrar {
 
   private final LocalApi localApi;
   private final String id;
@@ -31,7 +32,7 @@ public class PasstroughController implements StorageController, PluginListener {
   private Map<String, Message> receivedMessages = new HashMap<>();
 
   /**
-   * <p>Constructor for passtrouhgcontroller.</p>
+   * <p>Constructor for PasstroughController.</p>
    *
    * @param api the LocalApi it belongs to
    * @param id  the PluginId it belongs to
@@ -46,7 +47,7 @@ public class PasstroughController implements StorageController, PluginListener {
   private Message waitForResult(String command, String identifier) {
     String token = command + "/" + identifier;
     while (receivedMessages.get(token) == null) {
-      // wait for the apropriate message
+      // wait for the appropriate message
       try {
         synchronized (comm) {
           comm.wait(1000);
@@ -61,6 +62,34 @@ public class PasstroughController implements StorageController, PluginListener {
   @Override
   public Node get(String path) throws StorageException {
     String command = "getNode";
+    String identifier = String.valueOf(new Random().nextInt());
+    try {
+      localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
+          MessageType.STORAGE_EVENT,
+          new GeigerUrl(id, command + "/" + identifier + "/" + path)));
+    } catch (MalformedUrlException e) {
+      // TODO proper Error handling
+      // this should never occur
+    }
+
+    // get response
+    Message response = waitForResult(command, identifier);
+    try {
+      if (response.getType() == MessageType.STORAGE_ERROR) {
+        throw StorageException
+            .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+      } else {
+        // it was a success
+        return NodeImpl.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+      }
+    } catch (IOException e) {
+      throw new StorageException("Could not get Node", e);
+    }
+  }
+
+  @Override
+  public Node getNodeOrTombstone(String path) throws StorageException {
+    String command = "getNodeOrTombstone";
     String identifier = String.valueOf(new Random().nextInt());
     try {
       localApi.sendMessage(LocalApi.MASTER, new Message(id, LocalApi.MASTER,
@@ -132,6 +161,32 @@ public class PasstroughController implements StorageController, PluginListener {
     } catch (IOException e) {
       throw new StorageException("Could not update Node", e);
     }
+  }
+
+  @Override
+  public boolean addOrUpdate(Node node) throws StorageException {
+    String command = "addOrUpdateNode";
+    String identifier = String.valueOf(new Random().nextInt());
+    try {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      node.toByteArrayStream(bos);
+      byte[] payload = bos.toByteArray();
+      Message m = new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
+          new GeigerUrl(id, command + "/" + identifier), payload);
+      localApi.sendMessage(LocalApi.MASTER, m);
+
+      // get response
+      Message response = waitForResult(command, identifier);
+      if (response.getType() == MessageType.STORAGE_ERROR) {
+        throw StorageException
+            .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+      }
+      // if no error received, nothing more to do
+      return true;
+    } catch (IOException e) {
+      throw new StorageException("Could not add or update Node", e);
+    }
+
   }
 
   @Override

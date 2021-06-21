@@ -52,6 +52,7 @@ public class LocalApi implements CommunicatorApi {
    * @param id          the id of the plugin
    * @param isMaster    true if the current API should denote a master
    * @param declaration declaration of data sharing
+   * @throws StorageException in case registration fails
    */
   protected LocalApi(String executor, String id, boolean isMaster, Declaration declaration)
       throws StorageException {

@@ -1,5 +1,6 @@
 package eu.cybergeiger.totalcross;
 
+import ch.fhnw.geiger.totalcross.Detector;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 

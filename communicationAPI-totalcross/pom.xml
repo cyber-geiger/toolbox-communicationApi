@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.totalcross</groupId>
             <artifactId>totalcross-sdk</artifactId>
-            <version>7.0.3</version>
+            <version>7.1.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -107,7 +107,6 @@
                 <configuration>
                     <name>${project.name}</name>
                     <platforms>
-                        <platform>-android</platform>
                         <platform>-win32</platform>
                     </platforms>
                 </configuration>

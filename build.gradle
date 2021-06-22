@@ -38,3 +38,30 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+task totalcrossMavenBuild(type: Exec) {
+    // executes mvn package -Dmaven.test.skip=true
+    // as the tests already run in gradle there is no need to rerun in maven
+    workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+    commandLine 'cmd', '/c', 'mvn build -Dmaven.test.skip=true'
+}
+
+task totalcrossMavenPackage(type: Exec) {
+    // executes mvn package -Dmaven.test.skip=true
+    // as the tests already run in gradle there is no need to rerun in maven
+    workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+    commandLine 'cmd', '/c', 'mvn package -Dmaven.test.skip=true'
+}
+
+task totalcrossMavenPackageLinux(type: Exec) {
+    // executes mvn package -Dmaven.test.skip=true
+    // as the tests already run in gradle there is no need to rerun in maven
+    workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+    commandLine 'mvn', 'package', '-Dmaven.test.skip=true'
+}
+
+task totalcrossMavenTest(type: Exec) {
+    workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+    commandLine 'cmd', '/c', 'mvn test'
+}
+

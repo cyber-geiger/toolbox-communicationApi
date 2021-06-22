@@ -6,11 +6,11 @@ import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.System;
+import ch.fhnw.geiger.totalcross.UUID;
 import eu.cybergeiger.communication.CommunicatorApi;
 import eu.cybergeiger.communication.Declaration;
 import eu.cybergeiger.communication.DeclarationMismatchException;
 import eu.cybergeiger.communication.LocalApiFactory;
-import ch.fhnw.geiger.totalcross.UUID;
 import java.io.IOException;
 
 
@@ -64,12 +64,9 @@ public class DemoPlugin {
       setDaemon(true);
 
       // initially create plugin nodes
-      for (Node n :
-          new Node[]
-            {
-              new NodeImpl(":Users:" + userUuid + ":" + UUID),
-              new NodeImpl(":Devices:" + deviceUuid + ":" + UUID)
-            }
+      for (Node n : new Node[]{
+          new NodeImpl(":Users:" + userUuid + ":" + UUID),
+          new NodeImpl(":Devices:" + deviceUuid + ":" + UUID)}
       ) {
         try {
           store.add(n);

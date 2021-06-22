@@ -42,10 +42,10 @@ pipeline {
     }
     post {
         always {
-          publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'localstorage/build/reports/tests/test/', reportFiles: 'index.html', reportName: 'GEIGER localstorage Report', reportTitles: 'GEIGER-localstorage'])
+          publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'communicationAPI/build/reports/tests/test/', reportFiles: 'index.html', reportName: 'GEIGER localstorage Report', reportTitles: 'GEIGER-localstorage'])
         }
         success {
-            archiveArtifacts artifacts: '**/build/libs/*.jar', fingerprint: true
+            archiveArtifacts artifacts: '**/build/libs/*.jar,**/target/install/**/*', fingerprint: true
 			step([$class: 'JavadocArchiver', javadocDir: 'localstorage/build/docs/javadoc', keepAll: false])
             updateGitlabCommitStatus(name: 'build', state: 'success')
         }

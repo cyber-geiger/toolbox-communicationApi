@@ -25,7 +25,7 @@ pipeline {
             steps {
 				script{
 					try {
-						sh './gradlew clean test checkstyleMain'
+						sh './gradlew test checkstyleMain'
 					} finally {
 						junit '**/build/test-results/test/*.xml' 
 					}

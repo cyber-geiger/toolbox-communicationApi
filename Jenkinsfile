@@ -46,7 +46,7 @@ pipeline {
         }
         success {
             archiveArtifacts artifacts: '**/build/libs/*.jar,**/target/install/**/*', fingerprint: true
-			step([$class: 'JavadocArchiver', javadocDir: '**/build/docs/javadoc', keepAll: false])
+			      step([$class: 'JavadocArchiver', javadocDir: 'communicationAPI/build/docs/javadoc/', keepAll: false])
             updateGitlabCommitStatus(name: 'build', state: 'success')
         }
         failure {

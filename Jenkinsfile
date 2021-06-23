@@ -25,7 +25,7 @@ pipeline {
             steps {
 				script{
 					try {
-						sh './gradlew clean test checkstyleMain'
+						sh './gradlew test checkstyleMain'
 					} finally {
 						junit '**/build/test-results/test/*.xml' 
 					}
@@ -35,18 +35,18 @@ pipeline {
 
         stage('Gradle publish') {
             steps {
-                sh './gradlew -Dgradle.user.home=$HOME/.gradle publish --no-daemon'
+                sh './gradlew -Dgradle.user.home=$HOME/.gradle publish totalcrossMavenPackageLinux --no-daemon'
             }
         }
 
     }
     post {
         always {
-          publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'localstorage/build/reports/tests/test/', reportFiles: 'index.html', reportName: 'GEIGER localstorage Report', reportTitles: 'GEIGER-localstorage'])
+          publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'communicationAPI/build/reports/tests/test/', reportFiles: 'index.html', reportName: 'GEIGER localstorage Report', reportTitles: 'GEIGER-localstorage'])
         }
         success {
-            archiveArtifacts artifacts: '**/build/libs/*.jar', fingerprint: true
-			step([$class: 'JavadocArchiver', javadocDir: 'localstorage/build/docs/javadoc', keepAll: false])
+            archiveArtifacts artifacts: '**/build/libs/*.jar,**/target/install/**/*', fingerprint: true
+			      step([$class: 'JavadocArchiver', javadocDir: 'communicationAPI/build/docs/javadoc/', keepAll: false])
             updateGitlabCommitStatus(name: 'build', state: 'success')
         }
         failure {

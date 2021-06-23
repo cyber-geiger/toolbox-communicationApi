@@ -1,6 +1,6 @@
 package eu.cybergeiger.communication;
 
-import eu.cybergeiger.totalcross.Random;
+import ch.fhnw.geiger.totalcross.Random;
 import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;

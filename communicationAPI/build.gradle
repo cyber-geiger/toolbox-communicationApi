@@ -34,12 +34,10 @@ configurations {
 }
 
 dependencies {
-    implementation  ('eu.cyber-geiger:toolbox-storage:0.3.3b-SNAPSHOT'){
-        changing=true
-    }
-    implementation 'com.totalcross:totalcross-sdk:7.0.3'
+    implementation('eu.cyber-geiger:toolbox-storage:0.3.3b-SNAPSHOT') { changing = true }
+    implementation 'com.totalcross:totalcross-sdk:7.1.0'
 
-    compile group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
+    testImplementation group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
     checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }
 
     // junit

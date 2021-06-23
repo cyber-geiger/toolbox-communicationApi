@@ -32,17 +32,17 @@ public class DemoPluginStageProvider {
    * <p>create a new instance of the provider.</p>
    *
    * @param controller the controller to be used for updates
-   * @throws StorageException if anything fails on the storage backend
+   * @throws StorageException if anythings goes wrong when accessing the database backend
    */
   public DemoPluginStageProvider(StorageController controller) throws StorageException {
     this.controller = controller;
     Node localNode = controller.get(":Local");
     this.localUser = localNode.getValue("currentUser").getValue();
     this.localDevice = localNode.getValue("currentDevice").getValue();
-    this.deviceGeigerPlugin =
-        ":Devices:" + localDevice + ":gi7448fc-0795-44a9-8ec6-gicba9520c20:data";
-    this.userGeigerPlugin =
-        ":Users:" + localUser + ":gi7448fc-0795-44a9-8ec6-gicba9520c20:data";
+    this.deviceGeigerPlugin = ":Devices:" + localDevice
+        + ":gi7448fc-0795-44a9-8ec6-gicba9520c20:data";
+    this.userGeigerPlugin = ":Users:" + localUser
+        + ":gi7448fc-0795-44a9-8ec6-gicba9520c20:data";
     initNodes();
   }
 
@@ -56,7 +56,7 @@ public class DemoPluginStageProvider {
    *
    * @param stage the stage number of the change set
    * @return the nodes to be written
-   * @throws StorageException if anything fails on the storage backend
+   * @throws StorageException if anythings goes wrong when accessing the database backend
    */
   public Node[] getStageNode(int stage) throws StorageException {
     Node[] nodes;
@@ -123,11 +123,13 @@ public class DemoPluginStageProvider {
     threatMap.put("80efffaf-98a1-4e0a-8f5e-th89388372le",
         new String[]{"Legal", "External environment threats"});
 
+    // building node list
     List<Node> l = new Vector<>();
     l.add(new NodeImpl(":Global:threats"));
     for (Map.Entry<String, String[]> e : threatMap.entrySet()) {
       Node threat = new NodeImpl(":Global:threats:" + e.getKey(), Visibility.RED,
-          new NodeValue[]{new NodeValueImpl("name", e.getValue()[0]),
+          new NodeValue[]{
+              new NodeValueImpl("name", e.getValue()[0]),
               new NodeValueImpl("GEIGER_threat",
                   e.getValue().length > 1 ? e.getValue()[1] : e.getValue()[0])}, null
       );
@@ -163,8 +165,8 @@ public class DemoPluginStageProvider {
     return l.toArray(new Node[0]);
   }
 
-  private String getThreatUuid(String threat) throws StorageException {
-    List<Node> n = controller.search(new SearchCriteria(":Global:threats", "name", threat));
+  private String getThreatUuid(String name) throws StorageException {
+    List<Node> n = controller.search(new SearchCriteria(":Global:threats", "name", name));
     return n.get(0).getName();
   }
 
@@ -177,35 +179,40 @@ public class DemoPluginStageProvider {
                     new NodeValue[]{
                         new NodeValueImpl("GEIGER_score", "74"),
                         new NodeValueImpl("threats_score", "Phishing=75;Malware=73")}, null),
-                new NodeImpl(userGeigerPlugin + ":GeigerScoreUser", null, new NodeValue[]{
-                    new NodeValueImpl("threats_score", "Phishing=75;Malware=73")}, null),
-                new NodeImpl(userGeigerPlugin + ":recommendations", null, new NodeValue[]{
-                    new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")}, null)}),
-        new NodeImpl(deviceGeigerPlugin, null, new NodeValue[]{
-            new NodeValueImpl("GEIGER_score", "")},
+                new NodeImpl(userGeigerPlugin + ":GeigerScoreUser", null,
+                    new NodeValue[]{new NodeValueImpl("threats_score", "Phishing=75;Malware=73")},
+                    null),
+                new NodeImpl(userGeigerPlugin + ":recommendations", null,
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
+                    null)}
+        ),
+        new NodeImpl(deviceGeigerPlugin, null,
+            new NodeValue[]{
+                new NodeValueImpl("GEIGER_score", "")},
             new Node[]{
                 new NodeImpl(deviceGeigerPlugin + ":GeigerScoreDevice", null,
-                    new NodeValue[]{new NodeValueImpl("threats_score", "")}, null),
+                  new NodeValue[]{
+                      new NodeValueImpl("threats_score", "")}, null),
                 new NodeImpl(deviceGeigerPlugin + ":recommendations", null,
-                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
-                    null)}),
+                  new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
+                  null)}),
         new NodeImpl(":Global:Recommendations:" + UUID_MI_CYBERRANGE, null,
             new NodeValue[]{
                 new NodeValueImpl("short", "Experience Phishing Simulation"),
                 new NodeValueImpl("long", "Experience the MontImage basic cyber range.")},
             new Node[]{
                 new NodeImpl(deviceGeigerPlugin + ":GeigerScoreDevice", null,
-                    new NodeValue[]{new NodeValueImpl("threats_score", "")}, null),
+                  new NodeValue[]{new NodeValueImpl("threats_score", "")}, null),
                 new NodeImpl(deviceGeigerPlugin + ":recommendations", null,
-                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
-                    null)})};
+                  new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
+                  null)})};
   }
 
   /**
    * <p>Apply all changes of the specified stage to the controller.</p>
    *
    * @param stage the stage number of the change set
-   * @throws StorageException if anything fails on the storage backend
+   * @throws StorageException if anything goes wrong when accessing the storage backend
    */
   public void applyStage(int stage) throws StorageException {
     Node[] nodes = getStageNode(stage);

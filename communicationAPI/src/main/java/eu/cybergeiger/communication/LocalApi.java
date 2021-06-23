@@ -25,6 +25,8 @@ import java.util.Vector;
  */
 public class LocalApi implements CommunicatorApi {
 
+  public static final boolean PERSISTENT = false;
+
   public static final String MASTER = "__MASTERPLUGIN__";
 
   private static final StorableHashMap<StorableString, PluginInformation> plugins =
@@ -237,8 +239,12 @@ public class LocalApi implements CommunicatorApi {
   public StorageController getStorage() throws StorageException {
     if (isMaster) {
       // TODO remove hardcoded DB information
-      return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
-          "sa2", "1234"));
+      if (PERSISTENT) {
+        return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
+            "sa2", "1234"));
+      } else {
+        return new GenericController(id, new ch.fhnw.geiger.localstorage.db.mapper.DummyMapper());
+      }
     } else {
       return new PasstroughController(this, id);
     }

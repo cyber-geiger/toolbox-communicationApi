@@ -107,10 +107,8 @@
                 <configuration>
                     <name>${project.name}</name>
                     <platforms>
-                        <platform>-android</platform>
                         <platform>-win32</platform>
                         <platform>-linux</platform>
-                        <platform>-linux_arm</platform>
                     </platforms>
                 </configuration>
                 <executions>

@@ -116,28 +116,6 @@ java {
     withJavadocJar()
 }
 
-task packageTotalcross {
-    doLast {
-        mavenexec {
-            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
-            goals '-DskipTests', 'package'
-        }
-    }
-}
-
-jar.dependsOn packageTotalcross
-
-task testTotalcross {
-    doLast {
-        mavenexec {
-            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
-            goals 'test'
-        }
-    }
-}
-
-check.dependsOn testTotalcross
-
 artifacts {
     archives javadocJar, sourcesJar
 }
@@ -223,3 +201,29 @@ signing {
     sign publishing.publications.mavenJava
 }
 
+jar{
+    from rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross/target/install/linux_arm/communicationAPI-totalcross.tcz"
+    rename '(.+).tcz', 'toolbox-communicationApiLib.tcz'
+}
+
+task packageTotalcross {
+    doLast {
+        mavenexec {
+            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+            goals '-DskipTests', 'package'
+        }
+    }
+}
+
+jar.dependsOn packageTotalcross
+
+task testTotalcross {
+    doLast {
+        mavenexec {
+            workingDir rootProject.getProjectDir().getAbsolutePath() + "/communicationAPI-totalcross"
+            goals 'test'
+        }
+    }
+}
+
+check.dependsOn testTotalcross

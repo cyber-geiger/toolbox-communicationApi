@@ -20,6 +20,7 @@ public class DemoPluginStageProvider {
 
   public static final String UUID_MI_CYBERRANGE = "123456-1234-1234-1234-1234567890";
   public static final String UUID_KSP_ON_ACCESS_SCAN = "123456-1234-1234-1234-1234567891";
+  public static final String UUID_GEIGER_INDICATOR = "gi7448fc-0795-44a9-8ec6-gicba9520c20";
 
   private final String localUser;
   private final String localDevice;
@@ -39,10 +40,8 @@ public class DemoPluginStageProvider {
     Node localNode = controller.get(":Local");
     this.localUser = localNode.getValue("currentUser").getValue();
     this.localDevice = localNode.getValue("currentDevice").getValue();
-    this.deviceGeigerPlugin = ":Devices:" + localDevice
-        + ":gi7448fc-0795-44a9-8ec6-gicba9520c20:data";
-    this.userGeigerPlugin = ":Users:" + localUser
-        + ":gi7448fc-0795-44a9-8ec6-gicba9520c20:data";
+    this.deviceGeigerPlugin = ":Devices:" + localDevice + ":" + UUID_GEIGER_INDICATOR + ":data";
+    this.userGeigerPlugin = ":Users:" + localUser + ":" + UUID_GEIGER_INDICATOR + ":data";
     initNodes();
   }
 
@@ -66,6 +65,15 @@ public class DemoPluginStageProvider {
         break;
       case 0:
         nodes = getStage0Nodes();
+        break;
+      case 1:
+        nodes = getStage1Nodes();
+        break;
+      case 2:
+        nodes = getStage2Nodes();
+        break;
+      case 3:
+        nodes = getStage3Nodes();
         break;
       default:
         nodes = new Node[0];
@@ -170,6 +178,7 @@ public class DemoPluginStageProvider {
     return n.get(0).getName();
   }
 
+  // Scenario 1
   private Node[] getStage0Nodes() {
     return new Node[]{
         new NodeImpl(userGeigerPlugin, null,
@@ -178,13 +187,14 @@ public class DemoPluginStageProvider {
                 new NodeImpl(userGeigerPlugin + ":GeigerScoreAgregate", null,
                     new NodeValue[]{
                         new NodeValueImpl("GEIGER_score", "74"),
-                        new NodeValueImpl("threats_score", "Phishing=75;Malware=73")}, null),
+                        new NodeValueImpl("threats_score", "Phishing=75;Malware=73")},
+                    null),
                 new NodeImpl(userGeigerPlugin + ":GeigerScoreUser", null,
-                    new NodeValue[]{new NodeValueImpl("threats_score", "Phishing=75;Malware=73")},
+                    new NodeValue[]{new NodeValueImpl("threats_score", "Phishing=73;Malware=70")},
                     null),
                 new NodeImpl(userGeigerPlugin + ":recommendations", null,
-                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
-                    null)}
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds",
+                        "high")}, null)}
         ),
         new NodeImpl(deviceGeigerPlugin, null,
             new NodeValue[]{
@@ -192,20 +202,125 @@ public class DemoPluginStageProvider {
             new Node[]{
                 new NodeImpl(deviceGeigerPlugin + ":GeigerScoreDevice", null,
                   new NodeValue[]{
-                      new NodeValueImpl("threats_score", "")}, null),
+                      new NodeValueImpl("threats_score", "Phishing=79;Malware=75")},
+                    null),
                 new NodeImpl(deviceGeigerPlugin + ":recommendations", null,
-                  new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
+                  new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388352p", "high")},
                   null)}),
+        new NodeImpl(":Global:Recommendations:" + UUID_KSP_ON_ACCESS_SCAN, null,
+            new NodeValue[]{
+                new NodeValueImpl("short", "Activate Anti-Malware"),
+                new NodeValueImpl("long", "Activate the Kaspersky on-access scan."),
+                new NodeValueImpl("action", "geiger://toolbox/activate_onaccessscan"),
+                new NodeValueImpl("relatedThreatsWeights",
+                    "80efffaf-98a1-4e0a-8f5e-gr89388350ma=high"
+                        + ";80efffaf-98a1-4e0a-8f5e-gr89388352ph=low"),
+                new NodeValueImpl("costs", "False"),
+                new NodeValueImpl("recommendationType", "Device")}, null),
         new NodeImpl(":Global:Recommendations:" + UUID_MI_CYBERRANGE, null,
             new NodeValue[]{
                 new NodeValueImpl("short", "Experience Phishing Simulation"),
-                new NodeValueImpl("long", "Experience the MontImage basic cyber range.")},
+                new NodeValueImpl("long", "Experience the MontImage basic cyber range."),
+                new NodeValueImpl("action", "geiger://montimage/experience_cyberrange_basic"),
+                new NodeValueImpl("relatedThreatsWeights",
+                    "80efffaf-98a1-4e0a-8f5e-gr89388350ma=low"
+                    + ";80efffaf-98a1-4e0a-8f5e-gr89388352ph=high"),
+                new NodeValueImpl("costs", "False"),
+                new NodeValueImpl("recommendationType", "User")}, null)};
+
+  }
+
+  // scenario 2
+  private Node[] getStage1Nodes() {
+    return new Node[]{
+        new NodeImpl(userGeigerPlugin, null,
+            new NodeValue[]{new NodeValueImpl("GEIGER_score", "60")},
+            new Node[]{
+                new NodeImpl(userGeigerPlugin + ":GeigerScoreAgregate", null,
+                    new NodeValue[]{
+                        new NodeValueImpl("GEIGER_score", "60"),
+                        new NodeValueImpl("threats_score", "Phishing=59;Malware=60")},
+                    null),
+                new NodeImpl(userGeigerPlugin + ":GeigerScoreUser", null,
+                    new NodeValue[]{new NodeValueImpl("threats_score", "Phishing=58;Malware=58")},
+                    null),
+                new NodeImpl(userGeigerPlugin + ":recommendations", null,
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds",
+                        "high")}, null)}
+        ),
+        new NodeImpl(deviceGeigerPlugin, null,
+            new NodeValue[]{
+                new NodeValueImpl("GEIGER_score", "")},
             new Node[]{
                 new NodeImpl(deviceGeigerPlugin + ":GeigerScoreDevice", null,
-                  new NodeValue[]{new NodeValueImpl("threats_score", "")}, null),
+                    new NodeValue[]{
+                        new NodeValueImpl("threats_score", "Phishing=60;Malware=62")},
+                    null),
                 new NodeImpl(deviceGeigerPlugin + ":recommendations", null,
-                  new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds", "")},
-                  null)})};
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388352p",
+                        "high")}, null)})};
+  }
+
+  // scenario 3
+  private Node[] getStage2Nodes() {
+    return new Node[]{
+        new NodeImpl(userGeigerPlugin, null,
+            new NodeValue[]{new NodeValueImpl("GEIGER_score", "51")},
+            new Node[]{
+                new NodeImpl(userGeigerPlugin + ":GeigerScoreAgregate", null,
+                    new NodeValue[]{
+                        new NodeValueImpl("GEIGER_score", "51"),
+                        new NodeValueImpl("threats_score", "Phishing=59;Malware=46")},
+                    null),
+                new NodeImpl(userGeigerPlugin + ":GeigerScoreUser", null,
+                    new NodeValue[]{new NodeValueImpl("threats_score", "Phishing=58;Malware=58")},
+                    null),
+                new NodeImpl(userGeigerPlugin + ":recommendations", null,
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds",
+                        "high")}, null)}
+        ),
+        new NodeImpl(deviceGeigerPlugin, null,
+            new NodeValue[]{
+                new NodeValueImpl("GEIGER_score", "")},
+            new Node[]{
+                new NodeImpl(deviceGeigerPlugin + ":GeigerScoreDevice", null,
+                    new NodeValue[]{
+                        new NodeValueImpl("threats_score", "Phishing=60;Malware=40")},
+                    null),
+                new NodeImpl(deviceGeigerPlugin + ":recommendations", null,
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388352p",
+                        "high")}, null)})};
+  }
+
+  // scenario 4
+  private Node[] getStage3Nodes() {
+    return new Node[]{
+        new NodeImpl(userGeigerPlugin, null,
+            new NodeValue[]{new NodeValueImpl("GEIGER_score", "46")},
+            new Node[]{
+                new NodeImpl(userGeigerPlugin + ":GeigerScoreAgregate", null,
+                    new NodeValue[]{
+                        new NodeValueImpl("GEIGER_score", "46"),
+                        new NodeValueImpl("threats_score", "Phishing=45;Malware=46")},
+                    null),
+                new NodeImpl(userGeigerPlugin + ":GeigerScoreUser", null,
+                    new NodeValue[]{new NodeValueImpl("threats_score", "Phishing=30;Malware=58")},
+                    null),
+                new NodeImpl(userGeigerPlugin + ":recommendations", null,
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388355ds",
+                        "high")}, null)}
+        ),
+        new NodeImpl(deviceGeigerPlugin, null,
+            new NodeValue[]{
+                new NodeValueImpl("GEIGER_score", "")},
+            new Node[]{
+                new NodeImpl(deviceGeigerPlugin + ":GeigerScoreDevice", null,
+                    new NodeValue[]{
+                        new NodeValueImpl("threats_score", "Phishing=60;Malware=40")},
+                    null),
+                new NodeImpl(deviceGeigerPlugin + ":recommendations", null,
+                    new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388352p",
+                        "high")}, null)})};
   }
 
   /**

@@ -7,8 +7,12 @@ plugins {
     id 'signing'
 }
 
+group = 'eu.cyber-geiger'
+version = '0.0.2'
+description = 'communication API for GEIGER toolbox'
+sourceCompatibility = '1.8'
+
 repositories {
-    jcenter()
     mavenCentral()
     maven {
         url = uri('http://maven.totalcross.com/artifactory/repo1')
@@ -46,6 +50,8 @@ dependencies {
     testImplementation("junit:junit:4.13")
     //testImplementation "org.mockito:mockito-core:3.+"
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.0")
+
+    // logging
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-jul', version: '2.12.1'
@@ -58,11 +64,6 @@ configurations.all {
         force 'xml-apis:xml-apis:1.0.b2'
     }
 }
-
-group = 'eu.cyber-geiger'
-version = '0.0.2'
-description = 'communication API for GEIGER toolbox'
-sourceCompatibility = '1.8'
 
 tasks.named('jar') {
     manifest {
@@ -114,10 +115,6 @@ java {
     withJavadocJar()
 }
 
-artifacts {
-    archives javadocJar, sourcesJar
-}
-
 def gitBranch() {
     def branch = ""
     def proc = "git rev-parse --abbrev-ref HEAD".execute()
@@ -125,6 +122,10 @@ def gitBranch() {
     proc.err.eachLine { line -> println line }
     proc.waitFor()
     branch
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
 }
 
 publishing {

@@ -28,7 +28,7 @@
         <dependency>
             <groupId>eu.cyber-geiger</groupId>
             <artifactId>toolbox-storage</artifactId>
-            <version>0.3.3c-SNAPSHOT</version>
+            <version>0.3.3c-noH2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

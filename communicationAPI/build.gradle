@@ -38,7 +38,7 @@ configurations {
 }
 
 dependencies {
-    implementation('eu.cyber-geiger:toolbox-storage:0.3.3c-SNAPSHOT') { changing = true }
+    implementation('eu.cyber-geiger:toolbox-storage:0.3.3c-noH2-SNAPSHOT') { changing = true }
     implementation 'com.totalcross:totalcross-sdk:7.1.0'
 
     testImplementation group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'

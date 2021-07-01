@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'eu.cyber-geiger'
-version = '0.0.2b'
+version = '0.0.2b-noH2'
 description = 'communication API for GEIGER toolbox'
 sourceCompatibility = '1.8'
 

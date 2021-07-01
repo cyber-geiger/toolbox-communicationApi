@@ -6,7 +6,7 @@
 
     <groupId>eu.cybergeiger</groupId>
     <artifactId>communicationAPI</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.2b-SNAPSHOT</version>
     <name>communicationAPI-totalcross</name>
 
     <properties>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>eu.cyber-geiger</groupId>
             <artifactId>toolbox-storage</artifactId>
-            <version>0.3.3b-SNAPSHOT</version>
+            <version>0.3.3c-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -42,20 +42,13 @@
             <version>RELEASE</version>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.mockito</groupId>-->
-<!--            <artifactId>mockito-core</artifactId>-->
-<!--            <version>3.11.0</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-
     </dependencies>
 
     <repositories>
         <repository>
             <id>totalcross-repo</id>
             <name>ip-172-31-40-140-releases</name>
-            <url>http://maven.totalcross.com/artifactory/repo1</url>
+            <url>https://maven.totalcross.com/artifactory/repo1</url>
         </repository>
         <repository>
             <id>cyber-geiger-repo</id>
@@ -68,7 +61,7 @@
         <pluginRepository>
             <id>totalcross-repo</id>
             <name>ip-172-31-40-140-releases</name>
-            <url>http://maven.totalcross.com/artifactory/repo1</url>
+            <url>https://maven.totalcross.com/artifactory/repo1</url>
         </pluginRepository>
     </pluginRepositories>
 

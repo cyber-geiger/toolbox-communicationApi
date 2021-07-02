@@ -3,17 +3,17 @@ plugins {
 }
 
 group 'eu.cyber-geiger'
-version '0.1-SNAPSHOT'
+version '0.0.1b-SNAPSHOT'
 
 repositories {
     jcenter()
     mavenCentral()
     maven {
-        url = uri('http://maven.totalcross.com/artifactory/repo1')
+        url = uri('https://maven.totalcross.com/artifactory/repo1')
     }
 
     maven {
-        url = uri('http://repo.maven.apache.org/maven2')
+        url = uri('https://repo.maven.apache.org/maven2')
         mavenContent {
             releasesOnly()
         }
@@ -29,7 +29,7 @@ repositories {
 
 
 dependencies {
-    implementation 'eu.cyber-geiger:toolbox-storage:0.3.3b-SNAPSHOT'
+    implementation 'eu.cyber-geiger:toolbox-storage:0.3.3c-noH2-SNAPSHOT'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'

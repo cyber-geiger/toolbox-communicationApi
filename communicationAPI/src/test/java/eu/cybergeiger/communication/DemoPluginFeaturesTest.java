@@ -2,6 +2,7 @@ package eu.cybergeiger.communication;
 
 import eu.cybergeiger.demo.DemoPluginFeatures;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -10,6 +11,7 @@ import org.junit.Test;
 public class DemoPluginFeaturesTest {
 
   @Test
+  @Ignore
   public void bitSetterTest() {
     Assert.assertEquals("unable to set first bit", 1,
         DemoPluginFeatures.FEATURE_HEARTBEAT.getId());

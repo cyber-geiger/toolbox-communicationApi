@@ -10,7 +10,12 @@ import ch.fhnw.geiger.totalcross.UUID;
 import eu.cybergeiger.communication.CommunicatorApi;
 import eu.cybergeiger.communication.Declaration;
 import eu.cybergeiger.communication.DeclarationMismatchException;
+import eu.cybergeiger.communication.GeigerUrl;
+import eu.cybergeiger.communication.LocalApi;
 import eu.cybergeiger.communication.LocalApiFactory;
+import eu.cybergeiger.communication.Message;
+import eu.cybergeiger.communication.MessageType;
+import eu.cybergeiger.communication.PluginListener;
 import java.io.IOException;
 
 
@@ -21,11 +26,13 @@ public class DemoPlugin {
 
   public static UUID UUID = new UUID(0x1111111122223333L, 0x4444555555555555L);
 
-  private static class DemoPluginRunner extends Thread {
+  private static class DemoPluginRunner extends Thread implements PluginListener {
 
     private boolean shutdown = false;
     private long features = 0;
     public static int MAX_STATES = 1;
+
+    private DemoPluginStageProvider dataProvider;
 
     private int state;
     private CommunicatorApi comm;
@@ -40,6 +47,15 @@ public class DemoPlugin {
         comm = LocalApiFactory.getLocalApi("still undefined", "DemoPlugin",
             Declaration.DO_NOT_SHARE_DATA);
         store = comm.getStorage();
+
+        // check if demo scenario should be used
+        if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
+          // get initial data
+          dataProvider = new DemoPluginStageProvider(store);
+          // register Listener that sets the next state on SCAN_PRESSED event if not already exists
+          comm.registerListener(new MessageType[]{MessageType.SCAN_PRESSED}, this);
+        }
+
       } catch (DeclarationMismatchException dme) {
         throw new IOException("OOPS! that should not happen... please contact developer", dme);
       }
@@ -90,7 +106,8 @@ public class DemoPlugin {
 
           // implement scan states
           if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
-            // FIXME waiting for spec here
+            // TODO any other necessary things for demo
+            // listener has to be registered outside the loop to avoid multiple registrations
           }
 
           // wait for some time
@@ -119,13 +136,38 @@ public class DemoPlugin {
           }
         }
       }
+      // deregister Listener
+      if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
+        comm.deregisterListener(new MessageType[]{MessageType.SCAN_PRESSED}, this);
+      }
+      // remove heartbeat node
+      if (DemoPluginFeatures.FEATURE_HEARTBEAT.containsFeature(features)) {
+        try {
+          StorageController storageController = LocalApiFactory.getLocalApi(LocalApi.MASTER)
+              .getStorage();
+          storageController.delete(":Devices:" + deviceUuid + ":" + UUID);
+        } catch (StorageException e) {
+          e.printStackTrace();
+        }
+      }
     }
 
+    @Override
+    public void pluginEvent(GeigerUrl url, Message msg) {
+      setState(++state);
+      // get new Nodes
+      try {
+        dataProvider.applyStage(this.state);
+      } catch (StorageException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
-  private long features;
+  private final long features;
 
-  private Thread runner = null;
+  private DemoPluginRunner runner = null;
+  private final Object lock = new Object();
 
   /**
    * <p>Create an instance of the plugin demo.</p>
@@ -140,25 +182,46 @@ public class DemoPlugin {
    * <p>start the data provider.</p>
    */
   public void start() {
-    // check if heartbeat exists
-    // FIXME
-    if (runner != null && runner.isAlive()) {
-      // check if threat not already running
-      // FIXME
-      synchronized (runner) {
-        // FIXME
+    synchronized (lock) {
+      // check if heartbeat exists
+      StorageController store = null;
+      long lastHeartbeat = 0;
+      try {
+        store = LocalApiFactory.getLocalApi("undefined", LocalApi.MASTER,
+            Declaration.DO_NOT_SHARE_DATA).getStorage();
+        String deviceUuid = store.getValue(":Local", "currentDevice").getValue();;
+        lastHeartbeat = System.currentTimeMillis() - Long.parseLong(store
+            .get(":Devices:" + deviceUuid + ":" + UUID)
+            .getValue("heartbeat").getValue());
+      } catch (StorageException | DeclarationMismatchException e) {
+        e.printStackTrace();
+      }
+
+      if (runner == null || lastHeartbeat > 5) {
+        // create and start runner if not exists or heartbeat is old
+        try {
+          runner = new DemoPluginRunner(features);
+        } catch (IOException e) {
+          // FIXME
+          e.printStackTrace();
+        }
+        runner.start();
+      } else {
+        throw new RuntimeException("Runner already running");
       }
     }
-    // start thread
-
   }
 
   /**
    * <p>Stop the data provider.</p>
    */
   public void stop() {
-    // stop thread
-    // remove heartbeat node
+    synchronized (lock) {
+      if (runner != null) {
+        runner.shutdown();
+        runner = null;
+      }
+    }
   }
 
 }

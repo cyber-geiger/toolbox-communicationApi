@@ -8,18 +8,18 @@ plugins {
 }
 
 group = 'eu.cyber-geiger'
-version = '0.0.2'
+version = '0.0.2b-noH2'
 description = 'communication API for GEIGER toolbox'
 sourceCompatibility = '1.8'
 
 repositories {
     mavenCentral()
     maven {
-        url = uri('http://maven.totalcross.com/artifactory/repo1')
+        url = uri('https://maven.totalcross.com/artifactory/repo1')
     }
 
     maven {
-        url = uri('http://repo.maven.apache.org/maven2')
+        url = uri('https://repo.maven.apache.org/maven2')
         mavenContent {
             releasesOnly()
         }
@@ -38,14 +38,13 @@ configurations {
 }
 
 dependencies {
-    implementation('eu.cyber-geiger:toolbox-storage:0.3.3b-SNAPSHOT') { changing = true }
+    implementation('eu.cyber-geiger:toolbox-storage:0.3.3c-noH2-SNAPSHOT') { changing = true }
     implementation 'com.totalcross:totalcross-sdk:7.1.0'
 
     testImplementation group: 'com.puppycrawl.tools', name: 'checkstyle', version: '8.38'
     checkstyleConfig("com.puppycrawl.tools:checkstyle:8.38") { transitive = false }
 
     // junit
-    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.0'
     //testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.0'
     testImplementation("junit:junit:4.13")
     //testImplementation "org.mockito:mockito-core:3.+"
@@ -168,7 +167,7 @@ publishing {
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
                 }
                 developers {
@@ -186,7 +185,7 @@ publishing {
                 scm {
                     connection = 'scm:git:git://github.com/cyber-geiger/toolbox-communicationAPI.git'
                     developerConnection = 'scm:git:ssh://github.com/cyber-geiger/toolbox-communicationAPI.git'
-                    url = 'http://github.com/cyber-geiger/toolbox-communicationAPI'
+                    url = 'https://github.com/cyber-geiger/toolbox-communicationAPI'
                 }
             }
 

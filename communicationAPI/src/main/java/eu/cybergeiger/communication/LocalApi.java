@@ -3,7 +3,7 @@ package eu.cybergeiger.communication;
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.GenericController;
-import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
+//import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
 import eu.cybergeiger.totalcross.Base64;
@@ -240,8 +240,12 @@ public class LocalApi implements CommunicatorApi {
     if (isMaster) {
       // TODO remove hardcoded DB information
       if (PERSISTENT) {
-        return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
-            "sa2", "1234"));
+        // currently not available
+        // FIXME
+        //return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
+        //    "sa2", "1234"));
+        return null;
+
       } else {
         return new GenericController(id, new ch.fhnw.geiger.localstorage.db.mapper.DummyMapper());
       }

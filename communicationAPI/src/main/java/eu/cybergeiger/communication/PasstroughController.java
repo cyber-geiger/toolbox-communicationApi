@@ -46,6 +46,7 @@ public class PasstroughController implements StorageController, PluginListener, 
 
   private Message waitForResult(String command, String identifier) {
     String token = command + "/" + identifier;
+    long start = System.currentTimeMillis();
     while (receivedMessages.get(token) == null) {
       // wait for the appropriate message
       try {
@@ -54,6 +55,9 @@ public class PasstroughController implements StorageController, PluginListener, 
         }
       } catch (InterruptedException e) {
         e.printStackTrace();
+      }
+      if(System.currentTimeMillis()-start>5000) {
+        throw new RuntimeException("Lost communication while waiting for "+token);
       }
     }
     return receivedMessages.get(token);

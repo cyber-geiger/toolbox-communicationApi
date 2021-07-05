@@ -37,6 +37,7 @@ public class MessageHandler implements Runnable {
       msg = Message.fromByteArray(byteArrayInputStream);
 
       PluginInformation pluginInformation = new PluginInformation(null, 0);
+      System.out.println("## got message ("+msg+")");
       localApi.receivedMessage(pluginInformation, msg);
     } catch (IOException ioe) {
       // TODO handle communications error

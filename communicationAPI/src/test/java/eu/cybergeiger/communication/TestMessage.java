@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import eu.cybergeiger.totalcross.Base64;
 import eu.cybergeiger.totalcross.MalformedUrlException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -119,4 +120,21 @@ public class TestMessage {
     Message msg5 = new Message(targetId, sourceId, messageType, url);
     Assert.assertNotEquals(msg.hashCode(), msg5.hashCode());
   }
+
+  @Test
+  public void payloadEncodingTest() {
+    Message m = new Message("src", "target", MessageType.ACTIVATE_PLUGIN,
+        null, null);
+    for (String pl : new String[] {
+        null, "", UUID.randomUUID().toString()
+    }) {
+      m.setPayloadString(pl);
+      Assert.assertEquals(pl, m.getPayloadString());
+
+      byte[] blarr = pl != null ? pl.getBytes(StandardCharsets.UTF_8) : null;
+      m.setPayload(blarr);
+      Assert.assertArrayEquals(blarr, m.getPayload());
+    }
+  }
+
 }

@@ -22,6 +22,8 @@ public class DemoPluginStageProvider {
   public static final String UUID_KSP_ON_ACCESS_SCAN = "123456-1234-1234-1234-1234567891";
   public static final String UUID_GEIGER_INDICATOR = "gi7448fc-0795-44a9-8ec6-gicba9520c20";
 
+  public static final int MAX_STATES = 4;
+
   private final String localUser;
   private final String localDevice;
   private final String deviceGeigerPlugin;
@@ -166,7 +168,13 @@ public class DemoPluginStageProvider {
       for (int i = 1; i < a.length; i++) {
         String threat = listOfThreats[i - 1];
         String threatValue = a[i];
-        node.addValue(new NodeValueImpl(getThreatUuid(threat), threatValue));
+        String uuid=null;
+        for(Map.Entry<String,String[]> entry:threatMap.entrySet()) {
+          if(threat.equals(entry.getValue()[0])) {
+             uuid=entry.getKey();
+          }
+        }
+        node.addValue(new NodeValueImpl(uuid, threatValue));
       }
       l.add(node);
     }
@@ -175,12 +183,18 @@ public class DemoPluginStageProvider {
 
   private String getThreatUuid(String name) throws StorageException {
     List<Node> n = controller.search(new SearchCriteria(":Global:threats", "name", name));
-    return n.get(0).getName();
+    if (n.size()>0) {
+      return n.get(0).getName();
+    } else{
+      throw new StorageException("Thread "+name+" does not exist");
+    }
   }
 
   // Scenario 1
   private Node[] getStage0Nodes() {
     return new Node[]{
+        new NodeImpl(userGeigerPlugin.substring(0,userGeigerPlugin.length()-5)),
+        new NodeImpl(deviceGeigerPlugin.substring(0,deviceGeigerPlugin.length()-5)),
         new NodeImpl(userGeigerPlugin, null,
             new NodeValue[]{new NodeValueImpl("GEIGER_score", "74")},
             new Node[]{
@@ -207,6 +221,7 @@ public class DemoPluginStageProvider {
                 new NodeImpl(deviceGeigerPlugin + ":recommendations", null,
                   new NodeValue[]{new NodeValueImpl("80efffaf-98a1-4e0a-8f5e-gr89388352p", "high")},
                   null)}),
+        new NodeImpl(":Global:Recommendations"),
         new NodeImpl(":Global:Recommendations:" + UUID_KSP_ON_ACCESS_SCAN, null,
             new NodeValue[]{
                 new NodeValueImpl("short", "Activate Anti-Malware"),
@@ -335,7 +350,7 @@ public class DemoPluginStageProvider {
       try {
         controller.addOrUpdate(n);
       } catch (StorageException se) {
-        throw new RuntimeException("Should not happen but is probably harmless (please check)", se);
+        throw new RuntimeException("Should not happen but is probably harmless (please check "+n+")", se);
       }
     }
   }

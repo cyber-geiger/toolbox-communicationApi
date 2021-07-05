@@ -12,13 +12,12 @@ import org.junit.Test;
 public class TestDemoPlugin {
 
   @Test
-  @Ignore
-  public void testScanButtonListener() throws StorageException, DeclarationMismatchException {
+  public void testStartStop() throws StorageException, DeclarationMismatchException {
     LocalApi localApi = LocalApiFactory.getLocalApi("undefined", LocalApi.MASTER,
         Declaration.DO_NOT_SHARE_DATA);
     // create demoPlugin
     DemoPlugin demoPlugin = new DemoPlugin(DemoPluginFeatures.FEATURE_ALL.getId());
     demoPlugin.start();
-
+    demoPlugin.stop();
   }
 }

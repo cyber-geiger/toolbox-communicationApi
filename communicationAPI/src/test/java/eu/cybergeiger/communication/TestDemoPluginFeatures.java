@@ -8,7 +8,7 @@ import org.junit.Test;
 /**
  * <p>Test the feature class of the demo plugin.</p>
  */
-public class DemoPluginFeaturesTest {
+public class TestDemoPluginFeatures {
 
   @Test
   @Ignore

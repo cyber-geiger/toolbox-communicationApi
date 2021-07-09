@@ -28,13 +28,13 @@ public class DemoPlugin {
 
   private static class DemoPluginRunner extends Thread implements PluginListener {
 
-    /** true if the runner should shut down as soon as possible */
+    /** true if the runner should shut down as soon as possible. */
     private boolean shutdown = false;
 
-    /** the currently requested features */
+    /** the currently requested features. */
     private final long features;
 
-    /** the current data provider */
+    /** the current data provider. */
     private DemoPluginStageProvider dataProvider;
 
     private int state;
@@ -47,7 +47,7 @@ public class DemoPlugin {
 
     public DemoPluginRunner(long features) throws IOException {
       try {
-        comm = LocalApiFactory.getLocalApi("still undefined", "DemoPlugin",
+        comm = LocalApiFactory.getLocalApi("still undefined", LocalApi.MASTER,
             Declaration.DO_NOT_SHARE_DATA);
         store = comm.getStorage();
 
@@ -55,8 +55,6 @@ public class DemoPlugin {
         if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
           // get initial data
           dataProvider = new DemoPluginStageProvider(store);
-          // register Listener that sets the next state on SCAN_PRESSED event if not already exists
-          comm.registerListener(new MessageType[]{MessageType.SCAN_PRESSED}, this);
         }
 
       } catch (DeclarationMismatchException dme) {
@@ -119,7 +117,7 @@ public class DemoPlugin {
           // may be safely ignored (wakeup by shutdown or state update?)
         }
       }
-      // register listener if required
+      // deregister listener if required
       if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
         comm.deregisterListener(new MessageType[]{MessageType.SCAN_PRESSED}, this);
       }
@@ -138,6 +136,7 @@ public class DemoPlugin {
 
     /**
      * <p>Sets the state and updates the store to reflect the current state.</p>
+     *
      * @param state the state to be set
      */
     public void setState(int state) {
@@ -172,10 +171,10 @@ public class DemoPlugin {
     }
   }
 
-  /** The currently set features to be supported */
+  /** The currently set features to be supported. */
   private final long features;
 
-  /** the currently running runner */
+  /** the currently running runner. */
   private DemoPluginRunner runner = null;
 
   /** the lock object to guarantee that only one runner is running simulataneously. */

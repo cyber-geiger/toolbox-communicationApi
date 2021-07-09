@@ -11,6 +11,7 @@ import ch.fhnw.geiger.localstorage.db.data.NodeValue;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import ch.fhnw.geiger.totalcross.ByteArrayInputStream;
 import ch.fhnw.geiger.totalcross.ByteArrayOutputStream;
+import ch.fhnw.geiger.totalcross.System;
 import eu.cybergeiger.totalcross.MalformedUrlException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,8 +57,8 @@ public class PasstroughController implements StorageController, PluginListener, 
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      if(System.currentTimeMillis()-start>5000) {
-        throw new RuntimeException("Lost communication while waiting for "+token);
+      if (System.currentTimeMillis() - start > 5000) {
+        throw new RuntimeException("Lost communication while waiting for " + token);
       }
     }
     return receivedMessages.get(token);

@@ -127,7 +127,7 @@ public class TestMessage {
         null, null);
     for (String pl : new String[] {
         null, "", UUID.randomUUID().toString()
-    }) {
+      }) {
       m.setPayloadString(pl);
       Assert.assertEquals(pl, m.getPayloadString());
 

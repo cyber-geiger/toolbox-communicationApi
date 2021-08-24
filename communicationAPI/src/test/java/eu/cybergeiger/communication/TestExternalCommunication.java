@@ -7,6 +7,8 @@ import ch.fhnw.geiger.localstorage.StorageException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
 import mocks.SimpleEventListener;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,7 +16,6 @@ import org.junit.Test;
 /**
  * <p>Testing non local communication.</p>
  */
-@Ignore
 public class TestExternalCommunication {
 
   @Test
@@ -26,18 +27,19 @@ public class TestExternalCommunication {
       // create listener
       SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
-      Thread.sleep(1000);
+      //Thread.sleep(1000);
 
       // create plugin, this registers and activates the plugin automatically
       LocalApi plugin = LocalApiFactory.getLocalApi("", "plugin1",
           Declaration.DO_NOT_SHARE_DATA);
-      SimpleEventListener pluginListener = new SimpleEventListener();
-      plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
-      Thread.sleep(1000);
+      //SimpleEventListener pluginListener = new SimpleEventListener();
+      //plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
+      //Thread.sleep(1000);
 
       // check master
-      ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
-      assertEquals(2, receivedEventsMaster.size());
+      List<Message> receivedEventsMaster = masterListener.getEvents();
+      assertEquals("checking if register and activate events have been received",
+          2, receivedEventsMaster.size());
       Message rcvdMessage = receivedEventsMaster.get(0);
       assertEquals(MessageType.REGISTER_PLUGIN, rcvdMessage.getType());
       assertEquals("plugin1", rcvdMessage.getSourceId());
@@ -46,20 +48,21 @@ public class TestExternalCommunication {
       assertEquals("registerPlugin", rcvdMessage.getAction().getPath());
 
       // check Plugin
-      ArrayList<Message> receivedEventsPlugin = pluginListener.getEvents();
-      assertEquals(2, receivedEventsPlugin.size());
-      rcvdMessage = receivedEventsPlugin.get(0);
-      assertEquals(MessageType.COMAPI_SUCCESS, rcvdMessage.getType());
-      assertEquals(LocalApi.MASTER, rcvdMessage.getSourceId());
-      assertEquals("geiger", rcvdMessage.getAction().getProtocol());
-      assertEquals("plugin1", rcvdMessage.getAction().getPlugin());
-      assertEquals("registerPlugin", rcvdMessage.getAction().getPath());
-    } catch (DeclarationMismatchException | InterruptedException e) {
+      //ArrayList<Message> receivedEventsPlugin = pluginListener.getEvents();
+      //assertEquals(2, receivedEventsPlugin.size());
+      //rcvdMessage = receivedEventsPlugin.get(0);
+      //assertEquals(MessageType.COMAPI_SUCCESS, rcvdMessage.getType());
+      //assertEquals(LocalApi.MASTER, rcvdMessage.getSourceId());
+      //assertEquals("geiger", rcvdMessage.getAction().getProtocol());
+      //assertEquals("plugin1", rcvdMessage.getAction().getPlugin());
+      //assertEquals("registerPlugin", rcvdMessage.getAction().getPath());
+    } catch (DeclarationMismatchException e) {
       fail(e.getMessage());
     }
   }
 
   @Test
+  @Ignore
   public void testActivatePlugin() throws StorageException {
     try {
       // create Master
@@ -76,7 +79,7 @@ public class TestExternalCommunication {
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
       // check master
-      ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
+      List<Message> receivedEventsMaster = masterListener.getEvents();
       assertEquals(2, receivedEventsMaster.size());
       Message rcvdMessage = receivedEventsMaster.get(1);
       assertEquals(MessageType.ACTIVATE_PLUGIN, rcvdMessage.getType());
@@ -86,7 +89,7 @@ public class TestExternalCommunication {
       assertEquals("activatePlugin", rcvdMessage.getAction().getPath());
 
       // check Plugin
-      ArrayList<Message> receivedEventsPlugin = pluginListener.getEvents();
+      List<Message> receivedEventsPlugin = pluginListener.getEvents();
       assertEquals(2, receivedEventsPlugin.size());
       rcvdMessage = receivedEventsPlugin.get(1);
       assertEquals(MessageType.COMAPI_SUCCESS, rcvdMessage.getType());
@@ -100,6 +103,7 @@ public class TestExternalCommunication {
   }
 
   @Test
+  @Ignore
   public void testDeactivatePlugin() throws Exception {
     try {
       // create Master
@@ -119,7 +123,7 @@ public class TestExternalCommunication {
       plugin.deregisterPlugin();
 
       // check master
-      ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
+      List<Message> receivedEventsMaster = masterListener.getEvents();
       assertEquals(2, receivedEventsMaster.size());
       Message rcvdMessage = receivedEventsMaster.get(1);
       assertEquals(MessageType.ACTIVATE_PLUGIN, rcvdMessage.getType());
@@ -129,7 +133,7 @@ public class TestExternalCommunication {
       assertEquals("activatePlugin", rcvdMessage.getAction().getPath());
 
       // check Plugin
-      ArrayList<Message> receivedEventsPlugin = pluginListener.getEvents();
+      List<Message> receivedEventsPlugin = pluginListener.getEvents();
       assertEquals(2, receivedEventsPlugin.size());
       rcvdMessage = receivedEventsPlugin.get(1);
       assertEquals(MessageType.COMAPI_SUCCESS, rcvdMessage.getType());
@@ -143,11 +147,7 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void testRegisterListener() {
-    fail("not implemented");
-  }
-
-  @Test
+  @Ignore
   public void testRegisterMenu() throws Exception {
     try {
       // create Master
@@ -167,7 +167,7 @@ public class TestExternalCommunication {
       plugin.registerMenu("testMenu", new GeigerUrl(LocalApi.MASTER, "testMenu"));
 
       // check master (the first 2 messages should always be registerPlugin and activatePlugin)
-      ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
+      List<Message> receivedEventsMaster = masterListener.getEvents();
       assertEquals(3, receivedEventsMaster.size());
       Message rcvdMessage = receivedEventsMaster.get(2);
       assertEquals(MessageType.REGISTER_MENU, rcvdMessage.getType());
@@ -180,7 +180,7 @@ public class TestExternalCommunication {
 
       // check Plugin (the first 2 messages should always be COMAPI_SUCCESS for
       // registerPlugin and activatePlugin)
-      ArrayList<Message> receivedEventsPlugin = pluginListener.getEvents();
+      List<Message> receivedEventsPlugin = pluginListener.getEvents();
       assertEquals(3, receivedEventsPlugin.size());
       rcvdMessage = receivedEventsPlugin.get(2);
       assertEquals(MessageType.COMAPI_SUCCESS, rcvdMessage.getType());
@@ -194,6 +194,7 @@ public class TestExternalCommunication {
   }
 
   @Test
+  @Ignore
   public void testDisableMenu() throws Exception {
     try {
       // create Master
@@ -214,7 +215,7 @@ public class TestExternalCommunication {
       plugin.disableMenu("testMenu");
 
       // check master (the first 2 messages should always be registerPlugin and activatePlugin)
-      ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
+      List<Message> receivedEventsMaster = masterListener.getEvents();
       assertEquals(4, receivedEventsMaster.size());
       Message rcvdMessage = receivedEventsMaster.get(3);
       assertEquals(MessageType.DISABLE_MENU, rcvdMessage.getType());
@@ -226,7 +227,7 @@ public class TestExternalCommunication {
 
       // check Plugin (the first 2 messages should always be COMAPI_SUCCESS for
       // registerPlugin and activatePlugin)
-      ArrayList<Message> receivedEventsPlugin = pluginListener.getEvents();
+      List<Message> receivedEventsPlugin = pluginListener.getEvents();
       assertEquals(4, receivedEventsPlugin.size());
       rcvdMessage = receivedEventsPlugin.get(3);
       assertEquals(MessageType.COMAPI_SUCCESS, rcvdMessage.getType());
@@ -240,6 +241,7 @@ public class TestExternalCommunication {
   }
 
   @Test
+  @Ignore
   public void testMenuPressed() throws Exception {
     try {
       // create Master
@@ -259,7 +261,7 @@ public class TestExternalCommunication {
       plugin.menuPressed(new GeigerUrl(LocalApi.MASTER, "testMenu"));
 
       // check master (the first 2 messages should always be registerPlugin and activatePlugin)
-      ArrayList<Message> receivedEventsMaster = masterListener.getEvents();
+      List<Message> receivedEventsMaster = masterListener.getEvents();
       assertEquals(4, receivedEventsMaster.size());
       Message rcvdMessage = receivedEventsMaster.get(3);
       assertEquals(MessageType.MENU_PRESSED, rcvdMessage.getType());
@@ -275,12 +277,13 @@ public class TestExternalCommunication {
   }
 
   @Test
-  public void registerListener() {
+  @Ignore
+  public void testRegisterListener() {
     fail("not implemented");
   }
 
   @Test
-  public void deregisterListener() {
+  public void testDeregisterListener() {
     fail("not implemented");
   }
 
@@ -294,13 +297,4 @@ public class TestExternalCommunication {
 
     fail("not implemented");
   }
-
-  @Test
-  public void mockedRegisterPluginTest() {
-    // Create a mocked socket
-    // TODO
-    //ServerSocket mockServerSocket = mock(ServerSocket.class);
-
-  }
-
 }

@@ -78,7 +78,10 @@ public class LocalApi implements CommunicatorApi {
       }
       // TODO should the passtroughcontroller be listener?
       storageEventHandler = new PasstroughController(this, id);
-
+      // this code is duplicate from registerListener method
+      // it is currently not possible to determin between register internally and register on Master
+      // therefore this duplicate is necessary
+      registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler, true);
     } else {
       // it is master
       try {
@@ -89,8 +92,8 @@ public class LocalApi implements CommunicatorApi {
         e.printStackTrace();
       }
       storageEventHandler = new StorageEventHandler(this, getStorage());
+      registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler);
     }
-    registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler);
   }
 
   /**
@@ -125,6 +128,7 @@ public class LocalApi implements CommunicatorApi {
   private void registerPlugin(String id, PluginInformation info) {
     if (!plugins.containsKey(new StorableString(id))) {
       plugins.put(new StorableString(id), info);
+      System.out.println("## registered Plugin " + id + " executable: " + info.getExecutable() + " port: " + info.getPort());
     }
   }
 
@@ -251,6 +255,33 @@ public class LocalApi implements CommunicatorApi {
       }
     } else {
       return new PasstroughController(this, id);
+    }
+  }
+
+  /**
+   * To register a Pluginlistener inside this LocalApi.
+   *
+   * @param events The events to register for
+   * @param listener The listener to register
+   * @param internal If it is internal or not
+   */
+  public void registerListener(MessageType[] events, PluginListener listener, boolean internal) {
+    if(internal) {
+      for (MessageType e : events) {
+        synchronized (listeners) {
+          List<PluginListener> l = listeners.get(e);
+          // The short form computeIfAbsent is not available in TotalCross
+          if (l == null) {
+            l = new Vector<>();
+            listeners.put(e, l);
+          }
+          if (e.getId() < 10000) {
+            l.add(listener);
+          }
+        }
+      }
+    } else {
+      registerListener(events, listener);
     }
   }
 
@@ -453,11 +484,12 @@ public class LocalApi implements CommunicatorApi {
         byte[] intRange = Arrays.copyOfRange(payload, 0, 4);
         byte[] inputRange = Arrays.copyOfRange(payload, 4, payload.length);
         int length = GeigerCommunicator.byteArrayToInt(intRange);
+        // workaround, register for all events always until messagetype serialization is available
+        MessageType[] events = new MessageType[]{MessageType.ALL_EVENTS};
         ByteArrayInputStream in = new ByteArrayInputStream(inputRange);
-        MessageType[] events = new MessageType[length];
+        //MessageType[] events = new MessageType[length];
         for (int j = 0; j < length; ++j) {
           // TODO deserialize messagetypes
-
         }
         // TODO deserialize Pluginlistener
         PluginListener listener = null;
@@ -506,7 +538,9 @@ public class LocalApi implements CommunicatorApi {
       List<PluginListener> l = listeners.get(mt);
       if (l != null) {
         for (PluginListener pl : l) {
+          System.out.println("## notifying PluginListener " + pl.toString() + " for msg " + msg.getType() + " " + msg.getAction());
           pl.pluginEvent(msg.getAction(), msg);
+          System.out.println("## PluginEvent fired");
         }
       }
     }

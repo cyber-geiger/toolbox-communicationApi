@@ -21,6 +21,7 @@ public class MessageHandler implements Runnable {
 
   @Override
   public void run() {
+    System.out.println("## MessageHandler reached");
     Message msg;
     try (InputStream in = socket.asInputStream()) {
       // read bytes
@@ -37,7 +38,7 @@ public class MessageHandler implements Runnable {
       msg = Message.fromByteArray(byteArrayInputStream);
 
       PluginInformation pluginInformation = new PluginInformation(null, 0);
-      System.out.println("## got message (" + msg + ")");
+      System.out.println("## got message (" + msg + " " + msg.getType() + " " + msg.getAction() + ")");
       localApi.receivedMessage(pluginInformation, msg);
     } catch (IOException ioe) {
       // TODO handle communications error

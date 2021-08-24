@@ -16,6 +16,7 @@ import org.junit.Test;
 /**
  * <p>Class to test the DemoPlugin implementation.</p>
  */
+@Ignore
 public class TestDemoPlugin {
 
   LocalApi localApi;
@@ -53,7 +54,6 @@ public class TestDemoPlugin {
   }
 
   @Test
-  @Ignore
   public void testStartStop() throws StorageException, DeclarationMismatchException {
     // create demoPlugin
     DemoPlugin demoPlugin = new DemoPlugin(DemoPluginFeatures.FEATURE_ALL.getId());

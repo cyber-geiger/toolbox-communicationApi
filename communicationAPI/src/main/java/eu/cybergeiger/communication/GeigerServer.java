@@ -12,7 +12,7 @@ import totalcross.util.concurrent.ThreadPool;
  */
 public class GeigerServer extends GeigerCommunicator {
   // TODO find a way to get number of cores
-  private final ThreadPool executor = new ThreadPool(1);
+  //private final ThreadPool executor = new ThreadPool(4);
   private static final int port = 1234;
   private ServerSocket serverSocket;
   private final LocalApi localApi;
@@ -38,14 +38,17 @@ public class GeigerServer extends GeigerCommunicator {
         while (!shutdown) {
           final Socket s = serverSocket.accept();
           // This is only for debugging purposes use lambda for production
-          //(new MessageHandler(s, localApi)).run();
-          executor.execute(() -> new MessageHandler(s, localApi));
+
+          System.out.println("## GEIGER-Server run method reached");
+          (new MessageHandler(s, localApi)).run();
+          //executor.execute(() -> new MessageHandler(s, localApi));
         }
       } catch (IOException e) {
         // TODO error handling
         e.printStackTrace();
       }
     });
+    server.setName("GeigerServer");
     server.start();
   }
 

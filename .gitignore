@@ -8,6 +8,4 @@ hs_err_pid*
 **/gradlew
 **/gradlew.bat
 **/gradle
-/communicationAPI-totalcross/communicationAPI-totalcross.iml
-/communicationAPI-totalcross/testdb.mv.db
-/communicationAPI/testdb.mv.db
+/testdb.mv.db

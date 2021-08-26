@@ -41,11 +41,12 @@ public class PasstroughController implements StorageController, PluginListener, 
     this.localApi = api;
     this.id = id;
     localApi.registerListener(new MessageType[]{MessageType.STORAGE_EVENT,
-        MessageType.STORAGE_SUCCESS, MessageType.STORAGE_ERROR}, this);
+        MessageType.STORAGE_SUCCESS, MessageType.STORAGE_ERROR}, this, true);
   }
 
   private Message waitForResult(String command, String identifier) {
     String token = command + "/" + identifier;
+    long start = System.currentTimeMillis();
     while (receivedMessages.get(token) == null) {
       // wait for the appropriate message
       try {
@@ -55,6 +56,9 @@ public class PasstroughController implements StorageController, PluginListener, 
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
+      if (System.currentTimeMillis() - start > 5000) {
+        throw new RuntimeException("Lost communication while waiting for " + token);
+    }
     }
     return receivedMessages.get(token);
   }
@@ -326,6 +330,7 @@ public class PasstroughController implements StorageController, PluginListener, 
     String command = "deleteValue";
     String identifier = String.valueOf(new Random().nextInt());
     try {
+      // this will not work if either the old or the new path contains any "/"
       localApi.sendMessage(LocalApi.MASTER,
           new Message(id, LocalApi.MASTER, MessageType.STORAGE_EVENT,
               new GeigerUrl(id, command + "/" + identifier + "/"
@@ -376,6 +381,8 @@ public class PasstroughController implements StorageController, PluginListener, 
         // retrieve nodes and add to list
         List<Node> nodes = new ArrayList<>();
         for (int i = 0; i < numNodes; ++i) {
+          // does this advance the stream? after every read the next one needs to start at
+          // the ned of the last read + 1
           nodes.add(NodeImpl.fromByteArrayStream(new ByteArrayInputStream(receivedNodes)));
         }
         return nodes;

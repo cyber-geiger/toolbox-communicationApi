@@ -208,4 +208,9 @@ public class Message implements Serializer {
   public int hashCode() {
     return Objects.hash(sourceId, targetId, type, action, payloadString);
   }
+
+  @Override
+  public String toString() {
+    return getSourceId()+"=>"+getTargetId()+"{["+getType()+"] "+getAction()+"}";
+  }
 }

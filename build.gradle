@@ -7,10 +7,13 @@ plugins {
     id 'signing'
 }
 
+group 'eu.cyber-geiger'
+version '0.0.1b-SNAPSHOT'
+
 repositories {
     mavenCentral()
     maven {
-        url = uri('http://repo.maven.apache.org/maven2')
+        url = uri('https://repo.maven.apache.org/maven2')
         mavenContent {
             releasesOnly()
         }
@@ -29,6 +32,7 @@ configurations {
 }
 
 dependencies {
+    implementation 'eu.cyber-geiger:toolbox-storage:0.3.3c-noH2-SNAPSHOT'
     implementation  ('eu.cyber-geiger:toolbox-storage:0.3.3c-noH2-SNAPSHOT'){
         changing=true
     }

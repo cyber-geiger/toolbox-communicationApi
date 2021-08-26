@@ -39,14 +39,17 @@ public class GeigerServer extends GeigerCommunicator {
         while (!shutdown) {
           final Socket s = serverSocket.accept();
           // This is only for debugging purposes use lambda for production
-          //(new MessageHandler(s, localApi)).run();
-          executor.execute(() -> new MessageHandler(s, localApi));
+
+          System.out.println("## GEIGER-Server run method reached");
+          (new MessageHandler(s, localApi)).run();
+          //executor.execute(() -> new MessageHandler(s, localApi));
         }
       } catch (IOException e) {
         // TODO error handling
         e.printStackTrace();
       }
     });
+    server.setName("GeigerServer");
     server.start();
   }
 

@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -47,7 +48,7 @@ public class TestMessage {
 
     byte[] payload2 = "payload2".getBytes(StandardCharsets.UTF_8);
     msg2.setPayload(payload2);
-    Assert.assertArrayEquals("checker setter for payload",  payload2, msg2.getPayload());
+    Assert.assertArrayEquals("checker setter for payload", payload2, msg2.getPayload());
 
     msg2.setPayloadString("payload3");
     Assert.assertEquals("checking setter for payloadString", "payload3",
@@ -118,4 +119,21 @@ public class TestMessage {
     Message msg5 = new Message(targetId, sourceId, messageType, url);
     Assert.assertNotEquals(msg.hashCode(), msg5.hashCode());
   }
+
+  @Test
+  public void payloadEncodingTest() {
+    Message m = new Message("src", "target", MessageType.ACTIVATE_PLUGIN,
+        null, null);
+    for (String pl : new String[]{
+        null, "", UUID.randomUUID().toString()
+    }) {
+      m.setPayloadString(pl);
+      Assert.assertEquals(pl, m.getPayloadString());
+
+      byte[] blarr = pl != null ? pl.getBytes(StandardCharsets.UTF_8) : null;
+      m.setPayload(blarr);
+      Assert.assertArrayEquals(blarr, m.getPayload());
+    }
+  }
+
 }

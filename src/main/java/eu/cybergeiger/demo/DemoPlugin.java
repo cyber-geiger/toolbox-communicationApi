@@ -8,7 +8,12 @@ import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
 import eu.cybergeiger.communication.CommunicatorApi;
 import eu.cybergeiger.communication.Declaration;
 import eu.cybergeiger.communication.DeclarationMismatchException;
+import eu.cybergeiger.communication.GeigerUrl;
+import eu.cybergeiger.communication.LocalApi;
 import eu.cybergeiger.communication.LocalApiFactory;
+import eu.cybergeiger.communication.Message;
+import eu.cybergeiger.communication.MessageType;
+import eu.cybergeiger.communication.PluginListener;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -20,11 +25,16 @@ public class DemoPlugin {
 
   public static UUID uuid = new UUID(0x1111111122223333L, 0x4444555555555555L);
 
-  private static class DemoPluginRunner extends Thread {
+  private static class DemoPluginRunner extends Thread implements PluginListener {
 
+    /** true if the runner should shut down as soon as possible. */
     private boolean shutdown = false;
-    private long features = 0;
-    public static int MAX_STATES = 1;
+
+    /** the currently requested features. */
+    private final long features;
+
+    /** the current data provider. */
+    private DemoPluginStageProvider dataProvider;
 
     private int state;
     private CommunicatorApi comm;
@@ -36,9 +46,16 @@ public class DemoPlugin {
 
     public DemoPluginRunner(long features) throws IOException {
       try {
-        comm = LocalApiFactory.getLocalApi("still undefined", "DemoPlugin",
+        comm = LocalApiFactory.getLocalApi("still undefined", LocalApi.MASTER,
             Declaration.DO_NOT_SHARE_DATA);
         store = comm.getStorage();
+
+        // check if demo scenario should be used
+        if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
+          // get initial data
+          dataProvider = new DemoPluginStageProvider(store);
+        }
+
       } catch (DeclarationMismatchException dme) {
         throw new IOException("OOPS! that should not happen... please contact developer", dme);
       }
@@ -63,9 +80,7 @@ public class DemoPlugin {
       setDaemon(true);
 
       // initially create plugin nodes
-      for (Node n :
-          new Node[]
-              {
+      for (Node n : new Node[]{
                   new NodeImpl(":Users:" + userUuid + ":" + uuid),
                   new NodeImpl(":Devices:" + deviceUuid + ":" + uuid)
               }
@@ -75,6 +90,11 @@ public class DemoPlugin {
         } catch (StorageException ioe) {
           // just ignore if the node already exists
         }
+      }
+
+      // register listener if required
+      if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
+        comm.registerListener(new MessageType[]{MessageType.SCAN_PRESSED}, this);
       }
 
       // Do the data
@@ -91,11 +111,6 @@ public class DemoPlugin {
             }
           }
 
-          // implement scan states
-          if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
-            // FIXME waiting for spec here
-          }
-
           // wait for some time
           Thread.sleep(1000);
 
@@ -103,10 +118,37 @@ public class DemoPlugin {
           // may be safely ignored (wakeup by shutdown or state update?)
         }
       }
+      // deregister listener if required
+      if (DemoPluginFeatures.FEATURE_SCAN_DEMO.containsFeature(features)) {
+        comm.deregisterListener(new MessageType[]{MessageType.SCAN_PRESSED}, this);
     }
 
+      // remove heartbeat node
+      if (DemoPluginFeatures.FEATURE_HEARTBEAT.containsFeature(features)) {
+        try {
+          StorageController storageController = LocalApiFactory.getLocalApi(LocalApi.MASTER)
+              .getStorage();
+          storageController.delete(":Devices:" + deviceUuid + ":" + uuid);
+        } catch (StorageException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    /**
+     * <p>Sets the state and updates the store to reflect the current state.</p>
+     *
+     * @param state the state to be set
+     */
     public void setState(int state) {
-      this.state = state % MAX_STATES;
+      this.state = state % DemoPluginStageProvider.MAX_STATES;
+
+      // get new Nodes
+      try {
+        dataProvider.applyStage(this.state);
+      } catch (StorageException e) {
+        e.printStackTrace();
+    }
     }
 
     public void shutdown() {
@@ -124,11 +166,20 @@ public class DemoPlugin {
       }
     }
 
+    @Override
+    public void pluginEvent(GeigerUrl url, Message msg) {
+      setState(++state);
+  }
   }
 
-  private long features;
+  /** The currently set features to be supported. */
+  private final long features;
 
-  private Thread runner = null;
+  /** the currently running runner. */
+  private DemoPluginRunner runner = null;
+
+  /** the lock object to guarantee that only one runner is running simulataneously. */
+  private final Object lock = new Object();
 
   /**
    * <p>Create an instance of the plugin demo.</p>
@@ -143,25 +194,52 @@ public class DemoPlugin {
    * <p>start the data provider.</p>
    */
   public void start() {
+    synchronized (lock) {
     // check if heartbeat exists
-    // FIXME
-    if (runner != null && runner.isAlive()) {
-      // check if threat not already running
-      // FIXME
-      synchronized (runner) {
-        // FIXME
-      }
-    }
-    // start thread
+      StorageController store = null;
+      long lastHeartbeat = 0;
+      try {
+        store = LocalApiFactory.getLocalApi("undefined", LocalApi.MASTER,
+            Declaration.DO_NOT_SHARE_DATA).getStorage();
 
+        // initialize database
+        new DemoPluginStageProvider(store).applyStage(-1);
+
+        String deviceUuid = store.getValue(":Local", "currentDevice").getValue();
+
+        lastHeartbeat = System.currentTimeMillis() - Long.parseLong(store
+            .get(":Devices:" + deviceUuid + ":" + uuid)
+            .getValue("heartbeat").getValue());
+      } catch (StorageException | DeclarationMismatchException e) {
+        // ignore it. It simply means that there is nor runner available
+        // e.printStackTrace();
+      }
+
+      if (runner == null || lastHeartbeat > 5000) {
+        // create and start runner if not exists or heartbeat is old
+        try {
+          runner = new DemoPluginRunner(features);
+        } catch (IOException e) {
+    // FIXME
+          e.printStackTrace();
+      }
+        runner.start();
+      } else {
+        throw new RuntimeException("Runner already running");
+    }
+  }
   }
 
   /**
    * <p>Stop the data provider.</p>
    */
   public void stop() {
-    // stop thread
-    // remove heartbeat node
+    synchronized (lock) {
+      if (runner != null) {
+        runner.shutdown();
+        runner = null;
+  }
+    }
   }
 
 }

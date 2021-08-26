@@ -3,8 +3,10 @@ package eu.cybergeiger.communication;
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.GenericController;
+import ch.fhnw.geiger.localstorage.db.StorageMapper;
 import ch.fhnw.geiger.localstorage.db.mapper.DummyMapper;
 import ch.fhnw.geiger.localstorage.db.mapper.H2SqlMapper;
+import ch.fhnw.geiger.localstorage.db.mapper.SqliteMapper;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -20,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 
 /**
@@ -27,7 +30,24 @@ import java.util.Vector;
  */
 public class LocalApi implements CommunicatorApi {
 
-  public static final boolean PERSISTENT = false;
+  public enum Mapper {
+    DUMMY_MAPPER(new DummyMapper()),
+    H2_MAPPER(new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE", "sa2", "1234",true)),
+    SQLITE_MAPPER(new SqliteMapper("./testdb"));
+
+    StorageMapper mapper;
+
+    Mapper(StorageMapper m) {
+      this.mapper=m;
+    }
+
+    public StorageMapper getMapper() {
+      return this.mapper;
+    }
+  }
+
+  private static Mapper mapper = null;
+  private static final Mapper DEFAULT_MAPPER = Mapper.SQLITE_MAPPER;
 
   public static final String MASTER = "__MASTERPLUGIN__";
 
@@ -36,7 +56,7 @@ public class LocalApi implements CommunicatorApi {
   private static final StorableHashMap<StorableString, MenuItem> menuItems =
       new StorableHashMap<>();
 
-  //private static final Logger log = Logger.getLogger("LocalAPI");
+  private static final Logger log = Logger.getLogger("LocalAPI");
 
   private final String executor;
   private final String id;
@@ -94,8 +114,16 @@ public class LocalApi implements CommunicatorApi {
         e.printStackTrace();
       }
       storageEventHandler = new StorageEventHandler(this, getStorage());
-    registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler);
+      registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, storageEventHandler);
+    }
   }
+
+  public void setMapper(Mapper m) throws StorageException {
+    if(mapper==null) {
+      mapper = m;
+    } else {
+      throw new StorageException("Mapper is already set");
+    }
   }
 
   /**
@@ -130,7 +158,9 @@ public class LocalApi implements CommunicatorApi {
   private void registerPlugin(String id, PluginInformation info) {
     if (!plugins.containsKey(new StorableString(id))) {
       plugins.put(new StorableString(id), info);
-      System.out.println("## registered Plugin " + id + " executable: " + info.getExecutable() + " port: " + info.getPort());
+      System.out.println(
+          "## registered Plugin " + id + " executable: " + info.getExecutable() + " port: " + info
+              .getPort());
     }
   }
 
@@ -245,13 +275,11 @@ public class LocalApi implements CommunicatorApi {
    * @return a generic controller providing access to the local storage
    */
   public StorageController getStorage() throws StorageException {
+    if(mapper==null) {
+      mapper=DEFAULT_MAPPER;
+    }
     if (isMaster) {
-      // TODO remove hardcoded DB information
-      if (PERSISTENT) {
-        return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE", "sa2", "1234"));
-    } else {
-        return new GenericController(id, new ch.fhnw.geiger.localstorage.db.mapper.DummyMapper());
-      }
+      return new GenericController(id, mapper.getMapper());
     } else {
       return new PasstroughController(this, id);
     }
@@ -260,12 +288,12 @@ public class LocalApi implements CommunicatorApi {
   /**
    * To register a Pluginlistener inside this LocalApi.
    *
-   * @param events The events to register for
+   * @param events   The events to register for
    * @param listener The listener to register
    * @param internal If it is internal or not
    */
   public void registerListener(MessageType[] events, PluginListener listener, boolean internal) {
-    if(internal) {
+    if (internal) {
       for (MessageType e : events) {
         synchronized (listeners) {
           List<PluginListener> l = listeners.get(e);
@@ -536,7 +564,9 @@ public class LocalApi implements CommunicatorApi {
       List<PluginListener> l = listeners.get(mt);
       if (l != null) {
         for (PluginListener pl : l) {
-          System.out.println("## notifying PluginListener " + pl.toString() + " for msg " + msg.getType() + " " + msg.getAction());
+          System.out.println(
+              "## notifying PluginListener " + pl.toString() + " for msg " + msg.getType() + " "
+                  + msg.getAction());
           pl.pluginEvent(msg.getAction(), msg);
           System.out.println("## PluginEvent fired");
         }

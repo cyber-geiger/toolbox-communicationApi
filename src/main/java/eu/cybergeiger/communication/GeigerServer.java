@@ -50,6 +50,7 @@ public class GeigerServer extends GeigerCommunicator {
       }
     });
     server.setName("GeigerServer");
+    server.setDaemon(true);
     server.start();
   }
 

@@ -48,6 +48,7 @@ public class GeigerClient extends GeigerCommunicator {
       }
     });
     client.setName("GeigerClient-");
+    client.setDaemon(true);
     client.start();
   }
 

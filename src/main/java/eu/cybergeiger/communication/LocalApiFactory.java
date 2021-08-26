@@ -9,6 +9,8 @@ import java.util.Map;
  */
 public class LocalApiFactory {
 
+  public static final String MASTER_EXECUTOR = "FIXME";
+
   // TODO check for threadsafety as concurrenthashmap is not supported
   private static final Map<String, LocalApi> instances = new HashMap<>();
 

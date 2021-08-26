@@ -1,5 +1,7 @@
 package eu.cybergeiger.examples;
 
+import static eu.cybergeiger.communication.LocalApiFactory.MASTER_EXECUTOR;
+
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.data.Node;
@@ -12,34 +14,26 @@ import eu.cybergeiger.communication.LocalApiFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class InternalPluginExample {
+/**********************************/
+/*** BROKEN... DO NOT USE (YET) ***/
+/**********************************/
+public class ExternalPluginExample {
 
   public static void main(String[] args) {
     try {
-      LocalApi localMaster = LocalApiFactory.getLocalApi("NOT_YET_NEEDED_HERE", LocalApi.MASTER,
+      // Make sure there is a master (For development only)
+      LocalApiFactory.getLocalApi(MASTER_EXECUTOR, LocalApi.MASTER,
           Declaration.DO_NOT_SHARE_DATA);
-      StorageController controller = localMaster.getStorage();
+
+      LocalApi plugin = LocalApiFactory.getLocalApi("NOT_YET_NEEDED_HERE", "plugin1",
+          Declaration.DO_NOT_SHARE_DATA);
+
+      StorageController controller = plugin.getStorage();
 
       //get and print currentUser value
       Node n = controller.get(":Local");
       System.out.println("Current user UUID is:" + n.getValue("currentUser"));
 
-      // geting invocation counter
-      try {
-        n = controller.get(":Local:temp");
-      } catch (StorageException se) {
-        n = new NodeImpl(":Local:temp");
-        n.addValue(new NodeValueImpl("counter", "0"));
-        controller.add(n);
-      }
-
-      //incrementing counter
-      int i = Integer.parseInt(n.getValue("counter").getValue()) + 1;
-      System.out.println("Current counter is:" + i);
-      n.updateValue(new NodeValueImpl("counter", "" + i));
-
-      // updating counter
-      controller.update(n);
     } catch (StorageException se) {
       Logger.getLogger("ExampleLogger").log(Level.SEVERE, "got an unexpected exception", se);
     } catch (DeclarationMismatchException e) {

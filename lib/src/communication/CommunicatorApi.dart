@@ -21,7 +21,7 @@ abstract class CommunicatorApi with PluginRegistrar, MenuRegistrar {
   /// <p>Obtain controller to access the storage.</p>
   /// @return a generic controller providing access to the local storage
   /// @throws StorageException in case allocation of storage backed fails
-  StorageController getStorage();
+  StorageController? getStorage();
 
   /// <p>Register an event listener for specific events on the Master.</p>
   /// @param events   list of events for which messages should be received. Use MessageType.

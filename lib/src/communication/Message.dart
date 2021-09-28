@@ -7,10 +7,10 @@ import 'MessageType.dart';
 class Message // with ch_fhnw_geiger_serialization_Serializer
 {
   static const int serialVersionUID = 143287432;
-  final String sourceId;
-  final String targetId;
+  final String? sourceId;
+  final String? targetId;
   final MessageType type;
-  final GeigerUrl action;
+  final GeigerUrl? action;
   String? payloadString;
 
   /// <p>A message object transported through the local communication api.</p>
@@ -28,13 +28,13 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
 
   /// <p>returns the target id of the message.</p>
   /// @return the target id
-  String getTargetId() {
+  String? getTargetId() {
     return targetId;
   }
 
   /// <p>returns the source id of the message.</p>
   /// @return the id of the plugin source
-  String getSourceId() {
+  String? getSourceId() {
     return sourceId;
   }
 
@@ -46,7 +46,7 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
 
   /// <p>Returns the action URL of the message.</p>
   /// @return the action URL
-  GeigerUrl getAction() {
+  GeigerUrl? getAction() {
     return action;
   }
 
@@ -149,10 +149,10 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
 
   @override
   int get hashCode {
-    return (sourceId +
-            targetId +
-            type.getId().toString() +
-            action.toString() +
+    return ((sourceId ?? 'null') +
+            (targetId ?? 'null') +
+            type.hashCode.toString() +
+            action.hashCode.toString() +
             (payloadString ?? 'null'))
         .hashCode;
   }

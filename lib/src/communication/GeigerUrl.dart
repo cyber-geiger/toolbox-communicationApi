@@ -1,5 +1,6 @@
 import 'package:communicationapi/src/totalcross/MalformedUrlException.dart';
-import 'package:communicationapi/src/totalcross/Matcher.dart';
+
+import 'LocalApi.dart';
 
 /// <p>GEIGER communication URL object.</p>
 class GeigerUrl // with ch_fhnw_geiger_serialization_Serializer
@@ -8,29 +9,28 @@ class GeigerUrl // with ch_fhnw_geiger_serialization_Serializer
   String protocol = 'geiger';
   String pluginId = LocalApi.MASTER;
   String path = '';
-  static final Matcher urlPattern = Matcher.compile('(.+?)://([^/]+)/(.*)');
+  static final RegExp urlPattern = RegExp('(.+?)://([^/]+)/(.*)');
 
   /// <p>GeigerUrl constructor.</p>
   /// @param spec a well formed URI
   /// @throws MalformedUrlException if a malformed URL was received
   GeigerUrl.fromSpec(String spec) {
-    try {
-      Matcher m = urlPattern.matcher(spec);
-      if (!m.matches()) {
-        throw MalformedUrlException(
-            'Matcher was unable to match the string \"' +
-                spec +
-                '\" to regexp ' +
-                urlPattern.pattern);
-      }
-      protocol = m.group(1);
-      init(m.group(2), m.group(3));
-    } on IllegalStateException catch (e) {
+    /*try {*/
+    var m = urlPattern.firstMatch(spec);
+    if (m == null) {
       throw MalformedUrlException('Matcher was unable to match the string \"' +
           spec +
           '\" to regexp ' +
           urlPattern.pattern);
     }
+    protocol = m[1]!;
+    init(m[2]!, m[3]!);
+    /*} on IllegalStateException catch (e) {
+      throw MalformedUrlException('Matcher was unable to match the string \"' +
+          spec +
+          '\" to regexp ' +
+          urlPattern.pattern);
+    }*/
   }
 
   /// <p>Constructor to create a GEIGER url from id and path.</p>

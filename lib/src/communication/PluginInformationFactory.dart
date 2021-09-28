@@ -3,7 +3,7 @@ import 'java.dart';
 /// <p>A factory class to create plugin information entries.</p>
 class PluginInformationFactory
 {
-    static final java_util_Map<String, PluginInformation> store = new java_util_HashMap();
+    static final Map<String, PluginInformation> store = new HashMap();
     /// <p>Retrieves plugin information for a plugin.</p>
     /// @param id the id of the the plugin
     /// @param executor the executor string required to run the plugin

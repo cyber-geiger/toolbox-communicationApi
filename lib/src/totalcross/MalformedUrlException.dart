@@ -1,16 +1,9 @@
+import 'dart:io';
 
-import 'java.dart';
 /// Exception class to denote a malformed URL.
-class MalformedUrlException extends java_io_IOException
-{
-    MalformedUrlException(String msg)
-    {
-        super(msg);
-    }
+class MalformedUrlException extends IOException {
+  String message;
+  Exception? exception;
 
-    MalformedUrlException(String msg, Exception e)
-    {
-        super(msg, e);
-    }
-
+  MalformedUrlException(this.message, [this.exception]);
 }

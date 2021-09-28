@@ -1,15 +1,17 @@
 
-import 'java.dart';
+import 'Message.dart';
+import 'MessageListener.dart';
+import 'PluginInformation.dart';
 /// Abstract class to define common methods for GeigerCommunicators.
 abstract class GeigerCommunicator
 {
-    MessageListener listener = null;
+    MessageListener? listener;
     void setListener(MessageListener listener)
     {
         this.listener = listener;
     }
 
-    void sendMessage(PluginInformation pluginInformation, Message msg);
+    void  sendMessage(PluginInformation pluginInformation, Message msg);
 
     void start();
 
@@ -26,10 +28,10 @@ abstract class GeigerCommunicator
     /// @return bytearray representing the int
     static List<int> intToByteArray(int value)
     {
-        return new List<int>.from([value >> 24, value >> 16, value >> 8, value]);
+        return [value >> 24, value >> 16, value >> 8, value];
     }
 
-    MessageListener getListener()
+    MessageListener? getListener()
     {
         return listener;
     }

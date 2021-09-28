@@ -1,42 +1,32 @@
-
-import 'java.dart';
 /// <p>A serializable yet simple String object.</p>
-class StorableString with ch_fhnw_geiger_serialization_Serializer
-{
-    static const int serialVersionUID = 142314912322198374;
-    final String value;
-    StorableString()
-    {
-        value = "";
-    }
+class StorableString /*with Serializer*/ {
+  static const int serialVersionUID = 142314912322198374;
+  final String value;
 
-    StorableString(String value)
-    {
-        this.value = value;
-    }
+  StorableString([this.value = '']);
 
-    String toString()
-    {
-        return value;
-    }
+  @override
+  String toString() {
+    return value;
+  }
 
-    bool equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if ((o == null) || (getClass() != o.getClass())) {
-            return false;
-        }
-        StorableString that = o;
-        return ((value == null) && (that.value == null)) || ((value != null) && (value == that.value));
-    }
+  @override
+  bool operator ==(Object other) => equals(other);
 
-    int hashCode()
-    {
-        return value.hashCode();
+  bool equals(Object? o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || !(o is StorableString)) {
+      return false;
+    }
+    StorableString? that = o;
+    return value == that.value;
+  }
 
+  @override
+  int get hashCode => value.hashCode;
+/*
     void toByteArrayStream(ch_fhnw_geiger_totalcross_ByteArrayOutputStream out)
     {
         SerializerHelper.writeString(out, this.value);
@@ -49,6 +39,6 @@ class StorableString with ch_fhnw_geiger_serialization_Serializer
     StorableString fromByteArrayStream(ch_fhnw_geiger_totalcross_ByteArrayInputStream in_)
     {
         return new StorableString(SerializerHelper.readString(in_));
-    }
+    }*/
 
 }

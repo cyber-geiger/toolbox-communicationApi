@@ -1,53 +1,39 @@
+import 'CommunicationSecret.dart';
 
-import 'java.dart';
 /// <p>Object for storing vital plugin information.</p>
-class PluginInformation with ch_fhnw_geiger_serialization_Serializer
-{
-    static const int serialVersionUID = 48032940912340;
-    final String executable;
-    const int port;
-    CommunicationSecret secret;
-    PluginInformation(String executable, int port)
-    {
-        this(executable, port, null);
-    }
+class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
+  static const int serialVersionUID = 48032940912340;
+  final String executable;
+  final int port;
+  late CommunicationSecret secret;
 
-    /// <p>Constructor for plugin information.</p>
-    /// @param executable the string required for platform specific wakeup of a plugin
-    /// @param port       the port of the plugin to be contacted on
-    /// @param secret     the secret required for communicating (if null a new secret is generated)
-    PluginInformation(String executable, int port, CommunicationSecret secret)
-    {
-        this.executable = executable;
-        this.port = port;
-        this.secret = secret;
-        if (this.secret == null) {
-            this.secret = new CommunicationSecret();
-        }
-    }
+  /// <p>Constructor for plugin information.</p>
+  /// @param executable the string required for platform specific wakeup of a plugin
+  /// @param port       the port of the plugin to be contacted on
+  /// @param secret     the secret required for communicating (if null a new secret is generated)
+  PluginInformation(this.executable, this.port, [CommunicationSecret? secret]) {
+    this.secret = secret ?? CommunicationSecret();
+  }
 
-    /// <p>Gets the port of the plugin.</p>
-    /// @return the port an active plugin may be reached on
-    int getPort()
-    {
-        return this.port;
-    }
+  /// <p>Gets the port of the plugin.</p>
+  /// @return the port an active plugin may be reached on
+  int getPort() {
+    return port;
+  }
 
-    /// <p>The executable string required for starting the plugin.</p>
-    /// @return the executable string
-    String getExecutable()
-    {
-        return this.executable;
-    }
+  /// <p>The executable string required for starting the plugin.</p>
+  /// @return the executable string
+  String getExecutable() {
+    return executable;
+  }
 
-    /// <p>The communication secret required for sending securely between two instances.</p>
-    /// @return the requested secret
-    CommunicationSecret getSecret()
-    {
-        return this.secret;
-    }
+  /// <p>The communication secret required for sending securely between two instances.</p>
+  /// @return the requested secret
+  CommunicationSecret getSecret() {
+    return secret;
+  }
 
-    void toByteArrayStream(ch_fhnw_geiger_totalcross_ByteArrayOutputStream out)
+  /*void toByteArrayStream(ch_fhnw_geiger_totalcross_ByteArrayOutputStream out)
     {
         SerializerHelper.writeLong(out, serialVersionUID);
         SerializerHelper.writeString(out, executable);
@@ -99,11 +85,10 @@ class PluginInformation with ch_fhnw_geiger_serialization_Serializer
             ioe.printStackTrace();
             return null;
         }
-    }
+    }*/
 
-    int hashCode()
-    {
-        return (((executable + ":") + port) + ":") + secret.toString()).hashCode(;
-    }
-
+  int get hashCode {
+    return (executable + ':' + port.toString() + ':' + secret.toString())
+        .hashCode;
+  }
 }

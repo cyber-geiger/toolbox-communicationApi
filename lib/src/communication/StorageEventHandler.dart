@@ -24,7 +24,7 @@ class StorageEventHandler with PluginListener {
     if (LocalApi.MASTER == msg.getTargetId()) {
       isMaster = true;
     }
-    var urlParts = msg.getAction().getPath().split('/');
+    var urlParts = msg.getAction()!.getPath().split('/');
     var action = urlParts[0];
     var identifier = urlParts[1];
     var optionalArgs = urlParts.sublist(2, urlParts.length);
@@ -100,13 +100,13 @@ class StorageEventHandler with PluginListener {
       node.toByteArrayStream(bos);
       List<int> payload = bos.toByteArray();
       localApi.sendMessage(
-          msg.getSourceId(),
+          msg.getSourceId()!,
           Message(
               msg.getTargetId(),
               msg.getSourceId(),
               MessageType.STORAGE_SUCCESS,
               GeigerUrl(
-                  msg.getSourceId(), (('getNode/' + identifier) + '/') + path),
+                  msg.getSourceId()!, (('getNode/' + identifier) + '/') + path),
               payload));
     } on IOException catch (e) {
       try {
@@ -115,12 +115,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not get Node' + path, e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'getNode/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'getNode/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -143,12 +143,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not add Node', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'addNode/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'addNode/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -171,12 +171,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not update Node', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'updateNode/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'updateNode/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -195,21 +195,21 @@ class StorageEventHandler with PluginListener {
         node.toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId(), 'deleteNode/' + identifier),
+                GeigerUrl(msg.getTargetId()!, 'deleteNode/' + identifier),
                 payload));
       } else {
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId(), 'deleteNode/' + identifier)));
+                GeigerUrl(msg.getTargetId()!, 'deleteNode/' + identifier)));
       }
     } on Exception catch (e) {
       try {
@@ -218,12 +218,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not delete Node', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'deleteNode/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'deleteNode/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -243,21 +243,21 @@ class StorageEventHandler with PluginListener {
         nodeValue.toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId(), 'getValue/' + identifier),
+                GeigerUrl(msg.getTargetId()!, 'getValue/' + identifier),
                 payload));
       } else {
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId(), 'getValue/' + identifier)));
+                GeigerUrl(msg.getTargetId()!, 'getValue/' + identifier)));
       }
     } on Exception catch (e) {
       try {
@@ -266,12 +266,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not get NodeValue', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'getValue/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'getValue/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -294,12 +294,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not add NodeValue', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'addValue/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'addValue/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -323,12 +323,12 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'updateValue/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'updateValue/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -348,12 +348,12 @@ class StorageEventHandler with PluginListener {
       nodeValue.toByteArrayStream(bos);
       List<int> payload = bos.toByteArray();
       localApi.sendMessage(
-          msg.getSourceId(),
+          msg.getSourceId()!,
           Message(
               msg.getTargetId(),
               msg.getSourceId(),
               MessageType.STORAGE_SUCCESS,
-              GeigerUrl(msg.getTargetId(), 'deleteNodeValue/' + identifier),
+              GeigerUrl(msg.getTargetId()!, 'deleteNodeValue/' + identifier),
               payload));
     } on Exception catch (e) {
       try {
@@ -363,12 +363,12 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'deleteValue/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'deleteValue/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -388,12 +388,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not rename Node', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'rename/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'rename/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -417,21 +417,21 @@ class StorageEventHandler with PluginListener {
         }
         payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId(), 'search/' + identifier),
+                GeigerUrl(msg.getTargetId()!, 'search/' + identifier),
                 payload));
       } else {
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId(), 'search/' + identifier)));
+                GeigerUrl(msg.getTargetId()!, 'search/' + identifier)));
       }
     } on Exception catch (e) {
       try {
@@ -440,12 +440,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not search Node', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'search/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'search/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -465,12 +465,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not close', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'close/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'close/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -490,12 +490,12 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not flush', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'flush/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'flush/' + identifier),
                 payload));
       } on IOException {}
     }
@@ -515,17 +515,18 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not zap', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId(),
+            msg.getSourceId()!,
             Message(
                 msg.getTargetId(),
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
-                GeigerUrl(msg.getSourceId(), 'zap/' + identifier),
+                GeigerUrl(msg.getSourceId()!, 'zap/' + identifier),
                 payload));
       } on IOException {}
     }
   }
 
+  @override
   void pluginEvent(GeigerUrl url, Message msg) {
     storageEventParser(msg);
   }

@@ -3,7 +3,7 @@ import 'CommunicationSecret.dart';
 /// <p>Object for storing vital plugin information.</p>
 class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
   static const int serialVersionUID = 48032940912340;
-  final String executable;
+  final String? executable;
   final int port;
   late CommunicationSecret secret;
 
@@ -12,7 +12,7 @@ class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
   /// @param port       the port of the plugin to be contacted on
   /// @param secret     the secret required for communicating (if null a new secret is generated)
   PluginInformation(this.executable, this.port, [CommunicationSecret? secret]) {
-    this.secret = secret ?? CommunicationSecret();
+    this.secret = secret ?? CommunicationSecret.empty();
   }
 
   /// <p>Gets the port of the plugin.</p>
@@ -23,7 +23,7 @@ class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
 
   /// <p>The executable string required for starting the plugin.</p>
   /// @return the executable string
-  String getExecutable() {
+  String? getExecutable() {
     return executable;
   }
 

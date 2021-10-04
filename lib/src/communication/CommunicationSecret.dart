@@ -37,7 +37,7 @@ class CommunicationSecret /*with Serializer*/ {
     }
     secret = List.filled(size, 0);
     for (var i = 0; i < size; i++) {
-      var value = Random().nextInt(pow(2, 51).toInt());
+      var value = Random.secure().nextInt(pow(2, 51).toInt());
       secret[i] = value;
     }
   }

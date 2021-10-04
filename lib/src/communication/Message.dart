@@ -156,4 +156,16 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
             (payloadString ?? 'null'))
         .hashCode;
   }
+
+  @override
+  String toString() {
+    return (getSourceId() ?? 'null') +
+        '=>' +
+        (getTargetId() ?? 'null') +
+        '{[' +
+        getType().toString() +
+        '] ' +
+        (getAction()?.toString() ?? 'null') +
+        '}';
+  }
 }

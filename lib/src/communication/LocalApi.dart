@@ -2,8 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:communicationapi/src/totalcross/MalformedUrlException.dart';
-import 'package:communicationapi/src/totalcross/PluginStarter.dart';
+import 'MalformedUrlException.dart';
 import 'package:localstorage/localstorage.dart';
 
 import 'CommunicatorApi.dart';
@@ -18,13 +17,33 @@ import 'MessageType.dart';
 import 'PasstroughController.dart';
 import 'PluginInformation.dart';
 import 'PluginListener.dart';
+import 'PluginStarter.dart';
 import 'StorableHashMap.dart';
 import 'StorableString.dart';
 import 'StorageEventHandler.dart';
 
+enum Mapper {
+  DUMMY_MAPPER,
+  SQLITE_MAPPER,
+}
+
+extension MapperExtension on Mapper {
+  StorageMapper getMapper() {
+    switch (this) {
+      case Mapper.DUMMY_MAPPER:
+        return DummyMapper();
+      case Mapper.SQLITE_MAPPER:
+        return SqliteMapper('./testdb');
+    }
+  }
+}
+
 /// <p>Offers an API for all plugins to access the local toolbox.</p>
 class LocalApi implements CommunicatorApi {
   static final bool PERSISTENT = false;
+
+  static Mapper? mapper;
+  static final Mapper DEFAULT_MAPPER = Mapper.SQLITE_MAPPER;
 
   static final String MASTER = '__MASTERPLUGIN__';
 
@@ -70,6 +89,10 @@ class LocalApi implements CommunicatorApi {
       }
       // TODO should the passtroughcontroller be listener?
       storageEventHandler = PasstroughController(this, id);
+      // this code is duplicate from registerListener method
+      // it is currently not possible to determin between register internally and register on Master
+      // therefore this duplicate is necessary
+      registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
       // it is master
       try {
@@ -80,8 +103,16 @@ class LocalApi implements CommunicatorApi {
         print(e);
       }
       storageEventHandler = StorageEventHandler(this, getStorage()!);
+      registerListener([MessageType.STORAGE_EVENT], storageEventHandler);
     }
-    registerListener([MessageType.STORAGE_EVENT], storageEventHandler);
+  }
+
+  void setMapper(Mapper m) {
+    if (mapper == null) {
+      mapper = m;
+    } else {
+      throw StorageException('Mapper is already set');
+    }
   }
 
   /// <p>Returns the declaration given upon creation.</p>
@@ -102,6 +133,12 @@ class LocalApi implements CommunicatorApi {
       if (info == null) throw NullThrownError();
       if (!plugins.containsKey(StorableString(id))) {
         plugins[StorableString(id)] = info;
+        print('## registered Plugin ' +
+            id +
+            ' executable: ' +
+            (info.getExecutable() ?? 'null') +
+            ' port: ' +
+            info.getPort().toString());
       }
       return;
     }
@@ -119,7 +156,7 @@ class LocalApi implements CommunicatorApi {
               GeigerUrl(MASTER, 'registerPlugin'),
               pluginInformation.toByteArray()));
     } on MalformedUrlException {
-      // TODO proper handling
+      // TODO proper Error handling
       // this should never occur
     }
   }
@@ -154,7 +191,7 @@ class LocalApi implements CommunicatorApi {
       throw ArgumentError(
           'no communication secret found for id \"' + this.id + '\"');
     }
-// first deactivate, then deregister at Master, before deleting my own entries.
+    // first deactivate, then deregister at Master, before deleting my own entries.
     deactivatePlugin();
     try {
       sendMessage(
@@ -162,8 +199,8 @@ class LocalApi implements CommunicatorApi {
           Message(this.id, LocalApi.MASTER, MessageType.DEREGISTER_PLUGIN,
               GeigerUrl(MASTER, 'deregisterPlugin')));
     } on MalformedUrlException {
-// TODO proper error handling
-// this should never occur
+      // TODO proper Error handling
+      // this should never occur
     }
     zapState();
   }
@@ -236,29 +273,38 @@ class LocalApi implements CommunicatorApi {
   /// @return a generic controller providing access to the local storage
   @override
   StorageController? getStorage() {
+    mapper ??= DEFAULT_MAPPER;
     if (isMaster) {
-// TODO remove hardcoded DB information
-      if (PERSISTENT) {
-// currently not available
-// FIXME
-//return new GenericController(id, new H2SqlMapper("jdbc:h2:./testdb;AUTO_SERVER=TRUE",
-//    "sa2", "1234"));
-        return null;
-      } else {
-        return GenericController(id, DummyMapper());
-      }
+      return GenericController(id, mapper!.getMapper());
     } else {
       return PasstroughController(this, id);
     }
   }
 
   @override
-  void registerListener(List<MessageType> events, PluginListener listener) {
+  void registerListener(List<MessageType> events, PluginListener listener,
+      [bool internal = false]) {
+    if (internal) {
+      for (var e in events) {
+        // synchronized(listeners) {
+        var l = listeners[e];
+        // The short form computeIfAbsent is not available in TotalCross
+        if (l == null) {
+          l = List.empty(growable: true);
+          listeners[e] = l;
+        }
+        if (e.getId() < 10000) {
+          l.add(listener);
+        }
+        // }
+      }
+      return;
+    }
     if (isMaster) {
       for (var e in events) {
         // synchronized(listeners) {
         var l = listeners[e];
-// The short form computeIfAbsent is not available in TotalCross
+        // The short form computeIfAbsent is not available in TotalCross
         if (l == null) {
           l = List.empty(growable: true);
           listeners[e] = l;
@@ -269,14 +315,14 @@ class LocalApi implements CommunicatorApi {
         // }
       }
     } else {
-// formatin int number of events -> events -> listener
-      ByteArrayOutputStream out = ByteArrayOutputStream();
-      out.write(GeigerCommunicator.intToByteArray(events.length));
-      for (var event in events) {
-        out.write(GeigerCommunicator.intToByteArray(event.ordinal()));
-      }
-// out.write(listener.toByteArray());
       try {
+        // formatin int number of events -> events -> listener
+        ByteArrayOutputStream out = ByteArrayOutputStream();
+        out.write(GeigerCommunicator.intToByteArray(events.length));
+        for (var event in events) {
+          out.write(GeigerCommunicator.intToByteArray(event.ordinal()));
+        }
+        // out.write(listener.toByteArray());
         sendMessage(
             MASTER,
             Message(
@@ -285,9 +331,9 @@ class LocalApi implements CommunicatorApi {
                 MessageType.REGISTER_LISTENER,
                 GeigerUrl(LocalApi.MASTER, 'registerListener'),
                 out.toByteArray()));
-      } on MalformedUrlException {
-// TODO proper handling
-// this should never occur
+      } on IOException {
+        // TODO proper Error handling
+        // this should never occur
       }
     }
   }
@@ -296,6 +342,7 @@ class LocalApi implements CommunicatorApi {
   ///
   /// @param events   the events affected or null if the listener should be removed from all events
   /// @param listener the listener to be removed
+  /// @param internal If it is internal or not
   @override
   void deregisterListener(List<MessageType>? events, PluginListener listener) {
     events ??= MessageType.values;
@@ -497,8 +544,10 @@ class LocalApi implements CommunicatorApi {
           var intRange = payload.sublist(0, 4);
           var inputRange = payload.sublist(4, payload.length);
           var length = GeigerCommunicator.byteArrayToInt(intRange);
+          // workaround, register for all events always until messagetype serialization is available
+          var events = [MessageType.ALL_EVENTS];
           ByteArrayInputStream in_ = ByteArrayInputStream(inputRange);
-          var events = List<MessageType>.empty(growable: true);
+          // var events = List<MessageType>.empty(growable: true);
           for (var j = 0; j < length; ++j) {
             // TODO deserialize messagetypes
 
@@ -554,7 +603,15 @@ class LocalApi implements CommunicatorApi {
       var l = listeners[mt];
       if (l != null) {
         for (var pl in l) {
+          print('## notifying PluginListener ' +
+              pl.toString() +
+              ' for msg ' +
+              msg.getType().toString() +
+              ' ' +
+              msg.getAction().toString());
           pl.pluginEvent(msg.getAction()!, msg);
+
+          print('## PluginEvent fired');
         }
       }
     }

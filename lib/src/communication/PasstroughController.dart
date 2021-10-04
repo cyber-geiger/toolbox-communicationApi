@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:communicationapi/src/totalcross/MalformedUrlException.dart';
+import 'MalformedUrlException.dart';
 import 'package:localstorage/localstorage.dart';
 
 import 'GeigerUrl.dart';
@@ -27,7 +27,7 @@ class PasstroughController
       MessageType.STORAGE_EVENT,
       MessageType.STORAGE_SUCCESS,
       MessageType.STORAGE_ERROR
-    ], this);
+    ], this, true);
   }
 
   Message? waitForResult(String command, String identifier) {
@@ -53,6 +53,7 @@ class PasstroughController
     return receivedMessages[token];
   }
 
+  @override
   Node get(String path) {
     var command = 'getNode';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -77,6 +78,7 @@ class PasstroughController
     }
   }
 
+  @override
   Node getNodeOrTombstone(String path) {
     var command = 'getNodeOrTombstone';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -101,6 +103,7 @@ class PasstroughController
     }
   }
 
+  @override
   void add(Node node) {
     var command = 'addNode';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -122,6 +125,7 @@ class PasstroughController
     }
   }
 
+  @override
   void update(Node node) {
     var command = 'updateNode';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -143,6 +147,7 @@ class PasstroughController
     }
   }
 
+  @override
   bool addOrUpdate(Node node) {
     var command = 'addOrUpdateNode';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -165,6 +170,7 @@ class PasstroughController
     }
   }
 
+  @override
   Node delete(String path) {
     var command = 'deleteNode';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -189,6 +195,7 @@ class PasstroughController
     }
   }
 
+  @override
   NodeValue getValue(String path, String key) {
     var command = 'getValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -213,6 +220,7 @@ class PasstroughController
     }
   }
 
+  @override
   void addValue(String path, NodeValue value) {
     var command = 'addValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -235,6 +243,7 @@ class PasstroughController
     }
   }
 
+  @override
   void updateValue(String nodeName, NodeValue value) {
     var command = 'updateValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -257,6 +266,7 @@ class PasstroughController
     }
   }
 
+  @override
   NodeValue deleteValue(String path, String key) {
     var command = 'deleteValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -281,10 +291,12 @@ class PasstroughController
     }
   }
 
+  @override
   void rename(String oldPath, String newPathOrName) {
     var command = 'deleteValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
+      // this will not work if either the old or the new path contains any "/"
       localApi.sendMessage(LocalApi.MASTER, Message(
           id, LocalApi.MASTER, MessageType.STORAGE_EVENT, GeigerUrl(id,
           (((((command + '/') + identifier) + '/') + oldPath) + '/') +
@@ -302,8 +314,8 @@ class PasstroughController
     }
   }
 
-  java_util_List<Node> search(
-      ch_fhnw_geiger_localstorage_SearchCriteria criteria) {
+  @override
+  List<Node> search(SearchCriteria criteria) {
     var command = 'search';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
@@ -319,13 +331,15 @@ class PasstroughController
             ch_fhnw_geiger_totalcross_ByteArrayInputStream(
                 response.getPayload()));
       } else {
-        List<int> receivedPayload = response.getPayload();
+        var receivedPayload = response.getPayload();
         int numNodes = GeigerCommunicator.byteArrayToInt(
-            Arrays.copyOfRange(receivedPayload, 0, 4));
-        List<int> receivedNodes = Arrays.copyOfRange(
-            receivedPayload, 5, receivedPayload.length);
-        java_util_List<Node> nodes = java_util_ArrayList();
+            receivedPayload?.sublist(0, 4));
+        var receivedNodes = receivedPayload?.sublist(
+            5, receivedPayload.length);
+        var nodes = List<Node>.empty(growable: true);
         for (var i = 0; i < numNodes; (++i)) {
+          // does this advance the stream? after every read the next one needs to start at
+          // the ned of the last read + 1
           nodes.add(NodeImpl.fromByteArrayStream(
               ch_fhnw_geiger_totalcross_ByteArrayInputStream(
                   receivedNodes)));
@@ -337,6 +351,7 @@ class PasstroughController
     }
   }
 
+  @override
   void close() {
     var command = 'close';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -357,6 +372,7 @@ class PasstroughController
     }
   }
 
+  @override
   void flush() {
     var command = 'flush';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -377,6 +393,7 @@ class PasstroughController
     }
   }
 
+  @override
   void zap() {
     var command = 'zap';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
@@ -397,6 +414,7 @@ class PasstroughController
     }
   }
 
+  @override
   void pluginEvent(GeigerUrl url, Message msg) {
     synchronized(receivedMessages, {
     receivedMessages.put(url.getPath(), msg);
@@ -410,9 +428,9 @@ class PasstroughController
   /// @param listener StorageListener to be registered
   /// @param criteria SearchCriteria to search for the Node
   /// @throws StorageException if the listener could not be registered
-  void registerChangeListener(
-      ch_fhnw_geiger_localstorage_StorageListener listener,
-      ch_fhnw_geiger_localstorage_SearchCriteria criteria) {
+  @override
+  void registerChangeListener(StorageListener listener,
+      SearchCriteria criteria) {
     var command = 'registerChangeListener';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     ch_fhnw_geiger_totalcross_ByteArrayOutputStream byteArrayOutputStream = ch_fhnw_geiger_totalcross_ByteArrayOutputStream();
@@ -439,8 +457,8 @@ class PasstroughController
   /// @param listener the listener to Deregister
   /// @return the SearchCriteria that were deregistered
   /// @throws StorageException if listener could not be deregistered
-  List<ch_fhnw_geiger_localstorage_SearchCriteria> deregisterChangeListener(
-      ch_fhnw_geiger_localstorage_StorageListener listener) {
+  @override
+  List<SearchCriteria> deregisterChangeListener(StorageListener listener) {
     var command = 'deregisterChangeListener';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     ch_fhnw_geiger_totalcross_ByteArrayOutputStream byteArrayOutputStream = ch_fhnw_geiger_totalcross_ByteArrayOutputStream();
@@ -460,8 +478,8 @@ class PasstroughController
         throw StorageException('Could not rename Node', e);
       }
     } else {
-      SearchCriteria_.fromByteArray(response.getPayload());
-      return List<ch_fhnw_geiger_localstorage_SearchCriteria>(0);
+      SearchCriteria.fromByteArray(response.getPayload());
+      return [];
     }
   }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'GeigerCommunicator.dart';
 import 'LocalApi.dart';
 import 'Message.dart';
+import 'MessageHandler.dart';
 import 'PluginInformation.dart';
 
 /// Communicator for Geiger Core.
@@ -30,6 +31,7 @@ class GeigerServer extends GeigerCommunicator {
 
         while (!shutdown) {
           final Socket s = serverSocket.accept();
+          print('## GEIGER-Server run method reached');
           // This is only for debugging purposes use lambda for production
           //(new MessageHandler(s, localApi)).run();
           executor.execute(() => MessageHandler(s, localApi));
@@ -39,6 +41,8 @@ class GeigerServer extends GeigerCommunicator {
         print(e);
       }
     });
+    server.setName('GeigerServer');
+    server.setDaemon(true);
     server.start();
   }
 
@@ -48,7 +52,7 @@ class GeigerServer extends GeigerCommunicator {
   void stop() {
 // TODO server stop
     shutdown = true;
-    var s = Socket("127.0.0.1", port);
+    var s = Socket('127.0.0.1', port);
     s.close();
   }
 
@@ -64,7 +68,7 @@ class GeigerServer extends GeigerCommunicator {
   @override
   void sendMessage(PluginInformation pluginInformation, Message msg) {
     try {
-      var s = Socket("127.0.0.1", pluginInformation.getPort());
+      var s = Socket('127.0.0.1', pluginInformation.getPort());
 
       OutputStream out = s.asOutputStream();
       ByteArrayOutputStream bos = ByteArrayOutputStream();

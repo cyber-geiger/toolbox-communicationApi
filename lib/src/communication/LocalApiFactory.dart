@@ -6,6 +6,8 @@ import 'LocalApi.dart';
 
 /// <p>Implements a singleton pattern for local API.</p>
 class LocalApiFactory {
+  static final String MASTER_EXECUTOR = 'FIXME';
+
   static final Map<String, LocalApi> instances = HashMap();
 
   /// <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be

@@ -30,7 +30,13 @@ class MessageHandler /*implements Runnable*/ {
       msg = Message.fromByteArray(byteArrayInputStream);
 
       var pluginInformation = PluginInformation(null, 0);
-      print('## got message (' + msg.toString() + ')');
+      print('## got message (' +
+          msg.toString() +
+          ' ' +
+          msg.getType().toString() +
+          ' ' +
+          (msg.getAction()?.toString() ?? 'null') +
+          ')');
       localApi.receivedMessage(pluginInformation, msg);
     } on IOException catch (ioe) {
       // TODO handle communications error

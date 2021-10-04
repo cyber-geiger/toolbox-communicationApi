@@ -28,6 +28,7 @@ class GeigerClient extends GeigerCommunicator {
         port = serverSocket.getLocalPort();
         while (true) {
           final Socket s = serverSocket.accept();
+          print('## GEIGER-Client run method reached');
           executor.execute(() => MessageHandler(s, localApi));
         }
       } on IOException catch (e) {
@@ -35,6 +36,8 @@ class GeigerClient extends GeigerCommunicator {
         e.printStackTrace();
       }
     });
+    client.setName("GeigerClient-");
+    client.setDaemon(true);
     client.start();
   }
 
@@ -43,7 +46,7 @@ class GeigerClient extends GeigerCommunicator {
   /// @throws IOException if client could not be stopped
   void stop() {
     shutdown = true;
-    Socket s = Socket("127.0.0.1", port);
+    Socket s = Socket('127.0.0.1', port);
     s.close();
   }
 
@@ -51,7 +54,7 @@ class GeigerClient extends GeigerCommunicator {
   void sendMessage(PluginInformation pluginInformation, Message msg) {
     // Plugin information is ignored as clients only write to master
     try {
-      Socket s = Socket("127.0.0.1", GeigerServer.getDefaultPort());
+      Socket s = Socket('127.0.0.1', GeigerServer.getDefaultPort());
 
       OutputStream out = s.asOutputStream();
       ByteArrayOutputStream bos = ByteArrayOutputStream();

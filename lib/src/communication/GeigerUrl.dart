@@ -1,4 +1,4 @@
-import 'package:communicationapi/src/totalcross/MalformedUrlException.dart';
+import 'MalformedUrlException.dart';
 
 import 'LocalApi.dart';
 

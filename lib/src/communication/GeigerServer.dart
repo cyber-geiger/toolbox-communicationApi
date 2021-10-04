@@ -18,9 +18,9 @@ class GeigerServer extends GeigerCommunicator {
 
   GeigerServer(this.localApi);
 
-  /// Start the GeigerServer.
+  /// Start the [GeigerServer].
   ///
-  /// @throws IOException if server could not be started
+  /// Throws [IOException] if server could not be started
   @override
   void start() {
     // TODO handle shutdown correctly even when JVM close
@@ -46,9 +46,9 @@ class GeigerServer extends GeigerCommunicator {
     server.start();
   }
 
-  /// Stop the GeigerServer.
+  /// Stop the [GeigerServer].
   ///
-  /// @throws IOException if server could not be closed
+  /// Throws [IOException] if server could not be closed
   void stop() {
 // TODO server stop
     shutdown = true;

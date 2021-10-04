@@ -1,4 +1,4 @@
-/// <p>A serializable yet simple String object.</p>
+/// A serializable yet simple String object.
 class StorableString /*with Serializer*/ {
   static const int serialVersionUID = 142314912322198374;
   final String value;
@@ -32,7 +32,7 @@ class StorableString /*with Serializer*/ {
         SerializerHelper.writeString(out, this.value);
     }
 
-    /// <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+    /// Reads objects from ByteArrayInputStream and stores them in map.
     /// @param in ByteArrayInputStream to be used
     /// @return the deserialized Storable String
     /// @throws IOException if value cannot be read

@@ -8,9 +8,7 @@ import 'Message.dart';
 import 'MessageType.dart';
 import 'PluginListener.dart';
 
-/// StorageEventHandler processes StorageEvents accordingly.
-/// the GeigerUrl of a response has the form protocol://targetId/command/identifier/result
-/// where result is either success or error in all cases
+/// [StorageEventHandler] processes StorageEvents accordingly.
 class StorageEventHandler with PluginListener {
   final LocalApi localApi;
   final StorageController storageController;
@@ -18,8 +16,7 @@ class StorageEventHandler with PluginListener {
 
   StorageEventHandler(this.localApi, this.storageController);
 
-  /// <p>Decides which storage method has been called.</p>
-  /// @param msg the received message to process
+  /// Decides which storage method has been called for [msg].
   void storageEventParser(Message msg) {
     if (LocalApi.MASTER == msg.getTargetId()) {
       isMaster = true;
@@ -87,10 +84,7 @@ class StorageEventHandler with PluginListener {
     return ret.toString();
   }
 
-  /// Calls getNode on the GenericController and sends the Node back to the caller.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.getNode] and sends the Node back to the [msg] source.
   void getNode(Message msg, String identifier, List<String> optionalArgs) {
     var path = join('/', optionalArgs);
     try {
@@ -126,10 +120,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls addNode on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.addNode].
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void addNode(Message msg, String identifier, List<String> optionalArgs) {
     Node node;
     try {
@@ -154,10 +147,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls updateNode on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.updateNode].
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void updateNode(Message msg, String identifier, List<String> optionalArgs) {
     Node node;
     try {
@@ -182,10 +174,7 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls removeNode on the GenericController and sends the Node back to the caller.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.deleteNode] and sends the deleted node back to the [msg] source.
   void deleteNode(Message msg, String identifier, List<String> optionalArgs) {
     try {
       var node = storageController.delete(optionalArgs[0]);
@@ -229,10 +218,7 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls getValue on the GenericController and sends the NodeValue back to the caller.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.getValue] and sends the [NodeValue] back to the [msg] source.
   void getValue(Message msg, String identifier, List<String> optionalArgs) {
     try {
       var nodeValue =
@@ -277,10 +263,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls addValue on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.addValue].
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void addValue(Message msg, String identifier, List<String> optionalArgs) {
     NodeValue nodeValue;
     try {
@@ -305,10 +290,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// UpdateValue on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.updateValue].
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void updateValue(Message msg, String identifier, List<String> optionalArgs) {
     NodeValue nodeValue;
     try {
@@ -334,11 +318,8 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Either calls removeValue on the GenericController and sends the NodeValue back to the caller,
-  /// or stores the received NodeValue in the storageEventObject map.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Either calls [GenericController.removeValue] and sends the [NodeValue] back to the [msg] source
+  /// or stores the received [NodeValue] in the storageEventObject map.
   void deleteValue(Message msg, String identifier, List<String> optionalArgs) {
     try {
       var nodeValue =
@@ -374,10 +355,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls rename on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.rename]
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void rename(Message msg, String identifier, List<String> optionalArgs) {
     try {
       storageController.rename(optionalArgs[0], optionalArgs[1]);
@@ -399,10 +379,7 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls search on the GenericController and sends the List of Nodes back to the caller.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.search] and sends the List of Nodes back to the [msg] source.
   void search(Message msg, String identifier, List<String> optionalArgs) {
     try {
       SearchCriteria searchCriteria =
@@ -451,10 +428,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls close on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.close].
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void close(Message msg, String identifier, List<String> optionalArgs) {
     try {
       storageController.close();
@@ -476,10 +452,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls flush on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.flush].
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void flush(Message msg, String identifier, List<String> optionalArgs) {
     try {
       storageController.flush();
@@ -501,10 +476,9 @@ class StorageEventHandler with PluginListener {
     }
   }
 
-  /// Calls zap on the GenericController or throws StorageException.
-  /// @param msg          received message to process
-  /// @param identifier   used to identify return objects inside the caller
-  /// @param optionalArgs string arguments used for the called method
+  /// Calls [GenericController.zap].
+  ///
+  /// If it fails it sends a [StorageException] to the [msg] source.
   void zap(Message msg, String identifier, List<String> optionalArgs) {
     try {
       storageController.zap();
@@ -531,10 +505,7 @@ class StorageEventHandler with PluginListener {
     storageEventParser(msg);
   }
 
-  /// Registers a StorageListener.
-  /// @param msg the received message
-  /// @param identifier the method identifier
-  /// @param optionalArgs other arguments from GeigerUrl
+  /// Registers a [StorageListener].
   void registerChangeListener(
       Message msg, String identifier, List<String> optionalArgs) {
     msg.getPayload();

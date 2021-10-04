@@ -4,21 +4,27 @@ import 'Declaration.dart';
 import 'DeclarationMismatchException.dart';
 import 'LocalApi.dart';
 
-/// <p>Implements a singleton pattern for local API.</p>
+/// Implements a singleton pattern for local API.
 class LocalApiFactory {
   static final String MASTER_EXECUTOR = 'FIXME';
 
   static final Map<String, LocalApi> instances = HashMap();
 
-  /// <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be
-  /// private.</p>
-  /// @param executor    the executor string required to run the plugin (may be platform dependant) or id the id to be retrieved
-  /// @param id          the id of the API to be retrieved
-  /// @param declaration the privacy declaration
-  /// @return the instance requested
-  /// @throws DeclarationMismatchException if the plugin has been registered previously and the
-  /// declaration does not match
-  /// @throws StorageException             if registration failed
+  /// Creates or gets an instance.
+  ///
+  /// Will only create one [LocalApi] instance per plugin id without guarantee
+  /// that this is the only instance since the [LocalApi] constructor cant be
+  /// private.
+  ///
+  /// To stay compatible with the old Java API this is two methods in one.
+  ///
+  /// - Provide an executor ([executorOrId]), [id], and [declaration] is provided
+  /// which creates a new instance in case none existing yet.
+  /// - Provide only an id ([executorOrId]) is provided and it just returns
+  /// the corresponding instance if it exists.
+  ///
+  /// Throws [DeclarationMismatchException] if the plugin has been registered previously and the
+  /// declaration does not match and [StorageException] if registration failed.
   static LocalApi? getLocalApi(String executorOrId,
       [String? id, Declaration? declaration]) {
     if (id == null) {
@@ -26,11 +32,8 @@ class LocalApiFactory {
     }
     // synchronized(instances, {
     if (!instances.containsKey(id)) {
-      if (LocalApi.MASTER == id) {
-        instances[id] = LocalApi(executorOrId, id, true, declaration);
-      } else {
-        instances[id] = LocalApi(executorOrId, id, false, declaration);
-      }
+      instances[id] =
+          LocalApi(executorOrId, id, LocalApi.MASTER == id, declaration);
     }
     // });
     var l = instances[id]!;

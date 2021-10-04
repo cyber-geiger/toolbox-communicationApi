@@ -4,9 +4,6 @@ import 'dart:collection';
 // https://pub.dev/documentation/quiver/latest/quiver.collection/DelegatingMap-class.html
 
 /// Serializable Hashmap.
-///
-/// @param <K> Keytype
-/// @param <V> Valuetype
 class StorableHashMap<K /*extends Serializer*/, V /*extends Serializer*/ >
     extends Map<K, V> /*implements Serializer*/ {
   static final int serialVersionUID = 14231491232;
@@ -21,7 +18,7 @@ class StorableHashMap<K /*extends Serializer*/, V /*extends Serializer*/ >
     SerializerHelper.writeLong(out, serialVersionUID);
     }
 
-  /// <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+  /// Reads objects from ByteArrayInputStream and stores them in map.
   ///
   /// @param in  ByteArrayInputStream to be used
   /// @param map Map to store objects

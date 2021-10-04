@@ -1,4 +1,4 @@
-/// <p>The type of message transferred.</p>
+/// The type of message transferred.
 enum MessageType {
   /* Events related to plugin registration */
   REGISTER_PLUGIN,
@@ -93,10 +93,9 @@ extension MessageTypeExtension on MessageType {
     }
   }
 
-  /// Get enumeration element by its ASN.1 ID.
+  /// Get [MessageType] by its ASN.1 ID.
   ///
-  /// @param id the ID of the element to be obtained
-  /// @return the element or null if the ID is unknown
+  /// Will return `null` if not found.
   static MessageType? getById(int id) {
     for (var e in MessageType.values) {
       if (e.getId() == id) {

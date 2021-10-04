@@ -2,7 +2,7 @@ import 'MalformedUrlException.dart';
 
 import 'LocalApi.dart';
 
-/// <p>GEIGER communication URL object.</p>
+/// GEIGER communication URL object.
 class GeigerUrl // with ch_fhnw_geiger_serialization_Serializer
 {
   static const int serialVersionUID = 32411423;
@@ -11,15 +11,15 @@ class GeigerUrl // with ch_fhnw_geiger_serialization_Serializer
   String path = '';
   static final RegExp urlPattern = RegExp('(.+?)://([^/]+)/(.*)');
 
-  /// <p>GeigerUrl constructor.</p>
-  /// @param spec a well formed URI
-  /// @throws MalformedUrlException if a malformed URL was received
-  GeigerUrl.fromSpec(String spec) {
+  /// Created a [GeigerUrl] with the given [uri].
+  ///
+  /// Throws [MalformedUrlException] if a malformed URL was received
+  GeigerUrl.fromSpec(String uri) {
     /*try {*/
-    var m = urlPattern.firstMatch(spec);
+    var m = urlPattern.firstMatch(uri);
     if (m == null) {
       throw MalformedUrlException('Matcher was unable to match the string \"' +
-          spec +
+          uri +
           '\" to regexp ' +
           urlPattern.pattern);
     }
@@ -33,11 +33,9 @@ class GeigerUrl // with ch_fhnw_geiger_serialization_Serializer
     }*/
   }
 
-  /// <p>Constructor to create a GEIGER url from id and path.</p>
-  /// @param protocol the protocol name, may not be null nor empty
-  /// @param pluginId the plugin id name, may not be null nor empty
-  /// @param path     the path to call the respective function
-  /// @throws MalformedUrlException if the resulting URL is not fulfilling the minimum requirements
+  /// Create a [GeigerUrl] with the provided [pluginId], [path], and optionally [protocol].
+  ///
+  /// Throws MalformedUrlException if the resulting URL is not fulfilling the minimum requirements
   GeigerUrl(String pluginId, String path, {String? protocol}) {
     if (protocol == '') {
       throw MalformedUrlException('protocol cannot be empty');
@@ -59,27 +57,22 @@ class GeigerUrl // with ch_fhnw_geiger_serialization_Serializer
     this.path = path;
   }
 
-  /// <p>Get the string representation of a geiger URL.</p>
-  /// @return the string representation
   @override
   String toString() {
     return protocol + '://' + pluginId + '/'.codeUnitAt(0).toString() + path;
   }
 
-  /// <p>Gets the plugin id.</p>
-  /// @return the plugin id
+  /// Gets the plugin id.
   String getPlugin() {
     return pluginId;
   }
 
-  /// <p>Gets the protocol of the URL.</p>
-  /// @return the protocol prefix
+  /// Gets the protocol of the URL.
   String getProtocol() {
     return protocol;
   }
 
-  /// <p>Gets the path part of the URL.</p>
-  /// @return the path of the URL
+  /// Gets the path part of the URL.
   String getPath() {
     return path;
   }
@@ -108,7 +101,7 @@ class GeigerUrl // with ch_fhnw_geiger_serialization_Serializer
         }
     }
 
-    /// <p>Convert ByteArrayInputStream to GeigerUrl.</p>
+    /// Convert ByteArrayInputStream to GeigerUrl.
     /// @param in ByteArrayInputStream to read from
     /// @return the converted GeigerUrl
     /// @throws IOException if GeigerUrl cannot be read

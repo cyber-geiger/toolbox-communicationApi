@@ -1,23 +1,19 @@
-/// <p>Serializable parameter list.</p>
+/// Serializable parameter list.
 class ParameterList /*with Serializer*/ {
   static const int serialVersionUID = 98734028931;
   List<String> args = List.empty(growable: true);
 
-  /// <p>Serializable list of strings as parameter map.</p>
-  /// @param args The parameters to be added
+  /// Creates a [ParameterList] with the provided [args.
   ParameterList(List<String> args) {
     this.args.addAll(args);
   }
 
-  /// <p>Get a parameter based on its position.</p>
-  /// @param pos the position of the parameter in the list
-  /// @return the requested parameter
-  String get(int pos) {
-    return args[pos];
+  /// Get a parameter based on its [position].
+  String get(int position) {
+    return args[position];
   }
 
-  /// <p>Gets the size of the parameter list.</p>
-  /// @return the number of parameters in the list
+  /// Gets the size of the parameter list.
   int size() {
     return args.length;
   }
@@ -32,7 +28,7 @@ class ParameterList /*with Serializer*/ {
         SerializerHelper.writeLong(out, serialVersionUID);
     }
 
-    /// <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+    /// Reads objects from ByteArrayInputStream and stores them in map.
     /// @param in ByteArrayInputStream to be used
     /// @return the ParameterList read from byte stream
     /// @throws IOException if value cannot be read

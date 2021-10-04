@@ -1,6 +1,6 @@
 import 'GeigerUrl.dart';
 
-/// <p>Represents a menu item for a list of items.</p>
+/// Represents a menu item for a list of items.
 /// . * FIXME: Menu texts are not internationalizable
 class MenuItem /*with Serializer*/ {
   static const int serialVersionUID = 481231212;
@@ -8,37 +8,31 @@ class MenuItem /*with Serializer*/ {
   final GeigerUrl action;
   bool enabled;
 
-  /// <p>Creates a new menu item and assigns an action URL.</p>
-  /// @param menu    the menu name
-  /// @param action  the action url
-  /// @param enabled is the menu entry currently enabled
+  /// Creates a new [MenuItem] for [menu] and assigns an [action] URL.
+  ///
+  /// Whether the menu item is [enabled] or not can also be specified.
   MenuItem(this.menu, this.action, [this.enabled = true]) {
     if ('' == menu) {
       throw ArgumentError('menu may not be empty');
     }
   }
 
-  /// <p>Returns the menu string.</p>
-  /// @return the menu string
+  /// Returns the menu string.
   String getMenu() {
     return menu;
   }
 
-  /// <p>Returns the action URL.</p>
-  /// @return the action url
+  /// Returns the action URL.
   GeigerUrl getAction() {
     return action;
   }
 
-  /// <p>Returns the menu state.</p>
-  /// @return true if the menu entry is currently enabled
+  /// Returns the menu state.
   bool isEnabled() {
     return enabled;
   }
 
-  /// <p>Enables or disables the menu entry.</p>
-  /// @param enabled the new state of the menu entry
-  /// @return the previously set state
+  /// Enables or disables the menu entry and returns the previous state.
   bool setEnabled(bool enabled) {
     var old = this.enabled;
     this.enabled = enabled;
@@ -54,7 +48,7 @@ class MenuItem /*with Serializer*/ {
         SerializerHelper.writeLong(out, serialVersionUID);
     }
 
-    /// <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+    /// Reads objects from ByteArrayInputStream and stores them in map.
     /// @param in ByteArrayInputStream to be used
     /// @return the deserialized Storable String
     /// @throws IOException if value cannot be read
@@ -107,7 +101,7 @@ class MenuItem /*with Serializer*/ {
         .hashCode;
   }
 
-/*/// <p>Wrapper function to simplify serialization.</p>
+/*/// Wrapper function to simplify serialization.
   /// @return the serializer object as byte array
   List<int> toByteArray() {
     try {
@@ -120,7 +114,7 @@ class MenuItem /*with Serializer*/ {
     }
   }
 
-  /// <p>Wrapper function to simplify deserialization.</p>
+  /// Wrapper function to simplify deserialization.
   /// @param buf the buffer to be read
   /// @return the deserialized object
   static MenuItem fromByteArray(List<int> buf) {

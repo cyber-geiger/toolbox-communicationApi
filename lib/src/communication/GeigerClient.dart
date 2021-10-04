@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'GeigerCommunicator.dart';
 import 'LocalApi.dart';
+import 'Message.dart';
+import 'PluginInformation.dart';
 
 // TODO: reimplement this without threads
 
@@ -16,9 +18,10 @@ class GeigerClient extends GeigerCommunicator {
 
   GeigerClient(this.localApi);
 
-  /// Start the GeigerClient.
+  /// Start the [GeigerClient].
   ///
-  /// @throws IOException if GeigerClient could not be started
+  /// Throws [IOException] if GeigerClient could not be started
+  @override
   void start() {
     // TODO handle shutdown correctly even when JVM close
     shutdown = false;
@@ -41,16 +44,16 @@ class GeigerClient extends GeigerCommunicator {
     client.start();
   }
 
-  /// Stop the GeigerClient.
+  /// Stop the [GeigerClient].
   ///
-  /// @throws IOException if client could not be stopped
+  /// Throws [IOException] if client could not be stopped
   void stop() {
     shutdown = true;
     Socket s = Socket('127.0.0.1', port);
     s.close();
   }
 
-
+  @override
   void sendMessage(PluginInformation pluginInformation, Message msg) {
     // Plugin information is ignored as clients only write to master
     try {
@@ -63,18 +66,18 @@ class GeigerClient extends GeigerCommunicator {
 
       out.close();
       //s.close();
-    } on java.io.IOException catch (e) {
+    } on IOException catch (e) {
       // TODO if master unknown try to start master and send again
-      e.printStackTrace();
+      print(e);
     }
   }
 
-
+  @override
   int getPort() {
     return port;
   }
 
-
+  @override
   void startPlugin(PluginInformation pluginInformation) {
     // TODO check how this behaves on different operating systems
     // maybe not needed for clients, unless they need to start the core somehow?
@@ -84,5 +87,4 @@ class GeigerClient extends GeigerCommunicator {
     // current operating system
     //Vm.exec(pluginInformation.getExecutable(), null, 0, true);
   }
-
 }

@@ -3,7 +3,7 @@
 
 import 'dart:io';
 
-/// <p>Exception signalling wrong communication.</p>
+/// Exception signalling wrong communication.
 class CommunicationException extends IOException /*implements Serializer*/ {
   /*
   private static class SerializedException extends Throwable implements Serializer {
@@ -74,10 +74,6 @@ class CommunicationException extends IOException /*implements Serializer*/ {
   final Object? cause;
   final StackTrace? stackTrace;
 
-  /// <p>Standard exception constructor for including a causing exception.</p>
-  ///
-  /// @param txt the exception message
-  /// @param e   the root cause
   CommunicationException(this.message, [this.cause, this.stackTrace]);
 
 /*void toByteArrayStream(ByteArrayOutputStream out) {
@@ -108,9 +104,9 @@ class CommunicationException extends IOException /*implements Serializer*/ {
     SerializerHelper.writeLong(out, serialversionUID);
   }
 
-  /// <p>Static deserializer.</p>
+  /// Static deserializer.
   ///
-  /// <p>CReates a storage exception from the stream.</p>
+  /// CReates a storage exception from the stream.
   ///
   /// @param in The input byte stream to be used
   /// @return the object parsed from the input stream by the respective class

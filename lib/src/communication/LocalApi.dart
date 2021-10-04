@@ -38,7 +38,7 @@ extension MapperExtension on Mapper {
   }
 }
 
-/// <p>Offers an API for all plugins to access the local toolbox.</p>
+/// Offers an API for all plugins to access the local toolbox.
 class LocalApi implements CommunicatorApi {
   static final bool PERSISTENT = false;
 
@@ -65,13 +65,9 @@ class LocalApi implements CommunicatorApi {
 
   late GeigerCommunicator geigerCommunicator;
 
-  /// <p>Constructor called by LocalApiFactory.</p>
+  /// Creates a [LocalApi] with the given [executor] and plugin [id].
   ///
-  /// @param executor    the executor string of the plugin
-  /// @param id          the id of the plugin
-  /// @param isMaster    true if the current API should denote a master
-  /// @param declaration declaration of data sharing
-  /// @ if the StorageController could not be initialized
+  /// Whether this api [isMaster] and its privacy [declaration] must also be provided.
   LocalApi(this.executor, this.id, this.isMaster, this.declaration) {
     restoreState();
 
@@ -115,9 +111,7 @@ class LocalApi implements CommunicatorApi {
     }
   }
 
-  /// <p>Returns the declaration given upon creation.</p>
-  ///
-  /// @return the current declaration
+  /// Returns the [Declaration] given upon creation.
   Declaration? getDeclaration() {
     return declaration;
   }
@@ -205,7 +199,7 @@ class LocalApi implements CommunicatorApi {
     zapState();
   }
 
-  /// <p>Deletes all current registered items.</p>
+  /// Deletes all current registered items.
   void zapState() {
     // synchronized(menuItems) {
     menuItems.clear();
@@ -268,9 +262,7 @@ class LocalApi implements CommunicatorApi {
         MASTER, Message(id, MASTER, MessageType.DEACTIVATE_PLUGIN, null));
   }
 
-  /// <p>Obtain controller to access the storage.</p>
-  ///
-  /// @return a generic controller providing access to the local storage
+  /// Obtain [StorageController] to access the storage.
   @override
   StorageController? getStorage() {
     mapper ??= DEFAULT_MAPPER;
@@ -338,11 +330,6 @@ class LocalApi implements CommunicatorApi {
     }
   }
 
-  /// <p>Remove a listener waiting for Events.</p>
-  ///
-  /// @param events   the events affected or null if the listener should be removed from all events
-  /// @param listener the listener to be removed
-  /// @param internal If it is internal or not
   @override
   void deregisterListener(List<MessageType>? events, PluginListener listener) {
     events ??= MessageType.values;
@@ -375,15 +362,13 @@ class LocalApi implements CommunicatorApi {
     }
   }
 
-  /// <p>broadcasts a message to all known plugins.</p>
-  ///
-  /// @param msg the message to be broadcast
-  void broadcastMessage(Message msg) {
+  /// Broadcasts a [message] to all known plugins.
+  void broadcastMessage(Message message) {
     for (var plugin in plugins.entries) {
       sendMessage(
           plugin.key.toString(),
-          Message(MASTER, plugin.key.toString(), msg.getType(), msg.getAction(),
-              msg.getPayload()));
+          Message(MASTER, plugin.key.toString(), message.getType(),
+              message.getAction(), message.getPayload()));
     }
   }
 
@@ -702,9 +687,7 @@ class LocalApi implements CommunicatorApi {
     }
   }
 
-  /// <p>Start a plugin by using the stored executable String.</p>
-  ///
-  /// @param pluginInformation the Information of the plugin to start
+  /// Start a plugin of [pluginInformation] by using the stored executable String.
   void startPlugin(PluginInformation pluginInformation) {
     PluginStarter.startPlugin(pluginInformation);
   }

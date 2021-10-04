@@ -1,34 +1,32 @@
 import 'CommunicationSecret.dart';
 
-/// <p>Object for storing vital plugin information.</p>
+/// Object for storing vital plugin information.
 class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
   static const int serialVersionUID = 48032940912340;
   final String? executable;
   final int port;
   late CommunicationSecret secret;
 
-  /// <p>Constructor for plugin information.</p>
-  /// @param executable the string required for platform specific wakeup of a plugin
-  /// @param port       the port of the plugin to be contacted on
-  /// @param secret     the secret required for communicating (if null a new secret is generated)
+  /// Creates a [PluginInformation] with the given properties:
+  ///
+  /// - [executable] the string required for platform specific wakeup of a plugin
+  /// - [port]       the port of the plugin to be contacted on
+  /// - [secret]     the secret required for communicating (if null a new secret is generated)
   PluginInformation(this.executable, this.port, [CommunicationSecret? secret]) {
     this.secret = secret ?? CommunicationSecret.empty();
   }
 
-  /// <p>Gets the port of the plugin.</p>
-  /// @return the port an active plugin may be reached on
+  /// Gets the port of the plugin.
   int getPort() {
     return port;
   }
 
-  /// <p>The executable string required for starting the plugin.</p>
-  /// @return the executable string
+  /// The executable string required for starting the plugin.
   String? getExecutable() {
     return executable;
   }
 
-  /// <p>The communication secret required for sending securely between two instances.</p>
-  /// @return the requested secret
+  /// The communication secret required for sending securely between two instances.
   CommunicationSecret getSecret() {
     return secret;
   }
@@ -42,7 +40,7 @@ class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
         SerializerHelper.writeLong(out, serialVersionUID);
     }
 
-    /// <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+    /// Reads objects from ByteArrayInputStream and stores them in map.
     /// @param in ByteArrayInputStream to be used
     /// @return the deserialized Storable String
     /// @throws IOException if value cannot be read
@@ -60,7 +58,7 @@ class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
         return new PluginInformation(executable, port, secret);
     }
 
-    /// <p>Wrapper function to simplify serialization.</p>
+    /// Wrapper function to simplify serialization.
     /// @return the serializer object as byte array
     List<int> toByteArray()
     {
@@ -73,7 +71,7 @@ class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
         }
     }
 
-    /// <p>Wrapper function to simplify deserialization.</p>
+    /// Wrapper function to simplify deserialization.
     /// @param buf the buffer to be read
     /// @return the deserialized object
     static PluginInformation fromByteArray(List<int> buf)
@@ -88,7 +86,11 @@ class PluginInformation /*with ch_fhnw_geiger_serialization_Serializer*/ {
     }*/
 
   int get hashCode {
-    return (executable + ':' + port.toString() + ':' + secret.toString())
+    return ((executable ?? 'null') +
+            ':' +
+            port.toString() +
+            ':' +
+            secret.toString())
         .hashCode;
   }
 }

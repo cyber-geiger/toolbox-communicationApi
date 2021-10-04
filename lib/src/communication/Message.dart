@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'GeigerUrl.dart';
 import 'MessageType.dart';
 
-/// <p>Representation of a message.</p>
+/// Representation of a message.
 class Message // with ch_fhnw_geiger_serialization_Serializer
 {
   static const int serialVersionUID = 143287432;
@@ -13,12 +13,7 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
   final GeigerUrl? action;
   String? payloadString;
 
-  /// <p>A message object transported through the local communication api.</p>
-  /// @param sourceId the id of the source plugin
-  /// @param targetId the id of the target plugin
-  /// @param type     the type of message
-  /// @param action   the url of the event
-  /// @param payload  the payload section of the message
+  /// Creates a [Message] with the provided properties.
   Message(this.sourceId, this.targetId, this.type, this.action,
       [List<int>? payload]) {
     if (payload != null) {
@@ -26,32 +21,27 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
     }
   }
 
-  /// <p>returns the target id of the message.</p>
-  /// @return the target id
+  /// Returns the target id of the message.
   String? getTargetId() {
     return targetId;
   }
 
-  /// <p>returns the source id of the message.</p>
-  /// @return the id of the plugin source
+  /// Returns the source id of the message.
   String? getSourceId() {
     return sourceId;
   }
 
-  /// <p>Returns the type of the message.</p>
-  /// @return the message type
+  /// Returns the type of the message.
   MessageType getType() {
     return type;
   }
 
-  /// <p>Returns the action URL of the message.</p>
-  /// @return the action URL
+  /// Returns the action URL of the message.
   GeigerUrl? getAction() {
     return action;
   }
 
-  /// <p>Returns the payload as array of bytes.</p>
-  /// @return a byte array representing the payload
+  /// Returns the payload as array of bytes.
   List<int>? getPayload() {
     var pl = payloadString;
     if (pl == null) {
@@ -60,28 +50,24 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
     return base64.decode(pl);
   }
 
-  /// <p>sets payload as byte array.</p>
-  /// @param payload the payload to be set
+  /// Sets payload as byte array.
   void setPayload(List<int>? payload) {
     payloadString = (payload == null) ? null : base64.encode(payload);
   }
 
-  /// <p>Returns the payload as a string.</p>
-  /// @return a string representing the payload
+  /// Returns the payload as a string.
   String? getPayloadString() {
     return payloadString;
   }
 
-  /// <p>Sets the payload as a string.</p>
-  /// @param value the string to be used as payload
-  /// @return a string representing the payload
+  /// Sets the payload as a string and returns the previous payload string.
   String? setPayloadString(String value) {
     var ret = payloadString;
     payloadString = value;
     return ret;
   }
 
-  /* /// <p>Convert ByteArrayInputStream to Message.</p>
+  /* /// Convert ByteArrayInputStream to Message.
     /// @param in the ByteArrayInputStream to use
     /// @return the converted Message
     /// @throws IOException if bytes cannot be read

@@ -11,7 +11,7 @@ import 'Message.dart';
 import 'MessageType.dart';
 import 'PluginListener.dart';
 
-/// <p>Class for handling storage events in Plugins.</p>
+/// Class for handling storage events in Plugins.
 class PasstroughController
     with StorageController, PluginListener, ChangeRegistrar {
   final LocalApi localApi;
@@ -19,9 +19,7 @@ class PasstroughController
   final Object comm = Object();
   final Map<String, Message> receivedMessages = HashMap();
 
-  /// <p>Constructor for PasstroughController.</p>
-  /// @param api the LocalApi it belongs to
-  /// @param id  the PluginId it belongs to
+  /// Creates a [PasstroughController] for the given [api] and plugin (provide its [id]).
   PasstroughController(this.localApi, this.id) {
     localApi.registerListener([
       MessageType.STORAGE_EVENT,
@@ -424,10 +422,9 @@ class PasstroughController
     });
   }
 
-  /// Register a StorageListener for a Node defined by SearchCriteria.
-  /// @param listener StorageListener to be registered
-  /// @param criteria SearchCriteria to search for the Node
-  /// @throws StorageException if the listener could not be registered
+  /// Register a [StorageListener] for a Node defined by [SearchCriteria].
+  ///
+  /// Throws a [StorageException] if the listener could not be registered.
   @override
   void registerChangeListener(StorageListener listener,
       SearchCriteria criteria) {
@@ -453,10 +450,9 @@ class PasstroughController
     }
   }
 
-  /// Deregister a StorageListener from the Storage.
-  /// @param listener the listener to Deregister
-  /// @return the SearchCriteria that were deregistered
-  /// @throws StorageException if listener could not be deregistered
+  /// Deregister a [StorageListener] from the Storage and returns the associated [SearchCriteria].
+  ///
+  /// Throws a [StorageException] if listener could not be deregistered.
   @override
   List<SearchCriteria> deregisterChangeListener(StorageListener listener) {
     var command = 'deregisterChangeListener';

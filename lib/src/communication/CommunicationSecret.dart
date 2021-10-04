@@ -1,20 +1,18 @@
 import 'dart:convert';
 import 'dart:math';
 
-/// <p>Encapsulates secret parameters for communication and provides methods to employ them.</p>
+/// Encapsulates secret parameters for communication and provides methods to employ them.
 class CommunicationSecret /*with Serializer*/ {
   static const int serialVersionUID = 8901230;
   static const int DEFAULT_SIZE = 32;
   List<int> secret = [];
 
-  /// <p>Creates a new secret with random content and specified size.</p>
-  /// @param size the size of the secret in bytes
+  /// Creates a new secret with random content and specified [size] in bytes.
   CommunicationSecret.empty([int size = DEFAULT_SIZE]) {
     setRandomSecret(size);
   }
 
-  /// <p>Creates a secret which is already known.</p>
-  /// @param secret the already known secret
+  /// Wraps an existing [secret].
   CommunicationSecret(List<int>? secret) {
     if (secret == null || secret.isEmpty) {
       setRandomSecret(DEFAULT_SIZE);
@@ -23,14 +21,12 @@ class CommunicationSecret /*with Serializer*/ {
     }
   }
 
-  /// <p>Gets the secret.</p>
-  /// @return the current secret
+  /// Gets the secret.
   List<int> getSecret() {
     return [...secret];
   }
 
-  /// <p>Sets a new Secret with size.</p>
-  /// @param size the size of the new secret
+  /// Sets a new Secret with the given [size] in bytes.
   void setRandomSecret(int size) {
     if (size <= 0) {
       throw ArgumentError('size must be greater than 0');
@@ -42,10 +38,10 @@ class CommunicationSecret /*with Serializer*/ {
     }
   }
 
-  /// <p>Sets the secret.</p>
-  /// If new secret is null or its length is 0 a random secret is generated
-  /// @param newSecret the new secret bytes
-  /// @return the previously set secret
+  /// Sets the secret to [newSecret].
+  ///
+  /// If new secret is `null` or its length is `0` a random secret is generated.
+  /// Returns the previously set secret.
   List<int> setSecret(List<int>? newSecret) {
     var ret = secret;
     if (newSecret == null || newSecret.isEmpty) {
@@ -63,7 +59,7 @@ class CommunicationSecret /*with Serializer*/ {
         SerializerHelper.writeLong(out, serialVersionUID);
     }
 
-    /// <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+    /// Reads objects from ByteArrayInputStream and stores them in map.
     /// @param in ByteArrayInputStream to be used
     /// @return the deserialized Storable String
     /// @throws IOException if value cannot be read

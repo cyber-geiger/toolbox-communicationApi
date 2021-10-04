@@ -7,7 +7,7 @@ import 'Message.dart';
 import 'MessageType.dart';
 import 'PluginListener.dart';
 
-/// Interface to denote a MessageFilter.
+/// Interface to denote a message filter.
 abstract class MessageFilter {
   bool filter(Message msg);
 }
@@ -56,16 +56,15 @@ class Listener with PluginListener {
   }
 }
 
-/// A helper class for sending and waiting on Messages.
+/// A helper class for sending and waiting on [Message]s.
 /// TODO should this only be used for Testing?
 class CommunicationHelper {
-  /// <p>Sends a message and waits for the first message matching the provided message filter.</p>
-  /// @param api     the API to be used as communication endpoint
-  /// @param msg     the message to be sent
-  /// @param filter  the filter matching the expected reply
-  /// @param timeout the timeout in milliseconds (-1 for infinite)
-  /// @return the response Message
-  /// @throws CommunicationException if communication with master fails
+  /// Sends [msg] and waits for the first message matching the provided [filter].
+  ///
+  /// Will communication using the provided [api] and waits maximum [timeout]
+  /// milliseconds. Specify `-1` to remove any time limit.
+  ///
+  /// Throws [CommunicationException] if communication with master fails
   static Message sendAndWait(LocalApi api, Message msg, MessageFilter filter,
       [int timeout = 10000]) {
     var l = Listener(api, filter);

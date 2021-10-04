@@ -3,16 +3,14 @@ import 'dart:collection';
 import 'CommunicationSecret.dart';
 import 'PluginInformation.dart';
 
-/// <p>A factory class to create plugin information entries.</p>
+/// A factory class to create plugin information entries.
 class PluginInformationFactory {
   static final Map<String, PluginInformation> store = HashMap();
 
-  /// <p>Retrieves plugin information for a plugin.</p>
-  /// @param id the id of the the plugin
-  /// @param executor the executor string required to run the plugin
-  /// @param port     the current port of the plugin (-1 denotes unknown)
-  /// @param secret   the communication secret
-  /// @return returns the information object or null if not available
+  /// Retrieves plugin information for the plugin with the [id].
+  ///
+  /// Additional [PluginInformation] properties can be passed to create an
+  /// instance in-case it doesn't exist.
   static PluginInformation? getPluginInformation(String id,
       [String? executor, int? port, CommunicationSecret? secret]) {
     if (executor == null || port == null || secret == null) {
@@ -27,10 +25,9 @@ class PluginInformationFactory {
     return info;
   }
 
-  /// <p>Puts a pluginInformation into the store.</p>
-  /// @param id   the id of the the plugin
-  /// @param info the information object containing all relevant information to contact the plugin
-  /// @return the previously set information or null if new
+  /// Puts [info] corresponding to the plugin with [id] into the store.
+  ///
+  /// Returns the previously set information or null if its new.
   static PluginInformation? setPluginInformation(
       String id, PluginInformation info) {
     var old = getPluginInformation(id);
@@ -38,7 +35,7 @@ class PluginInformationFactory {
     return old;
   }
 
-  /// <p>Clears all plugin information from the store.</p>
+  /// Clears all plugin information from the store.
   static void zap() {
     store.clear();
   }

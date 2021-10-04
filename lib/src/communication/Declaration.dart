@@ -1,12 +1,8 @@
-/// <p>The self declaration of the plugin.</p>
-///
-/// <p>
-/// If a plugin declares data sharing only access to own data is granted. If a plugin declares no
-/// sharing full access to all available data is granted.
-/// </p>
+/// The self declaration of the plugin.
 enum Declaration {
   /// No data sharing is done and thus no implications on GDPR
   DO_NOT_SHARE_DATA,
+
   /// Data sharing is done. As a result only access to own objects (any TLP) is granted and to all
   /// objects of TLP:WHITE
   DO_SHARE_DATA

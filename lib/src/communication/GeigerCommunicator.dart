@@ -1,45 +1,39 @@
-
 import 'Message.dart';
 import 'MessageListener.dart';
 import 'PluginInformation.dart';
+
 /// Abstract class to define common methods for GeigerCommunicators.
-abstract class GeigerCommunicator
-{
-    MessageListener? listener;
-    void setListener(MessageListener listener)
-    {
-        this.listener = listener;
-    }
+abstract class GeigerCommunicator {
+  MessageListener? listener;
 
-    void  sendMessage(PluginInformation pluginInformation, Message msg);
+  void setListener(MessageListener listener) {
+    this.listener = listener;
+  }
 
-    void start();
+  void sendMessage(PluginInformation pluginInformation, Message msg);
 
-    /// Convert bytearray to int.
-    /// @param bytes bytearray containing 4 bytes
-    /// @return int denoting the given bytes
-    static int byteArrayToInt(List<int> bytes)
-    {
-        return ((((bytes[0] & 15) << 24) | ((bytes[1] & 15) << 16)) | ((bytes[2] & 15) << 8)) | (bytes[3] & 15);
-    }
+  void start();
 
-    /// <p>Convert int to bytearray.</p>
-    /// @param value the int to convert
-    /// @return bytearray representing the int
-    static List<int> intToByteArray(int value)
-    {
-        return [value >> 24, value >> 16, value >> 8, value];
-    }
+  /// Convert a bytearray to int.
+  ///
+  /// The provided [bytes] can only be 4 long.
+  static int byteArrayToInt(List<int> bytes) {
+    return ((((bytes[0] & 15) << 24) | ((bytes[1] & 15) << 16)) |
+            ((bytes[2] & 15) << 8)) |
+        (bytes[3] & 15);
+  }
 
-    MessageListener? getListener()
-    {
-        return listener;
-    }
+  /// Convert int [value] to bytearray of length 4.
+  static List<int> intToByteArray(int value) {
+    return [value >> 24, value >> 16, value >> 8, value];
+  }
 
-    int getPort();
+  MessageListener? getListener() {
+    return listener;
+  }
 
-    /// <p>Start a plugin by using the stored executable String.</p>
-    /// @param pluginInformation the Information of the plugin to start
-    void startPlugin(PluginInformation pluginInformation);
+  int getPort();
 
+  /// Start a plugin of [pluginInformation] by using the stored executable String.
+  void startPlugin(PluginInformation pluginInformation);
 }

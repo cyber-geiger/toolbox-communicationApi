@@ -11,3 +11,7 @@ pubspec.lock
 
 /.idea/
 /toolbox-communicationApi.iml
+/LocalAPI.__MASTERPLUGIN__.state
+/LocalAPI.plugin1.state
+/testdb
+/testdb.mv.db

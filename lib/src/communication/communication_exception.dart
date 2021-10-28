@@ -1,3 +1,5 @@
+library geiger_api;
+
 // FIXME This exception shares large portions of code with Storage Exception.
 //       Should have a common Ancestor Serializable Exception in storage
 

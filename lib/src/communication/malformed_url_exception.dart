@@ -1,3 +1,5 @@
+library geiger_api;
+
 import 'dart:io';
 
 /// Exception class to denote a malformed URL.

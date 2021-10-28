@@ -1,26 +1,26 @@
-import 'dart:collection';
+library geiger_api;
+
 import 'dart:convert';
 import 'dart:io';
 
-import 'MalformedUrlException.dart';
-import 'package:localstorage/localstorage.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'CommunicatorApi.dart';
-import 'Declaration.dart';
-import 'GeigerClient.dart';
-import 'GeigerCommunicator.dart';
-import 'GeigerServer.dart';
-import 'GeigerUrl.dart';
-import 'MenuItem.dart';
-import 'Message.dart';
-import 'MessageType.dart';
-import 'PasstroughController.dart';
-import 'PluginInformation.dart';
-import 'PluginListener.dart';
-import 'PluginStarter.dart';
-import 'StorableHashMap.dart';
-import 'StorableString.dart';
-import 'StorageEventHandler.dart';
+import 'declaration.dart';
+import 'geiger_api.dart';
+import 'geiger_communicator.dart';
+import 'geiger_url.dart';
+import 'malformed_url_exception.dart';
+import 'menu_item.dart';
+import 'message.dart';
+import 'message_type.dart';
+import 'passtrough_controller.dart';
+import 'plugin_communicator.dart';
+import 'plugin_information.dart';
+import 'plugin_listener.dart';
+import 'plugin_starter.dart';
+import 'storable_hash_map.dart';
+import 'storable_string.dart';
+import 'storage_event_handler.dart';
 
 enum Mapper {
   DUMMY_MAPPER,
@@ -39,71 +39,68 @@ extension MapperExtension on Mapper {
 }
 
 /// Offers an API for all plugins to access the local toolbox.
-class LocalApi implements CommunicatorApi {
-  static final bool PERSISTENT = false;
+class CommunicationApi implements GeigerApi {
+  static const bool PERSISTENT = false;
 
   static Mapper? mapper;
-  static final Mapper DEFAULT_MAPPER = Mapper.SQLITE_MAPPER;
-
-  static final String MASTER = '__MASTERPLUGIN__';
+  static const Mapper DEFAULT_MAPPER = Mapper.SQLITE_MAPPER;
 
   static final StorableHashMap<StorableString, PluginInformation> plugins =
-      StorableHashMap();
+      StorableHashMap<StorableString, PluginInformation>();
   static final StorableHashMap<StorableString, MenuItem> menuItems =
-      StorableHashMap();
+      StorableHashMap<StorableString, MenuItem>();
 
-  // static final Logger log = Logger.getLogger("LocalAPI");
+  // static final Logger log = Logger.getLogger("GeigerApi");
 
-  final String executor;
-  final String id;
-  final bool isMaster;
-  final Declaration? declaration;
+  late String _executor;
+  late String _id;
+  late bool _isMaster;
+  late Declaration _declaration;
 
-  final Map<MessageType, List<PluginListener>> listeners = HashMap();
+  final Map<MessageType, List<PluginListener>> _listeners =
+      <MessageType, List<PluginListener>>{};
 
-  // TODO: continue translating from here
+  late GeigerCommunicator _geigerCommunicator;
 
-  late GeigerCommunicator geigerCommunicator;
-
-  /// Creates a [LocalApi] with the given [executor] and plugin [id].
+  /// Creates a [CommunicationApi] with the given [executor] and plugin [_id].
   ///
-  /// Whether this api [isMaster] and its privacy [declaration] must also be provided.
-  LocalApi(this.executor, this.id, this.isMaster, this.declaration) {
+  /// Whether this api [_isMaster] and its privacy [_declaration] must also be provided.
+  CommunicationApi(
+      String executor, String id, bool isMaster, Declaration declaration) {
+    _executor = executor;
+    _id = id;
+    _isMaster = isMaster;
+    _declaration = declaration;
+    _geigerCommunicator = PluginCommunicator(this, _isMaster);
+
     restoreState();
 
     PluginListener storageEventHandler;
-    if (!isMaster) {
-      // it is a plugin
+    _geigerCommunicator.start();
+    if (!_isMaster) {
       try {
-        geigerCommunicator = GeigerClient(this);
-        geigerCommunicator.start();
+        // setup listener
         registerPlugin();
-        activatePlugin(geigerCommunicator.getPort());
+        activatePlugin(_geigerCommunicator.getPort());
       } on IOException catch (e) {
         // TODO error handling
         print(e);
       }
       // TODO should the passtroughcontroller be listener?
-      storageEventHandler = PasstroughController(this, id);
+      storageEventHandler = PasstroughController(this, _id);
       // this code is duplicate from registerListener method
       // it is currently not possible to determin between register internally and register on Master
       // therefore this duplicate is necessary
       registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
       // it is master
-      try {
-        geigerCommunicator = GeigerServer(this);
-        geigerCommunicator.start();
-      } on IOException catch (e) {
-        // TODO error handling
-        print(e);
-      }
       storageEventHandler = StorageEventHandler(this, getStorage()!);
       registerListener([MessageType.STORAGE_EVENT], storageEventHandler);
     }
   }
 
-  void setMapper(Mapper m) {
+  @override
+  set mappper(Mapper m) {
     if (mapper == null) {
       mapper = m;
     } else {
@@ -112,45 +109,45 @@ class LocalApi implements CommunicatorApi {
   }
 
   /// Returns the [Declaration] given upon creation.
-  Declaration? getDeclaration() {
-    return declaration;
+  @override
+  Declaration get declaration {
+    return _declaration;
   }
 
   @override
-  void registerPlugin([String? id, PluginInformation? info]) {
-    // TODO share secret in a secure paired way....
+  Future<void> registerPlugin([String? id, PluginInformation? info]) async {
+    // TODO(mgwerder): share secret in a secure paired way....
     //PluginInformation pi = new PluginInformation();
     //CommunicationSecret secret = new CommunicationSecret();
     //secrets.put(id, secret);
 
     if (id != null) {
-      if (info == null) throw NullThrownError();
+      if (info == null) {
+        throw NullThrownError();
+      }
       if (!plugins.containsKey(StorableString(id))) {
         plugins[StorableString(id)] = info;
-        print('## registered Plugin ' +
-            id +
-            ' executable: ' +
-            (info.getExecutable() ?? 'null') +
-            ' port: ' +
-            info.getPort().toString());
+        print(
+            '## registered Plugin $id executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
       }
       return;
     }
 
     // request to register at Master
     var pluginInformation =
-        PluginInformation(executor, geigerCommunicator.getPort());
+        PluginInformation(_executor, _geigerCommunicator.getPort());
+
     try {
       sendMessage(
-          LocalApi.MASTER,
+          GeigerApi.MASTER,
           Message(
-              id,
-              LocalApi.MASTER,
+              id!,
+              GeigerApi.MASTER,
               MessageType.REGISTER_PLUGIN,
-              GeigerUrl(MASTER, 'registerPlugin'),
-              pluginInformation.toByteArray()));
+              GeigerUrl(null,GeigerApi.MASTER, 'registerPlugin'),
+              await pluginInformation.toByteArray()));
     } on MalformedUrlException {
-      // TODO proper Error handling
+      // TODO(mgwerder): proper Error handling
       // this should never occur
     }
   }
@@ -159,18 +156,16 @@ class LocalApi implements CommunicatorApi {
   void deregisterPlugin([String? id]) {
     if (id != null) {
       // remove on master all menu items
-      if (isMaster) {
-        // synchronized(menuItems) {
-        var l = List<String>.empty(growable: true);
-        for (var i in menuItems.entries) {
-          if (i.value.getAction().getPlugin().equals(id)) {
+      if (_isMaster) {
+        List<String> l = List<String>.empty(growable: true);
+        for (final MapEntry<StorableString,MenuItem> i in menuItems.entries) {
+          if (i.value.action.plugin == id) {
             l.add(i.key.toString());
           }
         }
-        for (var key in l) {
+        for (final String key in l) {
           menuItems.remove(StorableString(key));
         }
-        // }
       }
 
       // remove plugin secret
@@ -180,18 +175,17 @@ class LocalApi implements CommunicatorApi {
       return;
     }
 
-    // TODO getting the id of the plugin itself doesnt make sense
-    if (plugins[StorableString(this.id)] == null) {
-      throw ArgumentError(
-          'no communication secret found for id \"' + this.id + '\"');
+    // TODO(mgwerder): getting the id of the plugin itself doesnt make sense
+    if (plugins[StorableString(this._id)] == null) {
+      throw ArgumentError('no communication secret found for id "$_id"');
     }
     // first deactivate, then deregister at Master, before deleting my own entries.
     deactivatePlugin();
     try {
       sendMessage(
-          LocalApi.MASTER,
-          Message(this.id, LocalApi.MASTER, MessageType.DEREGISTER_PLUGIN,
-              GeigerUrl(MASTER, 'deregisterPlugin')));
+          GeigerApi.MASTER,
+          Message(_id, GeigerApi.MASTER, MessageType.DEREGISTER_PLUGIN,
+              GeigerUrl(null,GeigerApi.MASTER, 'deregisterPlugin')));
     } on MalformedUrlException {
       // TODO proper Error handling
       // this should never occur
@@ -201,27 +195,24 @@ class LocalApi implements CommunicatorApi {
 
   /// Deletes all current registered items.
   void zapState() {
-    // synchronized(menuItems) {
     menuItems.clear();
-    // }
-    // synchronized(plugins) {
     plugins.clear();
-    // }
     storeState();
   }
 
-  void storeState() {
+  void storeState() async {
     // store plugin state
     try {
-      ByteArrayOutputStream out = ByteArrayOutputStream();
-      // synchronized(plugins) {
+      File f = File('GeigerApi.' + _id + '.state');
+      ByteSink out = ByteSink();
       plugins.toByteArrayStream(out);
-      //
-      // synchronized(menuItems) {
       menuItems.toByteArrayStream(out);
-      // }
-      File('LocalAPI.' + id + '.state').writeAsBytesSync(out.toByteArray());
+      out.close();
+      var file = f.openWrite();
+      file.add(await out.bytes);
+      file.close();
     } catch (ioe) {
+      // FIXME
       //System.out.println("===============================================U");
       //ioe.printStackTrace();
       //System.out.println("===============================================L");
@@ -229,11 +220,11 @@ class LocalApi implements CommunicatorApi {
   }
 
   void restoreState() {
-    var fname = 'LocalAPI.' + id + '.state';
+    var fname = 'GeigerApi.' + _id + '.state';
     try {
       var file = File(fname);
-      var buff = file.existsSync() ? file.readAsBytesSync() : [];
-      ByteArrayInputStream in_ = ByteArrayInputStream(buff);
+      final List<int> buff = file.existsSync() ? file.readAsBytesSync() : [];
+      ByteStream in_ = ByteStream(null, buff);
       // restoring plugin information
       // synchronized(plugins) {
       StorableHashMap.fromByteArrayStream(in_, plugins);
@@ -251,78 +242,78 @@ class LocalApi implements CommunicatorApi {
   @override
   void activatePlugin(int port) {
     sendMessage(
-        MASTER,
-        Message(id, MASTER, MessageType.ACTIVATE_PLUGIN, null,
+        GeigerApi.MASTER,
+        Message(_id, GeigerApi.MASTER, MessageType.ACTIVATE_PLUGIN, null,
             GeigerCommunicator.intToByteArray(port)));
   }
 
   @override
   void deactivatePlugin() {
     sendMessage(
-        MASTER, Message(id, MASTER, MessageType.DEACTIVATE_PLUGIN, null));
+        GeigerApi.MASTER, Message(_id, GeigerApi.MASTER, MessageType.DEACTIVATE_PLUGIN, null));
   }
 
   /// Obtain [StorageController] to access the storage.
   @override
   StorageController? getStorage() {
     mapper ??= DEFAULT_MAPPER;
-    if (isMaster) {
-      return GenericController(id, mapper!.getMapper());
+    if (_isMaster) {
+      return GenericController(_id, mapper!.getMapper());
     } else {
-      return PasstroughController(this, id);
+      return PasstroughController(this, _id);
     }
   }
 
   @override
-  void registerListener(List<MessageType> events, PluginListener listener,
-      [bool internal = false]) {
+  Future<void> registerListener(List<MessageType> events, PluginListener listener,
+      [bool internal = false]) async {
     if (internal) {
       for (var e in events) {
         // synchronized(listeners) {
-        var l = listeners[e];
+        var l = _listeners[e];
         // The short form computeIfAbsent is not available in TotalCross
         if (l == null) {
           l = List.empty(growable: true);
-          listeners[e] = l;
+          _listeners[e] = l;
         }
-        if (e.getId() < 10000) {
+        if (e.id < 10000) {
           l.add(listener);
         }
         // }
       }
       return;
     }
-    if (isMaster) {
+    if (_isMaster) {
       for (var e in events) {
         // synchronized(listeners) {
-        var l = listeners[e];
+        var l = _listeners[e];
         // The short form computeIfAbsent is not available in TotalCross
         if (l == null) {
           l = List.empty(growable: true);
-          listeners[e] = l;
+          _listeners[e] = l;
         }
-        if (e.getId() < 10000) {
+        if (e.id < 10000) {
           l.add(listener);
         }
         // }
       }
     } else {
       try {
-        // formatin int number of events -> events -> listener
-        ByteArrayOutputStream out = ByteArrayOutputStream();
-        out.write(GeigerCommunicator.intToByteArray(events.length));
-        for (var event in events) {
-          out.write(GeigerCommunicator.intToByteArray(event.ordinal()));
+        // formating int number of events -> events -> listener
+        ByteSink out = ByteSink();
+        out.sink.add(GeigerCommunicator.intToByteArray(events.length));
+        for (final MessageType event in events) {
+          out.sink.add(GeigerCommunicator.intToByteArray(event.id));
         }
         // out.write(listener.toByteArray());
         sendMessage(
-            MASTER,
+            GeigerApi.MASTER,
             Message(
-                id,
-                MASTER,
+                _id,
+                GeigerApi.MASTER,
                 MessageType.REGISTER_LISTENER,
-                GeigerUrl(LocalApi.MASTER, 'registerListener'),
-                out.toByteArray()));
+                GeigerUrl(null,GeigerApi.MASTER, 'registerListener'),
+                await out.bytes));
       } on IOException {
         // TODO proper Error handling
         // this should never occur
@@ -335,7 +326,7 @@ class LocalApi implements CommunicatorApi {
     events ??= MessageType.values;
     for (var e in events) {
       // synchronized(listeners) {
-      var l = listeners[e];
+      var l = _listeners[e];
       if (l != null) {
         l.remove(listener);
       }
@@ -345,20 +336,20 @@ class LocalApi implements CommunicatorApi {
 
   @override
   void sendMessage(String pluginId, Message msg) {
-    if (id == pluginId) {
+    if (_id == pluginId) {
       // communicate locally
-      receivedMessage(plugins[StorableString(id)]!, msg);
+      receivedMessage(plugins[StorableString(_id)]!, msg);
     } else {
       // communicate with foreign plugin
       var pluginInformation = plugins[StorableString(pluginId)]!;
-      if (isMaster) {
+      if (_isMaster) {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInformation.getPort() > 0)) {
           // is inactive -> start plugin
-          geigerCommunicator.startPlugin(pluginInformation);
+          _geigerCommunicator.startPlugin(pluginInformation);
         }
       }
-      geigerCommunicator.sendMessage(pluginInformation, msg);
+      _geigerCommunicator.sendMessage(pluginInformation, msg);
     }
   }
 
@@ -367,62 +358,61 @@ class LocalApi implements CommunicatorApi {
     for (var plugin in plugins.entries) {
       sendMessage(
           plugin.key.toString(),
-          Message(MASTER, plugin.key.toString(), message.getType(),
-              message.getAction(), message.getPayload()));
+          Message(GeigerApi.MASTER, plugin.key.toString(), message.type,
+              message.action, message.payload));
     }
   }
 
-  void receivedMessage(PluginInformation info, Message msg) {
-    // TODO other messagetypes
+  Future<void> receivedMessage(PluginInformation info, Message msg) async {
+    // TODO(mgwerder): other messagetypes
     MenuItem? i;
-    switch (msg.getType()) {
+    switch (msg.type) {
       case MessageType.ENABLE_MENU:
-        i = menuItems[StorableString(msg.getPayloadString()!)];
+        i = menuItems[StorableString(msg.payloadString)];
         if (i != null) {
-          i.setEnabled(true);
-        }
+          i.enabled=true;        }
         try {
           sendMessage(
-              msg.getSourceId()!,
+              msg.sourceId,
               Message(
-                  msg.getTargetId(),
-                  msg.getSourceId(),
+                  msg.targetId!,
+                  msg.sourceId,
                   MessageType.COMAPI_SUCCESS,
-                  GeigerUrl(msg.getSourceId()!, 'enableMenu')));
+                  GeigerUrl(null,msg.sourceId, 'enableMenu')));
         } on MalformedUrlException {
           // TODO proper Error handling
           // this should never occur
         }
         break;
       case MessageType.DISABLE_MENU:
-        i = menuItems[StorableString(msg.getPayloadString()!)];
+        i = menuItems[StorableString(msg.payloadString)];
         if (i != null) {
-          i.setEnabled(false);
+          i.enabled=false;
         }
         try {
           sendMessage(
-              msg.getSourceId()!,
+              msg.sourceId,
               Message(
-                  msg.getTargetId(),
-                  msg.getSourceId(),
+                  msg.targetId!,
+                  msg.sourceId,
                   MessageType.COMAPI_SUCCESS,
-                  GeigerUrl(msg.getSourceId()!, 'disableMenu')));
+                  GeigerUrl(null,msg.sourceId, 'disableMenu')));
         } on MalformedUrlException {
           // TODO proper Error handling
           // this should never occur
         }
         break;
       case MessageType.REGISTER_MENU:
-        i = MenuItem.fromByteArray(msg.getPayload()!);
-        menuItems[StorableString(i.getMenu())] = i;
+        i = await MenuItem.fromByteArrayStream(ByteStream(null,msg.payload));
+        menuItems[StorableString(i.menu)] = i;
         try {
           sendMessage(
-              msg.getSourceId()!,
+              msg.sourceId,
               Message(
-                  msg.getTargetId(),
-                  msg.getSourceId(),
+                  msg.targetId!,
+                  msg.sourceId,
                   MessageType.COMAPI_SUCCESS,
-                  GeigerUrl(msg.getSourceId()!, 'registerMenu')));
+                  GeigerUrl(null,msg.sourceId, 'registerMenu')));
         } on MalformedUrlException {
           // TODO proper Error handling
           // this should never occur
@@ -430,47 +420,47 @@ class LocalApi implements CommunicatorApi {
         break;
       case MessageType.DEREGISTER_MENU:
         var menuString =
-            utf8.fuse(base64).decode(msg.getPayloadString()!.toString());
+            utf8.fuse(base64).decode(msg.payloadString.toString());
         menuItems.remove(StorableString(menuString));
         try {
           sendMessage(
-              msg.getSourceId()!,
+              msg.sourceId,
               Message(
-                  msg.getTargetId(),
-                  msg.getSourceId(),
+                  msg.targetId!,
+                  msg.sourceId,
                   MessageType.COMAPI_SUCCESS,
-                  GeigerUrl(msg.getSourceId()!, 'deregisterMenu')));
+                  GeigerUrl(null,msg.sourceId, 'deregisterMenu')));
         } on MalformedUrlException {
           // TODO proper Error handling
           // this should never occur
         }
         break;
       case MessageType.REGISTER_PLUGIN:
-        registerPlugin(msg.getSourceId(),
-            PluginInformation.fromByteArray(msg.getPayload()!));
+        registerPlugin(msg.sourceId,
+            await PluginInformation.fromByteArray(msg.payload));
         try {
           sendMessage(
-              msg.getSourceId()!,
+              msg.sourceId,
               Message(
-                  msg.getTargetId(),
-                  msg.getSourceId(),
+                  msg.targetId!,
+                  msg.sourceId,
                   MessageType.COMAPI_SUCCESS,
-                  GeigerUrl(msg.getSourceId()!, 'registerPlugin')));
+                  GeigerUrl(null,msg.sourceId, 'registerPlugin')));
         } on MalformedUrlException {
           // TODO proper Error handling
           // this should never occur
         }
         break;
       case MessageType.DEREGISTER_PLUGIN:
-        deregisterPlugin(msg.getSourceId());
+        deregisterPlugin(msg.sourceId);
         try {
           sendMessage(
-              msg.getSourceId()!,
+              msg.sourceId,
               Message(
-                  msg.getTargetId(),
-                  msg.getSourceId(),
+                  msg.targetId!,
+                  msg.sourceId,
                   MessageType.COMAPI_SUCCESS,
-                  GeigerUrl(msg.getSourceId()!, 'deregisterPlugin')));
+                  GeigerUrl(null,msg.sourceId, 'deregisterPlugin')));
         } on MalformedUrlException {
           // TODO proper Error handling
           // this should never occur
@@ -479,20 +469,20 @@ class LocalApi implements CommunicatorApi {
       case MessageType.ACTIVATE_PLUGIN:
         {
           // get and remove old info
-          var pluginInfo = plugins[StorableString(msg.getSourceId()!)]!;
-          plugins.remove(StorableString(msg.getSourceId()!));
+          var pluginInfo = plugins[StorableString(msg.sourceId)]!;
+          plugins.remove(StorableString(msg.sourceId));
           // put new info
-          var port = GeigerCommunicator.byteArrayToInt(msg.getPayload()!);
-          plugins[StorableString(msg.getSourceId()!)] =
+          var port = GeigerCommunicator.byteArrayToInt(msg.payload);
+          plugins[StorableString(msg.sourceId)] =
               PluginInformation(pluginInfo.getExecutable(), port);
           try {
             sendMessage(
-                msg.getSourceId()!,
+                msg.sourceId,
                 Message(
-                    msg.getTargetId(),
-                    msg.getSourceId(),
+                    msg.targetId!,
+                    msg.sourceId,
                     MessageType.COMAPI_SUCCESS,
-                    GeigerUrl(msg.getSourceId()!, 'activatePlugin')));
+                    GeigerUrl(null,msg.sourceId, 'activatePlugin')));
           } on MalformedUrlException {
             // TODO proper Error handling
             // this should never occur
@@ -503,19 +493,19 @@ class LocalApi implements CommunicatorApi {
         {
           // remove port from plugin info
           // get and remove old info
-          var pluginInfo = plugins[StorableString(msg.getSourceId()!)]!;
-          plugins.remove(StorableString(msg.getSourceId()!));
+          var pluginInfo = plugins[StorableString(msg.sourceId)]!;
+          plugins.remove(StorableString(msg.sourceId));
           // put new info
-          plugins[StorableString(msg.getSourceId()!)] =
+          plugins[StorableString(msg.sourceId)] =
               PluginInformation(pluginInfo.getExecutable(), 0);
           try {
             sendMessage(
-                msg.getSourceId()!,
+                msg.sourceId,
                 Message(
-                    msg.getTargetId(),
-                    msg.getSourceId(),
+                    msg.targetId!,
+                    msg.sourceId,
                     MessageType.COMAPI_SUCCESS,
-                    GeigerUrl(msg.getSourceId()!, 'deactivatePlugin')));
+                    GeigerUrl(null,msg.sourceId, 'deactivatePlugin')));
           } on MalformedUrlException {
             // TODO proper Error handling
             // this should never occur
@@ -525,13 +515,13 @@ class LocalApi implements CommunicatorApi {
       case MessageType.REGISTER_LISTENER:
         {
           // TODO after pluginListener serialization
-          var payload = msg.getPayload()!;
+          var payload = msg.payload;
           var intRange = payload.sublist(0, 4);
-          var inputRange = payload.sublist(4, payload.length);
+          List<int> inputRange = payload.sublist(4, payload.length);
           var length = GeigerCommunicator.byteArrayToInt(intRange);
           // workaround, register for all events always until messagetype serialization is available
           var events = [MessageType.ALL_EVENTS];
-          ByteArrayInputStream in_ = ByteArrayInputStream(inputRange);
+          ByteSink in_ = ByteSink();
           // var events = List<MessageType>.empty(growable: true);
           for (var j = 0; j < length; ++j) {
             // TODO deserialize messagetypes
@@ -541,13 +531,13 @@ class LocalApi implements CommunicatorApi {
           PluginListener? listener;
           for (var e in events) {
             // synchronized(listeners) {
-            var l = listeners[e];
+            var l = _listeners[e];
             // short form with computeIfAbsent is not available in TotalCross
             if (l == null) {
               l = List.empty(growable: true);
-              listeners[e] = l;
+              _listeners[e] = l;
             }
-            if (e.getId() < 10000) {
+            if (e.id < 10000) {
               l.add(listener!);
             }
             // }
@@ -561,7 +551,7 @@ class LocalApi implements CommunicatorApi {
           break;
         }
       case MessageType.SCAN_PRESSED:
-        if (isMaster) {
+        if (_isMaster) {
           scanButtonPressed();
         }
         // if its not the Master there should be a listener registered for this event
@@ -571,9 +561,9 @@ class LocalApi implements CommunicatorApi {
           // answer with PONG
           try {
             sendMessage(
-                msg.getSourceId()!,
-                Message(msg.getTargetId(), msg.getSourceId(), MessageType.PONG,
-                    GeigerUrl(msg.getSourceId()!, ''), msg.getPayload()));
+                msg.sourceId,
+                Message(msg.targetId!, msg.sourceId, MessageType.PONG,
+                    GeigerUrl(null,msg.sourceId, ''), msg.payload));
           } on MalformedUrlException {
             // TODO proper Error handling
             // this should never occur
@@ -584,17 +574,12 @@ class LocalApi implements CommunicatorApi {
         // all other messages are not handled internally
         break;
     }
-    for (var mt in [MessageType.ALL_EVENTS, msg.getType()]) {
-      var l = listeners[mt];
+    for (var mt in [MessageType.ALL_EVENTS, msg.type]) {
+      var l = _listeners[mt];
       if (l != null) {
         for (var pl in l) {
-          print('## notifying PluginListener ' +
-              pl.toString() +
-              ' for msg ' +
-              msg.getType().toString() +
-              ' ' +
-              msg.getAction().toString());
-          pl.pluginEvent(msg.getAction()!, msg);
+          print('## notifying PluginListener ${pl.toString()} for msg ${msg.type.toString()} ${msg.action.toString()}');
+          pl.pluginEvent(msg.action!, msg);
 
           print('## PluginEvent fired');
         }
@@ -603,16 +588,16 @@ class LocalApi implements CommunicatorApi {
   }
 
   @override
-  void registerMenu(String menu, GeigerUrl action) {
+  Future<void> registerMenu(String menu, GeigerUrl action) async {
     try {
       sendMessage(
-          MASTER,
+          GeigerApi.MASTER,
           Message(
-              id,
-              MASTER,
+              _id,
+              GeigerApi.MASTER,
               MessageType.REGISTER_MENU,
-              GeigerUrl(MASTER, 'registerMenu'),
-              MenuItem(menu, action).toByteArray()));
+              GeigerUrl(null,GeigerApi.MASTER, 'registerMenu'),
+              await MenuItem(menu, action).toByteArray()));
     } on MalformedUrlException {
       // TODO proper Error handling
       // this should never occur
@@ -623,9 +608,9 @@ class LocalApi implements CommunicatorApi {
   void enableMenu(String menu) {
     try {
       sendMessage(
-          MASTER,
-          Message(id, MASTER, MessageType.ENABLE_MENU,
-              GeigerUrl(MASTER, 'enableMenu'), utf8.encode(menu)));
+          GeigerApi.MASTER,
+          Message(_id, GeigerApi.MASTER, MessageType.ENABLE_MENU,
+              GeigerUrl(null,GeigerApi.MASTER, 'enableMenu'), utf8.encode(menu)));
     } on MalformedUrlException {
       // TODO proper Error handling
       // this should never occur
@@ -636,9 +621,9 @@ class LocalApi implements CommunicatorApi {
   void disableMenu(String menu) {
     try {
       sendMessage(
-          MASTER,
-          Message(id, MASTER, MessageType.DISABLE_MENU,
-              GeigerUrl(MASTER, 'disableMenu'), utf8.encode(menu)));
+          GeigerApi.MASTER,
+          Message(_id, GeigerApi.MASTER, MessageType.DISABLE_MENU,
+              GeigerUrl(null,GeigerApi.MASTER, 'disableMenu'), utf8.encode(menu)));
     } on MalformedUrlException {
       // TODO proper Error handling
       // this should never occur
@@ -649,9 +634,9 @@ class LocalApi implements CommunicatorApi {
   void deregisterMenu(String menu) {
     try {
       sendMessage(
-          MASTER,
-          Message(id, MASTER, MessageType.DEREGISTER_MENU,
-              GeigerUrl(MASTER, 'deregisterMenu'), utf8.encode(menu)));
+          GeigerApi.MASTER,
+          Message(_id, GeigerApi.MASTER, MessageType.DEREGISTER_MENU,
+              GeigerUrl(null,GeigerApi.MASTER, 'deregisterMenu'), utf8.encode(menu)));
     } on MalformedUrlException {
       // TODO proper Error handling
       // this should never occur
@@ -660,8 +645,8 @@ class LocalApi implements CommunicatorApi {
 
   @override
   void menuPressed(GeigerUrl url) {
-    sendMessage(url.getPlugin(),
-        Message(MASTER, url.getPlugin(), MessageType.MENU_PRESSED, url, null));
+    sendMessage(url.plugin,
+        Message(GeigerApi.MASTER, url.plugin, MessageType.MENU_PRESSED, url, null));
   }
 
   @override
@@ -672,18 +657,18 @@ class LocalApi implements CommunicatorApi {
   @override
   void scanButtonPressed() {
     // TODO
-    if (!isMaster) {
+    if (!_isMaster) {
       try {
         sendMessage(
-            MASTER,
-            Message(id, MASTER, MessageType.SCAN_PRESSED,
-                GeigerUrl(MASTER, 'scanPressed')));
+            GeigerApi.MASTER,
+            Message(_id, GeigerApi.MASTER, MessageType.SCAN_PRESSED,
+                GeigerUrl(null,GeigerApi.MASTER, 'scanPressed')));
       } on MalformedUrlException {
         // TODO proper Error handling
         // this should never occur
       }
     } else {
-      broadcastMessage(Message(MASTER, null, MessageType.SCAN_PRESSED, null));
+      broadcastMessage(Message(GeigerApi.MASTER, null, MessageType.SCAN_PRESSED, null));
     }
   }
 

@@ -1,3 +1,5 @@
+library geiger_api;
+
 /// The self declaration of the plugin.
 enum Declaration {
   /// No data sharing is done and thus no implications on GDPR

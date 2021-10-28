@@ -1,20 +1,22 @@
+library geiger_api;
+
 import 'dart:io';
 
-import 'LocalApi.dart';
-import 'Message.dart';
-import 'PluginInformation.dart';
+import 'geiger_api.dart';
+import 'message.dart';
+import 'plugin_information.dart';
 
 /// Class to handle incoming messages.
 class MessageHandler /*implements Runnable*/ {
-  final Socket socket;
-  final LocalApi localApi;
+  final Socket _socket;
+  final GeigerApi _localApi;
 
-  MessageHandler(this.socket, this.localApi);
+  MessageHandler(this._socket, this._localApi);
 
   void run() {
     Message msg;
     try {
-      InputStream in_ = socket.asInputStream();
+      ByteSink in_ = _socket.asInputStream();
       // read bytes
       var inputData = List<int>.filled(4096, 0);
       int numRead;
@@ -37,7 +39,7 @@ class MessageHandler /*implements Runnable*/ {
           ' ' +
           (msg.getAction()?.toString() ?? 'null') +
           ')');
-      localApi.receivedMessage(pluginInformation, msg);
+      _localApi.receivedMessage(pluginInformation, msg);
     } on IOException catch (ioe) {
       // TODO handle communications error
       //throw new CommunicationException("Communication Error", ioe);

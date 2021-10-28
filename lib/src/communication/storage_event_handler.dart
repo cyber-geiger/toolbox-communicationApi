@@ -1,16 +1,19 @@
+library geiger_api;
+
 import 'dart:io';
 
-import 'package:localstorage/localstorage.dart';
+import 'package:communicationapi/src/communication/communication_api.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'GeigerUrl.dart';
-import 'LocalApi.dart';
-import 'Message.dart';
-import 'MessageType.dart';
-import 'PluginListener.dart';
+import 'geiger_api.dart';
+import 'message.dart';
+import 'message_type.dart';
+import 'plugin_listener.dart';
+import 'geiger_url.dart';
 
 /// [StorageEventHandler] processes StorageEvents accordingly.
 class StorageEventHandler with PluginListener {
-  final LocalApi localApi;
+  final CommunicationApi localApi;
   final StorageController storageController;
   bool isMaster = false;
 
@@ -18,10 +21,10 @@ class StorageEventHandler with PluginListener {
 
   /// Decides which storage method has been called for [msg].
   void storageEventParser(Message msg) {
-    if (LocalApi.MASTER == msg.getTargetId()) {
+    if (GeigerApi.MASTER == msg.targetId) {
       isMaster = true;
     }
-    var urlParts = msg.getAction()!.getPath().split('/');
+    var urlParts = (msg.action!.path)??''.split('/');
     var action = urlParts[0];
     var identifier = urlParts[1];
     var optionalArgs = urlParts.sublist(2, urlParts.length);
@@ -89,29 +92,27 @@ class StorageEventHandler with PluginListener {
     var path = join('/', optionalArgs);
     try {
       var node = storageController.get(path);
-      ch_fhnw_geiger_totalcross_ByteArrayOutputStream bos =
-          ch_fhnw_geiger_totalcross_ByteArrayOutputStream();
+      ByteSink bos =ByteSink();
       node.toByteArrayStream(bos);
       List<int> payload = bos.toByteArray();
       localApi.sendMessage(
-          msg.getSourceId()!,
+          msg.sourceId,
           Message(
-              msg.getTargetId(),
-              msg.getSourceId(),
+              msg.targetId,
+              msg.sourceId,
               MessageType.STORAGE_SUCCESS,
               GeigerUrl(
-                  msg.getSourceId()!, (('getNode/' + identifier) + '/') + path),
+                  msg.sourceId, (('getNode/' + identifier) + '/') + path),
               payload));
     } on IOException catch (e) {
       try {
-        ch_fhnw_geiger_totalcross_ByteArrayOutputStream bos =
-            ch_fhnw_geiger_totalcross_ByteArrayOutputStream();
+        ByteSink bos =ByteSink();
         StorageException('Could not get Node' + path, e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
-            msg.getSourceId()!,
+            msg.sourceId,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'getNode/' + identifier),
@@ -126,19 +127,18 @@ class StorageEventHandler with PluginListener {
   void addNode(Message msg, String identifier, List<String> optionalArgs) {
     Node node;
     try {
-      node = NodeImpl.fromByteArrayStream(
-          ch_fhnw_geiger_totalcross_ByteArrayInputStream(msg.getPayload()));
+      node = NodeImpl.fromByteArrayStream(ByteStream(null,msg.getPayload());
       storageController.add(node);
     } on Exception catch (e) {
       try {
-        ch_fhnw_geiger_totalcross_ByteArrayOutputStream bos =
-            ch_fhnw_geiger_totalcross_ByteArrayOutputStream();
+        ByteSink bos = ByteSink();
         StorageException('Could not add Node', e).toByteArrayStream(bos);
+        bos.close();
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'addNode/' + identifier),
@@ -153,19 +153,17 @@ class StorageEventHandler with PluginListener {
   void updateNode(Message msg, String identifier, List<String> optionalArgs) {
     Node node;
     try {
-      node = NodeImpl.fromByteArrayStream(
-          ch_fhnw_geiger_totalcross_ByteArrayInputStream(msg.getPayload()));
+      node = NodeImpl.fromByteArrayStream(ByteStream(null,msg.getPayload()));
       storageController.update(node);
     } on Exception catch (e) {
       try {
-        ch_fhnw_geiger_totalcross_ByteArrayOutputStream bos =
-            ch_fhnw_geiger_totalcross_ByteArrayOutputStream();
+        ByteSink bos = ByteSink();
         StorageException('Could not update Node', e).toByteArrayStream(bos);
         List<int> payload = bos.toByteArray();
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'updateNode/' + identifier),
@@ -179,26 +177,26 @@ class StorageEventHandler with PluginListener {
     try {
       var node = storageController.delete(optionalArgs[0]);
       if (node != null) {
-        ch_fhnw_geiger_totalcross_ByteArrayOutputStream bos =
-            ch_fhnw_geiger_totalcross_ByteArrayOutputStream();
+        ByteSink bos =ByteSink();
         node.toByteArrayStream(bos);
-        List<int> payload = bos.toByteArray();
+        bos.close();
+        List<int> payload = await bos.bytes();
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId()!, 'deleteNode/' + identifier),
+                GeigerUrl(msg.targetId!, 'deleteNode/' + identifier),
                 payload));
       } else {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId()!, 'deleteNode/' + identifier)));
+                GeigerUrl(msg.targetId!, 'deleteNode/' + identifier)));
       }
     } on Exception catch (e) {
       try {
@@ -209,7 +207,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'deleteNode/' + identifier),
@@ -231,19 +229,19 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId()!, 'getValue/' + identifier),
+                GeigerUrl(msg.targetId!, 'getValue/' + identifier),
                 payload));
       } else {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId()!, 'getValue/' + identifier)));
+                GeigerUrl(msg.targetId!, 'getValue/' + identifier)));
       }
     } on Exception catch (e) {
       try {
@@ -254,7 +252,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'getValue/' + identifier),
@@ -281,7 +279,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'addValue/' + identifier),
@@ -309,7 +307,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'updateValue/' + identifier),
@@ -331,10 +329,10 @@ class StorageEventHandler with PluginListener {
       localApi.sendMessage(
           msg.getSourceId()!,
           Message(
-              msg.getTargetId(),
+              msg.targetId,
               msg.getSourceId(),
               MessageType.STORAGE_SUCCESS,
-              GeigerUrl(msg.getTargetId()!, 'deleteNodeValue/' + identifier),
+              GeigerUrl(msg.targetId!, 'deleteNodeValue/' + identifier),
               payload));
     } on Exception catch (e) {
       try {
@@ -346,7 +344,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'deleteValue/' + identifier),
@@ -370,7 +368,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'rename/' + identifier),
@@ -396,19 +394,19 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId()!, 'search/' + identifier),
+                GeigerUrl(msg.targetId!, 'search/' + identifier),
                 payload));
       } else {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_SUCCESS,
-                GeigerUrl(msg.getTargetId()!, 'search/' + identifier)));
+                GeigerUrl(msg.targetId!, 'search/' + identifier)));
       }
     } on Exception catch (e) {
       try {
@@ -419,7 +417,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'search/' + identifier),
@@ -443,7 +441,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'close/' + identifier),
@@ -467,7 +465,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'flush/' + identifier),
@@ -491,7 +489,7 @@ class StorageEventHandler with PluginListener {
         localApi.sendMessage(
             msg.getSourceId()!,
             Message(
-                msg.getTargetId(),
+                msg.targetId,
                 msg.getSourceId(),
                 MessageType.STORAGE_ERROR,
                 GeigerUrl(msg.getSourceId()!, 'zap/' + identifier),

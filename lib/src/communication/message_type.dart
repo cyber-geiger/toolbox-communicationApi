@@ -44,7 +44,8 @@ enum MessageType {
 }
 
 extension MessageTypeExtension on MessageType {
-  int getId() {
+
+  int get id {
     switch (this) {
       case MessageType.REGISTER_PLUGIN:
         return (100);
@@ -90,6 +91,8 @@ extension MessageTypeExtension on MessageType {
         return (30000);
       case MessageType.COMAPI_ERROR:
         return (30200);
+      default:
+        throw Exception('OOPS!!! incomplete list of ids... contact developers');
     }
   }
 
@@ -98,7 +101,7 @@ extension MessageTypeExtension on MessageType {
   /// Will return `null` if not found.
   static MessageType? getById(int id) {
     for (var e in MessageType.values) {
-      if (e.getId() == id) {
+      if (e.id == id) {
         return e;
       }
     }

@@ -1,7 +1,9 @@
+library geiger_api;
+
 import 'dart:collection';
 
-import 'CommunicationSecret.dart';
-import 'PluginInformation.dart';
+import 'communication_secret.dart';
+import 'plugin_information.dart';
 
 /// A factory class to create plugin information entries.
 class PluginInformationFactory {

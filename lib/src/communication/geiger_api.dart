@@ -1,15 +1,21 @@
-import 'package:localstorage/localstorage.dart';
+library geiger_api;
 
-import 'GeigerUrl.dart';
-import 'MenuItem.dart';
-import 'MenuRegistrar.dart';
-import 'Message.dart';
-import 'MessageType.dart';
-import 'PluginListener.dart';
-import 'PluginRegistrar.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
+
+import 'declaration.dart';
+import 'geiger_url.dart';
+import 'menu_item.dart';
+import 'menu_registrar.dart';
+import 'message.dart';
+import 'message_type.dart';
+import 'plugin_listener.dart';
+import 'plugin_registrar.dart';
 
 /// The API provided by all communicator interfaces.
-abstract class CommunicatorApi with PluginRegistrar, MenuRegistrar {
+abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
+
+  static const String MASTER = '__MASTERPLUGIN__';
+
   /// Activates the plugin and sets up communication on the specified [port].
   void activatePlugin(int port);
 
@@ -52,4 +58,7 @@ abstract class CommunicatorApi with PluginRegistrar, MenuRegistrar {
   ///
   /// This call is for the toolbox core only.
   void scanButtonPressed();
+
+  /// get the declaration of data sharing provided when establishing the agreement.
+  Declaration get declaration;
 }

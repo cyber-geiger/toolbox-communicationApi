@@ -1,11 +1,13 @@
+library geiger_api;
+
 import 'dart:io';
 
-import 'CommunicationException.dart';
-import 'GeigerUrl.dart';
-import 'LocalApi.dart';
-import 'Message.dart';
-import 'MessageType.dart';
-import 'PluginListener.dart';
+import 'communication_exception.dart';
+import 'geiger_url.dart';
+import 'message.dart';
+import 'message_type.dart';
+import 'plugin_listener.dart';
+import 'communication_api.dart';
 
 /// Interface to denote a message filter.
 abstract class MessageFilter {
@@ -14,7 +16,7 @@ abstract class MessageFilter {
 
 class Listener with PluginListener {
   final MessageFilter filter;
-  final LocalApi api;
+  final CommunicationApi api;
   final Object obj = Object();
   Message? msg;
 
@@ -41,12 +43,7 @@ class Listener with PluginListener {
     while ((msg == null) &&
         ((timeout < 0) ||
             ((DateTime.now().millisecondsSinceEpoch - startTime) < timeout))) {
-      // try {
-      /*synchronized(obj, {
-          obj.wait(100);
-        });*/
       sleep(Duration(milliseconds: 100));
-      // } on InterruptedException catch (e) {}
     }
     var message = msg;
     if (message == null) {
@@ -65,10 +62,10 @@ class CommunicationHelper {
   /// milliseconds. Specify `-1` to remove any time limit.
   ///
   /// Throws [CommunicationException] if communication with master fails
-  static Message sendAndWait(LocalApi api, Message msg, MessageFilter filter,
+  static Message sendAndWait(CommunicationApi api, Message msg, MessageFilter filter,
       [int timeout = 10000]) {
     var l = Listener(api, filter);
-    api.sendMessage(msg.getTargetId()!, msg);
+    api.sendMessage(msg.targetId!, msg);
     var result = l.waitForResult(timeout);
     l.dispose();
     return result;

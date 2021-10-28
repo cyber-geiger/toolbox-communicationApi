@@ -1,5 +1,7 @@
-import 'GeigerUrl.dart';
-import 'Message.dart';
+library geiger_api;
+
+import 'geiger_url.dart';
+import 'message.dart';
 
 /// Interface for plugins listening for events.
 abstract class PluginListener {

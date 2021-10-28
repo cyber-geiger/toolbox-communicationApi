@@ -1,3 +1,5 @@
+library geiger_api;
+
 abstract class PluginRegistrar {
   /// Registers the plugin to the toolbox framework.
   ///

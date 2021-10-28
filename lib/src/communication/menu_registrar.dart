@@ -1,4 +1,6 @@
-import 'GeigerUrl.dart';
+library geiger_api;
+
+import 'geiger_url.dart';
 
 /// Registrar interface for Menus.
 abstract class MenuRegistrar {

@@ -1,10 +1,16 @@
-import 'Message.dart';
-import 'MessageListener.dart';
-import 'PluginInformation.dart';
+library geiger_api;
 
-/// Abstract class to define common methods for GeigerCommunicators.
+import 'geiger_api.dart';
+import 'message.dart';
+import 'message_listener.dart';
+import 'plugin_information.dart';
+
 abstract class GeigerCommunicator {
   MessageListener? listener;
+
+  GeigerCommunicator(GeigerApi comm, bool isMaster) {
+    // FIXME
+  }
 
   void setListener(MessageListener listener) {
     this.listener = listener;
@@ -17,6 +23,7 @@ abstract class GeigerCommunicator {
   /// Convert a bytearray to int.
   ///
   /// The provided [bytes] can only be 4 long.
+  /// TODO(mgwerder): this is a specialized implementation of the writeIntLong implementatio. Please collapse sensibly
   static int byteArrayToInt(List<int> bytes) {
     return ((((bytes[0] & 15) << 24) | ((bytes[1] & 15) << 16)) |
             ((bytes[2] & 15) << 8)) |
@@ -24,6 +31,8 @@ abstract class GeigerCommunicator {
   }
 
   /// Convert int [value] to bytearray of length 4.
+  /// TODO(mgwerder): this is a specialized implementation of the writeIntLong implementatio. Please collapse sensibly
+  /// FIXME(mgwerder); does not work for negative values
   static List<int> intToByteArray(int value) {
     return [value >> 24, value >> 16, value >> 8, value];
   }

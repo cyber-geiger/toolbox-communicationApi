@@ -1,8 +1,13 @@
+library geiger_api;
+
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'dart:convert';
+
 /// Encapsulates secret parameters for communication and provides methods to employ them.
-class CommunicationSecret /*with Serializer*/ {
+class CommunicationSecret with Serializer {
   static const int serialVersionUID = 8901230;
   static const int DEFAULT_SIZE = 32;
   List<int> secret = [];
@@ -52,10 +57,11 @@ class CommunicationSecret /*with Serializer*/ {
     return ret;
   }
 
-  /*void toByteArrayStream(ch_fhnw_geiger_totalcross_ByteArrayOutputStream out)
+  @override
+  void toByteArrayStream(ByteSink out)
     {
         SerializerHelper.writeLong(out, serialVersionUID);
-        SerializerHelper.writeString(out, Base64.encodeToString(secret));
+        SerializerHelper.writeString(out, base64.encode(secret));
         SerializerHelper.writeLong(out, serialVersionUID);
     }
 
@@ -63,18 +69,18 @@ class CommunicationSecret /*with Serializer*/ {
     /// @param in ByteArrayInputStream to be used
     /// @return the deserialized Storable String
     /// @throws IOException if value cannot be read
-    static CommunicationSecret fromByteArrayStream(ch_fhnw_geiger_totalcross_ByteArrayInputStream in_)
+    static Future<CommunicationSecret> fromByteArrayStream(ByteStream in_) async
     {
-        if (SerializerHelper.readLong(in_) != serialVersionUID) {
-            throw new ClassCastException("Reading start marker fails");
+        if (await SerializerHelper.readLong(in_) != serialVersionUID) {
+            throw Exception('cannot cast');
         }
-        List<int> secret = Base64.decode(SerializerHelper.readString(in_));
-        CommunicationSecret ret = new CommunicationSecret(secret);
-        if (SerializerHelper.readLong(in_) != serialVersionUID) {
-            throw new ClassCastException("Reading end marker fails");
+        final List<int> secret = base64.decode(await SerializerHelper.readString(in_)??'');
+        CommunicationSecret ret = CommunicationSecret(secret);
+        if (await SerializerHelper.readLong(in_) != serialVersionUID) {
+            throw Exception("Reading end marker fails");
         }
         return ret;
-    }*/
+    }
 
   @override
   String toString() {

@@ -2,21 +2,19 @@ library geiger_api;
 
 import 'dart:io';
 
+import '../../geiger_api.dart';
 import 'communication_exception.dart';
 import 'geiger_url.dart';
 import 'message.dart';
 import 'message_type.dart';
 import 'plugin_listener.dart';
-import 'communication_api.dart';
 
 /// Interface to denote a message filter.
-abstract class MessageFilter {
-  bool filter(Message msg);
-}
+typedef MessageFilter = bool Function(Message msg);
 
 class Listener with PluginListener {
   final MessageFilter filter;
-  final CommunicationApi api;
+  final GeigerApi api;
   final Object obj = Object();
   Message? msg;
 
@@ -26,7 +24,7 @@ class Listener with PluginListener {
 
   @override
   void pluginEvent(GeigerUrl url, Message msg) {
-    if (filter.filter(msg)) {
+    if (filter(msg)) {
       this.msg = msg;
       // synchronized(obj, {
       // obj.notifyAll();
@@ -62,7 +60,7 @@ class CommunicationHelper {
   /// milliseconds. Specify `-1` to remove any time limit.
   ///
   /// Throws [CommunicationException] if communication with master fails
-  static Message sendAndWait(CommunicationApi api, Message msg, MessageFilter filter,
+  static Message sendAndWait(GeigerApi api, Message msg, MessageFilter filter,
       [int timeout = 10000]) {
     var l = Listener(api, filter);
     api.sendMessage(msg.targetId!, msg);

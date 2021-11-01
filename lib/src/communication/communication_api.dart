@@ -87,11 +87,11 @@ class CommunicationApi implements GeigerApi {
         print(e);
       }
       // TODO should the passtroughcontroller be listener?
-      storageEventHandler = PasstroughController(this, _id);
+      //storageEventHandler = PasstroughController(this, _id);
       // this code is duplicate from registerListener method
       // it is currently not possible to determin between register internally and register on Master
       // therefore this duplicate is necessary
-      registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
+      //registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
       // it is master
       storageEventHandler = StorageEventHandler(this, getStorage()!);
@@ -260,7 +260,8 @@ class CommunicationApi implements GeigerApi {
     if (_isMaster) {
       return GenericController(_id, mapper!.getMapper());
     } else {
-      return PasstroughController(this, _id);
+      //return PasstroughController(this, _id);
+      throw Exception('not implemented');
     }
   }
 

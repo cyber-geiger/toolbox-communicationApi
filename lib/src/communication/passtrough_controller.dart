@@ -14,6 +14,9 @@ import 'message.dart';
 import 'message_type.dart';
 import 'plugin_listener.dart';
 
+// TODO(mgwerder): completely redo this concept
+/*
+
 /// Class for handling storage events in Plugins.
 class PasstroughController implements StorageController, PluginListener {
   final GeigerApi localApi;
@@ -468,3 +471,6 @@ class PasstroughController implements StorageController, PluginListener {
   }
 
 }
+
+
+ */

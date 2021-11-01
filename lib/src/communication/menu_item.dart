@@ -70,13 +70,7 @@ class MenuItem implements Serializer {
 
   @override
   String toString() {
-    return '"'.codeUnitAt(0).toString() +
-        _menu +
-        '\"->' +
-        _action.toString() +
-        '(' +
-        (_enabled ? 'enabled' : 'disabled') +
-        ')';
+    return '"$_menu\"->$_action(${_enabled ? 'enabled' : 'disabled'})';
   }
 
   @override

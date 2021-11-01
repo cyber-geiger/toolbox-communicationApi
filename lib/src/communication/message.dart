@@ -79,15 +79,17 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');
     }
-    Message m = Message(await SerializerHelper.readString(in_)??'',
+    Message m = Message(
+        await SerializerHelper.readString(in_) ?? '',
         (await SerializerHelper.readInt(in_) == 1)
             ? await SerializerHelper.readString(in_)
             : null,
-             MessageTypeExtension.getById(await SerializerHelper.readInt(in_))??MessageType.STORAGE_ERROR,
+        MessageTypeExtension.getById(await SerializerHelper.readInt(in_)) ??
+            MessageType.STORAGE_ERROR,
         (await SerializerHelper.readInt(in_) == 1)
             ? await GeigerUrl.fromByteArrayStream(in_)
             : null);
-    m._payloadString= (await SerializerHelper.readInt(in_) == 1)
+    m._payloadString = (await SerializerHelper.readInt(in_) == 1)
         ? await SerializerHelper.readString(in_)
         : null;
     return m;
@@ -121,7 +123,7 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
   bool operator ==(Object other) => equals(other);
 
   bool equals(Object? o) {
-    if (this == o) {
+    if (identical(this, o)) {
       return true;
     }
     if ((o == null) || !(o is Message)) {
@@ -136,7 +138,7 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
 
   @override
   int get hashCode {
-    return ((sourceId ?? 'null') +
+    return (sourceId +
             (targetId ?? 'null') +
             type.hashCode.toString() +
             _action.hashCode.toString() +
@@ -146,6 +148,6 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
 
   @override
   String toString() {
-    return '${sourceId ?? 'null'}=>${targetId ?? 'null'}{[$type] ($action??"".toString()) }';
+    return '$sourceId=>${targetId ?? 'null'}{[$type] ($action??"".toString()) }';
   }
 }

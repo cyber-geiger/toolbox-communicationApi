@@ -38,8 +38,8 @@ class GeigerUrl implements Serializer {
   /// Create a [GeigerUrl] with the provided [pluginId], [path], and optionally [protocol].
   ///
   /// Throws MalformedUrlException if the resulting URL is not fulfilling the minimum requirements
-  GeigerUrl(String? protocol,String pluginId, String path) {
-    protocol??='geiger';
+  GeigerUrl(String? protocol, String pluginId, String path) {
+    protocol ??= 'geiger';
     if (protocol == '') {
       throw MalformedUrlException('protocol cannot be empty');
     }
@@ -105,12 +105,12 @@ class GeigerUrl implements Serializer {
       throw Exception('cannot cast');
     }
     return GeigerUrl(
-            await SerializerHelper.readString(in_)??'',
+        await SerializerHelper.readString(in_) ?? '',
         (await SerializerHelper.readInt(in_) == 1)
-            ? await SerializerHelper.readString(in_)??''
+            ? await SerializerHelper.readString(in_) ?? ''
             : '',
         (await SerializerHelper.readInt(in_) == 1)
-            ? await SerializerHelper.readString(in_)??''
+            ? await SerializerHelper.readString(in_) ?? ''
             : '');
   }
 
@@ -118,14 +118,15 @@ class GeigerUrl implements Serializer {
   bool operator ==(Object other) => equals(other);
 
   bool equals(Object? o) {
-    if (this == o) {
+    if (identical(this, o)) {
       return true;
     }
     if (o == null || !(o is GeigerUrl)) {
       return false;
     }
     var geigerUrl = o;
-    return (protocol == geigerUrl.protocol && _pluginId == geigerUrl._pluginId) &&
+    return (protocol == geigerUrl.protocol &&
+            _pluginId == geigerUrl._pluginId) &&
         path == geigerUrl.path;
   }
 

@@ -83,7 +83,7 @@ class MenuItem implements Serializer {
   bool operator ==(Object other) => equals(other);
 
   bool equals(Object? o) {
-    if (this == o) {
+    if (identical(this, o)) {
       return true;
     }
     if (o == null || !(o is MenuItem)) {

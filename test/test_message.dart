@@ -1,0 +1,117 @@
+library geiger_api;
+
+import 'package:communicationapi/geiger_api.dart';
+import 'package:communicationapi/src/communication/geiger_url.dart';
+import 'package:test/test.dart';
+import 'package:uuid/uuid.dart';
+import 'package:collection/collection.dart';
+
+class TestMessage {}
+
+
+
+void main(){
+  test('testConstructionGetterSetter', () {
+    String sourceId = 'sourceId';
+    String targetId = 'targetId';
+    MessageType messageType = MessageType.ALL_EVENTS;
+    GeigerUrl? url;
+    try{
+      url = GeigerUrl(null, GeigerApi.MASTER, 'geiger://plugin/path');
+    } catch(e) {
+      print(e);
+    }
+
+    Message msg = Message(sourceId, targetId, messageType, url);
+    expect(msg.sourceId == sourceId, true, reason: 'sourceId does not match');
+    expect(msg.targetId == targetId, true, reason: 'targetId does not match');
+    expect(msg.type == messageType, true, reason: 'messageType does not match');
+    expect(msg.action == url, true, reason: 'GeigerUrl does not match');
+    expect(msg.payloadString != null, true, reason: 'payloadString is empty');
+    expect(msg.payload.isEmpty, true, reason: 'payload is not empty');
+
+    List<int> payload = 'payload'.codeUnits;
+    Message msg2 = Message(sourceId, targetId, messageType, url, payload);
+    expect(msg2.sourceId == sourceId, true, reason: 'sourceId does not match');
+    expect(msg2.targetId == targetId, true, reason: 'targetId does not match');
+    expect(msg2.type == messageType, true, reason: 'messageType does not match');
+    expect(msg2.action == url, true, reason: 'GeigerUrl does not match');
+    expect(msg2.payloadString != null, true, reason: 'payloadString is empty');
+    expect(msg2.payload.equals(payload), true, reason: 'payload does not match');
+
+    List<int> payload2 = 'payload2'.codeUnits;
+    msg2.payload = payload2;
+    expect(msg2.payload.equals(payload2), true, reason: 'new payload does not match');
+  });
+
+  test('testEquals', () {
+    String sourceId = 'sourceId';
+    String targetId = 'targetId';
+    MessageType messageType = MessageType.ALL_EVENTS;
+    List<int> payload = 'payload'.codeUnits;
+    GeigerUrl? url;
+    try{
+      url = GeigerUrl(null, GeigerApi.MASTER, 'geiger://plugin/path');
+    } catch(e) {
+      print(e);
+    }
+
+    //without payload
+    Message msg = Message(sourceId, targetId, messageType, url);
+    Message msg2 = Message(sourceId, targetId, messageType, url);
+    expect(msg2.equals(msg), true);
+
+    //with payload
+    Message msg3 = Message(sourceId, targetId, messageType, url, payload);
+    Message msg4 = Message(sourceId, targetId, messageType, url, payload);
+    expect(msg3.equals(msg4), true);
+    expect(!msg.equals(msg3), true);
+
+    //negative tests
+    List<int> payload2 = 'payload2'.codeUnits;
+    Message msg5 = Message(sourceId, targetId, messageType, url, payload2);
+    expect(!msg5.equals(msg3), true);
+  });
+
+  test('testHashCode', () {
+    String sourceId = 'sourceId';
+    String targetId = 'targetId';
+    MessageType messageType = MessageType.ALL_EVENTS;
+    List<int> payload = 'payload'.codeUnits;
+    GeigerUrl? url;
+    try{
+      url = GeigerUrl(null, GeigerApi.MASTER, 'geiger://plugin/path');
+    } catch(e) {
+      print(e);
+    }
+
+    //without payload
+    Message msg = Message(sourceId, targetId, messageType, url);
+    Message msg2 = Message(sourceId, targetId, messageType, url);
+    expect(msg.hashCode == msg2.hashCode, true);
+
+    //with payload
+    Message msg3 = Message(sourceId, targetId, messageType, url, payload);
+    Message msg4 = Message(sourceId, targetId, messageType, url, payload);
+    expect(msg3.hashCode == msg4.hashCode, true);
+
+    //negative tests
+    expect(msg.hashCode != msg3.hashCode, true);
+  });
+
+  test('payloadEncodingTest', () {
+    Message m = Message('src', 'target', MessageType.ACTIVATE_PLUGIN, null, null);
+    List<String?> i = [null, '',  const Uuid().v4().toString()];
+    for(String? pl in i){
+      m.payloadString = pl;
+      expect(pl == m.payloadString, true);
+
+      List<int>? blarr;
+      if (pl != null) {
+        blarr = pl.codeUnits;
+        m.payload = blarr;
+        expect(blarr.equals(m.payload), true);
+      }
+    }
+  });
+}

@@ -28,9 +28,10 @@ void main() {
     ParameterList p = ParameterList(['test', '', 'Test', 'null']);
     ByteSink bout = ByteSink();
     p.toByteArrayStream(bout);
-    ByteStream tempStream = ByteStream(Stream.value(await bout.bytes));
+    bout.close();
+    ByteStream tempStream = ByteStream(Stream<List<int>>.value(await bout.bytes));
     ParameterList? p2 = await ParameterList.fromByteArrayStream(tempStream);
-    expect(p.toString() == p2.toString(), 'Cloned Parameter lists are not equal');
+    expect(p.toString() == p2.toString(), true ,reason: 'Cloned Parameter lists are not equal');
   });
 
   /**
@@ -40,7 +41,8 @@ void main() {
     GeigerUrl p = GeigerUrl(null, GeigerApi.MASTER, "path");
     ByteSink bout = ByteSink();
     p.toByteArrayStream(bout);
-    ByteStream bin = ByteStream(Stream.value(await bout.bytes));
+    bout.close();
+    ByteStream bin = ByteStream(Stream<List<int>>.value(await bout.bytes));
     GeigerUrl p2 = await GeigerUrl.fromByteArrayStream(bin);
 
     expect(p.toString() == p.toString(), true, reason: 'Cloned GeigerUrls are unequal');
@@ -50,25 +52,27 @@ void main() {
    * <p>Tests the serialization of the MenuItem object.</p>
    */
   test('menuItemSerializationTest', () async {
-    MenuItem p = MenuItem("test", GeigerUrl(null, GeigerApi.MASTER, 'path'), false);
+    MenuItem p = MenuItem('test', GeigerUrl(null, GeigerApi.MASTER, 'path'), false);
 
     ByteSink bout = ByteSink();
     p.toByteArrayStream(bout);
-    ByteStream bin = ByteStream(Stream.value(await bout.bytes));
+    bout.close();
+    ByteStream bin = ByteStream(null, await bout.bytes);
     MenuItem p2 = await MenuItem.fromByteArrayStream(bin);
-    expect(p.toString() == p.toString(), true, reason: 'Cloned MenuItems are unequal');
+    expect(p.toString() == p2.toString(), true, reason: 'Cloned MenuItems are unequal');
   });
 
   /**
    * <p>Tests the serialization of the ParameterList object.</p>
    */
   test('pluginInformationSerializationTest', () async {
-      PluginInformation p = PluginInformation("exec", 1234);
+      PluginInformation p = PluginInformation("exec", 1234, CommunicationSecret('Hello'.codeUnits));
       ByteSink bout = ByteSink();
       p.toByteArrayStream(bout);
-      ByteStream bin = ByteStream(Stream.value(await bout.bytes));
+      bout.close();
+      ByteStream bin = ByteStream(Stream<List<int>>.value(await bout.bytes));
       PluginInformation p2 = await PluginInformation.fromByteArrayStream(bin);
-      PluginInformation p3 = await PluginInformation.fromByteArray(await p.toByteArray() as List<int>);
+      PluginInformation p3 = await PluginInformation.fromByteArray(await p.toByteArray()!);
       expect(p != null, true, reason: 'PluginInformation p equals null');
       expect(p2 != null, true, reason: 'PluginInformation p2 equals null');
       expect(p3 != null, true, reason: 'PluginInformation p3 equals null');
@@ -77,35 +81,48 @@ void main() {
 
   });
 
+  /**
+   * <p>Tests the serialization of the ParameterList object.</p>
+   */
   test('communcationSecretSerialization', () async {
     List<CommunicationSecret> comsec = [
-      CommunicationSecret('Hello'.codeUnits),
-      CommunicationSecret([]),
-      new CommunicationSecret([1024])];
+      CommunicationSecret('hello'.codeUnits),
+      CommunicationSecret('a'.codeUnits),
+      CommunicationSecret([35])];
 
     for (CommunicationSecret p in comsec)
       {
         ByteSink bout = ByteSink();
         p.toByteArrayStream(bout);
-        ByteStream bin = ByteStream(Stream.value(await bout.bytes));
+        bout.close();
+        ByteStream bin = ByteStream(null, await bout.bytes);
         CommunicationSecret p2 = await CommunicationSecret.fromByteArrayStream(bin);
         expect(p != null, true);
         expect(p2 != null, true, reason: "deserialized object (stream) is null");
-        expect(p.toString() == p2.toString(), "Cloned Plugininformation using stream are not equal");
+        expect(p.toString() == p2.toString(), true, reason:  "Cloned Plugininformation using stream are not equal");
       }
   });
 
+  /**
+   * <p>Tests the serialization of the a serializable Hashmap object.</p>
+   */
   test('storableMapSerializationTest', () async {
-    StorableHashMap hm = StorableHashMap();
+    StorableHashMap<GeigerUrl, GeigerUrl> hm = StorableHashMap<GeigerUrl, GeigerUrl>();
+    Map<GeigerUrl,GeigerUrl> it = <GeigerUrl,GeigerUrl>{GeigerUrl(null, GeigerApi.MASTER, 'path'): GeigerUrl(null, GeigerApi.MASTER, 'path')};
+    hm.addAll(it);
     ByteSink bout = ByteSink();
     hm.toByteArrayStream(bout);
-    ByteStream bin = ByteStream(Stream.value(await bout.bytes));
+    bout.close();
+    ByteStream bin = ByteStream(Stream<List<int>>.value(await bout.bytes));
     StorableHashMap hm2 = StorableHashMap();
-    StorableHashMap.fromByteArrayStream(bin, hm2);
+    await StorableHashMap.fromByteArrayStream(bin, hm2);
     expect(hm2 != null, true, reason: 'deserialized object (stream) is null');
     expect(hm2.toString() == hm.toString(), true, reason: "Cloned Plugininformation using stream are not equal");
   });
 
+  /**
+   * <p>Tests the serialization of the a serializable Hashmap object.</p>
+   */
   test('messageSerializationTest', () async {
     List<Message> messageList = [
       Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
@@ -126,7 +143,8 @@ void main() {
       {
         ByteSink bout = ByteSink();
         m.toByteArrayStream(bout);
-        ByteStream bin = ByteStream(Stream.value(await bout.bytes));
+        bout.close();
+        ByteStream bin = ByteStream(Stream<List<int>>.value(await bout.bytes));
         Message m2 = await Message.fromByteArray(bin);
         expect(m2 != null, true, reason: 'deserialized object (stream) is null');
         expect(m == m2, true, reason: 'Cloned Plugininformation using stream are not equal');

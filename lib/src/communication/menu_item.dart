@@ -61,7 +61,7 @@ class MenuItem implements Serializer {
     }
     String menu = await SerializerHelper.readString(in_) ?? '';
     GeigerUrl url = await GeigerUrl.fromByteArrayStream(in_);
-    bool enabled = SerializerHelper.readInt(in_) == 1;
+    bool enabled = await SerializerHelper.readInt(in_) == 1;
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');
     }

@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
-import 'dart:convert';
 
 /// Encapsulates secret parameters for communication and provides methods to employ them.
 class CommunicationSecret with Serializer {
@@ -38,7 +37,7 @@ class CommunicationSecret with Serializer {
     }
     secret = List.filled(size, 0);
     for (var i = 0; i < size; i++) {
-      var value = Random.secure().nextInt(pow(2, 51).toInt());
+      var value = Random.secure().nextInt(pow(2, 32).toInt());
       secret[i] = value;
     }
   }
@@ -58,29 +57,28 @@ class CommunicationSecret with Serializer {
   }
 
   @override
-  void toByteArrayStream(ByteSink out)
-    {
-        SerializerHelper.writeLong(out, serialVersionUID);
-        SerializerHelper.writeString(out, base64.encode(secret));
-        SerializerHelper.writeLong(out, serialVersionUID);
-    }
+  void toByteArrayStream(ByteSink out) {
+    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, base64.encode(secret));
+    SerializerHelper.writeLong(out, serialVersionUID);
+  }
 
-    /// Reads objects from ByteArrayInputStream and stores them in map.
-    /// @param in ByteArrayInputStream to be used
-    /// @return the deserialized Storable String
-    /// @throws IOException if value cannot be read
-    static Future<CommunicationSecret> fromByteArrayStream(ByteStream in_) async
-    {
-        if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-            throw Exception('cannot cast');
-        }
-        final List<int> secret = base64.decode(await SerializerHelper.readString(in_)??'');
-        CommunicationSecret ret = CommunicationSecret(secret);
-        if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-            throw Exception("Reading end marker fails");
-        }
-        return ret;
+  /// Reads objects from ByteArrayInputStream and stores them in map.
+  /// @param in ByteArrayInputStream to be used
+  /// @return the deserialized Storable String
+  /// @throws IOException if value cannot be read
+  static Future<CommunicationSecret> fromByteArrayStream(ByteStream in_) async {
+    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
+      throw Exception('cannot cast');
     }
+    final List<int> secret =
+        base64.decode(await SerializerHelper.readString(in_) ?? '');
+    CommunicationSecret ret = CommunicationSecret(secret);
+    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
+      throw Exception("Reading end marker fails");
+    }
+    return ret;
+  }
 
   @override
   String toString() {

@@ -24,15 +24,17 @@ const Map<String, GeigerApi> instances = <String, GeigerApi>{};
 ///
 /// Throws [DeclarationMismatchException] if the plugin has been registered previously and the
 /// declaration does not match and [StorageException] if registration failed.
-GeigerApi? getGeigerApi(String executorOrId,
-    [String? id, Declaration declaration=Declaration.DO_SHARE_DATA]) {
+Future<GeigerApi?> getGeigerApi(String executorOrId,
+    [String? id, Declaration declaration = Declaration.DO_SHARE_DATA]) async {
   if (id == null) {
     return instances[id];
   }
   // synchronized(instances, {
   if (!instances.containsKey(id)) {
-    instances[id] =
+    var api =
         CommunicationApi(executorOrId, id, GeigerApi.MASTER == id, declaration);
+    await api.initialize();
+    instances[id] = api;
   }
   // });
   GeigerApi l = instances[id]!;

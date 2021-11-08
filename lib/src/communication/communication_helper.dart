@@ -18,8 +18,10 @@ class Listener with PluginListener {
   final Object obj = Object();
   Message? msg;
 
-  Listener(this.api, this.filter) {
-    api.registerListener([MessageType.ALL_EVENTS], this);
+  Listener(this.api, this.filter);
+
+  Future<void> register() async {
+    await api.registerListener([MessageType.ALL_EVENTS], this);
   }
 
   @override
@@ -60,10 +62,12 @@ class CommunicationHelper {
   /// milliseconds. Specify `-1` to remove any time limit.
   ///
   /// Throws [CommunicationException] if communication with master fails
-  static Message sendAndWait(GeigerApi api, Message msg, MessageFilter filter,
-      [int timeout = 10000]) {
+  static Future<Message> sendAndWait(
+      GeigerApi api, Message msg, MessageFilter filter,
+      [int timeout = 10000]) async {
     var l = Listener(api, filter);
-    api.sendMessage(msg.targetId!, msg);
+    await l.register();
+    await api.sendMessage(msg.targetId!, msg);
     var result = l.waitForResult(timeout);
     l.dispose();
     return result;

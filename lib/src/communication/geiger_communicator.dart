@@ -16,7 +16,7 @@ abstract class GeigerCommunicator {
     this.listener = listener;
   }
 
-  void sendMessage(PluginInformation pluginInformation, Message msg);
+  Future<void> sendMessage(PluginInformation pluginInformation, Message msg);
 
   void start();
 

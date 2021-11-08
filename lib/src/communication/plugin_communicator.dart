@@ -5,8 +5,8 @@ import 'package:communicationapi/src/communication/geiger_communicator.dart';
 import 'package:communicationapi/src/communication/message.dart';
 import 'package:communicationapi/src/communication/plugin_information.dart';
 
-class PluginCommunicator extends GeigerCommunicator{
-  PluginCommunicator(GeigerApi comm,bool isMaster) : super(comm,isMaster) {}
+class PluginCommunicator extends GeigerCommunicator {
+  PluginCommunicator(GeigerApi comm, bool isMaster) : super(comm, isMaster) {}
 
   @override
   int getPort() {
@@ -15,7 +15,7 @@ class PluginCommunicator extends GeigerCommunicator{
   }
 
   @override
-  void sendMessage(PluginInformation pluginInformation, Message msg) {
+  Future<void> sendMessage(PluginInformation pluginInformation, Message msg) {
     // TODO(mgwerder): implement sendMessage
     throw UnimplementedError();
   }

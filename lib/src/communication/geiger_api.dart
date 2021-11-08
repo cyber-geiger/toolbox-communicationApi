@@ -13,7 +13,6 @@ import 'plugin_registrar.dart';
 
 /// The API provided by all communicator interfaces.
 abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
-
   static const String MASTER = '__MASTERPLUGIN__';
 
   /// Activates the plugin and sets up communication on the specified [port].
@@ -32,7 +31,8 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   /// Register a [listener] for specific [events] on the Master.
   ///
   /// Use [MessageType.ALL_EVENTS] to register for all messages.
-  void registerListener(List<MessageType> events, PluginListener listener);
+  Future<void> registerListener(
+      List<MessageType> events, PluginListener listener);
 
   /// Remove a [listener] waiting for [events].
   ///
@@ -42,12 +42,12 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   /// Sends a custom, plugin-specific [message] to a peer plugin with the id [pluginId].
   ///
   /// Mainly used for internal purposes. Plugins may only send messages to the toolbox core.
-  void sendMessage(String pluginId, Message message);
+  Future<void> sendMessage(String pluginId, Message message);
 
   /// Notify plugin about a menu entry with a specific [url] being pressed.
   ///
   /// Wrapper function used by UI to notify plugins about pressed buttons/menu entries.
-  void menuPressed(GeigerUrl url);
+  Future<void> menuPressed(GeigerUrl url);
 
   /// Returns the list of currently registered menu.
   ///
@@ -57,7 +57,7 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   /// Notify all plugins about the event that a scan button has been pressed.
   ///
   /// This call is for the toolbox core only.
-  void scanButtonPressed();
+  Future<void> scanButtonPressed();
 
   /// get the declaration of data sharing provided when establishing the agreement.
   Declaration get declaration;

@@ -6,10 +6,18 @@ import 'message_listener.dart';
 import 'plugin_information.dart';
 
 abstract class GeigerCommunicator {
-  MessageListener? listener;
+  static const int defaultMasterPort = 12348;
 
-  GeigerCommunicator(GeigerApi comm, bool isMaster) {
-    // FIXME
+  MessageListener? listener;
+  final GeigerApi _communicationEndpoint;
+  int port = defaultMasterPort;
+
+  GeigerCommunicator(GeigerApi this._communicationEndpoint, bool isMaster) {
+    if (isMaster) {
+      // TODO(mgwerder): start communicator wirth port [defaultMasterPort]
+    } else {
+      // TODO(mgwerder): start communicator with port -1
+    }
   }
 
   void setListener(MessageListener listener) {

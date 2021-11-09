@@ -83,6 +83,7 @@ class PluginInformation with Serializer {
     return fromByteArrayStream(in_);
   }
 
+  @override
   int get hashCode {
     return ((executable ?? 'null') +
         ':' +

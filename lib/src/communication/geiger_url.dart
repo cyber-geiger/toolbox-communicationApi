@@ -20,9 +20,9 @@ class GeigerUrl implements Serializer {
     /*try {*/
     var m = _urlPattern.firstMatch(uri);
     if (m == null) {
-      throw MalformedUrlException('Matcher was unable to match the string \"' +
+      throw MalformedUrlException('Matcher was unable to match the string "' +
           uri +
-          '\" to regexp ' +
+          '" to regexp ' +
           _urlPattern.pattern);
     }
     _protocol = m[1]!;
@@ -121,7 +121,7 @@ class GeigerUrl implements Serializer {
     if (identical(this, o)) {
       return true;
     }
-    if (o == null || !(o is GeigerUrl)) {
+    if (o == null || o is! GeigerUrl) {
       return false;
     }
     var geigerUrl = o;

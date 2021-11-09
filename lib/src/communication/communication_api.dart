@@ -13,7 +13,6 @@ import 'malformed_url_exception.dart';
 import 'menu_item.dart';
 import 'message.dart';
 import 'message_type.dart';
-import 'passtrough_controller.dart';
 import 'plugin_communicator.dart';
 import 'plugin_information.dart';
 import 'plugin_listener.dart';
@@ -84,10 +83,10 @@ class CommunicationApi implements GeigerApi {
         await registerPlugin();
         await activatePlugin(_geigerCommunicator.getPort());
       } on IOException catch (e) {
-        // TODO error handling
+        // TODO(mgwerder): error handling
         print(e);
       }
-      // TODO should the passtroughcontroller be listener?
+      // TODO(mgwerder): should the passtroughcontroller be listener?
       //storageEventHandler = PasstroughController(this, _id);
       // this code is duplicate from registerListener method
       // it is currently not possible to determin between register internally and register on Master
@@ -135,7 +134,7 @@ class CommunicationApi implements GeigerApi {
     }
 
     // request to register at Master
-    var pluginInformation =
+    final PluginInformation pluginInformation =
         PluginInformation(_executor, _geigerCommunicator.getPort());
 
     try {
@@ -158,7 +157,7 @@ class CommunicationApi implements GeigerApi {
     if (id != null) {
       // remove on master all menu items
       if (_isMaster) {
-        List<String> l = List<String>.empty(growable: true);
+        List<String> l = <String>[];
         for (final MapEntry<StorableString, MenuItem> i in menuItems.entries) {
           if (i.value.action.plugin == id) {
             l.add(i.key.toString());
@@ -201,7 +200,7 @@ class CommunicationApi implements GeigerApi {
     storeState();
   }
 
-  void storeState() async {
+  Future<void> storeState() async {
     // store plugin state
     try {
       File f = File('GeigerApi.' + _id + '.state');

@@ -8,7 +8,7 @@ import 'geiger_url.dart';
 import 'message_type.dart';
 
 /// Representation of a message.
-class Message // with ch_fhnw_geiger_serialization_Serializer
+class Message with Serializer
 {
   static const int serialVersionUID = 143287432;
   final String _sourceId;
@@ -126,7 +126,7 @@ class Message // with ch_fhnw_geiger_serialization_Serializer
     if (identical(this, o)) {
       return true;
     }
-    if ((o == null) || !(o is Message)) {
+    if ((o == null) || o is! Message) {
       return false;
     }
     var message = o;

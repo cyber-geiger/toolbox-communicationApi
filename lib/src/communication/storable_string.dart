@@ -25,7 +25,7 @@ class StorableString implements Serializer {
     if (identical(this, o)) {
       return true;
     }
-    if (o == null || !(o is StorableString)) {
+    if (o == null || o is !StorableString) {
       return false;
     }
     StorableString? that = o;

@@ -70,7 +70,7 @@ class MenuItem implements Serializer {
 
   @override
   String toString() {
-    return '"$_menu\"->$_action(${_enabled ? 'enabled' : 'disabled'})';
+    return '"$_menu"->$_action(${_enabled ? 'enabled' : 'disabled'})';
   }
 
   @override
@@ -80,7 +80,7 @@ class MenuItem implements Serializer {
     if (identical(this, o)) {
       return true;
     }
-    if (o == null || !(o is MenuItem)) {
+    if (o == null || o is! MenuItem) {
       return false;
     }
     var menuItem = o;

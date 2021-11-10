@@ -30,7 +30,7 @@ class StorableHashMap<K extends Serializer, V extends Serializer>
   /// @throws IOException if value cannot be read
   static Future<StorableHashMap> fromByteArrayStream(
       ByteStream in_, StorableHashMap map) async {
-    if (SerializerHelper.readLong(in_) != serialVersionUID) {
+    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');
     }
     map.clear();

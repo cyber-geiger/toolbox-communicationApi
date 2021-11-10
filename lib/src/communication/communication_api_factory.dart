@@ -7,7 +7,7 @@ import 'geiger_api.dart';
 
 const String MASTER_EXECUTOR = 'FIXME';
 
-const Map<String, GeigerApi> instances = <String, GeigerApi>{};
+final Map<String, GeigerApi> instances = <String, GeigerApi>{};
 
 /// Creates or gets an instance.
 ///
@@ -31,7 +31,7 @@ Future<GeigerApi?> getGeigerApi(String executorOrId,
   }
   // synchronized(instances, {
   if (!instances.containsKey(id)) {
-    var api =
+    CommunicationApi api =
         CommunicationApi(executorOrId, id, GeigerApi.MASTER == id, declaration);
     await api.initialize();
     instances[id] = api;

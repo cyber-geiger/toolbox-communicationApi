@@ -74,7 +74,7 @@ class CommunicationSecret with Serializer {
         base64.decode(await SerializerHelper.readString(in_) ?? '');
     CommunicationSecret ret = CommunicationSecret(secret);
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception("Reading end marker fails");
+      throw Exception('Reading end marker fails');
     }
     return ret;
   }

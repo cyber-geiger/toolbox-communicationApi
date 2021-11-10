@@ -30,7 +30,7 @@ extension MapperExtension on Mapper {
   StorageMapper getMapper() {
     switch (this) {
       case Mapper.DUMMY_MAPPER:
-        return DummyMapper();
+        return DummyMapper('anyUser');
       case Mapper.SQLITE_MAPPER:
         return SqliteMapper('./testdb');
     }
@@ -39,6 +39,22 @@ extension MapperExtension on Mapper {
 
 /// Offers an API for all plugins to access the local toolbox.
 class CommunicationApi implements GeigerApi {
+
+  /// Creates a [CommunicationApi] with the given [executor] and plugin [_id].
+  ///
+  /// Whether this api [_isMaster] and its privacy [_declaration] must also be provided.
+  CommunicationApi(
+      String executor, String id, bool isMaster, Declaration declaration) {
+    _executor = executor;
+    _id = id;
+    _isMaster = isMaster;
+    _declaration = declaration;
+    _geigerCommunicator = PluginCommunicator(this, _isMaster);
+
+    restoreState();
+    _geigerCommunicator.start();
+  }
+
   static const bool PERSISTENT = false;
 
   static Mapper? _mapper;
@@ -61,21 +77,6 @@ class CommunicationApi implements GeigerApi {
 
   late GeigerCommunicator _geigerCommunicator;
 
-  /// Creates a [CommunicationApi] with the given [executor] and plugin [_id].
-  ///
-  /// Whether this api [_isMaster] and its privacy [_declaration] must also be provided.
-  CommunicationApi(
-      String executor, String id, bool isMaster, Declaration declaration) {
-    _executor = executor;
-    _id = id;
-    _isMaster = isMaster;
-    _declaration = declaration;
-    _geigerCommunicator = PluginCommunicator(this, _isMaster);
-
-    restoreState();
-    _geigerCommunicator.start();
-  }
-
   Future<void> initialize() async {
     if (!_isMaster) {
       try {
@@ -94,12 +95,11 @@ class CommunicationApi implements GeigerApi {
       //registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
       // it is master
-      var storageEventHandler = StorageEventHandler(this, getStorage()!);
-      await registerListener([MessageType.STORAGE_EVENT], storageEventHandler);
+      final StorageEventHandler storageEventHandler = StorageEventHandler(this, getStorage()!);
+      await registerListener(<MessageType>[MessageType.STORAGE_EVENT], storageEventHandler);
     }
   }
 
-  @override
   set mapper(Mapper m) {
     if (_mapper == null) {
       _mapper = m;
@@ -157,7 +157,7 @@ class CommunicationApi implements GeigerApi {
     if (id != null) {
       // remove on master all menu items
       if (_isMaster) {
-        List<String> l = <String>[];
+        final List<String> l = <String>[];
         for (final MapEntry<StorableString, MenuItem> i in menuItems.entries) {
           if (i.value.action.plugin == id) {
             l.add(i.key.toString());
@@ -176,7 +176,7 @@ class CommunicationApi implements GeigerApi {
     }
 
     // TODO(mgwerder): getting the id of the plugin itself doesnt make sense
-    if (plugins[StorableString(this._id)] == null) {
+    if (plugins[StorableString(_id)] == null) {
       throw ArgumentError('no communication secret found for id "$_id"');
     }
     // first deactivate, then deregister at Master, before deleting my own entries.
@@ -187,7 +187,7 @@ class CommunicationApi implements GeigerApi {
           Message(_id, GeigerApi.MASTER, MessageType.DEREGISTER_PLUGIN,
               GeigerUrl(null, GeigerApi.MASTER, 'deregisterPlugin')));
     } on MalformedUrlException {
-      // TODO proper Error handling
+      // TODO(mgwerder): proper Error handling
       // this should never occur
     }
     zapState();
@@ -203,8 +203,8 @@ class CommunicationApi implements GeigerApi {
   Future<void> storeState() async {
     // store plugin state
     try {
-      File f = File('GeigerApi.' + _id + '.state');
-      ByteSink out = ByteSink();
+      final File f = File('GeigerApi.' + _id + '.state');
+      final ByteSink out = ByteSink();
       plugins.toByteArrayStream(out);
       menuItems.toByteArrayStream(out);
       out.close();
@@ -317,7 +317,7 @@ class CommunicationApi implements GeigerApi {
                 GeigerUrl(null, GeigerApi.MASTER, 'registerListener'),
                 await out.bytes));
       } on IOException {
-        // TODO proper Error handling
+        // TODO(mgwerder): proper Error handling
         // this should never occur
       }
     }
@@ -380,7 +380,7 @@ class CommunicationApi implements GeigerApi {
               Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                   GeigerUrl(null, msg.sourceId, 'enableMenu')));
         } on MalformedUrlException {
-          // TODO proper Error handling
+          // TODO(mgwerder): proper Error handling
           // this should never occur
         }
         break;
@@ -395,7 +395,7 @@ class CommunicationApi implements GeigerApi {
               Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                   GeigerUrl(null, msg.sourceId, 'disableMenu')));
         } on MalformedUrlException {
-          // TODO proper Error handling
+          // TODO(mgwerder): proper Error handling
           // this should never occur
         }
         break;
@@ -408,7 +408,7 @@ class CommunicationApi implements GeigerApi {
               Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                   GeigerUrl(null, msg.sourceId, 'registerMenu')));
         } on MalformedUrlException {
-          // TODO proper Error handling
+          // TODO(mgwerder): proper Error handling
           // this should never occur
         }
         break;
@@ -421,7 +421,7 @@ class CommunicationApi implements GeigerApi {
               Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                   GeigerUrl(null, msg.sourceId, 'deregisterMenu')));
         } on MalformedUrlException {
-          // TODO proper Error handling
+          // TODO(mgwerder): proper Error handling
           // this should never occur
         }
         break;
@@ -434,7 +434,7 @@ class CommunicationApi implements GeigerApi {
               Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                   GeigerUrl(null, msg.sourceId, 'registerPlugin')));
         } on MalformedUrlException {
-          // TODO proper Error handling
+          // TODO(mgwerder): proper Error handling
           // this should never occur
         }
         break;
@@ -446,17 +446,17 @@ class CommunicationApi implements GeigerApi {
               Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                   GeigerUrl(null, msg.sourceId, 'deregisterPlugin')));
         } on MalformedUrlException {
-          // TODO proper Error handling
+          // TODO(mgwerder): proper Error handling
           // this should never occur
         }
         break;
       case MessageType.ACTIVATE_PLUGIN:
         {
           // get and remove old info
-          var pluginInfo = plugins[StorableString(msg.sourceId)]!;
+          final PluginInformation pluginInfo = plugins[StorableString(msg.sourceId)]!;
           plugins.remove(StorableString(msg.sourceId));
           // put new info
-          var port = GeigerCommunicator.byteArrayToInt(msg.payload);
+          int port = GeigerCommunicator.byteArrayToInt(msg.payload);
           plugins[StorableString(msg.sourceId)] =
               PluginInformation(pluginInfo.getExecutable(), port);
           try {
@@ -465,7 +465,7 @@ class CommunicationApi implements GeigerApi {
                 Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                     GeigerUrl(null, msg.sourceId, 'activatePlugin')));
           } on MalformedUrlException {
-            // TODO proper Error handling
+            // TODO(mgwerder): proper Error handling
             // this should never occur
           }
           break;
@@ -485,14 +485,14 @@ class CommunicationApi implements GeigerApi {
                 Message(msg.targetId!, msg.sourceId, MessageType.COMAPI_SUCCESS,
                     GeigerUrl(null, msg.sourceId, 'deactivatePlugin')));
           } on MalformedUrlException {
-            // TODO proper Error handling
+            // TODO(mgwerder): proper Error handling
             // this should never occur
           }
           break;
         }
       case MessageType.REGISTER_LISTENER:
         {
-          // TODO after pluginListener serialization
+          // TODO(mgwerder): after pluginListener serialization
           var payload = msg.payload;
           var intRange = payload.sublist(0, 4);
           List<int> inputRange = payload.sublist(4, payload.length);
@@ -543,7 +543,7 @@ class CommunicationApi implements GeigerApi {
                 Message(msg.targetId!, msg.sourceId, MessageType.PONG,
                     GeigerUrl(null, msg.sourceId, ''), msg.payload));
           } on MalformedUrlException {
-            // TODO proper Error handling
+            // TODO(mgwerder): proper Error handling
             // this should never occur
           }
           break;
@@ -578,7 +578,7 @@ class CommunicationApi implements GeigerApi {
               GeigerUrl(null, GeigerApi.MASTER, 'registerMenu'),
               await MenuItem(menu, action).toByteArray()));
     } on MalformedUrlException {
-      // TODO proper Error handling
+      // TODO(mgwerder): proper Error handling
       // this should never occur
     }
   }
@@ -595,7 +595,7 @@ class CommunicationApi implements GeigerApi {
               GeigerUrl(null, GeigerApi.MASTER, 'enableMenu'),
               utf8.encode(menu)));
     } on MalformedUrlException {
-      // TODO proper Error handling
+      // TODO(mgwerder): proper Error handling
       // this should never occur
     }
   }
@@ -612,7 +612,7 @@ class CommunicationApi implements GeigerApi {
               GeigerUrl(null, GeigerApi.MASTER, 'disableMenu'),
               utf8.encode(menu)));
     } on MalformedUrlException {
-      // TODO proper Error handling
+      // TODO(mgwerder): proper Error handling
       // this should never occur
     }
   }
@@ -629,7 +629,7 @@ class CommunicationApi implements GeigerApi {
               GeigerUrl(null, GeigerApi.MASTER, 'deregisterMenu'),
               utf8.encode(menu)));
     } on MalformedUrlException {
-      // TODO proper Error handling
+      // TODO(mgwerder): proper Error handling
       // this should never occur
     }
   }
@@ -657,7 +657,7 @@ class CommunicationApi implements GeigerApi {
             Message(_id, GeigerApi.MASTER, MessageType.SCAN_PRESSED,
                 GeigerUrl(null, GeigerApi.MASTER, 'scanPressed')));
       } on MalformedUrlException {
-        // TODO proper Error handling
+        // TODO(mgwerder): proper Error handling
         // this should never occur
       }
     } else {

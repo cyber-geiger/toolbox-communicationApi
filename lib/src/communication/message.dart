@@ -95,6 +95,7 @@ class Message with Serializer
     return m;
   }
 
+  @override
   void toByteArrayStream(ByteSink out) {
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, sourceId);

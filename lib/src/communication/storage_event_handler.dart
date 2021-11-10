@@ -24,7 +24,7 @@ class StorageEventHandler with PluginListener {
     if (GeigerApi.MASTER == msg.targetId) {
       _isMaster = true;
     }
-    final List<String> urlParts = ((msg.action!.path) ?? '').split('/');
+    final List<String> urlParts = ((msg.action!.path)).split('/');
     final String action = urlParts[0];
     final String identifier = urlParts[1];
     final List<String> optionalArgs = urlParts.sublist(2, urlParts.length);
@@ -92,7 +92,7 @@ class StorageEventHandler with PluginListener {
       Message msg, String identifier, List<String> optionalArgs) async {
     var path = join('/', optionalArgs);
     try {
-      final Node node = _controller.get(path);
+      final Node node = await _controller.get(path);
       final ByteSink bos = ByteSink();
       node.toByteArrayStream(bos);
       bos.close();
@@ -141,7 +141,7 @@ class StorageEventHandler with PluginListener {
         bos.close();
         final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -168,7 +168,7 @@ class StorageEventHandler with PluginListener {
         bos.close();
         final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -183,14 +183,14 @@ class StorageEventHandler with PluginListener {
   Future<void> deleteNode(
       Message msg, String identifier, List<String> optionalArgs) async {
     try {
-      var node = _controller.delete(optionalArgs[0]);
+      final NodeImpl node = _controller.delete(optionalArgs[0]) as NodeImpl;
       if (node != null) {
         final ByteSink bos = ByteSink();
         node.toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -199,19 +199,19 @@ class StorageEventHandler with PluginListener {
                 payload));
       } else {
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
                 GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier)));
       }
     } on Exception catch (e) {
       try {
-        ByteSink bos = ByteSink();
+        final ByteSink bos = ByteSink();
         StorageException('Could not delete Node', null, e)
             .toByteArrayStream(bos);
         bos.close();
-        List<int> payload = await bos.bytes;
+        final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -226,14 +226,14 @@ class StorageEventHandler with PluginListener {
   Future<void> getValue(
       Message msg, String identifier, List<String> optionalArgs) async {
     try {
-      var nodeValue = _controller.getValue(optionalArgs[0], optionalArgs[1]);
+      NodeImpl nodeValue = _controller.getValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
       if (nodeValue != null) {
         ByteSink bos = ByteSink();
         nodeValue.toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -242,7 +242,7 @@ class StorageEventHandler with PluginListener {
                 payload));
       } else {
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
                 GeigerUrl(null, msg.targetId!, 'getValue/' + identifier)));
       }
@@ -254,7 +254,7 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -285,7 +285,7 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -332,7 +332,7 @@ class StorageEventHandler with PluginListener {
   Future<void> deleteValue(
       Message msg, String identifier, List<String> optionalArgs) async {
     try {
-      var nodeValue = _controller.deleteValue(optionalArgs[0], optionalArgs[1]);
+      NodeImpl nodeValue = _controller.deleteValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
       ByteSink bos = ByteSink();
       nodeValue.toByteArrayStream(bos);
       bos.close();
@@ -397,11 +397,11 @@ class StorageEventHandler with PluginListener {
       final SearchCriteria searchCriteria =
           await SearchCriteria.fromByteArrayStream(
               ByteStream(null, msg.payload));
-      var nodes = _controller.search(searchCriteria);
+      List<Node> nodes = await _controller.search(searchCriteria);
       if (nodes.length > 0) {
         List<int> payload;
         ByteSink bos = ByteSink();
-        for (var n in nodes) {
+        for (NodeImpl n in nodes as List<NodeImpl>) {
           n.toByteArrayStream(bos);
         }
         bos.close();
@@ -416,7 +416,7 @@ class StorageEventHandler with PluginListener {
                 payload));
       } else {
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
                 GeigerUrl(null, msg.targetId!, 'search/' + identifier)));
       }
@@ -428,7 +428,7 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId!,
+            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,

@@ -10,12 +10,12 @@ class MenuItem implements Serializer {
   static const int serialVersionUID = 481231212;
   final String _menu;
   final GeigerUrl _action;
-  bool _enabled;
+  bool enabled;
 
   /// Creates a new [MenuItem] for [_menu] and assigns an [_action] URL.
   ///
-  /// Whether the menu item is [_enabled] or not can also be specified.
-  MenuItem(this._menu, this._action, [this._enabled = true]) {
+  /// Whether the menu item is [enabled] or not can also be specified.
+  MenuItem(this._menu, this._action, [this.enabled = true]) {
     if ('' == _menu) {
       throw ArgumentError('menu may not be empty');
     }
@@ -29,16 +29,6 @@ class MenuItem implements Serializer {
   /// Returns the action URL.
   GeigerUrl get action {
     return _action;
-  }
-
-  /// Returns the menu state.
-  bool get enabled {
-    return _enabled;
-  }
-
-  /// Enables or disables the menu entry and returns the previous state.
-  set enabled(bool enabled) {
-    this._enabled = enabled;
   }
 
   @override
@@ -59,18 +49,18 @@ class MenuItem implements Serializer {
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');
     }
-    String menu = await SerializerHelper.readString(in_) ?? '';
-    GeigerUrl url = await GeigerUrl.fromByteArrayStream(in_);
-    bool enabled = await SerializerHelper.readInt(in_) == 1;
+    final String menu = await SerializerHelper.readString(in_) ?? '';
+    final GeigerUrl url = await GeigerUrl.fromByteArrayStream(in_);
+    final bool mEnabled = await SerializerHelper.readInt(in_) == 1;
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');
     }
-    return new MenuItem(menu, url, enabled);
+    return MenuItem(menu, url, mEnabled);
   }
 
   @override
   String toString() {
-    return '"$_menu"->$_action(${_enabled ? 'enabled' : 'disabled'})';
+    return '"$_menu"->$_action(${enabled ? 'enabled' : 'disabled'})';
   }
 
   @override
@@ -84,7 +74,7 @@ class MenuItem implements Serializer {
       return false;
     }
     var menuItem = o;
-    return _enabled == menuItem._enabled &&
+    return enabled == menuItem.enabled &&
         _menu == menuItem._menu &&
         _action == menuItem._action;
   }
@@ -93,7 +83,7 @@ class MenuItem implements Serializer {
   int get hashCode {
     return (_menu.hashCode.toString() +
             _action.hashCode.toString() +
-            _enabled.toString())
+            enabled.toString())
         .hashCode;
   }
 

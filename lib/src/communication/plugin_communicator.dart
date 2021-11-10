@@ -22,8 +22,8 @@ class PluginCommunicator extends GeigerCommunicator {
 
   @override
   void start() {
-    // TODO(mgwerder): implement start
-    throw UnimplementedError();
+    // TODO(mgwerder): implement start (not needed for local only communication)
+
   }
 
   @override

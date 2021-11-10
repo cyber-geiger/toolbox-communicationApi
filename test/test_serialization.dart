@@ -38,7 +38,7 @@ void main() {
    * <p>Tests the serialization of the GeigerUrl object.</p>
    */
   test('geigerUrlSerializationTest', () async {
-    GeigerUrl p = GeigerUrl(null, GeigerApi.MASTER, "path");
+    GeigerUrl p = GeigerUrl(null, GeigerApi.MASTER, 'path');
     ByteSink bout = ByteSink();
     p.toByteArrayStream(bout);
     bout.close();
@@ -66,7 +66,7 @@ void main() {
    * <p>Tests the serialization of the ParameterList object.</p>
    */
   test('pluginInformationSerializationTest', () async {
-      PluginInformation p = PluginInformation("exec", 1234, CommunicationSecret('Hello'.codeUnits));
+      PluginInformation p = PluginInformation('exec', 1234, CommunicationSecret('Hello'.codeUnits));
       ByteSink bout = ByteSink();
       p.toByteArrayStream(bout);
       bout.close();
@@ -98,8 +98,8 @@ void main() {
         ByteStream bin = ByteStream(null, await bout.bytes);
         CommunicationSecret p2 = await CommunicationSecret.fromByteArrayStream(bin);
         expect(p != null, true);
-        expect(p2 != null, true, reason: "deserialized object (stream) is null");
-        expect(p.toString() == p2.toString(), true, reason:  "Cloned Plugininformation using stream are not equal");
+        expect(p2 != null, true, reason: 'deserialized object (stream) is null');
+        expect(p.toString() == p2.toString(), true, reason:  'Cloned Plugininformation using stream are not equal');
       }
   });
 
@@ -117,7 +117,7 @@ void main() {
     StorableHashMap hm2 = StorableHashMap();
     await StorableHashMap.fromByteArrayStream(bin, hm2);
     expect(hm2 != null, true, reason: 'deserialized object (stream) is null');
-    expect(hm2.toString() == hm.toString(), true, reason: "Cloned Plugininformation using stream are not equal");
+    expect(hm2.toString() == hm.toString(), true, reason: 'Cloned Plugininformation using stream are not equal');
   });
 
   /**
@@ -125,18 +125,18 @@ void main() {
    */
   test('messageSerializationTest', () async {
     List<Message> messageList = [
-      Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER,"geiger://id1/path1"), null),
-      Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
+      Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
+          GeigerUrl(null, GeigerApi.MASTER,'geiger://id1/path1'), null),
+      Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
           null, []),
-      Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER, "path2"), []),
-      Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER, ""), []),
-      Message("src", "target", MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER, ""), []),
-      Message("src", "target", MessageType.ALL_EVENTS, null, []),
-      Message("src", "target", MessageType.ALL_EVENTS, null,
+      Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
+          GeigerUrl(null, GeigerApi.MASTER, 'path2'), []),
+      Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
+          GeigerUrl(null, GeigerApi.MASTER, ''), []),
+      Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
+          GeigerUrl(null, GeigerApi.MASTER, ''), []),
+      Message('src', 'target', MessageType.ALL_EVENTS, null, []),
+      Message('src', 'target', MessageType.ALL_EVENTS, null,
           Uuid().v4().codeUnits)];
 
     for(Message m in messageList)

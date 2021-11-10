@@ -101,8 +101,8 @@ void main(){
 
   test('payloadEncodingTest', () {
     Message m = Message('src', 'target', MessageType.ACTIVATE_PLUGIN, null, null);
-    List<String?> i = [null, '',  const Uuid().v4().toString()];
-    for(String? pl in i){
+    final List<String?> i = [null, '',  const Uuid().v4()];
+    for(final String? pl in i){
       m.payloadString = pl;
       expect(pl == m.payloadString, true);
 

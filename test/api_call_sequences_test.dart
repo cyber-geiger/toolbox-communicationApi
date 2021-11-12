@@ -67,7 +67,7 @@ void main() {
     await CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
     // activate plugin
-    const int payloadActivate = 5555;
+    const int payloadActivate = 255; //ToDo correct 8bit bytevalue before 5555
     final Message requestActivate = Message(
         GeigerApi.MASTER,
         GeigerApi.MASTER,
@@ -101,7 +101,7 @@ void main() {
     await CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
     // activate plugin
-    const int payloadActivate = 5555;
+    const int payloadActivate = 255; //ToDo: Correct 8bit bytevalue, before 5555
     final Message requestActivate = Message(
         GeigerApi.MASTER,
         GeigerApi.MASTER,

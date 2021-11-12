@@ -1,18 +1,6 @@
 library geiger_api;
 
-import 'dart:collection';
-import 'dart:io';
-import 'dart:math';
 
-import 'geiger_api.dart';
-import 'malformed_url_exception.dart';
-import 'package:geiger_localstorage/geiger_localstorage.dart';
-
-import 'geiger_url.dart';
-import 'communication_api.dart';
-import 'message.dart';
-import 'message_type.dart';
-import 'plugin_listener.dart';
 
 // TODO(mgwerder): completely redo this concept
 /*

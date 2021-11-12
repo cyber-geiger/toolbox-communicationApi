@@ -6,10 +6,10 @@ import 'package:communicationapi/src/communication/communication_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'geiger_api.dart';
+import 'geiger_url.dart';
 import 'message.dart';
 import 'message_type.dart';
 import 'plugin_listener.dart';
-import 'geiger_url.dart';
 
 /// [StorageEventHandler] processes StorageEvents accordingly.
 class StorageEventHandler with PluginListener {
@@ -21,7 +21,7 @@ class StorageEventHandler with PluginListener {
 
   /// Decides which storage method has been called for [msg].
   Future<void> storageEventParser(Message msg) async {
-    if (GeigerApi.MASTER == msg.targetId) {
+    if (GeigerApi.MASTER_ID == msg.targetId) {
       _isMaster = true;
     }
     final List<String> urlParts = ((msg.action!.path)).split('/');

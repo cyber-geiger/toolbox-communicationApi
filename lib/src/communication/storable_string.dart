@@ -1,8 +1,10 @@
 library geiger_api;
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:meta/meta.dart';
 
 /// A serializable yet simple String object.
+@immutable
 class StorableString implements Serializer {
   static const int serialVersionUID = 142314912322198374;
   final String? _value;
@@ -37,7 +39,7 @@ class StorableString implements Serializer {
 
   @override
   void toByteArrayStream(ByteSink out) {
-    SerializerHelper.writeString(out, this._value);
+    SerializerHelper.writeString(out, _value);
   }
 
   /// Reads objects from ByteArrayInputStream and stores them in map.

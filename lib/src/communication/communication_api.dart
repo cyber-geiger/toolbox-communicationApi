@@ -57,8 +57,10 @@ class CommunicationApi implements GeigerApi {
 
   static const bool PERSISTENT = false;
 
+
   static Mapper? _mapper;
   static const Mapper DEFAULT_MAPPER = Mapper.SQLITE_MAPPER;
+
 
   static final StorableHashMap<StorableString, PluginInformation> plugins =
       StorableHashMap<StorableString, PluginInformation>();
@@ -144,12 +146,12 @@ class CommunicationApi implements GeigerApi {
         idNotNull = id!;
       }
       await sendMessage(
-          GeigerApi.MASTER,
+          GeigerApi.MASTER_ID,
           Message(
               idNotNull,
-              GeigerApi.MASTER,
+              GeigerApi.MASTER_ID,
               MessageType.REGISTER_PLUGIN,
-              GeigerUrl(null, GeigerApi.MASTER, 'registerPlugin'),
+              GeigerUrl(null, GeigerApi.MASTER_ID, 'registerPlugin'),
               await pluginInformation.toByteArray()));
     } on MalformedUrlException {
       // TODO(mgwerder): proper Error handling
@@ -188,9 +190,9 @@ class CommunicationApi implements GeigerApi {
     await deactivatePlugin();
     try {
       await sendMessage(
-          GeigerApi.MASTER,
-          Message(_id, GeigerApi.MASTER, MessageType.DEREGISTER_PLUGIN,
-              GeigerUrl(null, GeigerApi.MASTER, 'deregisterPlugin')));
+          GeigerApi.MASTER_ID,
+          Message(_id, GeigerApi.MASTER_ID, MessageType.DEREGISTER_PLUGIN,
+              GeigerUrl(null, GeigerApi.MASTER_ID, 'deregisterPlugin')));
     } on MalformedUrlException {
       // TODO(mgwerder): proper Error handling
       // this should never occur
@@ -208,12 +210,12 @@ class CommunicationApi implements GeigerApi {
   Future<void> storeState() async {
     // store plugin state
     try {
-      final File f = File('GeigerApi.' + _id + '.state');
+      final File f = File('GeigerApi.$_id.state');
       final ByteSink out = ByteSink();
       plugins.toByteArrayStream(out);
       menuItems.toByteArrayStream(out);
       out.close();
-      var file = f.openWrite();
+      final IOSink file = f.openWrite();
       file.add(await out.bytes);
       file.close();
     } catch (ioe) {
@@ -225,11 +227,11 @@ class CommunicationApi implements GeigerApi {
   }
 
   Future<void> restoreState() async {
-    var fname = 'GeigerApi.' + _id + '.state';
+    final String fname = 'GeigerApi.$_id.state';
     try {
-      var file = File(fname);
-      final List<int> buff = file.existsSync() ? file.readAsBytesSync() : [];
-      ByteStream in_ = ByteStream(null, buff);
+      final File file = File(fname);
+      final List<int> buff = file.existsSync() ? file.readAsBytesSync() : <int>[];
+      final ByteStream in_ = ByteStream(null, buff);
       // restoring plugin information
       // synchronized(plugins) {
       await StorableHashMap.fromByteArrayStream(in_, plugins);
@@ -247,15 +249,15 @@ class CommunicationApi implements GeigerApi {
   @override
   Future<void> activatePlugin(int port) async {
     await sendMessage(
-        GeigerApi.MASTER,
-        Message(_id, GeigerApi.MASTER, MessageType.ACTIVATE_PLUGIN, null,
+        GeigerApi.MASTER_ID,
+        Message(_id, GeigerApi.MASTER_ID, MessageType.ACTIVATE_PLUGIN, null,
             GeigerCommunicator.intToByteArray(port)));
   }
 
   @override
   Future<void> deactivatePlugin() async {
-    await sendMessage(GeigerApi.MASTER,
-        Message(_id, GeigerApi.MASTER, MessageType.DEACTIVATE_PLUGIN, null));
+    await sendMessage(GeigerApi.MASTER_ID,
+        Message(_id, GeigerApi.MASTER_ID, MessageType.DEACTIVATE_PLUGIN, null));
   }
 
   /// Obtain [StorageController] to access the storage.
@@ -275,12 +277,12 @@ class CommunicationApi implements GeigerApi {
       List<MessageType> events, PluginListener listener,
       [bool internal = false]) async {
     if (internal) {
-      for (var e in events) {
+      for (final MessageType e in events) {
         // synchronized(listeners) {
-        var l = _listeners[e];
+        List<PluginListener>? l = _listeners[e];
         // The short form computeIfAbsent is not available in TotalCross
         if (l == null) {
-          l = List.empty(growable: true);
+          l = <PluginListener>[];
           _listeners[e] = l;
         }
         if (e.id < 10000) {
@@ -291,12 +293,12 @@ class CommunicationApi implements GeigerApi {
       return;
     }
     if (_isMaster) {
-      for (var e in events) {
+      for (final MessageType e in events) {
         // synchronized(listeners) {
-        var l = _listeners[e];
+        List<PluginListener>? l = _listeners[e];
         // The short form computeIfAbsent is not available in TotalCross
         if (l == null) {
-          l = List.empty(growable: true);
+          l = <PluginListener>[];
           _listeners[e] = l;
         }
         if (e.id < 10000) {
@@ -307,19 +309,19 @@ class CommunicationApi implements GeigerApi {
     } else {
       try {
         // formating int number of events -> events -> listener
-        ByteSink out = ByteSink();
+        final ByteSink out = ByteSink();
         out.sink.add(GeigerCommunicator.intToByteArray(events.length));
         for (final MessageType event in events) {
           out.sink.add(GeigerCommunicator.intToByteArray(event.id));
         }
         // out.write(listener.toByteArray());
         await sendMessage(
-            GeigerApi.MASTER,
+            GeigerApi.MASTER_ID,
             Message(
                 _id,
-                GeigerApi.MASTER,
+                GeigerApi.MASTER_ID,
                 MessageType.REGISTER_LISTENER,
-                GeigerUrl(null, GeigerApi.MASTER, 'registerListener'),
+                GeigerUrl(null, GeigerApi.MASTER_ID, 'registerListener'),
                 await out.bytes));
       } on IOException {
         // TODO(mgwerder): proper Error handling
@@ -331,9 +333,9 @@ class CommunicationApi implements GeigerApi {
   @override
   void deregisterListener(List<MessageType>? events, PluginListener listener) {
     events ??= MessageType.values;
-    for (var e in events) {
+    for (final MessageType e in events) {
       // synchronized(listeners) {
-      var l = _listeners[e];
+      final List<PluginListener>? l = _listeners[e];
       if (l != null) {
         l.remove(listener);
       }
@@ -372,7 +374,7 @@ class CommunicationApi implements GeigerApi {
     for (var plugin in plugins.entries) {
       await sendMessage(
           plugin.key.toString(),
-          Message(GeigerApi.MASTER, plugin.key.toString(), message.type,
+          Message(GeigerApi.MASTER_ID, plugin.key.toString(), message.type,
               message.action, message.payload));
     }
   }
@@ -582,12 +584,12 @@ class CommunicationApi implements GeigerApi {
   Future<void> registerMenu(String menu, GeigerUrl action) async {
     try {
       await sendMessage(
-          GeigerApi.MASTER,
+          GeigerApi.MASTER_ID,
           Message(
               _id,
-              GeigerApi.MASTER,
+              GeigerApi.MASTER_ID,
               MessageType.REGISTER_MENU,
-              GeigerUrl(null, GeigerApi.MASTER, 'registerMenu'),
+              GeigerUrl(null, GeigerApi.MASTER_ID, 'registerMenu'),
               await MenuItem(menu, action).toByteArray()));
     } on MalformedUrlException {
       // TODO(mgwerder): proper Error handling
@@ -599,12 +601,12 @@ class CommunicationApi implements GeigerApi {
   Future<void> enableMenu(String menu) async {
     try {
       await sendMessage(
-          GeigerApi.MASTER,
+          GeigerApi.MASTER_ID,
           Message(
               _id,
-              GeigerApi.MASTER,
+              GeigerApi.MASTER_ID,
               MessageType.ENABLE_MENU,
-              GeigerUrl(null, GeigerApi.MASTER, 'enableMenu'),
+              GeigerUrl(null, GeigerApi.MASTER_ID, 'enableMenu'),
               utf8.encode(menu)));
     } on MalformedUrlException {
       // TODO(mgwerder): proper Error handling
@@ -616,12 +618,12 @@ class CommunicationApi implements GeigerApi {
   Future<void> disableMenu(String menu) async {
     try {
       await sendMessage(
-          GeigerApi.MASTER,
+          GeigerApi.MASTER_ID,
           Message(
               _id,
-              GeigerApi.MASTER,
+              GeigerApi.MASTER_ID,
               MessageType.DISABLE_MENU,
-              GeigerUrl(null, GeigerApi.MASTER, 'disableMenu'),
+              GeigerUrl(null, GeigerApi.MASTER_ID, 'disableMenu'),
               utf8.encode(menu)));
     } on MalformedUrlException {
       // TODO(mgwerder): proper Error handling
@@ -633,12 +635,12 @@ class CommunicationApi implements GeigerApi {
   Future<void> deregisterMenu(String menu) async {
     try {
       await sendMessage(
-          GeigerApi.MASTER,
+          GeigerApi.MASTER_ID,
           Message(
               _id,
-              GeigerApi.MASTER,
+              GeigerApi.MASTER_ID,
               MessageType.DEREGISTER_MENU,
-              GeigerUrl(null, GeigerApi.MASTER, 'deregisterMenu'),
+              GeigerUrl(null, GeigerApi.MASTER_ID, 'deregisterMenu'),
               utf8.encode(menu)));
     } on MalformedUrlException {
       // TODO(mgwerder): proper Error handling
@@ -651,7 +653,7 @@ class CommunicationApi implements GeigerApi {
     await sendMessage(
         url.plugin,
         Message(
-            GeigerApi.MASTER, url.plugin, MessageType.MENU_PRESSED, url, null));
+            GeigerApi.MASTER_ID, url.plugin, MessageType.MENU_PRESSED, url, null));
   }
 
   @override
@@ -665,16 +667,16 @@ class CommunicationApi implements GeigerApi {
     if (!_isMaster) {
       try {
         await sendMessage(
-            GeigerApi.MASTER,
-            Message(_id, GeigerApi.MASTER, MessageType.SCAN_PRESSED,
-                GeigerUrl(null, GeigerApi.MASTER, 'scanPressed')));
+            GeigerApi.MASTER_ID,
+            Message(_id, GeigerApi.MASTER_ID, MessageType.SCAN_PRESSED,
+                GeigerUrl(null, GeigerApi.MASTER_ID, 'scanPressed')));
       } on MalformedUrlException {
         // TODO(mgwerder): proper Error handling
         // this should never occur
       }
     } else {
       await broadcastMessage(
-          Message(GeigerApi.MASTER, null, MessageType.SCAN_PRESSED, null));
+          Message(GeigerApi.MASTER_ID, null, MessageType.SCAN_PRESSED, null));
     }
   }
 

@@ -38,7 +38,7 @@ void main() {
    * <p>Tests the serialization of the GeigerUrl object.</p>
    */
   test('geigerUrlSerializationTest', () async {
-    GeigerUrl p = GeigerUrl(null, GeigerApi.MASTER, 'path');
+    GeigerUrl p = GeigerUrl(null, GeigerApi.MASTER_ID, 'path');
     ByteSink bout = ByteSink();
     p.toByteArrayStream(bout);
     bout.close();
@@ -52,7 +52,7 @@ void main() {
    * <p>Tests the serialization of the MenuItem object.</p>
    */
   test('menuItemSerializationTest', () async {
-    MenuItem p = MenuItem('test', GeigerUrl(null, GeigerApi.MASTER, 'path'), false);
+    MenuItem p = MenuItem('test', GeigerUrl(null, GeigerApi.MASTER_ID, 'path'), false);
 
     ByteSink bout = ByteSink();
     p.toByteArrayStream(bout);
@@ -108,7 +108,7 @@ void main() {
    */
   test('storableMapSerializationTest', () async {
     StorableHashMap<GeigerUrl, GeigerUrl> hm = StorableHashMap<GeigerUrl, GeigerUrl>();
-    Map<GeigerUrl,GeigerUrl> it = <GeigerUrl,GeigerUrl>{GeigerUrl(null, GeigerApi.MASTER, 'path'): GeigerUrl(null, GeigerApi.MASTER, 'path')};
+    Map<GeigerUrl,GeigerUrl> it = <GeigerUrl,GeigerUrl>{GeigerUrl(null, GeigerApi.MASTER_ID, 'path'): GeigerUrl(null, GeigerApi.MASTER_ID, 'path')};
     hm.addAll(it);
     ByteSink bout = ByteSink();
     hm.toByteArrayStream(bout);
@@ -126,16 +126,16 @@ void main() {
   test('messageSerializationTest', () async {
     List<Message> messageList = [
       Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER,'geiger://id1/path1'), null),
+          GeigerUrl(null, GeigerApi.MASTER_ID,'geiger://id1/path1'), null),
       Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
           null, []),
       Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER, 'path2'), []),
+          GeigerUrl(null, GeigerApi.MASTER_ID, 'path2'), []),
       Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER, ''), []),
+          GeigerUrl(null, GeigerApi.MASTER_ID, ''), <int>[]),
       Message('src', 'target', MessageType.DEACTIVATE_PLUGIN,
-          GeigerUrl(null, GeigerApi.MASTER, ''), []),
-      Message('src', 'target', MessageType.ALL_EVENTS, null, []),
+          GeigerUrl(null, GeigerApi.MASTER_ID, ''),<int>[]),
+      Message('src', 'target', MessageType.ALL_EVENTS, null, <int>[]),
       Message('src', 'target', MessageType.ALL_EVENTS, null,
           Uuid().v4().codeUnits)];
 

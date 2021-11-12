@@ -11,17 +11,17 @@ void main() {
     'C:/path to/this/application',
     'thisApplication.apk'
   ];
-  var secrets = [
+  List<CommunicationSecret> secrets = [
     CommunicationSecret([1, 2, 3]),
     CommunicationSecret([4, 5, 6])
   ];
 
   group('ConstructorGetter', () {
-    for (var secret in secrets) {
+    for (final CommunicationSecret secret in secrets) {
       print(secret);
     }
-    for (int port in ports) {
-      for (String executable in executables) {
+    for (final int port in ports) {
+      for (final String executable in executables) {
         for (CommunicationSecret secret in secrets) {
           //Constructor without secret
           PluginInformation info = PluginInformation(executable, port);

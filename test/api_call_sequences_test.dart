@@ -13,12 +13,12 @@ import 'package:test/test.dart';
 void main() {
   test('testRegisterPlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final PluginInformation payload =
         PluginInformation('./plugin1', 5555, CommunicationSecret.empty());
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.REGISTER_PLUGIN, testUrl, await payload.toByteArray());
     final Message reply = await CommunicationHelper.sendAndWait(localMaster,
         request, (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
@@ -33,10 +33,10 @@ void main() {
 
   test('testDeregisterPlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.DEREGISTER_PLUGIN, testUrl);
     final Message reply = await CommunicationHelper.sendAndWait(
         localMaster,
@@ -56,21 +56,21 @@ void main() {
 
   test('testActivatePlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final PluginInformation payload =
         PluginInformation('./plugin1', 5555, CommunicationSecret.empty());
     // Pregister plugin
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.REGISTER_PLUGIN, testUrl, await payload.toByteArray());
     await CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
     // activate plugin
     const int payloadActivate = 255; //ToDo correct 8bit bytevalue before 5555
     final Message requestActivate = Message(
-        GeigerApi.MASTER,
-        GeigerApi.MASTER,
+        GeigerApi.MASTER_ID,
+        GeigerApi.MASTER_ID,
         MessageType.ACTIVATE_PLUGIN,
         testUrl,
         GeigerCommunicator.intToByteArray(payloadActivate));
@@ -90,29 +90,29 @@ void main() {
 
   test('testDeactivatePlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final PluginInformation payload =
         PluginInformation('./plugin1', 5555, CommunicationSecret.empty());
     // Pregister plugin
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.REGISTER_PLUGIN, testUrl, await payload.toByteArray());
     await CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
     // activate plugin
     const int payloadActivate = 255; //ToDo: Correct 8bit bytevalue, before 5555
     final Message requestActivate = Message(
-        GeigerApi.MASTER,
-        GeigerApi.MASTER,
+        GeigerApi.MASTER_ID,
+        GeigerApi.MASTER_ID,
         MessageType.ACTIVATE_PLUGIN,
         testUrl,
         GeigerCommunicator.intToByteArray(payloadActivate));
     await CommunicationHelper.sendAndWait(localMaster, requestActivate,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
     // deactivate Plugin
-    final Message requestDeactivate = Message(GeigerApi.MASTER,
-        GeigerApi.MASTER, MessageType.DEACTIVATE_PLUGIN, testUrl);
+    final Message requestDeactivate = Message(GeigerApi.MASTER_ID,
+        GeigerApi.MASTER_ID, MessageType.DEACTIVATE_PLUGIN, testUrl);
     final Message replyDeactivate = await CommunicationHelper.sendAndWait(
         localMaster,
         requestDeactivate,
@@ -130,7 +130,7 @@ void main() {
   test('testGetStorage', () async {
     // check master
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final StorageController? masterController = localMaster.getStorage();
     expect(true, masterController is GenericController);
 
@@ -144,12 +144,12 @@ void main() {
 
   test('testRegisterMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
     final MenuItem payload = MenuItem('plugin1Score', menuUrl);
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.REGISTER_MENU, testUrl, await payload.toByteArray());
     final Message reply = await CommunicationHelper.sendAndWait(localMaster,
         request, (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
@@ -169,18 +169,18 @@ void main() {
 
   test('testDeregisterMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
     final MenuItem payload = MenuItem('plugin1Score', menuUrl);
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.REGISTER_MENU, testUrl, await payload.toByteArray());
     // register a MenuItem
     await CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
 
-    final Message request2 = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request2 = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.DEREGISTER_MENU, testUrl, utf8.encode(payload.menu));
     final Message reply2 = await CommunicationHelper.sendAndWait(localMaster,
         request2, (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
@@ -197,20 +197,20 @@ void main() {
 
   test('testEnableMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
     // create a disabled menu
     final MenuItem payload = MenuItem('plugin1Score', menuUrl, false);
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.REGISTER_MENU, testUrl, await payload.toByteArray());
     // register a disabled menuItem
     await CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
 
     // enable the menuItem
-    final Message request2 = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request2 = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.ENABLE_MENU, testUrl, utf8.encode(payload.menu));
     final Message reply2 = await CommunicationHelper.sendAndWait(localMaster,
         request2, (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
@@ -231,20 +231,20 @@ void main() {
 
   test('testDisableMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
     // create an enabled menu
     final MenuItem payload = MenuItem('plugin1Score', menuUrl, true);
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.REGISTER_MENU, testUrl, await payload.toByteArray());
     // register a disabled menuItem
     await CommunicationHelper.sendAndWait(localMaster, request,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
 
     // enable the menuItem
-    final Message request2 = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+    final Message request2 = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.DISABLE_MENU, testUrl, utf8.encode(payload.menu));
     final Message reply2 = await CommunicationHelper.sendAndWait(localMaster,
         request2, (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
@@ -265,10 +265,10 @@ void main() {
 
   test('testPing', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
     final GeigerUrl testUrl =
-        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER}/test');
-    final Message request = Message(GeigerApi.MASTER, GeigerApi.MASTER,
+        GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
+    final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
         MessageType.PING, testUrl, utf8.encode('payload'));
     final Message reply = await CommunicationHelper.sendAndWait(
         localMaster,

@@ -17,7 +17,7 @@ void main(){
     MessageType messageType = MessageType.ALL_EVENTS;
     GeigerUrl? url;
     try{
-      url = GeigerUrl(null, GeigerApi.MASTER, 'geiger://plugin/path');
+      url = GeigerUrl(null, GeigerApi.MASTER_ID, 'geiger://plugin/path');
     } catch(e) {
       print(e);
     }
@@ -51,7 +51,7 @@ void main(){
     List<int> payload = 'payload'.codeUnits;
     GeigerUrl? url;
     try{
-      url = GeigerUrl(null, GeigerApi.MASTER, 'geiger://plugin/path');
+      url = GeigerUrl(null, GeigerApi.MASTER_ID, 'geiger://plugin/path');
     } catch(e) {
       print(e);
     }
@@ -80,7 +80,7 @@ void main(){
     List<int> payload = 'payload'.codeUnits;
     GeigerUrl? url;
     try{
-      url = GeigerUrl(null, GeigerApi.MASTER, 'geiger://plugin/path');
+      url = GeigerUrl(null, GeigerApi.MASTER_ID, 'geiger://plugin/path');
     } catch(e) {
       print(e);
     }

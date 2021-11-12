@@ -57,7 +57,7 @@ class ParameterList with Serializer {
     var sb = StringBuffer();
     sb.write('['.codeUnitAt(0));
     var first = true;
-    for (var p in args) {
+    for (String p in args) {
       if (!first) {
         sb.write(',');
       } else {

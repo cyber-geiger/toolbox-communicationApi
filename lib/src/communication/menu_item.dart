@@ -73,7 +73,7 @@ class MenuItem implements Serializer {
     if (o == null || o is! MenuItem) {
       return false;
     }
-    var menuItem = o;
+    MenuItem menuItem = o;
     return enabled == menuItem.enabled &&
         _menu == menuItem._menu &&
         _action == menuItem._action;

@@ -47,7 +47,7 @@ class Message with Serializer
 
   /// Returns the payload as array of bytes.
   List<int> get payload {
-    var pl = _payloadString;
+    String? pl = _payloadString;
     if (pl == null) {
       return <int>[];
     }

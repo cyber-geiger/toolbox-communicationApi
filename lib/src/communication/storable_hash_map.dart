@@ -9,7 +9,7 @@ import 'package:geiger_localstorage/geiger_localstorage.dart';
 /// Serializable Hashmap.
 class StorableHashMap<K extends Serializer, V extends Serializer>
     implements Map<K, V> {
-  static final int serialVersionUID = 14231491232;
+  static const int serialVersionUID = 14231491232;
 
   final Map<K, V> _map = <K, V>{};
 
@@ -46,7 +46,7 @@ class StorableHashMap<K extends Serializer, V extends Serializer>
 
   @override
   String toString() {
-    var sb = StringBuffer();
+    StringBuffer sb = StringBuffer();
     for (MapEntry e in entries) {
       sb.write(e.key.toString());
       sb.write('=');

@@ -2,21 +2,21 @@ import 'package:communicationapi/src/communication/geiger_url.dart';
 import 'package:communicationapi/src/communication/malformed_url_exception.dart';
 import 'package:test/test.dart';
 
-const List<String> protocols = [
+const List<String> protocols = <String>[
   'geiger',
   'some-protocol',
   'protocol/subprotocol',
   'protocol°+*ç%&/()=?`èà£!é_:;'
 ];
 
-const List<String> plugins = [
+const List<String> plugins = <String>[
   'plugin',
   'some-plugin',
   'plugin-?!subplugin',
   'plugin°+*ç%&()=?`èà£!é_:;',
   'plugin?some-plugin+some%path'
 ];
-const List<String?> paths = [
+const List<String?> paths = <String?>[
   'path',
   'some-path',
   'path/subpath',

@@ -12,7 +12,7 @@ abstract class GeigerCommunicator {
   final GeigerApi _communicationEndpoint;
   int port = defaultMasterPort;
 
-  GeigerCommunicator(GeigerApi this._communicationEndpoint, bool isMaster) {
+  GeigerCommunicator(this._communicationEndpoint, bool isMaster) {
     if (isMaster) {
       // TODO(mgwerder): start communicator wirth port [defaultMasterPort]
     } else {
@@ -42,7 +42,7 @@ abstract class GeigerCommunicator {
   /// TODO(mgwerder): this is a specialized implementation of the writeIntLong implementatio. Please collapse sensibly
   /// FIXME(mgwerder); does not work for negative values
   static List<int> intToByteArray(int value) {
-    return [value >> 24, value >> 16, value >> 8, value];
+    return <int>[value >> 24, value >> 16, value >> 8, value];
   }
 
   MessageListener? getListener() {

@@ -46,7 +46,7 @@ class CommunicationSecret with Serializer {
   /// If new secret is `null` or its length is `0` a random secret is generated.
   /// Returns the previously set secret.
   List<int> setSecret(List<int>? newSecret) {
-    var ret = secret;
+    List<int> ret = secret;
     if (newSecret == null || newSecret.isEmpty) {
       setRandomSecret(DEFAULT_SIZE);
     } else {

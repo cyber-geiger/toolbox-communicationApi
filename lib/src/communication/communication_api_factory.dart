@@ -1,11 +1,11 @@
 library geiger_api;
 
+import 'package:communicationapi/geiger_api.dart';
+
 import 'communication_api.dart';
 import 'declaration.dart';
 import 'declaration_mismatch_exception.dart';
 import 'geiger_api.dart';
-
-const String MASTER_EXECUTOR = 'FIXME';
 
 final Map<String, GeigerApi> instances = <String, GeigerApi>{};
 
@@ -27,12 +27,12 @@ final Map<String, GeigerApi> instances = <String, GeigerApi>{};
 Future<GeigerApi?> getGeigerApi(String executorOrId,
     [String? id, Declaration declaration = Declaration.DO_SHARE_DATA]) async {
   if (id == null) {
-    return instances[id];
+    return instances[GeigerApi.MASTER_ID];
   }
   // synchronized(instances, {
   if (!instances.containsKey(id)) {
     CommunicationApi api =
-        CommunicationApi(executorOrId, id, GeigerApi.MASTER == id, declaration);
+        CommunicationApi(executorOrId, id, GeigerApi.MASTER_ID == id, declaration);
     await api.initialize();
     instances[id] = api;
   }

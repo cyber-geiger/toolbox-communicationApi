@@ -13,7 +13,8 @@ import 'plugin_registrar.dart';
 
 /// The API provided by all communicator interfaces.
 abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
-  static const String MASTER = '__MASTERPLUGIN__';
+  static const String MASTER_ID = '__MASTERPLUGIN__';
+  static const String MASTER_EXECUTOR = 'FIXME';
 
   /// Activates the plugin and sets up communication on the specified [port].
   void activatePlugin(int port);

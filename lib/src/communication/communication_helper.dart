@@ -21,7 +21,7 @@ class Listener with PluginListener {
   Listener(this.api, this.filter);
 
   Future<void> register() async {
-    await api.registerListener([MessageType.ALL_EVENTS], this);
+    await api.registerListener(<MessageType>[MessageType.ALL_EVENTS], this);
   }
 
   @override

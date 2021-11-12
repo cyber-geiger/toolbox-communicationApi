@@ -100,7 +100,7 @@ extension MessageTypeExtension on MessageType {
   ///
   /// Will return `null` if not found.
   static MessageType? getById(int id) {
-    for (var e in MessageType.values) {
+    for (MessageType e in MessageType.values) {
       if (e.id == id) {
         return e;
       }

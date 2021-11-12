@@ -81,7 +81,7 @@ void main() {
 
     // negative tests
     // constructor with size
-    final List<int> incorrectSizes = [-1, -5, 0];
+    final List<int> incorrectSizes = <int>[-1, -5, 0];
     for (final int size in incorrectSizes) {
       expect(
           () => CommunicationSecret.empty(size), throwsA(isA<ArgumentError>()));

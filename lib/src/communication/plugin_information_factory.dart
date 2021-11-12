@@ -32,7 +32,7 @@ class PluginInformationFactory {
   /// Returns the previously set information or null if its new.
   static PluginInformation? setPluginInformation(
       String id, PluginInformation info) {
-    var old = getPluginInformation(id);
+    PluginInformation? old = getPluginInformation(id);
     store[id.toLowerCase()] = info;
     return old;
   }

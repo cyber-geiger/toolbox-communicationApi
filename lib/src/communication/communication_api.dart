@@ -365,7 +365,9 @@ class CommunicationApi implements GeigerApi {
           _geigerCommunicator.startPlugin(pluginInformation);
         }
       }
-      await _geigerCommunicator.sendMessage(pluginInformation, msg);
+      // TODO(mgwerder): short circuited delivery as no external delivery is supported
+      //await _geigerCommunicator.sendMessage(pluginInformation, msg);
+      receivedMessage(pluginInformation, msg);
     }
   }
 

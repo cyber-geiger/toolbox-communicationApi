@@ -138,10 +138,15 @@ class CommunicationApi implements GeigerApi {
         PluginInformation(_executor, _geigerCommunicator.getPort());
 
     try {
+      var idNotNull = "";
+      if (id != null)
+      {
+        idNotNull = id!;
+      }
       await sendMessage(
           GeigerApi.MASTER,
           Message(
-              id!,
+              idNotNull,
               GeigerApi.MASTER,
               MessageType.REGISTER_PLUGIN,
               GeigerUrl(null, GeigerApi.MASTER, 'registerPlugin'),
@@ -340,10 +345,17 @@ class CommunicationApi implements GeigerApi {
   Future<void> sendMessage(String pluginId, Message msg) async {
     if (_id == pluginId) {
       // communicate locally
-      await receivedMessage(plugins[StorableString(_id)]!, msg);
+      PluginInformation initplugin = PluginInformation(null, 0);
+      if(plugins[StorableString(_id)] != null) {
+        initplugin = plugins[StorableString(_id)]!;
+      }
+      await receivedMessage(initplugin, msg);
     } else {
       // communicate with foreign plugin
-      var pluginInformation = plugins[StorableString(pluginId)]!;
+      PluginInformation pluginInformation = PluginInformation(null, 0);
+      if(plugins[StorableString(_id)] != null) {
+        pluginInformation = plugins[StorableString(pluginId)]!;
+      }
       if (_isMaster) {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInformation.getPort() > 0)) {

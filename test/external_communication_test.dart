@@ -1,5 +1,6 @@
 import 'package:communicationapi/geiger_api.dart';
 import 'package:communicationapi/src/communication/communication_api.dart';
+import 'package:communicationapi/src/communication/communication_helper.dart';
 import 'package:communicationapi/src/communication/geiger_url.dart';
 import 'package:communicationapi/src/communication/menu_item.dart';
 import 'package:communicationapi/src/communication/plugin_listener.dart';
@@ -14,15 +15,12 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-      CommunicationApi('', 'plugin1', false, Declaration.DO_NOT_SHARE_DATA);
+      CommunicationApi plugin = CommunicationApi('', 'plugin1', false, Declaration.DO_NOT_SHARE_DATA);
       await plugin.initialize();
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
       List<Message> receivedEventsMaster = masterListener.getEvents();
-      test('checking if register and activate events have been received', () {
-        expect(receivedEventsMaster.length, 2);
-      });
+      expect(receivedEventsMaster.length, 2);
       Message rcvdMessage = receivedEventsMaster[0];
       expect(rcvdMessage.type, MessageType.REGISTER_PLUGIN);
       expect(rcvdMessage.sourceId, 'plugin1');
@@ -144,7 +142,7 @@ void main() {
 
       //register Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER, 'testMenu'));
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
       expect(receivedEventsMaster.length, 3);
@@ -155,7 +153,7 @@ void main() {
       expect(rcvdMessage.action?.plugin, GeigerApi.MASTER);
       expect(rcvdMessage.action?.path, 'registerMenu');
       expect(MenuItem.fromByteArray(rcvdMessage.payload),
-          MenuItem('testMenu', GeigerUrl('', GeigerApi.MASTER, 'testMenu')));
+          MenuItem('testMenu', GeigerUrl(null, GeigerApi.MASTER, 'testMenu')));
     });
     test('check Plugin', () async {
       CommunicationApi localMaster = CommunicationApi(
@@ -172,7 +170,7 @@ void main() {
 
       //register Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER, 'testMenu'));
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
       expect(receivedEventsMaster.length, 3);
@@ -200,7 +198,7 @@ void main() {
 
       //register and disable Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER, 'testMenu'));
       plugin.disableMenu('testMenu');
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
@@ -228,7 +226,7 @@ void main() {
 
       //register and disable Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER, 'testMenu'));
       plugin.disableMenu('testMenu');
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
@@ -257,8 +255,8 @@ void main() {
 
       //register Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER, 'testMenu'));
-      plugin.menuPressed(GeigerUrl('', GeigerApi.MASTER, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER, 'testMenu'));
+      plugin.menuPressed(GeigerUrl(null, GeigerApi.MASTER, 'testMenu'));
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
       expect(receivedEventsMaster.length, 4);

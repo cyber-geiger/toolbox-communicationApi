@@ -23,31 +23,34 @@ void main() {
     for (final int port in ports) {
       for (final String executable in executables) {
         for (CommunicationSecret secret in secrets) {
-          //Constructor without secret
-          PluginInformation info = PluginInformation(executable, port);
-          test('checking Executable', () {
-            expect(info.getExecutable(), executable);
-          });
-          test('checking Port', () {
-            expect(info.getPort(), port);
-          });
-          test('checking Secret', () {
-            bool isNull = false;
-            if (info.getSecret() == null) {
-              isNull = true;
-            }
-            expect(isNull, false);
-          });
-          //Constructor with secret
-          PluginInformation info2 = PluginInformation(executable, port, secret);
-          test('checking Executable', () {
-            expect(info.getExecutable(), executable);
-          });
-          test('checking Port', () {
-            expect(info.getPort(), port);
-          });
-          test('checking Secret', () {
-            expect(info2.getSecret().secret, secret.secret);
+          group('Testing with port=$port; executable=$executable; secret=$secret', () {
+            //Constructor without secret
+            PluginInformation info = PluginInformation(executable, port);
+            test('checking Executable', () {
+              expect(info.getExecutable(), executable);
+            });
+            test('checking Port', () {
+              expect(info.getPort(), port);
+            });
+            test('checking Secret', () {
+              bool isNull = false;
+              if (info.getSecret() == null) {
+                isNull = true;
+              }
+              expect(isNull, false);
+            });
+            //Constructor with secret
+            PluginInformation info2 =
+                PluginInformation(executable, port, secret);
+            test('checking Executable', () {
+              expect(info.getExecutable(), executable);
+            });
+            test('checking Port', () {
+              expect(info.getPort(), port);
+            });
+            test('checking Secret', () {
+              expect(info2.getSecret().secret, secret.secret);
+            });
           });
         }
       }
@@ -62,7 +65,8 @@ void main() {
                 PluginInformation(executable, port, secret);
             final PluginInformation info2 =
                 PluginInformation(executable, port, secret);
-            expect(info.hashCode, info2.hashCode,reason: 'Test failed with secret=$secret;');
+            expect(info.hashCode, info2.hashCode,
+                reason: 'Test failed with secret=$secret;');
           }
         }
       }

@@ -11,7 +11,7 @@ class PluginCommunicator extends GeigerCommunicator {
   @override
   int getPort() {
     // TODO(mgwerder): implement getPort
-    throw UnimplementedError();
+    return -1;
   }
 
   @override

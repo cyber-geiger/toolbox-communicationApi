@@ -52,6 +52,7 @@ void main() {
   });
   group('Deactivate Plugin', () {
     test('Check Master', () async {
+      flushPluginCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener();
@@ -75,6 +76,7 @@ void main() {
       expect(rcvdMessage.action?.path, 'activatePlugin');
     });
     test('check Plugin', () async {
+      flushPluginCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener();
@@ -100,6 +102,7 @@ void main() {
   });
   group('register Menu', () {
     test('check Master', () async {
+      flushPluginCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener();
@@ -126,6 +129,7 @@ void main() {
           MenuItem('testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu')));
     });
     test('check Plugin', () async {
+      flushPluginCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener();
@@ -152,6 +156,7 @@ void main() {
   });
   group('Disable Menu', () {
     test('check Master', () async {
+      flushPluginCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener();
@@ -178,6 +183,7 @@ void main() {
       expect(rcvdMessage.payload.toString(), 'testMenu');
     });
     test('check Plugin', () async {
+      flushPluginCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener();
@@ -205,6 +211,7 @@ void main() {
   });
   group('menu pressed', () {
     test('check Master', () async {
+      flushPluginCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener();

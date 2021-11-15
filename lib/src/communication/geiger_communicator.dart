@@ -32,19 +32,6 @@ abstract class GeigerCommunicator {
   ///
   /// The provided [bytes] can only be 4 long.
   /// TODO(mgwerder): this is a specialized implementation of the writeIntLong implementatio. Please collapse sensibly
-  static int byteArrayToInt(List<int> bytes) {
-    return ((((bytes[0] & 15) << 24) | ((bytes[1] & 15) << 16)) |
-            ((bytes[2] & 15) << 8)) |
-        (bytes[3] & 15);
-  }
-
-  /// Convert int [value] to bytearray of length 4.
-  /// TODO(mgwerder): this is a specialized implementation of the writeIntLong implementatio. Please collapse sensibly
-  /// FIXME(mgwerder); does not work for negative values
-  static List<int> intToByteArray(int value) {
-    return <int>[value >> 24, value >> 16, value >> 8, value];
-  }
-
   MessageListener? getListener() {
     return listener;
   }

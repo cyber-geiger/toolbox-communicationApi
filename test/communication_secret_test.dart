@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:communicationapi/src/communication/communication_secret.dart';
 import 'package:communicationapi/src/communication/geiger_communicator.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/expect.dart';
 import 'package:test/test.dart';
 
@@ -25,7 +26,7 @@ void main() {
 
     // constructor with secret
     for (int i = 0; i < 20; ++i) {
-      final List<int> sec = GeigerCommunicator.intToByteArray(
+      final List<int> sec = SerializerHelper.intToByteArray(
           Random.secure().nextInt(pow(2, 32).toInt()));
       final CommunicationSecret secret3 = CommunicationSecret(sec);
       expect(secret3.getSecret(), isNotNull, reason: 'checking existence');
@@ -48,7 +49,7 @@ void main() {
     for (int i = 0; i < 20; ++i) {
       final CommunicationSecret secret4 = CommunicationSecret.empty();
       final List<int> secretValue = secret4.getSecret();
-      final List<int> newSecretValue = GeigerCommunicator.intToByteArray(
+      final List<int> newSecretValue = SerializerHelper.intToByteArray(
           Random.secure().nextInt(pow(2, 32).toInt()));
       secret4.setSecret(newSecretValue);
       expect(secret4.getSecret(), isNotNull, reason: 'checking existence');

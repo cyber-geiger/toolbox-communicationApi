@@ -251,7 +251,7 @@ class CommunicationApi implements GeigerApi {
     await sendMessage(
         GeigerApi.MASTER_ID,
         Message(_id, GeigerApi.MASTER_ID, MessageType.ACTIVATE_PLUGIN, null,
-            GeigerCommunicator.intToByteArray(port)));
+            SerializerHelper.intToByteArray(port)));
   }
 
   @override
@@ -310,9 +310,9 @@ class CommunicationApi implements GeigerApi {
       try {
         // formating int number of events -> events -> listener
         final ByteSink out = ByteSink();
-        out.sink.add(GeigerCommunicator.intToByteArray(events.length));
+        out.sink.add(SerializerHelper.intToByteArray(events.length));
         for (final MessageType event in events) {
-          out.sink.add(GeigerCommunicator.intToByteArray(event.id));
+          out.sink.add(SerializerHelper.intToByteArray(event.id));
         }
         // out.write(listener.toByteArray());
         await sendMessage(
@@ -472,7 +472,7 @@ class CommunicationApi implements GeigerApi {
           final PluginInformation pluginInfo = plugins[StorableString(msg.sourceId)]!;
           plugins.remove(StorableString(msg.sourceId));
           // put new info
-          int port = GeigerCommunicator.byteArrayToInt(msg.payload);
+          int port = SerializerHelper.byteArrayToInt(msg.payload);
           plugins[StorableString(msg.sourceId)] =
               PluginInformation(pluginInfo.getExecutable(), port);
           try {
@@ -509,12 +509,12 @@ class CommunicationApi implements GeigerApi {
       case MessageType.REGISTER_LISTENER:
         {
           // TODO(mgwerder): after pluginListener serialization
-          var payload = msg.payload;
-          var intRange = payload.sublist(0, 4);
+          List<int> payload = msg.payload;
+          List<int> intRange = payload.sublist(0, 4);
           List<int> inputRange = payload.sublist(4, payload.length);
-          var length = GeigerCommunicator.byteArrayToInt(intRange);
+          int length = SerializerHelper.byteArrayToInt(intRange);
           // workaround, register for all events always until messagetype serialization is available
-          var events = [MessageType.ALL_EVENTS];
+          List<MessageType> events = [MessageType.ALL_EVENTS];
           ByteSink in_ = ByteSink();
           // var events = List<MessageType>.empty(growable: true);
           for (var j = 0; j < length; ++j) {

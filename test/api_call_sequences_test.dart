@@ -73,7 +73,7 @@ void main() {
         GeigerApi.MASTER_ID,
         MessageType.ACTIVATE_PLUGIN,
         testUrl,
-        GeigerCommunicator.intToByteArray(payloadActivate));
+        SerializerHelper.intToByteArray(payloadActivate));
     final Message replyActivate = await CommunicationHelper.sendAndWait(
         localMaster,
         requestActivate,
@@ -107,7 +107,7 @@ void main() {
         GeigerApi.MASTER_ID,
         MessageType.ACTIVATE_PLUGIN,
         testUrl,
-        GeigerCommunicator.intToByteArray(payloadActivate));
+        SerializerHelper.intToByteArray(payloadActivate));
     await CommunicationHelper.sendAndWait(localMaster, requestActivate,
         (Message msg) => msg.type == MessageType.COMAPI_SUCCESS);
     // deactivate Plugin

@@ -57,9 +57,8 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-          CommunicationApi('', 'plugin1', false, Declaration.doNotShareData);
-      await plugin.initialize();
+      var plugin =
+          (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
 
@@ -81,9 +80,8 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-          CommunicationApi('', 'plugin1', false, Declaration.doNotShareData);
-      await plugin.initialize();
+      var plugin =
+          (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
 
@@ -107,9 +105,8 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-          CommunicationApi('', 'plugin1', false, Declaration.doNotShareData);
-      await plugin.initialize();
+      var plugin =
+          (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
 
@@ -134,9 +131,8 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-          CommunicationApi('', 'plugin1', false, Declaration.doNotShareData);
-      await plugin.initialize();
+      var plugin =
+          (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
 
@@ -161,9 +157,8 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-          CommunicationApi('', 'plugin1', false, Declaration.doNotShareData);
-      await plugin.initialize();
+      var plugin =
+          (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
 
@@ -188,9 +183,8 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-          CommunicationApi('', 'plugin1', false, Declaration.doNotShareData);
-      await plugin.initialize();
+      var plugin =
+          (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
 
@@ -216,9 +210,8 @@ void main() {
       SimpleEventListener masterListener = SimpleEventListener();
       List<MessageType> allEvents = [MessageType.ALL_EVENTS];
       localMaster.registerListener(allEvents, masterListener);
-      CommunicationApi plugin =
-          CommunicationApi('', 'plugin1', false, Declaration.doNotShareData);
-      await plugin.initialize();
+      var plugin =
+          (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener();
       plugin.registerListener(allEvents, pluginListener);
 

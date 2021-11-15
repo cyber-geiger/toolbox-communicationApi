@@ -49,13 +49,6 @@ void main() {
     expect(rcvdMessage.type, MessageType.ACTIVATE_PLUGIN);
     expect(rcvdMessage.sourceId, 'plugin1');
     expect(rcvdMessage.action, null);
-
-    List<Message> receivedEventsPlugin = pluginListener.getEvents();
-    expect(receivedEventsPlugin.length, 2);
-    rcvdMessage = receivedEventsPlugin[1];
-    expect(rcvdMessage.type, MessageType.COMAPI_SUCCESS);
-    expect(rcvdMessage.sourceId, GeigerApi.MASTER_ID);
-    expect(rcvdMessage.action, null);
   });
   group('Deactivate Plugin', () {
     test('Check Master', () async {

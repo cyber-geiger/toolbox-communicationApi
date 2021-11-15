@@ -1,22 +1,15 @@
 library geiger_api;
 
-// FIXME This exception shares large portions of code with Storage Exception.
-//       Should have a common Ancestor Serializable Exception in storage
-
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 /// Exception signalling wrong communication.
 class CommunicationException extends SerializedException implements Serializer {
+  CommunicationException(String message,
+      [Exception? cause, StackTrace? stackTrace])
+      : super('CommunicationException',
+            message: message, cause: cause, stackTrace: stackTrace);
 
   static const int serialversionUID = 2348142321;
-
-  String txt;
-
-  CommunicationException(
-      this.txt, [Exception? rootCause, StackTrace? rootTrace]) {
-
-    rootCause=SerializedException(rootCause,rootTrace);
-  }
 
   /// Static deserializer.
   ///
@@ -25,16 +18,17 @@ class CommunicationException extends SerializedException implements Serializer {
   /// @param in The input byte stream to be used
   /// @return the object parsed from the input stream by the respective class
   /// @throws IOException if not overridden or reached unexpectedly the end of stream
-  static Future<CommunicationException> fromByteArrayStream(ByteStream in_) async {
+  static Future<CommunicationException> fromByteArrayStream(
+      ByteStream in_) async {
     if (await SerializerHelper.readLong(in_) != serialversionUID) {
       throw Exception('cannot cast');
     }
 
     // read exception text
-    String txt = (await SerializerHelper.readString(in_))!;
+    final String message = (await SerializerHelper.readString(in_))!;
 
     // deserialize stacktrace
-    StackTrace? ste = await SerializerHelper.readStackTraces(in_);
+    final StackTrace? ste = await SerializerHelper.readStackTraces(in_);
 
     // deserialize Throwable
     //List<Throwable> tv = new Vector<>();
@@ -48,7 +42,6 @@ class CommunicationException extends SerializedException implements Serializer {
     if (await SerializerHelper.readLong(in_) != serialversionUID) {
       throw Exception('cannot cast');
     }
-    return CommunicationException(txt, t, ste);
+    return CommunicationException(message, t, ste);
   }
-
 }

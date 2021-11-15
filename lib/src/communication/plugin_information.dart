@@ -54,8 +54,8 @@ class PluginInformation with Serializer {
     }
     String executable = await SerializerHelper.readString(in_) ?? '';
     int port = await SerializerHelper.readInt(in_);
-    CommunicationSecret secret = await CommunicationSecret.fromByteArrayStream(
-        in_);
+    CommunicationSecret secret =
+        await CommunicationSecret.fromByteArrayStream(in_);
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('Cannot cast');
     }
@@ -70,7 +70,7 @@ class PluginInformation with Serializer {
       toByteArrayStream(out);
       out.close();
       return out.bytes;
-    } on Exception catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -83,4 +83,18 @@ class PluginInformation with Serializer {
     return fromByteArrayStream(in_);
   }
 
+  @override
+  bool operator ==(Object other) {
+    return other is PluginInformation && super.hashCode == other.hashCode;
+  }
+
+  @override
+  int get hashCode {
+    return ((executable ?? 'null') +
+            ':' +
+            port.toString() +
+            ':' +
+            secret.toString())
+        .hashCode;
+  }
 }

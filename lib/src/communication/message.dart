@@ -84,7 +84,7 @@ class Message with Serializer
         (await SerializerHelper.readInt(in_) == 1)
             ? await SerializerHelper.readString(in_)
             : null,
-        MessageTypeExtension.getById(await SerializerHelper.readInt(in_)) ??
+        MessageType.getById(await SerializerHelper.readInt(in_)) ??
             MessageType.STORAGE_ERROR,
         (await SerializerHelper.readInt(in_) == 1)
             ? await GeigerUrl.fromByteArrayStream(in_)

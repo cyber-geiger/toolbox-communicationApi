@@ -43,7 +43,7 @@ class Listener with PluginListener {
     while ((msg == null) &&
         ((timeout < 0) ||
             ((DateTime.now().millisecondsSinceEpoch - startTime) < timeout))) {
-      sleep(Duration(milliseconds: 100));
+      sleep(const Duration(milliseconds: 100));
     }
     var message = msg;
     if (message == null) {

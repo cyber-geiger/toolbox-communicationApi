@@ -25,7 +25,7 @@ final Map<String, GeigerApi> instances = <String, GeigerApi>{};
 /// Throws [DeclarationMismatchException] if the plugin has been registered previously and the
 /// declaration does not match and [StorageException] if registration failed.
 Future<GeigerApi?> getGeigerApi(String executorOrId,
-    [String? id, Declaration declaration = Declaration.DO_SHARE_DATA]) async {
+    [String? id, Declaration declaration = Declaration.doShareData]) async {
   if (id == null) {
     return instances[GeigerApi.MASTER_ID];
   }
@@ -38,7 +38,7 @@ Future<GeigerApi?> getGeigerApi(String executorOrId,
   }
   // });
   GeigerApi l = instances[id]!;
-  if ((declaration != null) && (l.declaration != declaration)) {
+  if (l.declaration != declaration) {
     throw DeclarationMismatchException();
   }
   return l;

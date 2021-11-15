@@ -13,7 +13,7 @@ import 'package:test/test.dart';
 void main() {
   test('testRegisterPlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final PluginInformation payload =
@@ -33,7 +33,7 @@ void main() {
 
   test('testDeregisterPlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,
@@ -56,7 +56,7 @@ void main() {
 
   test('testActivatePlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final PluginInformation payload =
@@ -90,7 +90,7 @@ void main() {
 
   test('testDeactivatePlugin', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final PluginInformation payload =
@@ -130,13 +130,13 @@ void main() {
   test('testGetStorage', () async {
     // check master
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final StorageController? masterController = localMaster.getStorage();
     expect(true, masterController is GenericController);
 
     // check plugin
     final GeigerApi? pluginApi =
-        await getGeigerApi('./plugin1', 'plugin1', Declaration.DO_NOT_SHARE_DATA);
+        await getGeigerApi('./plugin1', 'plugin1', Declaration.doNotShareData);
     final StorageController? pluginController = pluginApi!.getStorage();
     //expect(true, pluginController is PasstroughController);
     // TODO(mgwerder): test with PasstroughController
@@ -144,7 +144,7 @@ void main() {
 
   test('testRegisterMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -169,7 +169,7 @@ void main() {
 
   test('testDeregisterMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -197,7 +197,7 @@ void main() {
 
   test('testEnableMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -231,7 +231,7 @@ void main() {
 
   test('testDisableMenu', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -265,7 +265,7 @@ void main() {
 
   test('testPing', () async {
     final GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.DO_NOT_SHARE_DATA))!;
+        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.MASTER_ID}/test');
     final Message request = Message(GeigerApi.MASTER_ID, GeigerApi.MASTER_ID,

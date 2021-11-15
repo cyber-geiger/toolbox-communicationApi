@@ -115,7 +115,7 @@ void main() {
 
       //register Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER_ID, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
       expect(receivedEventsMaster.length, 3);
@@ -126,7 +126,7 @@ void main() {
       expect(rcvdMessage.action?.plugin, GeigerApi.MASTER_ID);
       expect(rcvdMessage.action?.path, 'registerMenu');
       expect(MenuItem.fromByteArray(rcvdMessage.payload),
-          MenuItem('testMenu', GeigerUrl('', GeigerApi.MASTER_ID, 'testMenu')));
+          MenuItem('testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu')));
     });
     test('check Plugin', () async {
       var localMaster = (await getGeigerApi(
@@ -142,7 +142,7 @@ void main() {
 
       //register Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER_ID, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
       expect(receivedEventsMaster.length, 3);
@@ -169,7 +169,7 @@ void main() {
 
       //register and disable Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER_ID, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
       plugin.disableMenu('testMenu');
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
@@ -196,7 +196,7 @@ void main() {
 
       //register and disable Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER_ID, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
       plugin.disableMenu('testMenu');
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
@@ -224,8 +224,8 @@ void main() {
 
       //register Menu
       plugin.registerMenu(
-          'testMenu', GeigerUrl('', GeigerApi.MASTER_ID, 'testMenu'));
-      plugin.menuPressed(GeigerUrl('', GeigerApi.MASTER_ID, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
+      plugin.menuPressed(GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
 
       List<Message> receivedEventsMaster = pluginListener.getEvents();
       expect(receivedEventsMaster.length, 4);

@@ -83,13 +83,4 @@ class PluginInformation with Serializer {
     return fromByteArrayStream(in_);
   }
 
-  @override
-  int get hashCode {
-    return ((executable ?? 'null') +
-        ':' +
-        port.toString() +
-        ':' +
-        secret.toString())
-        .hashCode;
-  }
 }

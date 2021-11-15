@@ -23,16 +23,16 @@ import 'storable_string.dart';
 import 'storage_event_handler.dart';
 
 enum Mapper {
-  DUMMY_MAPPER,
-  SQLITE_MAPPER,
+  dummyMapper,
+  sqliteMapper,
 }
 
 extension MapperExtension on Mapper {
   StorageMapper getMapper() {
     switch (this) {
-      case Mapper.DUMMY_MAPPER:
+      case Mapper.dummyMapper:
         return DummyMapper('anyUser');
-      case Mapper.SQLITE_MAPPER:
+      case Mapper.sqliteMapper:
         return SqliteMapper('./testdb');
     }
   }
@@ -55,10 +55,10 @@ class CommunicationApi implements GeigerApi {
     _geigerCommunicator.start();
   }
 
-  static const bool PERSISTENT = false;
+  static const bool persistent = false;
 
   static Mapper? _mapper;
-  static const Mapper DEFAULT_MAPPER = Mapper.SQLITE_MAPPER;
+  static const Mapper defaultMapper = Mapper.sqliteMapper;
 
   static final StorableHashMap<StorableString, PluginInformation> plugins =
       StorableHashMap<StorableString, PluginInformation>();
@@ -83,9 +83,8 @@ class CommunicationApi implements GeigerApi {
         // setup listener
         await registerPlugin();
         await activatePlugin(_geigerCommunicator.getPort());
-      } on IOException catch (e) {
-        // TODO(mgwerder): error handling
-        print(e);
+      } on IOException {
+        rethrow;
       }
       // TODO(mgwerder): should the passtroughcontroller be listener?
       //storageEventHandler = PasstroughController(this, _id);
@@ -129,6 +128,7 @@ class CommunicationApi implements GeigerApi {
       }
       if (!plugins.containsKey(StorableString(id))) {
         plugins[StorableString(id)] = info;
+        // ignore: avoid_print
         print(
             '## registered Plugin $id executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
       }
@@ -259,7 +259,7 @@ class CommunicationApi implements GeigerApi {
   /// Obtain [StorageController] to access the storage.
   @override
   StorageController? getStorage() {
-    _mapper ??= DEFAULT_MAPPER;
+    _mapper ??= defaultMapper;
     if (_isMaster) {
       return GenericController(_id, _mapper!.getMapper());
     } else {
@@ -330,7 +330,7 @@ class CommunicationApi implements GeigerApi {
 
   @override
   void deregisterListener(List<MessageType>? events, PluginListener listener) {
-    events ??= MessageType.values;
+    events ??= MessageType.getAllValues();
     for (final MessageType e in events) {
       // synchronized(listeners) {
       final List<PluginListener>? l = _listeners[e];
@@ -508,18 +508,16 @@ class CommunicationApi implements GeigerApi {
         {
           // TODO(mgwerder): after pluginListener serialization
           List<int> payload = msg.payload;
-          List<int> intRange = payload.sublist(0, 4);
-          List<int> inputRange = payload.sublist(4, payload.length);
-          int length = SerializerHelper.byteArrayToInt(intRange);
+          ByteStream in_ = ByteStream(null, payload);
+          int length = await SerializerHelper.readInt(in_);
           // workaround, register for all events always until messagetype serialization is available
-          List<MessageType> events = [MessageType.ALL_EVENTS];
-          ByteSink in_ = ByteSink();
-          // var events = List<MessageType>.empty(growable: true);
+          //List<MessageType> events = [MessageType.ALL_EVENTS];
+          List<MessageType> events = <MessageType>[];
           for (var j = 0; j < length; ++j) {
-            // TODO deserialize messagetypes
-
+            events
+                .add(MessageType.getById(await SerializerHelper.readInt(in_))!);
           }
-          // TODO deserialize Pluginlistener
+          // TODO(mgwerder): deserialize Pluginlistener... WTF... this is most likely incorrect
           PluginListener? listener;
           for (var e in events) {
             // synchronized(listeners) {
@@ -570,10 +568,12 @@ class CommunicationApi implements GeigerApi {
       var l = _listeners[mt];
       if (l != null) {
         for (var pl in l) {
+          // ignore: avoid_print
           print(
               '## notifying PluginListener ${pl.toString()} for msg ${msg.type.toString()} ${msg.action.toString()}');
           pl.pluginEvent(msg.action, msg);
 
+          // ignore: avoid_print
           print('## PluginEvent fired');
         }
       }

@@ -8,18 +8,18 @@ import 'package:geiger_localstorage/geiger_localstorage.dart';
 /// Encapsulates secret parameters for communication and provides methods to employ them.
 class CommunicationSecret with Serializer {
   static const int serialVersionUID = 8901230;
-  static const int DEFAULT_SIZE = 32;
+  static const int defaultSize = 32;
   List<int> secret = [];
 
   /// Creates a new secret with random content and specified [size] in bytes.
-  CommunicationSecret.empty([int size = DEFAULT_SIZE]) {
+  CommunicationSecret.empty([int size = defaultSize]) {
     setRandomSecret(size);
   }
 
   /// Wraps an existing [secret].
   CommunicationSecret(List<int>? secret) {
     if (secret == null || secret.isEmpty) {
-      setRandomSecret(DEFAULT_SIZE);
+      setRandomSecret(defaultSize);
     } else {
       this.secret = secret;
     }
@@ -48,7 +48,7 @@ class CommunicationSecret with Serializer {
   List<int> setSecret(List<int>? newSecret) {
     List<int> ret = secret;
     if (newSecret == null || newSecret.isEmpty) {
-      setRandomSecret(DEFAULT_SIZE);
+      setRandomSecret(defaultSize);
     } else {
       secret = [...newSecret];
     }

@@ -1,110 +1,109 @@
 /// The type of message transferred.
-enum MessageType {
+class MessageType {
+
+  // TODO(mgwerder): replace with introspection
+  static final List<MessageType> _values = <MessageType>[
+    REGISTER_PLUGIN,
+    DEREGISTER_PLUGIN,
+    ACTIVATE_PLUGIN,
+    DEACTIVATE_PLUGIN,
+    REGISTER_MENU,
+    MENU_PRESSED,
+    ENABLE_MENU,
+    DISABLE_MENU,
+    DEREGISTER_MENU,
+    SCAN_PRESSED,
+    SCAN_COMPLETED,
+    REGISTER_MENU,
+    DEREGISTER_MENU,
+    ALL_EVENTS,
+    PING,
+    PONG,
+    STORAGE_EVENT,
+    STORAGE_SUCCESS,
+    STORAGE_ERROR,
+    COMAPI_SUCCESS,
+    COMAPI_ERROR
+  ];
+
+  final String _value;
+  final int _num;
+
   /* Events related to plugin registration */
-  REGISTER_PLUGIN,
-  DEREGISTER_PLUGIN,
+  static const REGISTER_PLUGIN = MessageType._('REGISTER_PLUGIN',100);
+  static const DEREGISTER_PLUGIN = MessageType._('DEREGISTER_PLUGIN',130);
 
   /* Activate plugin events */
-  ACTIVATE_PLUGIN,
-  DEACTIVATE_PLUGIN,
+  static const ACTIVATE_PLUGIN = MessageType._('ACTIVATE_PLUGIN',150);
+  static const DEACTIVATE_PLUGIN = MessageType._('DEACTIVATE_PLUGIN',151);
 
   /* Events related to menu items */
-  REGISTER_MENU, // Register a new menu entry
-  MENU_PRESSED, // Menu item selected by user
-  ENABLE_MENU, // Menu entry is active (a user may select it)
-  DISABLE_MENU, // Menu entry is inactive (a user may not select it)
-  DEREGISTER_MENU, // der-register a registered menu entry
+  static const REGISTER_MENU =
+      MessageType._('REGISTER_MENU',210); // Register a new menu entry
+  static const MENU_PRESSED = MessageType._('MENU_PRESSED',220); // Menu item selected by user
+  static const ENABLE_MENU = MessageType._('ENABLE_MENU',221); // Menu entry is active (a user may select it)
+  static const DISABLE_MENU = MessageType._('DISABLE_MENU',220); // Menu entry is inactive (a user may not select it)
+  static const DEREGISTER_MENU = MessageType._(
+      'DEREGISTER_MENU',230); // der-register a registered menu entry
 
   /* Messages related to out of bound messages */
-  SCAN_PRESSED, // Scan Button is pressed
-  SCAN_COMPLETED, // Scan has been finished by the plugin
+  static const SCAN_PRESSED =
+      MessageType._('SCAN_PRESSED',310); // Scan Button is pressed
+  static const SCAN_COMPLETED = MessageType._(
+      'SCAN_COMPLETED',320); // Scan has been finished by the plugin
 
   /* Messages related to the visual stack control */
-  RETURNING_CONTROL,
+  static const RETURNING_CONTROL = MessageType._('RETURNING_CONTROL',410);
 
   /* Messages related to listeners*/
-  REGISTER_LISTENER,
-  DEREGISTER_LISTENER,
+  static const REGISTER_LISTENER = MessageType._('REGISTER_LISTENER',500);
+  static const DEREGISTER_LISTENER =
+      MessageType._('DEREGISTER_LISTENER',530);
 
   /* internal messages to the API */
-  ALL_EVENTS,
+  static const ALL_EVENTS = MessageType._('ALL_EVENTS',1000);
 
   /* internal keep alive messages */
-  PING,
-  PONG,
+  static const PING = MessageType._('PING',10001);
+  static const PONG = MessageType._('PONG',10002);
 
   /* Messages related to the storage */
-  STORAGE_EVENT,
-  STORAGE_SUCCESS,
-  STORAGE_ERROR,
+  static const STORAGE_EVENT = MessageType._('STORAGE_EVENT',20000);
+  static const STORAGE_SUCCESS = MessageType._('STORAGE_SUCESS',20100);
+  static const STORAGE_ERROR = MessageType._('STORAGE_ERROR',20400);
 
   /* response messages*/
-  COMAPI_SUCCESS,
-  COMAPI_ERROR
-}
+  static const COMAPI_SUCCESS = MessageType._('COMAPI_SUCCESS',30100);
+  static const COMAPI_ERROR = MessageType._('COMAPI_ERROR',30400);
 
-extension MessageTypeExtension on MessageType {
+  const MessageType._(final this._value, final this._num);
+
+  toString() => '$_value';
 
   int get id {
-    switch (this) {
-      case MessageType.REGISTER_PLUGIN:
-        return (100);
-      case MessageType.DEREGISTER_PLUGIN:
-        return (130);
-      case MessageType.ACTIVATE_PLUGIN:
-        return (150);
-      case MessageType.DEACTIVATE_PLUGIN:
-        return (151);
-      case MessageType.REGISTER_MENU:
-        return (210);
-      case MessageType.MENU_PRESSED:
-        return (220);
-      case MessageType.ENABLE_MENU:
-        return (221);
-      case MessageType.DISABLE_MENU:
-        return (222);
-      case MessageType.DEREGISTER_MENU:
-        return (230);
-      case MessageType.SCAN_PRESSED:
-        return (310);
-      case MessageType.SCAN_COMPLETED:
-        return (320);
-      case MessageType.RETURNING_CONTROL:
-        return (410);
-      case MessageType.REGISTER_LISTENER:
-        return (500);
-      case MessageType.DEREGISTER_LISTENER:
-        return (530);
-      case MessageType.ALL_EVENTS:
-        return (1000);
-      case MessageType.PING:
-        return (10000);
-      case MessageType.PONG:
-        return (10001);
-      case MessageType.STORAGE_EVENT:
-        return (20000);
-      case MessageType.STORAGE_SUCCESS:
-        return (20100);
-      case MessageType.STORAGE_ERROR:
-        return (20400);
-      case MessageType.COMAPI_SUCCESS:
-        return (30000);
-      case MessageType.COMAPI_ERROR:
-        return (30200);
-      default:
-        throw Exception('OOPS!!! incomplete list of ids... contact developers');
-    }
+    return _num;
   }
 
   /// Get [MessageType] by its ASN.1 ID.
   ///
   /// Will return `null` if not found.
   static MessageType? getById(int id) {
-    for (MessageType e in MessageType.values) {
-      if (e.id == id) {
-        return e;
+    for(MessageType mt in _values) {
+      if(mt.id==id) {
+        return mt;
       }
     }
     return null;
   }
+
+  static List<MessageType> getAllValues() {
+    List<MessageType> ret = <MessageType>[];
+    for(MessageType mt in _values ) {
+      if(mt.id<1000) {
+        ret.add(mt);
+      }
+    }
+    return ret;
+  }
+
 }

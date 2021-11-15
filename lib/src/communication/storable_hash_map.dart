@@ -8,7 +8,7 @@ import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 /// Serializable Hashmap.
 class StorableHashMap<K extends Serializer, V extends Serializer>
-    implements Map<K, V> {
+    with Serializer implements Map<K, V> {
   static const int serialVersionUID = 14231491232;
 
   final Map<K, V> _map = <K, V>{};
@@ -36,7 +36,7 @@ class StorableHashMap<K extends Serializer, V extends Serializer>
     map.clear();
     int size = await SerializerHelper.readInt(in_);
     for (int i = 0; i < size; i++) {
-      map[await readObject(in_)] = await readObject(in_);
+      map[(await readObject(in_))!] = (await readObject(in_))!;
     }
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');

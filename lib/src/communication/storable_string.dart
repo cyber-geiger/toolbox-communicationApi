@@ -46,7 +46,7 @@ class StorableString implements Serializer {
   /// @param in ByteArrayInputStream to be used
   /// @return the deserialized Storable String
   /// @throws IOException if value cannot be read
-  Future<StorableString> fromByteArrayStream(ByteStream in_) async {
+  static Future<StorableString> fromByteArrayStream(ByteStream in_) async {
     return StorableString(await SerializerHelper.readString(in_));
   }
 }

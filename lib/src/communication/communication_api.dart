@@ -139,7 +139,6 @@ class CommunicationApi implements GeigerApi {
         PluginInformation(_executor, _geigerCommunicator.getPort());
 
     try {
-        idNotNull = id;
       await sendMessage(
           GeigerApi.MASTER_ID,
           Message(
@@ -346,7 +345,7 @@ class CommunicationApi implements GeigerApi {
     if (_id == pluginId) {
       // communicate locally
       PluginInformation initplugin = PluginInformation(null, 0);
-      if(plugins[StorableString(_id)] != null) {
+      if (plugins[StorableString(_id)] != null) {
         initplugin = plugins[StorableString(_id)]!;
       }
       await receivedMessage(initplugin, msg);
@@ -507,14 +506,14 @@ class CommunicationApi implements GeigerApi {
         {
           // TODO(mgwerder): after pluginListener serialization
           List<int> payload = msg.payload;
-          ByteStream in_ = ByteStream(null,payload);
+          ByteStream in_ = ByteStream(null, payload);
           int length = await SerializerHelper.readInt(in_);
           // workaround, register for all events always until messagetype serialization is available
           //List<MessageType> events = [MessageType.ALL_EVENTS];
           List<MessageType> events = <MessageType>[];
           for (var j = 0; j < length; ++j) {
-            events.add(MessageType.getById(await SerializerHelper.readInt(in_))!);
-
+            events
+                .add(MessageType.getById(await SerializerHelper.readInt(in_))!);
           }
           // TODO(mgwerder): deserialize Pluginlistener... WTF... this is most likely incorrect
           PluginListener? listener;

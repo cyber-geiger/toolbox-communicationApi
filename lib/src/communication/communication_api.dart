@@ -39,7 +39,6 @@ extension MapperExtension on Mapper {
 
 /// Offers an API for all plugins to access the local toolbox.
 class CommunicationApi implements GeigerApi {
-
   /// Creates a [CommunicationApi] with the given [executor] and plugin [_id].
   ///
   /// Whether this api [_isMaster] and its privacy [_declaration] must also be provided.
@@ -57,10 +56,8 @@ class CommunicationApi implements GeigerApi {
 
   static const bool PERSISTENT = false;
 
-
   static Mapper? _mapper;
   static const Mapper DEFAULT_MAPPER = Mapper.SQLITE_MAPPER;
-
 
   static final StorableHashMap<StorableString, PluginInformation> plugins =
       StorableHashMap<StorableString, PluginInformation>();
@@ -97,8 +94,10 @@ class CommunicationApi implements GeigerApi {
       //registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
       // it is master
-      final StorageEventHandler storageEventHandler = StorageEventHandler(this, getStorage()!);
-      await registerListener(<MessageType>[MessageType.STORAGE_EVENT], storageEventHandler);
+      final StorageEventHandler storageEventHandler =
+          StorageEventHandler(this, getStorage()!);
+      await registerListener(
+          <MessageType>[MessageType.STORAGE_EVENT], storageEventHandler);
     }
   }
 
@@ -140,15 +139,10 @@ class CommunicationApi implements GeigerApi {
         PluginInformation(_executor, _geigerCommunicator.getPort());
 
     try {
-      var idNotNull = "";
-      if (id != null)
-      {
-        idNotNull = id!;
-      }
       await sendMessage(
           GeigerApi.MASTER_ID,
           Message(
-              idNotNull,
+              _id,
               GeigerApi.MASTER_ID,
               MessageType.REGISTER_PLUGIN,
               GeigerUrl(null, GeigerApi.MASTER_ID, 'registerPlugin'),
@@ -230,7 +224,8 @@ class CommunicationApi implements GeigerApi {
     final String fname = 'GeigerApi.$_id.state';
     try {
       final File file = File(fname);
-      final List<int> buff = file.existsSync() ? file.readAsBytesSync() : <int>[];
+      final List<int> buff =
+          file.existsSync() ? file.readAsBytesSync() : <int>[];
       final ByteStream in_ = ByteStream(null, buff);
       // restoring plugin information
       // synchronized(plugins) {
@@ -267,8 +262,10 @@ class CommunicationApi implements GeigerApi {
     if (_isMaster) {
       return GenericController(_id, _mapper!.getMapper());
     } else {
+      // local only
+      return GenericController(_id, _mapper!.getMapper());
+      // TODO: Add support for remote storage
       //return PasstroughController(this, _id);
-      throw Exception('not implemented');
     }
   }
 
@@ -348,16 +345,14 @@ class CommunicationApi implements GeigerApi {
     if (_id == pluginId) {
       // communicate locally
       PluginInformation initplugin = PluginInformation(null, 0);
-      if(plugins[StorableString(_id)] != null) {
+      if (plugins[StorableString(_id)] != null) {
         initplugin = plugins[StorableString(_id)]!;
       }
       await receivedMessage(initplugin, msg);
     } else {
       // communicate with foreign plugin
-      PluginInformation pluginInformation = PluginInformation(null, 0);
-      if(plugins[StorableString(_id)] != null) {
-        pluginInformation = plugins[StorableString(pluginId)]!;
-      }
+      PluginInformation pluginInformation =
+          plugins[StorableString(pluginId)] ?? PluginInformation(null, 0);
       if (_isMaster) {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInformation.getPort() > 0)) {
@@ -367,7 +362,7 @@ class CommunicationApi implements GeigerApi {
       }
       // TODO(mgwerder): short circuited delivery as no external delivery is supported
       //await _geigerCommunicator.sendMessage(pluginInformation, msg);
-      receivedMessage(pluginInformation, msg);
+      await receivedMessage(pluginInformation, msg);
     }
   }
 
@@ -469,7 +464,8 @@ class CommunicationApi implements GeigerApi {
       case MessageType.ACTIVATE_PLUGIN:
         {
           // get and remove old info
-          final PluginInformation pluginInfo = plugins[StorableString(msg.sourceId)]!;
+          final PluginInformation pluginInfo =
+              plugins[StorableString(msg.sourceId)]!;
           plugins.remove(StorableString(msg.sourceId));
           // put new info
           int port = SerializerHelper.byteArrayToInt(msg.payload);
@@ -654,8 +650,8 @@ class CommunicationApi implements GeigerApi {
   Future<void> menuPressed(GeigerUrl url) async {
     await sendMessage(
         url.plugin,
-        Message(
-            GeigerApi.MASTER_ID, url.plugin, MessageType.MENU_PRESSED, url, null));
+        Message(GeigerApi.MASTER_ID, url.plugin, MessageType.MENU_PRESSED, url,
+            null));
   }
 
   @override

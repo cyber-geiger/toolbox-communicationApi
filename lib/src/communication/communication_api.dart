@@ -3,6 +3,7 @@ library geiger_api;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:communicationapi/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'declaration.dart';
@@ -362,7 +363,8 @@ class CommunicationApi implements GeigerApi {
       }
       // TODO(mgwerder): short circuited delivery as no external delivery is supported
       //await _geigerCommunicator.sendMessage(pluginInformation, msg);
-      await receivedMessage(pluginInformation, msg);
+      await (instances[pluginId] as CommunicationApi)
+          .receivedMessage(pluginInformation, msg);
     }
   }
 
@@ -570,7 +572,7 @@ class CommunicationApi implements GeigerApi {
         for (var pl in l) {
           print(
               '## notifying PluginListener ${pl.toString()} for msg ${msg.type.toString()} ${msg.action.toString()}');
-          pl.pluginEvent(msg.action!, msg);
+          pl.pluginEvent(msg.action, msg);
 
           print('## PluginEvent fired');
         }

@@ -511,7 +511,7 @@ class StorageEventHandler with PluginListener {
   }
 
   @override
-  Future<void> pluginEvent(GeigerUrl url, Message msg) async {
+  Future<void> pluginEvent(GeigerUrl? url, Message msg) async {
     await storageEventParser(msg);
   }
 

@@ -29,6 +29,5 @@ class PluginCommunicator extends GeigerCommunicator {
   @override
   void startPlugin(PluginInformation pluginInformation) {
     // TODO(mgwerder): implement startPlugin
-    throw UnimplementedError();
   }
 }

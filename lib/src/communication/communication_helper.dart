@@ -25,7 +25,7 @@ class Listener with PluginListener {
   }
 
   @override
-  void pluginEvent(GeigerUrl url, Message msg) {
+  void pluginEvent(GeigerUrl? url, Message msg) {
     if (filter(msg)) {
       this.msg = msg;
       // synchronized(obj, {

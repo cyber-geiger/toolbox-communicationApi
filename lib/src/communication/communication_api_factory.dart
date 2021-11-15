@@ -7,7 +7,7 @@ import 'declaration.dart';
 import 'declaration_mismatch_exception.dart';
 import 'geiger_api.dart';
 
-final Map<String, GeigerApi> instances = <String, GeigerApi>{};
+final Map<String, GeigerApi> instances = {};
 
 /// Creates or gets an instance.
 ///
@@ -31,10 +31,10 @@ Future<GeigerApi?> getGeigerApi(String executorOrId,
   }
   // synchronized(instances, {
   if (!instances.containsKey(id)) {
-    CommunicationApi api =
-        CommunicationApi(executorOrId, id, GeigerApi.MASTER_ID == id, declaration);
-    await api.initialize();
+    CommunicationApi api = CommunicationApi(
+        executorOrId, id, GeigerApi.MASTER_ID == id, declaration);
     instances[id] = api;
+    await api.initialize();
   }
   // });
   GeigerApi l = instances[id]!;

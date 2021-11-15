@@ -307,20 +307,15 @@ class CommunicationApi implements GeigerApi {
     } else {
       try {
         // formating int number of events -> events -> listener
-        final ByteSink out = ByteSink();
-        out.sink.add(SerializerHelper.intToByteArray(events.length));
+        var out = SerializerHelper.intToByteArray(events.length);
         for (final MessageType event in events) {
-          out.sink.add(SerializerHelper.intToByteArray(event.id));
+          out.addAll(SerializerHelper.intToByteArray(event.id));
         }
         // out.write(listener.toByteArray());
         await sendMessage(
             GeigerApi.MASTER_ID,
-            Message(
-                _id,
-                GeigerApi.MASTER_ID,
-                MessageType.REGISTER_LISTENER,
-                GeigerUrl(null, GeigerApi.MASTER_ID, 'registerListener'),
-                await out.bytes));
+            Message(_id, GeigerApi.MASTER_ID, MessageType.REGISTER_LISTENER,
+                GeigerUrl(null, GeigerApi.MASTER_ID, 'registerListener'), out));
       } on IOException {
         // TODO(mgwerder): proper Error handling
         // this should never occur

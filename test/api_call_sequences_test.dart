@@ -138,7 +138,7 @@ void main() {
     final GeigerApi? pluginApi =
         await getGeigerApi('./plugin1', 'plugin1', Declaration.doNotShareData);
     final StorageController? pluginController = pluginApi!.getStorage();
-    //expect(true, pluginController is PasstroughController);
+    expect(true, pluginController is StorageController);
     // TODO(mgwerder): test with PasstroughController
   });
 

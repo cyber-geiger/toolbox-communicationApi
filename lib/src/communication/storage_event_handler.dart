@@ -98,7 +98,6 @@ class StorageEventHandler with PluginListener {
       bos.close();
       final List<int> payload = await bos.bytes;
       await _api.sendMessage(
-          msg.sourceId,
           Message(
               msg.targetId ?? 'UNKONWN_TARGET',
               msg.sourceId,
@@ -114,7 +113,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -141,7 +139,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -168,7 +165,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -190,7 +186,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -199,7 +194,6 @@ class StorageEventHandler with PluginListener {
                 payload));
       } else {
         await _api.sendMessage(
-            msg.sourceId,
             Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
                 GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier)));
       }
@@ -211,7 +205,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -233,7 +226,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -242,7 +234,6 @@ class StorageEventHandler with PluginListener {
                 payload));
       } else {
         await _api.sendMessage(
-            msg.sourceId,
             Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
                 GeigerUrl(null, msg.targetId!, 'getValue/' + identifier)));
       }
@@ -254,7 +245,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -285,7 +275,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -316,7 +305,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -338,7 +326,6 @@ class StorageEventHandler with PluginListener {
       bos.close();
       List<int> payload = await bos.bytes;
       await _api.sendMessage(
-          msg.sourceId,
           Message(
               msg.targetId!,
               msg.sourceId,
@@ -353,7 +340,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -379,7 +365,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         final List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -407,7 +392,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -416,7 +400,6 @@ class StorageEventHandler with PluginListener {
                 payload));
       } else {
         await _api.sendMessage(
-            msg.sourceId,
             Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
                 GeigerUrl(null, msg.targetId!, 'search/' + identifier)));
       }
@@ -428,7 +411,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -453,7 +435,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -478,7 +459,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(
                 msg.targetId!,
                 msg.sourceId,
@@ -503,7 +483,6 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            msg.sourceId,
             Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_ERROR,
                 GeigerUrl(null, msg.sourceId, 'zap/' + identifier), payload));
       } on IOException {}

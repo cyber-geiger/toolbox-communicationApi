@@ -67,7 +67,7 @@ class CommunicationHelper {
       [int timeout = 10000]) async {
     var l = Listener(api, filter);
     await l.register();
-    await api.sendMessage(msg.targetId!, msg);
+    await api.sendMessage(msg);
     var result = l.waitForResult(timeout);
     l.dispose();
     return result;

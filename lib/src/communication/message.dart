@@ -149,6 +149,6 @@ class Message with Serializer
 
   @override
   String toString() {
-    return '$sourceId=>${targetId ?? 'null'}{[$type] ($action??"".toString()) }';
+    return '$sourceId=>${targetId ?? 'null'}{[$type] (${action??"".toString()}) }';
   }
 }

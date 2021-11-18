@@ -1,6 +1,6 @@
 library geiger_api;
 
-import 'package:communicationapi/geiger_api.dart';
+import 'package:geiger_api/geiger_api.dart';
 
 import 'communication_api.dart';
 import 'declaration.dart';

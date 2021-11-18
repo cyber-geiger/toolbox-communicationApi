@@ -1,5 +1,5 @@
-import 'package:communicationapi/src/communication/communication_secret.dart';
-import 'package:communicationapi/src/communication/plugin_information.dart';
+import 'package:geiger_api/src/communication/communication_secret.dart';
+import 'package:geiger_api/src/communication/plugin_information.dart';
 import 'package:test/test.dart';
 
 void main() {

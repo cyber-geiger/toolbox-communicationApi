@@ -1,5 +1,5 @@
-import 'package:communicationapi/src/communication/geiger_url.dart';
-import 'package:communicationapi/src/communication/menu_item.dart';
+import 'package:geiger_api/src/communication/geiger_url.dart';
+import 'package:geiger_api/src/communication/menu_item.dart';
 import 'package:test/test.dart';
 
 void main() {

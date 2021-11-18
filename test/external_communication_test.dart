@@ -1,8 +1,8 @@
-import 'package:communicationapi/geiger_api.dart';
-import 'package:communicationapi/src/communication/geiger_api.dart';
-import 'package:communicationapi/src/communication/geiger_url.dart';
-import 'package:communicationapi/src/communication/menu_item.dart';
-import 'package:communicationapi/src/communication/plugin_listener.dart';
+import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/communication/geiger_api.dart';
+import 'package:geiger_api/src/communication/geiger_url.dart';
+import 'package:geiger_api/src/communication/menu_item.dart';
+import 'package:geiger_api/src/communication/plugin_listener.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 

@@ -1,9 +1,9 @@
 library geiger_api;
 
-import 'package:communicationapi/src/communication/geiger_api.dart';
-import 'package:communicationapi/src/communication/geiger_communicator.dart';
-import 'package:communicationapi/src/communication/message.dart';
-import 'package:communicationapi/src/communication/plugin_information.dart';
+import 'package:geiger_api/src/communication/geiger_api.dart';
+import 'package:geiger_api/src/communication/geiger_communicator.dart';
+import 'package:geiger_api/src/communication/message.dart';
+import 'package:geiger_api/src/communication/plugin_information.dart';
 
 class PluginCommunicator extends GeigerCommunicator {
   PluginCommunicator(GeigerApi comm, bool isMaster) : super(comm, isMaster) {}

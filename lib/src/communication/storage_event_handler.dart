@@ -2,7 +2,7 @@ library geiger_api;
 
 import 'dart:io';
 
-import 'package:communicationapi/src/communication/communication_api.dart';
+import 'package:geiger_api/src/communication/communication_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'geiger_api.dart';

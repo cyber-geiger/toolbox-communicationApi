@@ -1,7 +1,7 @@
 library geiger_api;
 
-import 'package:communicationapi/geiger_api.dart';
-import 'package:communicationapi/src/communication/geiger_url.dart';
+import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/communication/geiger_url.dart';
 import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
 import 'package:collection/collection.dart';

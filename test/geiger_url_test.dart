@@ -1,5 +1,5 @@
-import 'package:communicationapi/src/communication/geiger_url.dart';
-import 'package:communicationapi/src/communication/malformed_url_exception.dart';
+import 'package:geiger_api/src/communication/geiger_url.dart';
+import 'package:geiger_api/src/communication/malformed_url_exception.dart';
 import 'package:test/test.dart';
 
 const List<String> protocols = <String>[

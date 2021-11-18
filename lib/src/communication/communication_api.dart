@@ -3,7 +3,7 @@ library geiger_api;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:communicationapi/geiger_api.dart';
+import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'declaration.dart';

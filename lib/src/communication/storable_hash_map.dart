@@ -1,6 +1,6 @@
 library geiger_api;
 
-import 'package:communicationapi/src/serialization/communication_serializer.dart';
+import 'package:geiger_api/src/serialization/communication_serializer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 // TODO: Maybe use quiver's DelegatingMap:

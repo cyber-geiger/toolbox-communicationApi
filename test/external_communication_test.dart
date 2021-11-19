@@ -14,9 +14,9 @@ void main() {
   test('Register External Plugin', () async {
     flushPluginCache();
     GeigerApi localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
+        '', GeigerApi.masterId, Declaration.doNotShareData))!;
     SimpleEventListener masterListener = SimpleEventListener('master');
-    List<MessageType> allEvents = [MessageType.ALL_EVENTS];
+    List<MessageType> allEvents = [MessageType.allEvents];
     await localMaster.registerListener(allEvents, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
@@ -27,19 +27,19 @@ void main() {
     print(pluginListener.toString());
     expect(receivedEventsMaster.length, 2);
     Message rcvdMessage = receivedEventsMaster[0];
-    expect(rcvdMessage.type, MessageType.REGISTER_PLUGIN);
+    expect(rcvdMessage.type, MessageType.registerPlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
     expect(rcvdMessage.action?.protocol, 'geiger');
-    expect(rcvdMessage.action?.plugin, GeigerApi.MASTER_ID);
+    expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
     expect(rcvdMessage.action?.path, 'registerPlugin');
   });
 
   test('Activate Plugin', () async {
     flushPluginCache();
     var localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
+        '', GeigerApi.masterId, Declaration.doNotShareData))!;
     SimpleEventListener masterListener = SimpleEventListener('master');
-    List<MessageType> allEvents = [MessageType.ALL_EVENTS];
+    List<MessageType> allEvents = [MessageType.allEvents];
     await localMaster.registerListener(allEvents, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
@@ -49,16 +49,16 @@ void main() {
     print(masterListener.toString());
     expect(receivedEventsMaster.length, 2);
     Message rcvdMessage = receivedEventsMaster[1];
-    expect(rcvdMessage.type, MessageType.ACTIVATE_PLUGIN);
+    expect(rcvdMessage.type, MessageType.activatePlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
     expect(rcvdMessage.action, null);
   });
   test('Deactivate Plugin', () async {
     flushPluginCache();
     var localMaster = (await getGeigerApi(
-        '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
+        '', GeigerApi.masterId, Declaration.doNotShareData))!;
     SimpleEventListener masterListener = SimpleEventListener('master');
-    List<MessageType> allEvents = [MessageType.ALL_EVENTS];
+    List<MessageType> allEvents = [MessageType.allEvents];
     await localMaster.registerListener(allEvents, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
@@ -72,23 +72,23 @@ void main() {
     print(masterListener);
     expect(receivedEventsMaster.length, 4);
     Message rcvdMessage = receivedEventsMaster[1];
-    expect(rcvdMessage.type, MessageType.ACTIVATE_PLUGIN);
+    expect(rcvdMessage.type, MessageType.activatePlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
     expect(rcvdMessage.action, null);
 
     rcvdMessage = receivedEventsMaster[3];
-    expect(rcvdMessage.type, MessageType.DEREGISTER_PLUGIN);
+    expect(rcvdMessage.type, MessageType.deregisterPlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
     expect(rcvdMessage.action?.protocol, 'geiger');
-    expect(rcvdMessage.action?.plugin, GeigerApi.MASTER_ID);
+    expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
     expect(rcvdMessage.action?.path, 'deregisterPlugin');
 
     print(pluginListener);
     List<Message> receivedEventsPlugin = pluginListener.getEvents();
     expect(receivedEventsPlugin.length, 2);
     rcvdMessage = receivedEventsPlugin[0];
-    expect(rcvdMessage.type, MessageType.COMAPI_SUCCESS);
-    expect(rcvdMessage.sourceId, GeigerApi.MASTER_ID);
+    expect(rcvdMessage.type, MessageType.comapiSuccess);
+    expect(rcvdMessage.sourceId, GeigerApi.masterId);
     expect(rcvdMessage.action?.protocol, 'geiger');
     expect(rcvdMessage.action?.plugin, 'plugin1');
     expect(rcvdMessage.action?.path, 'deactivatePlugin');
@@ -97,9 +97,9 @@ void main() {
     test('check Master', () async {
       flushPluginCache();
       var localMaster = (await getGeigerApi(
-          '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
+          '', GeigerApi.masterId, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener('master');
-      List<MessageType> allEvents = [MessageType.ALL_EVENTS];
+      List<MessageType> allEvents = [MessageType.allEvents];
       await localMaster.registerListener(allEvents, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
@@ -108,26 +108,26 @@ void main() {
 
       //register Menu
       await plugin.registerMenu(
-          'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu'));
 
       List<Message> receivedEventsMaster = masterListener.getEvents();
       expect(receivedEventsMaster.length, 3);
       Message rcvdMessage = receivedEventsMaster[2];
-      expect(rcvdMessage.type, MessageType.REGISTER_MENU);
+      expect(rcvdMessage.type, MessageType.registerMenu);
       expect(rcvdMessage.sourceId, 'plugin1');
       expect(rcvdMessage.action?.protocol, 'geiger');
-      expect(rcvdMessage.action?.plugin, GeigerApi.MASTER_ID);
+      expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'registerMenu');
       expect(
           await MenuItem.fromByteArray(rcvdMessage.payload),
           MenuItem(
-              'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu')));
+              'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu')));
 
       List<Message> receivedEventsPlugin = pluginListener.getEvents();
       expect(receivedEventsPlugin.length, 1);
       rcvdMessage = receivedEventsPlugin[0];
-      expect(rcvdMessage.type, MessageType.COMAPI_SUCCESS);
-      expect(rcvdMessage.sourceId, GeigerApi.MASTER_ID);
+      expect(rcvdMessage.type, MessageType.comapiSuccess);
+      expect(rcvdMessage.sourceId, GeigerApi.masterId);
       expect(rcvdMessage.action?.protocol, 'geiger');
       expect(rcvdMessage.action?.plugin, 'plugin1');
       expect(rcvdMessage.action?.path, 'registerMenu');
@@ -137,9 +137,9 @@ void main() {
     test('check Master', () async {
       flushPluginCache();
       var localMaster = (await getGeigerApi(
-          '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
+          '', GeigerApi.masterId, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener('master');
-      List<MessageType> allEvents = [MessageType.ALL_EVENTS];
+      List<MessageType> allEvents = [MessageType.allEvents];
       await localMaster.registerListener(allEvents, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
@@ -148,24 +148,24 @@ void main() {
 
       //register and disable Menu
       await plugin.registerMenu(
-          'testMenu', GeigerUrl(null, GeigerApi.MASTER_ID, 'testMenu'));
+          'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu'));
       await plugin.disableMenu('testMenu');
 
       List<Message> receivedEventsMaster = masterListener.getEvents();
       expect(receivedEventsMaster.length, 4);
       Message rcvdMessage = receivedEventsMaster[3];
-      expect(rcvdMessage.type, MessageType.DISABLE_MENU);
+      expect(rcvdMessage.type, MessageType.disableMenu);
       expect(rcvdMessage.sourceId, 'plugin1');
       expect(rcvdMessage.action?.protocol, 'geiger');
-      expect(rcvdMessage.action?.plugin, GeigerApi.MASTER_ID);
+      expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'disableMenu');
       expect(rcvdMessage.payloadString, 'testMenu');
 
       List<Message> receivedEventsPlugin = pluginListener.getEvents();
       expect(receivedEventsPlugin.length, 2);
       rcvdMessage = receivedEventsPlugin[1];
-      expect(rcvdMessage.type, MessageType.COMAPI_SUCCESS);
-      expect(rcvdMessage.sourceId, GeigerApi.MASTER_ID);
+      expect(rcvdMessage.type, MessageType.comapiSuccess);
+      expect(rcvdMessage.sourceId, GeigerApi.masterId);
       expect(rcvdMessage.action?.protocol, 'geiger');
       expect(rcvdMessage.action?.plugin, 'plugin1');
       expect(rcvdMessage.action?.path, 'disableMenu');
@@ -175,9 +175,9 @@ void main() {
     test('check Master', () async {
       flushPluginCache();
       var localMaster = (await getGeigerApi(
-          '', GeigerApi.MASTER_ID, Declaration.doNotShareData))!;
+          '', GeigerApi.masterId, Declaration.doNotShareData))!;
       SimpleEventListener masterListener = SimpleEventListener('master');
-      List<MessageType> allEvents = [MessageType.ALL_EVENTS];
+      List<MessageType> allEvents = [MessageType.allEvents];
       await localMaster.registerListener(allEvents, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
@@ -192,18 +192,18 @@ void main() {
       List<Message> receivedEventsMaster = masterListener.getEvents();
       expect(receivedEventsMaster.length, 3);
       Message rcvdMessage = receivedEventsMaster[2];
-      expect(rcvdMessage.type, MessageType.REGISTER_MENU);
+      expect(rcvdMessage.type, MessageType.registerMenu);
       expect(rcvdMessage.sourceId, 'plugin1');
       expect(rcvdMessage.action?.protocol, 'geiger');
-      expect(rcvdMessage.action?.plugin, GeigerApi.MASTER_ID);
+      expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'registerMenu');
       //expect(GeigerUrl.fromByteArrayStream(ByteStream(null,rcvdMessage.payload)), GeigerUrl(null,'plugin1','testMenu'));
 
       List<Message> receivedEventsPlugin = pluginListener.getEvents();
       expect(receivedEventsPlugin.length, 2);
       rcvdMessage = receivedEventsPlugin[1];
-      expect(rcvdMessage.type, MessageType.MENU_PRESSED);
-      expect(rcvdMessage.sourceId, GeigerApi.MASTER_ID);
+      expect(rcvdMessage.type, MessageType.menuPressed);
+      expect(rcvdMessage.sourceId, GeigerApi.masterId);
       expect(rcvdMessage.action?.protocol, 'geiger');
       expect(rcvdMessage.action?.plugin, 'plugin1');
       expect(rcvdMessage.action?.path, 'testMenu');

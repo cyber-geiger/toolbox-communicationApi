@@ -3,9 +3,6 @@ library geiger_api;
 import 'package:geiger_api/geiger_api.dart';
 
 import 'communication_api.dart';
-import 'declaration.dart';
-import 'declaration_mismatch_exception.dart';
-import 'geiger_api.dart';
 
 final Map<String, GeigerApi> instances = {};
 
@@ -27,12 +24,12 @@ final Map<String, GeigerApi> instances = {};
 Future<GeigerApi?> getGeigerApi(String executorOrId,
     [String? id, Declaration declaration = Declaration.doShareData]) async {
   if (id == null) {
-    return instances[GeigerApi.MASTER_ID];
+    return instances[GeigerApi.masterId];
   }
   // synchronized(instances, {
   if (!instances.containsKey(id)) {
     CommunicationApi api = CommunicationApi(
-        executorOrId, id, GeigerApi.MASTER_ID == id, declaration);
+        executorOrId, id, GeigerApi.masterId == id, declaration);
     instances[id] = api;
     await api.initialize();
   }

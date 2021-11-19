@@ -21,7 +21,7 @@ class StorageEventHandler with PluginListener {
 
   /// Decides which storage method has been called for [msg].
   Future<void> storageEventParser(Message msg) async {
-    if (GeigerApi.MASTER_ID == msg.targetId) {
+    if (GeigerApi.masterId == msg.targetId) {
       _isMaster = true;
     }
     final List<String> urlParts = ((msg.action!.path)).split('/');
@@ -101,7 +101,7 @@ class StorageEventHandler with PluginListener {
           Message(
               msg.targetId ?? 'UNKONWN_TARGET',
               msg.sourceId,
-              MessageType.STORAGE_SUCCESS,
+              MessageType.storageSuccess,
               GeigerUrl(
                   null, msg.sourceId, (('getNode/' + identifier) + '/') + path),
               payload));
@@ -116,7 +116,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
 
                 GeigerUrl(null,msg.sourceId, 'getNode/' + identifier),
                 payload));
@@ -142,7 +142,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null,msg.sourceId, 'addNode/' + identifier),
                 payload));
       } on IOException {}
@@ -168,7 +168,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null, msg.sourceId, 'updateNode/' + identifier),
                 payload));
       } on IOException {}
@@ -189,12 +189,12 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_SUCCESS,
+                MessageType.storageSuccess,
                 GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier),
                 payload));
       } else {
         await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
+            Message(msg.targetId!, msg.sourceId, MessageType.storageSuccess,
                 GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier)));
       }
     } on Exception catch (e) {
@@ -208,7 +208,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null,msg.sourceId, 'deleteNode/' + identifier),
                 payload));
       } on IOException {}
@@ -229,12 +229,12 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_SUCCESS,
+                MessageType.storageSuccess,
                 GeigerUrl(null, msg.targetId!, 'getValue/' + identifier),
                 payload));
       } else {
         await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
+            Message(msg.targetId!, msg.sourceId, MessageType.storageSuccess,
                 GeigerUrl(null, msg.targetId!, 'getValue/' + identifier)));
       }
     } on Exception catch (e,st) {
@@ -248,7 +248,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null,msg.sourceId, 'getValue/' + identifier),
                 payload));
       } on IOException catch (e,s) {
@@ -278,7 +278,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null, msg.sourceId, 'addValue/' + identifier),
                 payload));
       } on IOException catch(e,s)  {
@@ -308,7 +308,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null, msg.sourceId, 'updateValue/' + identifier),
                 payload));
       } on IOException {}
@@ -329,7 +329,7 @@ class StorageEventHandler with PluginListener {
           Message(
               msg.targetId!,
               msg.sourceId,
-              MessageType.STORAGE_SUCCESS,
+              MessageType.storageSuccess,
               GeigerUrl(null, msg.targetId!, 'deleteNodeValue/' + identifier),
               payload));
     } on Exception catch (e) {
@@ -343,7 +343,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null, msg.sourceId, 'deleteValue/' + identifier),
                 payload));
       } on IOException {}
@@ -368,7 +368,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null, msg.sourceId, 'rename/' + identifier),
                 payload));
       } on IOException {}
@@ -395,12 +395,12 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_SUCCESS,
+                MessageType.storageSuccess,
                 GeigerUrl(null, msg.targetId!, 'search/' + identifier),
                 payload));
       } else {
         await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_SUCCESS,
+            Message(msg.targetId!, msg.sourceId, MessageType.storageSuccess,
                 GeigerUrl(null, msg.targetId!, 'search/' + identifier)));
       }
     } on Exception catch (e) {
@@ -414,7 +414,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null, msg.sourceId, 'search/' + identifier),
                 payload));
       } on IOException {}
@@ -438,7 +438,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null,msg.sourceId, 'close/' + identifier),
                 payload));
       } on IOException {}
@@ -462,7 +462,7 @@ class StorageEventHandler with PluginListener {
             Message(
                 msg.targetId!,
                 msg.sourceId,
-                MessageType.STORAGE_ERROR,
+                MessageType.storageError,
                 GeigerUrl(null,msg.sourceId, 'flush/' + identifier),
                 payload));
       } on IOException {}
@@ -483,7 +483,7 @@ class StorageEventHandler with PluginListener {
         bos.close();
         List<int> payload = await bos.bytes;
         await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.STORAGE_ERROR,
+            Message(msg.targetId!, msg.sourceId, MessageType.storageError,
                 GeigerUrl(null, msg.sourceId, 'zap/' + identifier), payload));
       } on IOException {}
     }

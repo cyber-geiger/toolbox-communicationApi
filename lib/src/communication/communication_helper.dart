@@ -3,10 +3,6 @@ library geiger_api;
 import 'dart:io';
 
 import '../../geiger_api.dart';
-import 'communication_exception.dart';
-import 'geiger_url.dart';
-import 'message.dart';
-import 'message_type.dart';
 import 'plugin_listener.dart';
 
 /// Interface to denote a message filter.
@@ -21,7 +17,7 @@ class Listener with PluginListener {
   Listener(this.api, this.filter);
 
   Future<void> register() async {
-    await api.registerListener(<MessageType>[MessageType.ALL_EVENTS], this);
+    await api.registerListener(<MessageType>[MessageType.allEvents], this);
   }
 
   @override
@@ -35,7 +31,7 @@ class Listener with PluginListener {
   }
 
   void dispose() {
-    api.deregisterListener([MessageType.ALL_EVENTS], this);
+    api.deregisterListener([MessageType.allEvents], this);
   }
 
   Message waitForResult(int timeout) {

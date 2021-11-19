@@ -3,78 +3,78 @@ class MessageType {
 
   // TODO(mgwerder): replace with introspection
   static final List<MessageType> _values = <MessageType>[
-    REGISTER_PLUGIN,
-    DEREGISTER_PLUGIN,
-    ACTIVATE_PLUGIN,
-    DEACTIVATE_PLUGIN,
-    REGISTER_MENU,
-    MENU_PRESSED,
-    ENABLE_MENU,
-    DISABLE_MENU,
-    DEREGISTER_MENU,
-    SCAN_PRESSED,
-    SCAN_COMPLETED,
-    REGISTER_MENU,
-    DEREGISTER_MENU,
-    ALL_EVENTS,
-    PING,
-    PONG,
-    STORAGE_EVENT,
-    STORAGE_SUCCESS,
-    STORAGE_ERROR,
-    COMAPI_SUCCESS,
-    COMAPI_ERROR
+    registerPlugin,
+    deregisterPlugin,
+    activatePlugin,
+    deactivatePlugin,
+    registerMenu,
+    menuPressed,
+    enableMenu,
+    disableMenu,
+    deregisterMenu,
+    scanPressed,
+    scanCompleted,
+    registerMenu,
+    deregisterMenu,
+    allEvents,
+    ping,
+    pong,
+    storageEvent,
+    storageSuccess,
+    storageError,
+    comapiSuccess,
+    comapiError
   ];
 
   final String _value;
   final int _num;
 
   /* Events related to plugin registration */
-  static const REGISTER_PLUGIN = MessageType._('REGISTER_PLUGIN',100);
-  static const DEREGISTER_PLUGIN = MessageType._('DEREGISTER_PLUGIN',130);
+  static const registerPlugin = MessageType._('REGISTER_PLUGIN',100);
+  static const deregisterPlugin = MessageType._('DEREGISTER_PLUGIN',130);
 
   /* Activate plugin events */
-  static const ACTIVATE_PLUGIN = MessageType._('ACTIVATE_PLUGIN',150);
-  static const DEACTIVATE_PLUGIN = MessageType._('DEACTIVATE_PLUGIN',151);
+  static const activatePlugin = MessageType._('ACTIVATE_PLUGIN',150);
+  static const deactivatePlugin = MessageType._('DEACTIVATE_PLUGIN',151);
 
   /* Events related to menu items */
-  static const REGISTER_MENU =
+  static const registerMenu =
       MessageType._('REGISTER_MENU',210); // Register a new menu entry
-  static const MENU_PRESSED = MessageType._('MENU_PRESSED',220); // Menu item selected by user
-  static const ENABLE_MENU = MessageType._('ENABLE_MENU',221); // Menu entry is active (a user may select it)
-  static const DISABLE_MENU = MessageType._('DISABLE_MENU',220); // Menu entry is inactive (a user may not select it)
-  static const DEREGISTER_MENU = MessageType._(
+  static const menuPressed = MessageType._('MENU_PRESSED',220); // Menu item selected by user
+  static const enableMenu = MessageType._('ENABLE_MENU',221); // Menu entry is active (a user may select it)
+  static const disableMenu = MessageType._('DISABLE_MENU',220); // Menu entry is inactive (a user may not select it)
+  static const deregisterMenu = MessageType._(
       'DEREGISTER_MENU',230); // der-register a registered menu entry
 
   /* Messages related to out of bound messages */
-  static const SCAN_PRESSED =
+  static const scanPressed =
       MessageType._('SCAN_PRESSED',310); // Scan Button is pressed
-  static const SCAN_COMPLETED = MessageType._(
+  static const scanCompleted = MessageType._(
       'SCAN_COMPLETED',320); // Scan has been finished by the plugin
 
   /* Messages related to the visual stack control */
-  static const RETURNING_CONTROL = MessageType._('RETURNING_CONTROL',410);
+  static const returningControl = MessageType._('RETURNING_CONTROL',410);
 
   /* Messages related to listeners*/
-  static const REGISTER_LISTENER = MessageType._('REGISTER_LISTENER',500);
-  static const DEREGISTER_LISTENER =
+  static const registerListener = MessageType._('REGISTER_LISTENER',500);
+  static const deregisterListener =
       MessageType._('DEREGISTER_LISTENER',530);
 
   /* internal messages to the API */
-  static const ALL_EVENTS = MessageType._('ALL_EVENTS',1000);
+  static const allEvents = MessageType._('ALL_EVENTS',1000);
 
   /* internal keep alive messages */
-  static const PING = MessageType._('PING',10001);
-  static const PONG = MessageType._('PONG',10002);
+  static const ping = MessageType._('PING',10001);
+  static const pong = MessageType._('PONG',10002);
 
   /* Messages related to the storage */
-  static const STORAGE_EVENT = MessageType._('STORAGE_EVENT',20000);
-  static const STORAGE_SUCCESS = MessageType._('STORAGE_SUCESS',20100);
-  static const STORAGE_ERROR = MessageType._('STORAGE_ERROR',20400);
+  static const storageEvent = MessageType._('STORAGE_EVENT',20000);
+  static const storageSuccess = MessageType._('STORAGE_SUCESS',20100);
+  static const storageError = MessageType._('STORAGE_ERROR',20400);
 
   /* response messages*/
-  static const COMAPI_SUCCESS = MessageType._('COMAPI_SUCCESS',30100);
-  static const COMAPI_ERROR = MessageType._('COMAPI_ERROR',30400);
+  static const comapiSuccess = MessageType._('COMAPI_SUCCESS',30100);
+  static const comapiError = MessageType._('COMAPI_ERROR',30400);
 
   const MessageType._(final this._value, final this._num);
 

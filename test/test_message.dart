@@ -14,10 +14,10 @@ void main(){
   test('testConstructionGetterSetter', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
-    MessageType messageType = MessageType.ALL_EVENTS;
+    MessageType messageType = MessageType.allEvents;
     GeigerUrl? url;
     try{
-      url = GeigerUrl(null, GeigerApi.MASTER_ID, 'geiger://plugin/path');
+      url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
     } catch(e) {
       print(e);
     }
@@ -47,11 +47,11 @@ void main(){
   test('testEquals', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
-    MessageType messageType = MessageType.ALL_EVENTS;
+    MessageType messageType = MessageType.allEvents;
     List<int> payload = 'payload'.codeUnits;
     GeigerUrl? url;
     try{
-      url = GeigerUrl(null, GeigerApi.MASTER_ID, 'geiger://plugin/path');
+      url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
     } catch(e) {
       print(e);
     }
@@ -76,11 +76,11 @@ void main(){
   test('testHashCode', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
-    MessageType messageType = MessageType.ALL_EVENTS;
+    MessageType messageType = MessageType.allEvents;
     List<int> payload = 'payload'.codeUnits;
     GeigerUrl? url;
     try{
-      url = GeigerUrl(null, GeigerApi.MASTER_ID, 'geiger://plugin/path');
+      url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
     } catch(e) {
       print(e);
     }
@@ -100,7 +100,7 @@ void main(){
   });
 
   test('payloadEncodingTest', () {
-    Message m = Message('src', 'target', MessageType.ACTIVATE_PLUGIN, null, null);
+    Message m = Message('src', 'target', MessageType.activatePlugin, null, null);
     final List<String?> i = [null, '',  const Uuid().v4()];
     for(final String? pl in i){
       m.payloadString = pl;

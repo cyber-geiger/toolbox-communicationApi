@@ -13,8 +13,8 @@ import 'plugin_registrar.dart';
 
 /// The API provided by all communicator interfaces.
 abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
-  static const String MASTER_ID = '__MASTERPLUGIN__';
-  static const String MASTER_EXECUTOR = 'FIXME';
+  static const String masterId = '__MASTERPLUGIN__';
+  static const String masterExecutor = 'FIXME';
 
   Future<void> initialize();
 
@@ -33,7 +33,7 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
 
   /// Register a [listener] for specific [events] on the Master.
   ///
-  /// Use [MessageType.ALL_EVENTS] to register for all messages.
+  /// Use [MessageType.allEvents] to register for all messages.
   Future<void> registerListener(
       List<MessageType> events, PluginListener listener);
 

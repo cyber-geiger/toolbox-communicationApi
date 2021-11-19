@@ -44,7 +44,6 @@ class MenuItem implements Serializer {
   /// @param in ByteArrayInputStream to be used
   /// @return the deserialized Storable String
   /// @throws IOException if value cannot be read
-  @override
   static Future<MenuItem> fromByteArrayStream(ByteStream in_) async {
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');

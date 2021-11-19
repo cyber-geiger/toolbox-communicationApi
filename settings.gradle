@@ -1,4 +1,0 @@
-rootProject.name = 'toolbox-communicationApi'
-
-include 'communicationAPI', 'localstorage'
-

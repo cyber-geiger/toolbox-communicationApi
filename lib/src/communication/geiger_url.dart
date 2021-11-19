@@ -82,11 +82,8 @@ class GeigerUrl implements Serializer {
   void toByteArrayStream(ByteSink out) {
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, protocol);
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, _pluginId);
-      SerializerHelper.writeInt(out, 0);
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, path);
+    SerializerHelper.writeString(out, _pluginId);
+    SerializerHelper.writeString(out, path);
   }
 
   /// Convert ByteArrayInputStream to GeigerUrl.
@@ -99,12 +96,8 @@ class GeigerUrl implements Serializer {
     }
     return GeigerUrl(
         await SerializerHelper.readString(in_) ?? '',
-        (await SerializerHelper.readInt(in_) == 1)
-            ? await SerializerHelper.readString(in_) ?? ''
-            : '',
-        (await SerializerHelper.readInt(in_) == 1)
-            ? await SerializerHelper.readString(in_) ?? ''
-            : '');
+        await SerializerHelper.readString(in_) ?? '',
+        await SerializerHelper.readString(in_) ?? '');
   }
 
   @override

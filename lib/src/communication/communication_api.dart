@@ -6,9 +6,9 @@ import 'dart:io';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
+import 'communication_helper.dart';
 import 'geiger_communicator.dart';
 import 'menu_item.dart';
-import 'plugin_communicator.dart';
 import 'plugin_information.dart';
 import 'plugin_listener.dart';
 import 'plugin_starter.dart';
@@ -34,17 +34,15 @@ extension MapperExtension on Mapper {
 class CommunicationApi implements GeigerApi {
   /// Creates a [CommunicationApi] with the given [executor] and plugin [_id].
   ///
-  /// Whether this api [_isMaster] and its privacy [_declaration] must also be provided.
+  /// Whether this api [isMaster] and its privacy [_declaration] must also be provided.
   CommunicationApi(
-      String executor, String id, bool isMaster, Declaration declaration) {
+      String executor, String id, this.isMaster, Declaration declaration) {
     _executor = executor;
     _id = id;
-    _isMaster = isMaster;
     _declaration = declaration;
-    _geigerCommunicator = PluginCommunicator(this, _isMaster);
+    _geigerCommunicator = GeigerCommunicator(this);
 
     restoreState();
-    _geigerCommunicator.start();
   }
 
   static const bool persistent = false;
@@ -61,7 +59,7 @@ class CommunicationApi implements GeigerApi {
 
   late String _executor;
   late String _id;
-  late bool _isMaster;
+  late final bool isMaster;
   late Declaration _declaration;
 
   final Map<MessageType, List<PluginListener>> _listeners =
@@ -71,11 +69,12 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> initialize() async {
-    if (!_isMaster) {
+    await _geigerCommunicator.start();
+    if (!isMaster) {
       try {
         // setup listener
         await registerPlugin();
-        await activatePlugin(_geigerCommunicator.getPort());
+        await activatePlugin(_geigerCommunicator.port);
       } on IOException {
         rethrow;
       }
@@ -130,21 +129,26 @@ class CommunicationApi implements GeigerApi {
 
     // request to register at Master
     final PluginInformation pluginInformation =
-        PluginInformation(_executor, _geigerCommunicator.getPort());
+        PluginInformation(_executor, _geigerCommunicator.port);
 
-    await sendMessage(Message(
-        _id,
-        GeigerApi.masterId,
-        MessageType.registerPlugin,
-        GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
-        await pluginInformation.toByteArray()));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(
+            _id,
+            GeigerApi.masterId,
+            MessageType.registerPlugin,
+            GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
+            await pluginInformation.toByteArray()),
+        (msg) =>
+            msg.type == MessageType.comapiSuccess &&
+            msg.action?.path == 'registerPlugin');
   }
 
   @override
   Future<void> deregisterPlugin([String? id]) async {
     if (id != null) {
       // remove on master all menu items
-      if (_isMaster) {
+      if (isMaster) {
         final List<String> l = <String>[];
         for (final MapEntry<StorableString, MenuItem> i in menuItems.entries) {
           if (i.value.action.plugin == id) {
@@ -222,12 +226,13 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> activatePlugin(int port) async {
-    await sendMessage(Message(
-        _id,
-        GeigerApi.masterId,
-        MessageType.activatePlugin,
-        null,
-        SerializerHelper.intToByteArray(port)));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(_id, GeigerApi.masterId, MessageType.activatePlugin, null,
+            SerializerHelper.intToByteArray(port)),
+        (msg) =>
+            msg.type == MessageType.comapiSuccess &&
+            msg.action?.path == 'activatePlugin');
   }
 
   @override
@@ -240,7 +245,7 @@ class CommunicationApi implements GeigerApi {
   @override
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
-    if (_isMaster) {
+    if (isMaster) {
       return GenericController(_id, _mapper!.getMapper());
     } else {
       // local only
@@ -275,28 +280,26 @@ class CommunicationApi implements GeigerApi {
     pluginId ??= msg.targetId;
     if (_id == pluginId) {
       // Message to this plugin
-      await receivedMessage(
-          plugins[StorableString(_id)] ?? PluginInformation(null, 0), msg);
-    } else if (instances[pluginId] != null) {
-      // Message to plugin in same isolate
-      // ignore: avoid_print
-      print('## Sending message to internal plugin $pluginId ($msg)');
-      // TODO: refactor so this cast is no longer needed
-      await (instances[pluginId] as CommunicationApi)
-          .receivedMessage(PluginInformation(null, 0), msg);
+      await receivedMessage(msg);
     } else {
+      print('## Sending message to plugin $pluginId ($msg)');
       // Message to external plugin
-      PluginInformation pluginInfo =
-          plugins[StorableString(pluginId)] ?? PluginInformation(null, 0);
-      if (_isMaster) {
+      PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
+          PluginInformation(
+              null,
+              pluginId == GeigerApi.masterId
+                  ? GeigerCommunicator.masterPort
+                  : 0);
+      if (isMaster) {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInfo.getPort() > 0)) {
           // is inactive -> start plugin
-          _geigerCommunicator.startPlugin(pluginInfo);
+          // TODO: add plugin startup
+          throw UnimplementedError();
+          // _geigerCommunicator.startPlugin(pluginInfo);
         }
       }
-      // TODO(mgwerder): short circuited delivery as no external delivery is supported
-      //await _geigerCommunicator.sendMessage(pluginInformation, msg);
+      await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
     }
   }
 
@@ -308,7 +311,7 @@ class CommunicationApi implements GeigerApi {
     }
   }
 
-  Future<void> receivedMessage(PluginInformation info, Message msg) async {
+  Future<void> receivedMessage(Message msg) async {
     // TODO(mgwerder): other messagetypes
     // ignore: avoid_print
     print('## got message in plugin $_id => $msg');
@@ -419,7 +422,7 @@ class CommunicationApi implements GeigerApi {
           break;
         }
       case MessageType.scanPressed:
-        if (_isMaster) {
+        if (isMaster) {
           await scanButtonPressed();
         }
         // if its not the Master there should be a listener registered for this event
@@ -503,7 +506,7 @@ class CommunicationApi implements GeigerApi {
   @override
   Future<void> scanButtonPressed() async {
     // TODO
-    if (!_isMaster) {
+    if (!isMaster) {
       await sendMessage(Message(
           _id,
           GeigerApi.masterId,
@@ -518,5 +521,9 @@ class CommunicationApi implements GeigerApi {
   /// Start a plugin of [pluginInformation] by using the stored executable String.
   void startPlugin(PluginInformation pluginInformation) {
     PluginStarter.startPlugin(pluginInformation);
+  }
+
+  Future<void> close() async {
+    await _geigerCommunicator.close();
   }
 }

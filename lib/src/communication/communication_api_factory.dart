@@ -6,6 +6,10 @@ import 'communication_api.dart';
 
 final Map<String, GeigerApi> instances = {};
 
+void flushGeigerApiCache() {
+  instances.clear();
+}
+
 /// Creates or gets an instance.
 ///
 /// Will only create one [LocalApi] instance per plugin id without guarantee

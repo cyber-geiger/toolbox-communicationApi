@@ -79,6 +79,7 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> initialize() async {
+    await StorageMapper.initDatabaseExpander();
     if (!_isMaster) {
       try {
         // setup listener

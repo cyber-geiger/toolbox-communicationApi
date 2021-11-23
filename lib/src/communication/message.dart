@@ -8,9 +8,9 @@ import 'geiger_url.dart';
 import 'message_type.dart';
 
 /// Representation of a message.
-class Message with Serializer
-{
+class Message with Serializer {
   static const int serialVersionUID = 143287432;
+  String _id = '<undefined>';
   final String _sourceId;
   final String? _targetId;
   final MessageType _type;
@@ -19,10 +19,12 @@ class Message with Serializer
 
   /// Creates a [Message] with the provided properties.
   Message(this._sourceId, this._targetId, this._type, this._action,
-      [List<int>? payload]) {
+      [List<int>? payload, String? replyToId]) {
+    replyToId ??= '${ExtendedTimestamp.now(false)}';
     if (payload != null) {
       _payloadString = base64.encode(payload);
     }
+    _id = replyToId;
   }
 
   /// Returns the target id of the message.
@@ -149,6 +151,6 @@ class Message with Serializer
 
   @override
   String toString() {
-    return '$sourceId=>${targetId ?? 'null'}{[$type] (${action??"".toString()}) }';
+    return '$sourceId=>${targetId ?? 'null'}{[$type] (${action ?? "".toString()}) }';
   }
 }

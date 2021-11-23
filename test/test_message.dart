@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 library geiger_api;
 
 import 'package:geiger_api/geiger_api.dart';
@@ -8,17 +10,15 @@ import 'package:collection/collection.dart';
 
 class TestMessage {}
 
-
-
-void main(){
+void main() {
   test('testConstructionGetterSetter', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
     MessageType messageType = MessageType.allEvents;
     GeigerUrl? url;
-    try{
+    try {
       url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch(e) {
+    } catch (e) {
       print(e);
     }
 
@@ -34,14 +34,17 @@ void main(){
     Message msg2 = Message(sourceId, targetId, messageType, url, payload);
     expect(msg2.sourceId == sourceId, true, reason: 'sourceId does not match');
     expect(msg2.targetId == targetId, true, reason: 'targetId does not match');
-    expect(msg2.type == messageType, true, reason: 'messageType does not match');
+    expect(msg2.type == messageType, true,
+        reason: 'messageType does not match');
     expect(msg2.action == url, true, reason: 'GeigerUrl does not match');
     expect(msg2.payloadString != null, true, reason: 'payloadString is empty');
-    expect(msg2.payload.equals(payload), true, reason: 'payload does not match');
+    expect(msg2.payload.equals(payload), true,
+        reason: 'payload does not match');
 
     List<int> payload2 = 'payload2'.codeUnits;
     msg2.payload = payload2;
-    expect(msg2.payload.equals(payload2), true, reason: 'new payload does not match');
+    expect(msg2.payload.equals(payload2), true,
+        reason: 'new payload does not match');
   });
 
   test('testEquals', () {
@@ -50,9 +53,9 @@ void main(){
     MessageType messageType = MessageType.allEvents;
     List<int> payload = 'payload'.codeUnits;
     GeigerUrl? url;
-    try{
+    try {
       url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch(e) {
+    } catch (e) {
       print(e);
     }
 
@@ -79,9 +82,9 @@ void main(){
     MessageType messageType = MessageType.allEvents;
     List<int> payload = 'payload'.codeUnits;
     GeigerUrl? url;
-    try{
+    try {
       url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch(e) {
+    } catch (e) {
       print(e);
     }
 
@@ -100,9 +103,10 @@ void main(){
   });
 
   test('payloadEncodingTest', () {
-    Message m = Message('src', 'target', MessageType.activatePlugin, null, null);
-    final List<String?> i = [null, '',  const Uuid().v4()];
-    for(final String? pl in i){
+    Message m =
+        Message('src', 'target', MessageType.activatePlugin, null, null);
+    final List<String?> i = [null, '', const Uuid().v4()];
+    for (final String? pl in i) {
       m.payloadString = pl;
       expect(pl == m.payloadString, true);
 

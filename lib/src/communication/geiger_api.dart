@@ -45,7 +45,7 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   /// Sends a custom, plugin-specific [message] to a peer plugin with the id [pluginId].
   ///
   /// Mainly used for internal purposes. Plugins may only send messages to the toolbox core.
-  Future<void> sendMessage( Message message, [String? pluginId]);
+  Future<void> sendMessage(Message message, [String? pluginId]);
 
   /// Notify plugin about a menu entry with a specific [url] being pressed.
   ///

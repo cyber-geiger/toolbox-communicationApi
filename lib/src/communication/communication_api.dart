@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:logging/logging.dart';
 
 import 'geiger_communicator.dart';
 import 'malformed_url_exception.dart';
@@ -22,12 +23,16 @@ enum Mapper {
 
 extension MapperExtension on Mapper {
   StorageMapper getMapper() {
+    StorageMapper ret;
     switch (this) {
       case Mapper.dummyMapper:
-        return DummyMapper('anyUser');
+        ret = DummyMapper('anyUser');
+        break;
       case Mapper.sqliteMapper:
-        return SqliteMapper('./testdb');
+        ret = SqliteMapper('database');
+        break;
     }
+    return ret;
   }
 }
 
@@ -50,6 +55,8 @@ class CommunicationApi implements GeigerApi {
 
   static const bool persistent = false;
 
+  static final Logger _logger = Logger('GeigerAPI');
+
   static Mapper? _mapper;
   static const Mapper defaultMapper = Mapper.sqliteMapper;
 
@@ -58,7 +65,7 @@ class CommunicationApi implements GeigerApi {
   static final StorableHashMap<StorableString, MenuItem> menuItems =
       StorableHashMap<StorableString, MenuItem>();
 
-  // static final Logger log = Logger.getLogger("GeigerApi");
+  static final Logger log = Logger("GeigerApi");
 
   late String _executor;
   late String _id;
@@ -122,9 +129,8 @@ class CommunicationApi implements GeigerApi {
       }
       if (!plugins.containsKey(StorableString(id))) {
         plugins[StorableString(id)] = info;
-        // ignore: avoid_print
-        print(
-            '## registered Plugin $id executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
+        _logger.info(
+            'registered Plugin $id executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
       }
       return;
     }
@@ -140,9 +146,8 @@ class CommunicationApi implements GeigerApi {
           MessageType.registerPlugin,
           GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
           await pluginInformation.toByteArray()));
-    } on MalformedUrlException {
-      // TODO(mgwerder): proper Error handling
-      // this should never occur
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
     }
   }
 
@@ -181,9 +186,8 @@ class CommunicationApi implements GeigerApi {
           GeigerApi.masterId,
           MessageType.deregisterPlugin,
           GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
-    } on MalformedUrlException {
-      // TODO(mgwerder): proper Error handling
-      // this should never occur
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
     }
     zapState();
   }
@@ -255,14 +259,17 @@ class CommunicationApi implements GeigerApi {
   @override
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
+    StorageController? ret;
     if (_isMaster) {
-      return GenericController(_id, _mapper!.getMapper());
+      ret = GenericController(_id, _mapper!.getMapper());
     } else {
       // local only
-      return GenericController(_id, _mapper!.getMapper());
+      ret = GenericController(_id, _mapper!.getMapper());
       // TODO: Add support for remote storage
       //return PasstroughController(this, _id);
     }
+    ExtendedTimestamp.initializeTimestamp(ret);
+    return ret;
   }
 
   @override
@@ -322,7 +329,7 @@ class CommunicationApi implements GeigerApi {
       await receivedMessage(initplugin, msg);
       // Message to a local (internal) plugin?
     } else if (instances[pluginId] != null) {
-      print('## Sending message to internal plugin $pluginId ($msg)');
+      _logger.info('Sending message to internal plugin $pluginId ($msg)');
       await (instances[pluginId] as CommunicationApi)
           .receivedMessage(PluginInformation(null, 0), msg);
       // Message to an external plugin
@@ -352,7 +359,7 @@ class CommunicationApi implements GeigerApi {
 
   Future<void> receivedMessage(PluginInformation info, Message msg) async {
     // TODO(mgwerder): other messagetypes
-    print('## got message in plugin $_id => $msg');
+    _logger.info('## got message in plugin $_id => $msg');
     MenuItem? i;
     switch (msg.type) {
       case MessageType.enableMenu:
@@ -366,9 +373,8 @@ class CommunicationApi implements GeigerApi {
               msg.sourceId,
               MessageType.comapiSuccess,
               GeigerUrl(null, msg.sourceId, 'enableMenu')));
-        } on MalformedUrlException {
-          // TODO(mgwerder): proper Error handling
-          // this should never occur
+        } on MalformedUrlException catch (e, st) {
+          _logger.severe('got unexpected MalformedUrlException', e, st);
         }
         break;
       case MessageType.disableMenu:
@@ -382,9 +388,8 @@ class CommunicationApi implements GeigerApi {
               msg.sourceId,
               MessageType.comapiSuccess,
               GeigerUrl(null, msg.sourceId, 'disableMenu')));
-        } on MalformedUrlException {
-          // TODO(mgwerder): proper Error handling
-          // this should never occur
+        } on MalformedUrlException catch (e, st) {
+          _logger.severe('got unexpected MalformedUrlException', e, st);
         }
         break;
       case MessageType.registerMenu:
@@ -396,9 +401,8 @@ class CommunicationApi implements GeigerApi {
               msg.sourceId,
               MessageType.comapiSuccess,
               GeigerUrl(null, msg.sourceId, 'registerMenu')));
-        } on MalformedUrlException {
-          // TODO(mgwerder): proper Error handling
-          // this should never occur
+        } on MalformedUrlException catch (e, st) {
+          _logger.severe('got unexpected MalformedUrlException', e, st);
         }
         break;
       case MessageType.deregisterMenu:
@@ -410,9 +414,8 @@ class CommunicationApi implements GeigerApi {
               msg.sourceId,
               MessageType.comapiSuccess,
               GeigerUrl(null, msg.sourceId, 'deregisterMenu')));
-        } on MalformedUrlException {
-          // TODO(mgwerder): proper Error handling
-          // this should never occur
+        } on MalformedUrlException catch (e, st) {
+          _logger.severe('got unexpected MalformedUrlException', e, st);
         }
         break;
       case MessageType.registerPlugin:
@@ -424,9 +427,8 @@ class CommunicationApi implements GeigerApi {
               msg.sourceId,
               MessageType.comapiSuccess,
               GeigerUrl(null, msg.sourceId, 'registerPlugin')));
-        } on MalformedUrlException {
-          // TODO(mgwerder): proper Error handling
-          // this should never occur
+        } on MalformedUrlException catch (e, st) {
+          _logger.severe('got unexpected MalformedUrlException', e, st);
         }
         break;
       case MessageType.deregisterPlugin:
@@ -437,9 +439,8 @@ class CommunicationApi implements GeigerApi {
               msg.sourceId,
               MessageType.comapiSuccess,
               GeigerUrl(null, msg.sourceId, 'deregisterPlugin')));
-        } on MalformedUrlException {
-          // TODO(mgwerder): proper Error handling
-          // this should never occur
+        } on MalformedUrlException catch (e, st) {
+          _logger.severe('got unexpected MalformedUrlException', e, st);
         }
         break;
       case MessageType.activatePlugin:
@@ -458,9 +459,8 @@ class CommunicationApi implements GeigerApi {
                 msg.sourceId,
                 MessageType.comapiSuccess,
                 GeigerUrl(null, msg.sourceId, 'activatePlugin')));
-          } on MalformedUrlException {
-            // TODO(mgwerder): proper Error handling
-            // this should never occur
+          } on MalformedUrlException catch (e, st) {
+            _logger.severe('got unexpected MalformedUrlException', e, st);
           }
           break;
         }
@@ -479,9 +479,8 @@ class CommunicationApi implements GeigerApi {
                 msg.sourceId,
                 MessageType.comapiSuccess,
                 GeigerUrl(null, msg.sourceId, 'deactivatePlugin')));
-          } on MalformedUrlException {
-            // TODO(mgwerder): proper Error handling
-            // this should never occur
+          } on MalformedUrlException catch (e, st) {
+            _logger.severe('got unexpected MalformedUrlException', e, st);
           }
           break;
         }
@@ -533,9 +532,8 @@ class CommunicationApi implements GeigerApi {
           try {
             await sendMessage(Message(_id, msg.sourceId, MessageType.pong,
                 GeigerUrl(null, msg.sourceId, ''), msg.payload));
-          } on MalformedUrlException {
-            // TODO(mgwerder): proper Error handling
-            // this should never occur
+          } on MalformedUrlException catch (e, st) {
+            _logger.severe('got unexpected MalformedUrlException', e, st);
           }
           break;
         }
@@ -568,9 +566,8 @@ class CommunicationApi implements GeigerApi {
           MessageType.registerMenu,
           GeigerUrl(null, GeigerApi.masterId, 'registerMenu'),
           await MenuItem(menu, action).toByteArray()));
-    } on MalformedUrlException {
-      // TODO(mgwerder): proper Error handling
-      // this should never occur
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
     }
   }
 
@@ -583,9 +580,8 @@ class CommunicationApi implements GeigerApi {
           MessageType.enableMenu,
           GeigerUrl(null, GeigerApi.masterId, 'enableMenu'),
           utf8.encode(menu)));
-    } on MalformedUrlException {
-      // TODO(mgwerder): proper Error handling
-      // this should never occur
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
     }
   }
 
@@ -593,16 +589,15 @@ class CommunicationApi implements GeigerApi {
   Future<void> disableMenu(String menu) async {
     try {
       Message msg = Message(
-          _id,
-          GeigerApi.masterId,
-          MessageType.disableMenu,
-          GeigerUrl(null, GeigerApi.masterId, 'disableMenu'),
-          );
-      msg.payloadString=menu;
+        _id,
+        GeigerApi.masterId,
+        MessageType.disableMenu,
+        GeigerUrl(null, GeigerApi.masterId, 'disableMenu'),
+      );
+      msg.payloadString = menu;
       await sendMessage(msg);
-    } on MalformedUrlException {
-      // TODO(mgwerder): proper Error handling
-      // this should never occur
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
     }
   }
 
@@ -615,9 +610,8 @@ class CommunicationApi implements GeigerApi {
           MessageType.deregisterMenu,
           GeigerUrl(null, GeigerApi.masterId, 'deregisterMenu'),
           utf8.encode(menu)));
-    } on MalformedUrlException {
-      // TODO(mgwerder): proper Error handling
-      // this should never occur
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
     }
   }
 
@@ -642,9 +636,8 @@ class CommunicationApi implements GeigerApi {
             GeigerApi.masterId,
             MessageType.scanPressed,
             GeigerUrl(null, GeigerApi.masterId, 'scanPressed')));
-      } on MalformedUrlException {
-        // TODO(mgwerder): proper Error handling
-        // this should never occur
+      } on MalformedUrlException catch (e, st) {
+        _logger.severe('got unexpected MalformedUrlException', e, st);
       }
     } else {
       await broadcastMessage(

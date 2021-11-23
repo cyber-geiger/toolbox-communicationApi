@@ -1,2 +1,4 @@
 # toolbox-communicationApi
-Contains the communication API to connect plugins to the GEIGER toolbox
+This package contains the public interface to communicate in the GEIGER ecosystem.
+
+# Quick start

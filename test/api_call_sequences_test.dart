@@ -3,7 +3,6 @@ import 'package:collection/collection.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/communication_secret.dart';
-import 'package:geiger_api/src/communication/geiger_communicator.dart';
 import 'package:geiger_api/src/communication/geiger_url.dart';
 import 'package:geiger_api/src/communication/menu_item.dart';
 import 'package:geiger_api/src/communication/plugin_information.dart';

@@ -6,7 +6,7 @@ import 'package:geiger_api/src/communication/message.dart';
 import 'package:geiger_api/src/communication/plugin_information.dart';
 
 class PluginCommunicator extends GeigerCommunicator {
-  PluginCommunicator(GeigerApi comm, bool isMaster) : super(comm, isMaster) {}
+  PluginCommunicator(GeigerApi comm, bool isMaster) : super(comm, isMaster);
 
   @override
   int getPort() {
@@ -23,7 +23,6 @@ class PluginCommunicator extends GeigerCommunicator {
   @override
   void start() {
     // TODO(mgwerder): implement start (not needed for local only communication)
-
   }
 
   @override

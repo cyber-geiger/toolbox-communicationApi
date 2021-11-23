@@ -1,7 +1,5 @@
 library geiger_api;
 
-
-
 // TODO(mgwerder): completely redo this concept
 /*
 

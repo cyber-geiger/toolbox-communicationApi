@@ -7,6 +7,7 @@ import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
+import 'communication_helper.dart';
 import 'geiger_communicator.dart';
 import 'menu_item.dart';
 import 'plugin_information.dart';
@@ -125,10 +126,10 @@ class CommunicationApi implements GeigerApi {
       if (info == null) {
         throw NullThrownError();
       }
-      if (!plugins.containsKey(StorableString(id))) {
-        plugins[StorableString(id)] = info;
+      if (!plugins.containsKey(StorableString(pluginId))) {
+        plugins[StorableString(pluginId)] = info;
         _logger.info(
-            'registered Plugin $id executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
+            'registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
       }
       return;
     }
@@ -137,12 +138,14 @@ class CommunicationApi implements GeigerApi {
     final PluginInformation pluginInformation =
         PluginInformation(_executor, _geigerCommunicator.port);
 
-    await sendMessage(Message(
-        id,
-        GeigerApi.masterId,
-        MessageType.registerPlugin,
-        GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
-        await pluginInformation.toByteArray()));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(
+            id,
+            GeigerApi.masterId,
+            MessageType.registerPlugin,
+            GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
+            await pluginInformation.toByteArray()));
   }
 
   @override
@@ -174,11 +177,10 @@ class CommunicationApi implements GeigerApi {
     }
     // first deactivate, then deregister at Master, before deleting my own entries.
     await deactivatePlugin();
-    await sendMessage(Message(
-        id,
-        GeigerApi.masterId,
-        MessageType.deregisterPlugin,
-        GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
+            GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
     zapState();
   }
 
@@ -225,7 +227,8 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> activatePlugin(int port) async {
-    await sendMessage(
+    await CommunicationHelper.sendAndWait(
+      this,
       Message(id, GeigerApi.masterId, MessageType.activatePlugin, null,
           SerializerHelper.intToByteArray(port)),
     );
@@ -233,7 +236,7 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> deactivatePlugin() async {
-    await sendMessage(
+    await CommunicationHelper.sendAndWait(this,
         Message(id, GeigerApi.masterId, MessageType.deactivatePlugin, null));
   }
 
@@ -365,7 +368,6 @@ class CommunicationApi implements GeigerApi {
             msg.requestId));
         break;
       case MessageType.deregisterPlugin:
-        await deregisterPlugin(msg.sourceId);
         await sendMessage(Message(
             id,
             msg.sourceId,
@@ -373,6 +375,7 @@ class CommunicationApi implements GeigerApi {
             GeigerUrl(null, msg.sourceId, 'deregisterPlugin'),
             null,
             msg.requestId));
+        await deregisterPlugin(msg.sourceId);
         break;
       case MessageType.activatePlugin:
         {
@@ -398,10 +401,6 @@ class CommunicationApi implements GeigerApi {
           // remove port from plugin info
           // get and remove old info
           var pluginInfo = plugins[StorableString(msg.sourceId)]!;
-          plugins.remove(StorableString(msg.sourceId));
-          // put new info
-          plugins[StorableString(msg.sourceId)] =
-              PluginInformation(pluginInfo.getExecutable(), 0);
           await sendMessage(Message(
               id,
               msg.sourceId,
@@ -409,6 +408,10 @@ class CommunicationApi implements GeigerApi {
               GeigerUrl(null, msg.sourceId, 'deactivatePlugin'),
               null,
               msg.requestId));
+          plugins.remove(StorableString(msg.sourceId));
+          // put new info
+          plugins[StorableString(msg.sourceId)] =
+              PluginInformation(pluginInfo.getExecutable(), 0);
           break;
         }
       case MessageType.registerListener:
@@ -478,18 +481,26 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> registerMenu(String menu, GeigerUrl action) async {
-    await sendMessage(Message(
-        id,
-        GeigerApi.masterId,
-        MessageType.registerMenu,
-        GeigerUrl(null, GeigerApi.masterId, 'registerMenu'),
-        await MenuItem(menu, action).toByteArray()));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(
+            id,
+            GeigerApi.masterId,
+            MessageType.registerMenu,
+            GeigerUrl(null, GeigerApi.masterId, 'registerMenu'),
+            await MenuItem(menu, action).toByteArray()));
   }
 
   @override
   Future<void> enableMenu(String menu) async {
-    await sendMessage(Message(id, GeigerApi.masterId, MessageType.enableMenu,
-        GeigerUrl(null, GeigerApi.masterId, 'enableMenu'), utf8.encode(menu)));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(
+            id,
+            GeigerApi.masterId,
+            MessageType.enableMenu,
+            GeigerUrl(null, GeigerApi.masterId, 'enableMenu'),
+            utf8.encode(menu)));
   }
 
   @override
@@ -501,23 +512,27 @@ class CommunicationApi implements GeigerApi {
       GeigerUrl(null, GeigerApi.masterId, 'disableMenu'),
     );
     msg.payloadString = menu;
-    await sendMessage(msg);
+    await CommunicationHelper.sendAndWait(this, msg);
   }
 
   @override
   Future<void> deregisterMenu(String menu) async {
-    await sendMessage(Message(
-        id,
-        GeigerApi.masterId,
-        MessageType.deregisterMenu,
-        GeigerUrl(null, GeigerApi.masterId, 'deregisterMenu'),
-        utf8.encode(menu)));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(
+            id,
+            GeigerApi.masterId,
+            MessageType.deregisterMenu,
+            GeigerUrl(null, GeigerApi.masterId, 'deregisterMenu'),
+            utf8.encode(menu)));
   }
 
   @override
   Future<void> menuPressed(GeigerUrl url) async {
-    await sendMessage(Message(
-        GeigerApi.masterId, url.plugin, MessageType.menuPressed, url, null));
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(GeigerApi.masterId, url.plugin, MessageType.menuPressed, url,
+            null));
   }
 
   @override
@@ -529,8 +544,10 @@ class CommunicationApi implements GeigerApi {
   Future<void> scanButtonPressed() async {
     // TODO
     if (!isMaster) {
-      await sendMessage(Message(id, GeigerApi.masterId, MessageType.scanPressed,
-          GeigerUrl(null, GeigerApi.masterId, 'scanPressed')));
+      await CommunicationHelper.sendAndWait(
+          this,
+          Message(id, GeigerApi.masterId, MessageType.scanPressed,
+              GeigerUrl(null, GeigerApi.masterId, 'scanPressed')));
     } else {
       await broadcastMessage(
           Message(GeigerApi.masterId, null, MessageType.scanPressed, null));

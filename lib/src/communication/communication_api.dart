@@ -137,16 +137,12 @@ class CommunicationApi implements GeigerApi {
     final PluginInformation pluginInformation =
         PluginInformation(_executor, _geigerCommunicator.port);
 
-    await sendMessage(
-      Message(
-          id,
-          GeigerApi.masterId,
-          MessageType.registerPlugin,
-          GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
-          await pluginInformation.toByteArray()));
-    } on MalformedUrlException catch (e, st) {
-      _logger.severe('got unexpected MalformedUrlException', e, st);
-    }
+    await sendMessage(Message(
+        id,
+        GeigerApi.masterId,
+        MessageType.registerPlugin,
+        GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
+        await pluginInformation.toByteArray()));
   }
 
   @override
@@ -178,15 +174,11 @@ class CommunicationApi implements GeigerApi {
     }
     // first deactivate, then deregister at Master, before deleting my own entries.
     await deactivatePlugin();
-    try {
-      await sendMessage(Message(
-          id,
-          GeigerApi.masterId,
-          MessageType.deregisterPlugin,
-          GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
-    } on MalformedUrlException catch (e, st) {
-      _logger.severe('got unexpected MalformedUrlException', e, st);
-    }
+    await sendMessage(Message(
+        id,
+        GeigerApi.masterId,
+        MessageType.deregisterPlugin,
+        GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
     zapState();
   }
 
@@ -250,7 +242,7 @@ class CommunicationApi implements GeigerApi {
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
     StorageController? ret;
-    if (_isMaster) {
+    if (isMaster) {
       ret = GenericController(id, _mapper!.getMapper());
     } else {
       // local only
@@ -320,7 +312,7 @@ class CommunicationApi implements GeigerApi {
 
   Future<void> receivedMessage(Message msg) async {
     // TODO(mgwerder): other messagetypes
-    _logger.info('## got message in plugin $_id => $msg');
+    _logger.info('## got message in plugin $id => $msg');
     switch (msg.type) {
       case MessageType.enableMenu:
         var item = menuItems[StorableString(msg.payloadString)];
@@ -328,7 +320,7 @@ class CommunicationApi implements GeigerApi {
           item.enabled = true;
         }
         await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-            GeigerUrl(null, msg.sourceId, 'enableMenu')));
+            GeigerUrl(null, msg.sourceId, 'enableMenu'), null, msg.requestId));
         break;
       case MessageType.disableMenu:
         var item = menuItems[StorableString(msg.payloadString)];
@@ -336,31 +328,51 @@ class CommunicationApi implements GeigerApi {
           item.enabled = false;
         }
         await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-            GeigerUrl(null, msg.sourceId, 'disableMenu')));
+            GeigerUrl(null, msg.sourceId, 'disableMenu'), null, msg.requestId));
         break;
       case MessageType.registerMenu:
         var item =
             await MenuItem.fromByteArrayStream(ByteStream(null, msg.payload));
         menuItems[StorableString(item.menu)] = item;
-        await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-            GeigerUrl(null, msg.sourceId, 'registerMenu')));
+        await sendMessage(Message(
+            id,
+            msg.sourceId,
+            MessageType.comapiSuccess,
+            GeigerUrl(null, msg.sourceId, 'registerMenu'),
+            null,
+            msg.requestId));
         break;
       case MessageType.deregisterMenu:
         var menuString = utf8.fuse(base64).decode(msg.payloadString.toString());
         menuItems.remove(StorableString(menuString));
-        await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-            GeigerUrl(null, msg.sourceId, 'deregisterMenu')));
+        await sendMessage(Message(
+            id,
+            msg.sourceId,
+            MessageType.comapiSuccess,
+            GeigerUrl(null, msg.sourceId, 'deregisterMenu'),
+            null,
+            msg.requestId));
         break;
       case MessageType.registerPlugin:
         await registerPlugin(
             msg.sourceId, await PluginInformation.fromByteArray(msg.payload));
-        await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-            GeigerUrl(null, msg.sourceId, 'registerPlugin')));
+        await sendMessage(Message(
+            id,
+            msg.sourceId,
+            MessageType.comapiSuccess,
+            GeigerUrl(null, msg.sourceId, 'registerPlugin'),
+            null,
+            msg.requestId));
         break;
       case MessageType.deregisterPlugin:
         await deregisterPlugin(msg.sourceId);
-        await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-            GeigerUrl(null, msg.sourceId, 'deregisterPlugin')));
+        await sendMessage(Message(
+            id,
+            msg.sourceId,
+            MessageType.comapiSuccess,
+            GeigerUrl(null, msg.sourceId, 'deregisterPlugin'),
+            null,
+            msg.requestId));
         break;
       case MessageType.activatePlugin:
         {
@@ -372,8 +384,13 @@ class CommunicationApi implements GeigerApi {
           int port = SerializerHelper.byteArrayToInt(msg.payload);
           plugins[StorableString(msg.sourceId)] =
               PluginInformation(pluginInfo.getExecutable(), port);
-          await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-              GeigerUrl(null, msg.sourceId, 'activatePlugin')));
+          await sendMessage(Message(
+              id,
+              msg.sourceId,
+              MessageType.comapiSuccess,
+              GeigerUrl(null, msg.sourceId, 'activatePlugin'),
+              null,
+              msg.requestId));
           break;
         }
       case MessageType.deactivatePlugin:
@@ -385,8 +402,13 @@ class CommunicationApi implements GeigerApi {
           // put new info
           plugins[StorableString(msg.sourceId)] =
               PluginInformation(pluginInfo.getExecutable(), 0);
-          await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
-              GeigerUrl(null, msg.sourceId, 'deactivatePlugin')));
+          await sendMessage(Message(
+              id,
+              msg.sourceId,
+              MessageType.comapiSuccess,
+              GeigerUrl(null, msg.sourceId, 'deactivatePlugin'),
+              null,
+              msg.requestId));
           break;
         }
       case MessageType.registerListener:
@@ -431,7 +453,7 @@ class CommunicationApi implements GeigerApi {
         {
           // answer with PONG
           await sendMessage(Message(id, msg.sourceId, MessageType.pong,
-              GeigerUrl(null, msg.sourceId, ''), msg.payload));
+              GeigerUrl(null, msg.sourceId, ''), msg.payload, msg.requestId));
           break;
         }
       default:
@@ -520,6 +542,7 @@ class CommunicationApi implements GeigerApi {
     PluginStarter.startPlugin(pluginInformation);
   }
 
+  @override
   Future<void> close() async {
     await _geigerCommunicator.close();
   }

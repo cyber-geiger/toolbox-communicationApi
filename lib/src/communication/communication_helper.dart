@@ -20,7 +20,8 @@ class Listener with PluginListener {
 
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {
-    if (tmsg.id == msg.id &&
+    if (this.msg == null &&
+        tmsg.requestId == msg.requestId &&
         tmsg.targetId == msg.sourceId &&
         tmsg.sourceId == msg.targetId) {
       this.msg = msg;

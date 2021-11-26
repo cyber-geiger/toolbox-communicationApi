@@ -31,15 +31,7 @@ class GeigerCommunicator {
     var server = await ServerSocket.bind(
         InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
     server.listen((socket) async {
-      var message = await Message.fromByteArray(ByteStream(socket));
-      api.receivedMessage(message);
-      ByteSink sink = ByteSink();
-      Message(api.id, message.sourceId, MessageType.comapiSuccess, null, null,
-              message.requestId)
-          .toByteArrayStream(sink);
-      sink.close();
-      socket.add(await sink.bytes);
-      await socket.flush();
+      api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
     });
     _server = server;
   }
@@ -49,7 +41,7 @@ class GeigerCommunicator {
     _server = null;
   }
 
-  Future<Message> sendMessage(int port, Message message) async {
+  Future<void> sendMessage(int port, Message message) async {
     if (_server == null) {
       throw CommunicationException('GeigerCommunicator not started.');
     }
@@ -57,16 +49,11 @@ class GeigerCommunicator {
       InternetAddress.loopbackIPv4,
       port, /*sourceAddress: InternetAddress('localhost:$port')*/
     );
-
     ByteSink sink = ByteSink();
     message.toByteArrayStream(sink);
     sink.close();
     socket.add(await sink.bytes);
     await socket.flush();
-
-    ByteStream stream = ByteStream(socket);
-    var responseMessage = await Message.fromByteArray(stream);
     socket.destroy();
-    return responseMessage;
   }
 }

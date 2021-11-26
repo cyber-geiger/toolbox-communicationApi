@@ -8,17 +8,15 @@ import 'package:collection/collection.dart';
 
 class TestMessage {}
 
-
-
-void main(){
+void main() {
   test('testConstructionGetterSetter', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
     MessageType messageType = MessageType.allEvents;
     GeigerUrl? url;
-    try{
+    try {
       url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch(e) {
+    } catch (e) {
       print(e);
     }
 
@@ -34,65 +32,73 @@ void main(){
     Message msg2 = Message(sourceId, targetId, messageType, url, payload);
     expect(msg2.sourceId == sourceId, true, reason: 'sourceId does not match');
     expect(msg2.targetId == targetId, true, reason: 'targetId does not match');
-    expect(msg2.type == messageType, true, reason: 'messageType does not match');
+    expect(msg2.type == messageType, true,
+        reason: 'messageType does not match');
     expect(msg2.action == url, true, reason: 'GeigerUrl does not match');
     expect(msg2.payloadString != null, true, reason: 'payloadString is empty');
-    expect(msg2.payload.equals(payload), true, reason: 'payload does not match');
+    expect(msg2.payload.equals(payload), true,
+        reason: 'payload does not match');
 
     List<int> payload2 = 'payload2'.codeUnits;
     msg2.payload = payload2;
-    expect(msg2.payload.equals(payload2), true, reason: 'new payload does not match');
+    expect(msg2.payload.equals(payload2), true,
+        reason: 'new payload does not match');
   });
 
   test('testEquals', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
     MessageType messageType = MessageType.allEvents;
+    String requestId = 'some-id';
     List<int> payload = 'payload'.codeUnits;
-    GeigerUrl? url;
-    try{
-      url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch(e) {
-      print(e);
-    }
+    GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
 
     //without payload
-    Message msg = Message(sourceId, targetId, messageType, url);
-    Message msg2 = Message(sourceId, targetId, messageType, url);
-    expect(msg2.equals(msg), true);
+    Message msg =
+        Message(sourceId, targetId, messageType, url, null, requestId);
+    Message msg2 =
+        Message(sourceId, targetId, messageType, url, null, requestId);
+    expect(msg2, msg);
 
     //with payload
-    Message msg3 = Message(sourceId, targetId, messageType, url, payload);
-    Message msg4 = Message(sourceId, targetId, messageType, url, payload);
-    expect(msg3.equals(msg4), true);
-    expect(!msg.equals(msg3), true);
+    Message msg3 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
+    Message msg4 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
+    expect(msg3, msg4);
+    expect(msg, isNot(msg3));
 
     //negative tests
     List<int> payload2 = 'payload2'.codeUnits;
     Message msg5 = Message(sourceId, targetId, messageType, url, payload2);
-    expect(!msg5.equals(msg3), true);
+    expect(msg5, isNot(msg3));
+
+    String requestId2 = 'some-other-id';
+    Message msg6 =
+        Message(sourceId, targetId, messageType, url, null, requestId2);
+    expect(msg6, isNot(msg));
   });
 
   test('testHashCode', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
     MessageType messageType = MessageType.allEvents;
+    String requestId = 'some-id';
     List<int> payload = 'payload'.codeUnits;
-    GeigerUrl? url;
-    try{
-      url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch(e) {
-      print(e);
-    }
+    GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
 
     //without payload
-    Message msg = Message(sourceId, targetId, messageType, url);
-    Message msg2 = Message(sourceId, targetId, messageType, url);
+    Message msg =
+        Message(sourceId, targetId, messageType, url, null, requestId);
+    Message msg2 =
+        Message(sourceId, targetId, messageType, url, null, requestId);
     expect(msg.hashCode == msg2.hashCode, true);
 
     //with payload
-    Message msg3 = Message(sourceId, targetId, messageType, url, payload);
-    Message msg4 = Message(sourceId, targetId, messageType, url, payload);
+    Message msg3 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
+    Message msg4 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
     expect(msg3.hashCode == msg4.hashCode, true);
 
     //negative tests
@@ -100,9 +106,10 @@ void main(){
   });
 
   test('payloadEncodingTest', () {
-    Message m = Message('src', 'target', MessageType.activatePlugin, null, null);
-    final List<String?> i = [null, '',  const Uuid().v4()];
-    for(final String? pl in i){
+    Message m =
+        Message('src', 'target', MessageType.activatePlugin, null, null);
+    final List<String?> i = [null, '', const Uuid().v4()];
+    for (final String? pl in i) {
       m.payloadString = pl;
       expect(pl == m.payloadString, true);
 

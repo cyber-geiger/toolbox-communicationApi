@@ -1,5 +1,6 @@
 library geiger_api;
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
@@ -14,6 +15,7 @@ class GeigerCommunicator {
   final CommunicationApi api;
 
   late ServerSocket? _server;
+  Map<String, Completer<Message>> responseFutures = {};
 
   get isActive {
     return _server != null;
@@ -29,7 +31,15 @@ class GeigerCommunicator {
     var server = await ServerSocket.bind(
         InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
     server.listen((socket) async {
-      api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
+      var message = await Message.fromByteArray(ByteStream(socket));
+      api.receivedMessage(message);
+      ByteSink sink = ByteSink();
+      Message(api.id, message.sourceId, MessageType.comapiSuccess, null, null,
+              message.requestId)
+          .toByteArrayStream(sink);
+      sink.close();
+      socket.add(await sink.bytes);
+      await socket.flush();
     });
     _server = server;
   }
@@ -39,20 +49,24 @@ class GeigerCommunicator {
     _server = null;
   }
 
-  Future<void> sendMessage(int port, Message message) async {
+  Future<Message> sendMessage(int port, Message message) async {
     if (_server == null) {
       throw CommunicationException('GeigerCommunicator not started.');
     }
-    var socketFuture = Socket.connect(
+    var socket = await Socket.connect(
       InternetAddress.loopbackIPv4,
       port, /*sourceAddress: InternetAddress('localhost:$port')*/
     );
+
     ByteSink sink = ByteSink();
     message.toByteArrayStream(sink);
     sink.close();
-    var socket = await socketFuture;
     socket.add(await sink.bytes);
     await socket.flush();
+
+    ByteStream stream = ByteStream(socket);
+    var responseMessage = await Message.fromByteArray(stream);
     socket.destroy();
+    return responseMessage;
   }
 }

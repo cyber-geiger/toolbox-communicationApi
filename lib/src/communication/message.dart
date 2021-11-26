@@ -3,46 +3,39 @@ library geiger_api;
 import 'dart:convert';
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:uuid/uuid.dart';
 
 import 'geiger_url.dart';
 import 'message_type.dart';
 
 /// Representation of a message.
-class Message with Serializer
-{
+class Message with Serializer {
   static const int serialVersionUID = 143287432;
-  final String _sourceId;
-  final String? _targetId;
-  final MessageType _type;
-  final GeigerUrl? _action;
+
+  /// ID of the source plugin.
+  final String sourceId;
+
+  /// ID of the target plugin.
+  final String? targetId;
+
+  /// Type of the message.
+  final MessageType type;
+
+  /// Unique ID of the request shared by the request message and the confirmation message.
+  late final String requestId;
+
+  /// Returns the action URL of the message.
+  final GeigerUrl? action;
+
   String? _payloadString = '';
 
   /// Creates a [Message] with the provided properties.
-  Message(this._sourceId, this._targetId, this._type, this._action,
-      [List<int>? payload]) {
+  Message(this.sourceId, this.targetId, this.type, this.action,
+      [List<int>? payload, String? requestId]) {
+    this.requestId = requestId ?? const Uuid().v4();
     if (payload != null) {
       _payloadString = base64.encode(payload);
     }
-  }
-
-  /// Returns the target id of the message.
-  String? get targetId {
-    return _targetId;
-  }
-
-  /// Returns the source id of the message.
-  String get sourceId {
-    return _sourceId;
-  }
-
-  /// Returns the type of the message.
-  MessageType get type {
-    return _type;
-  }
-
-  /// Returns the action URL of the message.
-  GeigerUrl? get action {
-    return _action;
   }
 
   /// Returns the payload as array of bytes.
@@ -65,7 +58,7 @@ class Message with Serializer
     return _payloadString;
   }
 
-  /// Sets the payload as a string and returns the previous payload string.
+  /// Sets the payload as a string.
   // ignore: unnecessary_getters_setters
   set payloadString(String? value) {
     _payloadString = value;
@@ -88,8 +81,10 @@ class Message with Serializer
             MessageType.storageError,
         (await SerializerHelper.readInt(in_) == 1)
             ? await GeigerUrl.fromByteArrayStream(in_)
-            : null);
-    m._payloadString = (await SerializerHelper.readInt(in_) == 1)
+            : null,
+        null,
+        await SerializerHelper.readString(in_));
+    m.payloadString = (await SerializerHelper.readInt(in_) == 1)
         ? await SerializerHelper.readString(in_)
         : null;
     return m;
@@ -105,13 +100,14 @@ class Message with Serializer
       SerializerHelper.writeInt(out, 1);
       SerializerHelper.writeString(out, targetId);
     }
-    SerializerHelper.writeInt(out, _type.id);
+    SerializerHelper.writeInt(out, type.id);
     if (action == null) {
       SerializerHelper.writeInt(out, 0);
     } else {
       SerializerHelper.writeInt(out, 1);
       action?.toByteArrayStream(out);
     }
+    SerializerHelper.writeString(out, requestId);
     if (payloadString == null) {
       SerializerHelper.writeInt(out, 0);
     } else {
@@ -121,20 +117,15 @@ class Message with Serializer
   }
 
   @override
-  bool operator ==(Object other) => equals(other);
-
-  bool equals(Object? o) {
-    if (identical(this, o)) {
-      return true;
-    }
-    if ((o == null) || o is! Message) {
-      return false;
-    }
-    var message = o;
-    return (((sourceId == message.sourceId && targetId == message.targetId) &&
-                (type == message.type)) &&
-            _action == message._action) &&
-        payloadString == message.payloadString;
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is Message &&
+            sourceId == other.sourceId &&
+            targetId == other.targetId &&
+            type == other.type &&
+            action == other.action &&
+            requestId == other.requestId &&
+            payloadString == other.payloadString);
   }
 
   @override
@@ -142,13 +133,14 @@ class Message with Serializer
     return (sourceId +
             (targetId ?? 'null') +
             type.hashCode.toString() +
-            _action.hashCode.toString() +
+            action.hashCode.toString() +
+            requestId +
             (payloadString ?? 'null'))
         .hashCode;
   }
 
   @override
   String toString() {
-    return '$sourceId=>${targetId ?? 'null'}{[$type] (${action??"".toString()}) }';
+    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})}';
   }
 }

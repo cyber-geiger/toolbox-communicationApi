@@ -32,6 +32,8 @@ class Message with Serializer {
     return _targetId;
   }
 
+  String get id => _id;
+
   /// Returns the source id of the message.
   String get sourceId {
     return _sourceId;

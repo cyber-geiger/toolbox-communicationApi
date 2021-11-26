@@ -8,11 +8,13 @@ import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 /// Serializable Hashmap.
 class StorableHashMap<K extends Serializer, V extends Serializer>
-    with Serializer implements Map<K, V> {
+    with Serializer
+    implements Map<K, V> {
   static const int serialVersionUID = 14231491232;
 
   final Map<K, V> _map = <K, V>{};
 
+  @override
   void toByteArrayStream(ByteSink out) {
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeInt(out, length);

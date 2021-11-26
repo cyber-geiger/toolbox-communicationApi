@@ -19,8 +19,8 @@ void main() {
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
     await plugin.registerListener(allEvents, pluginListener);
     List<Message> receivedEventsMaster = masterListener.getEvents();
-    print(receivedEventsMaster.toString());
-    print(pluginListener.toString());
+    //print(receivedEventsMaster.toString());
+    //print(pluginListener.toString());
     expect(receivedEventsMaster.length, 2);
     Message rcvdMessage = receivedEventsMaster[0];
     expect(rcvdMessage.type, MessageType.registerPlugin);
@@ -45,7 +45,7 @@ void main() {
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
     await plugin.registerListener(allEvents, pluginListener);
     List<Message> receivedEventsMaster = masterListener.getEvents();
-    print(masterListener.toString());
+    //print(masterListener.toString());
     expect(receivedEventsMaster.length, 2);
     Message rcvdMessage = receivedEventsMaster[1];
     expect(rcvdMessage.type, MessageType.activatePlugin);
@@ -71,7 +71,7 @@ void main() {
     await plugin.deregisterPlugin();
 
     List<Message> receivedEventsMaster = masterListener.getEvents();
-    print(masterListener);
+    //print(masterListener);
     expect(receivedEventsMaster.length, 4);
     Message rcvdMessage = receivedEventsMaster[1];
     expect(rcvdMessage.type, MessageType.activatePlugin);
@@ -85,7 +85,7 @@ void main() {
     expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
     expect(rcvdMessage.action?.path, 'deregisterPlugin');
 
-    print(pluginListener);
+    //print(pluginListener);
     List<Message> receivedEventsPlugin = pluginListener.getEvents();
     expect(receivedEventsPlugin.length, 2);
     rcvdMessage = receivedEventsPlugin[0];
@@ -239,15 +239,14 @@ void main() {
 class SimpleEventListener implements PluginListener {
   List<Message> events = [];
 
-  String _id;
+  final String _id;
 
   SimpleEventListener(this._id);
 
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {
     events.add(msg);
-    print(
-        '## SimpleEventListener "$_id" received event ${msg.type} it currently has: ${events.length.toString()} events');
+    //print('## SimpleEventListener "$_id" received event ${msg.type} it currently has: ${events.length.toString()} events');
   }
 
   List<Message> getEvents() {

@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:logging/logging.dart';
 
 import 'geiger_communicator.dart';
 import 'menu_item.dart';
@@ -20,12 +21,16 @@ enum Mapper {
 
 extension MapperExtension on Mapper {
   StorageMapper getMapper() {
+    StorageMapper ret;
     switch (this) {
       case Mapper.dummyMapper:
-        return DummyMapper('anyUser');
+        ret = DummyMapper('anyUser');
+        break;
       case Mapper.sqliteMapper:
-        return SqliteMapper('./testdb');
+        ret = SqliteMapper('database');
+        break;
     }
+    return ret;
   }
 }
 
@@ -45,6 +50,8 @@ class CommunicationApi implements GeigerApi {
 
   static const bool persistent = false;
 
+  static final Logger _logger = Logger('GeigerAPI');
+
   static Mapper? _mapper;
   static const Mapper defaultMapper = Mapper.sqliteMapper;
 
@@ -53,7 +60,7 @@ class CommunicationApi implements GeigerApi {
   static final StorableHashMap<StorableString, MenuItem> menuItems =
       StorableHashMap();
 
-  // static final Logger log = Logger.getLogger("GeigerApi");
+  static final Logger log = Logger("GeigerApi");
 
   late String _executor;
   final String id;
@@ -68,6 +75,7 @@ class CommunicationApi implements GeigerApi {
   @override
   Future<void> initialize() async {
     await _geigerCommunicator.start();
+    await StorageMapper.initDatabaseExpander();
     if (!isMaster) {
       try {
         // setup listener
@@ -117,11 +125,10 @@ class CommunicationApi implements GeigerApi {
       if (info == null) {
         throw NullThrownError();
       }
-      if (!plugins.containsKey(StorableString(pluginId))) {
-        plugins[StorableString(pluginId)] = info;
-        // ignore: avoid_print
-        print(
-            '## registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
+      if (!plugins.containsKey(StorableString(id))) {
+        plugins[StorableString(id)] = info;
+        _logger.info(
+            'registered Plugin $id executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
       }
       return;
     }
@@ -136,8 +143,10 @@ class CommunicationApi implements GeigerApi {
           GeigerApi.masterId,
           MessageType.registerPlugin,
           GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
-          await pluginInformation.toByteArray()),
-    );
+          await pluginInformation.toByteArray()));
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
+    }
   }
 
   @override
@@ -169,13 +178,15 @@ class CommunicationApi implements GeigerApi {
     }
     // first deactivate, then deregister at Master, before deleting my own entries.
     await deactivatePlugin();
-
-    await sendMessage(Message(
-        id,
-        GeigerApi.masterId,
-        MessageType.deregisterPlugin,
-        GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
-
+    try {
+      await sendMessage(Message(
+          id,
+          GeigerApi.masterId,
+          MessageType.deregisterPlugin,
+          GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
+    } on MalformedUrlException catch (e, st) {
+      _logger.severe('got unexpected MalformedUrlException', e, st);
+    }
     zapState();
   }
 
@@ -238,14 +249,17 @@ class CommunicationApi implements GeigerApi {
   @override
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
-    if (isMaster) {
-      return GenericController(id, _mapper!.getMapper());
+    StorageController? ret;
+    if (_isMaster) {
+      ret = GenericController(id, _mapper!.getMapper());
     } else {
       // local only
-      return GenericController(id, _mapper!.getMapper());
+      ret = GenericController(id, _mapper!.getMapper());
       // TODO: Add support for remote storage
       //return PasstroughController(this, _id);
     }
+    ExtendedTimestamp.initializeTimestamp(ret);
+    return ret;
   }
 
   @override
@@ -306,8 +320,7 @@ class CommunicationApi implements GeigerApi {
 
   Future<void> receivedMessage(Message msg) async {
     // TODO(mgwerder): other messagetypes
-    // ignore: avoid_print
-    print('## got message in plugin $id => $msg');
+    _logger.info('## got message in plugin $_id => $msg');
     switch (msg.type) {
       case MessageType.enableMenu:
         var item = menuItems[StorableString(msg.payloadString)];

@@ -9,7 +9,7 @@ class StorableString implements Serializer {
   static const int serialVersionUID = 142314912322198374;
   final String? _value;
 
-  StorableString([this._value]);
+  const StorableString([this._value]);
 
   String? value() {
     return _value;
@@ -27,7 +27,7 @@ class StorableString implements Serializer {
     if (identical(this, o)) {
       return true;
     }
-    if (o == null || o is !StorableString) {
+    if (o == null || o is! StorableString) {
       return false;
     }
     StorableString? that = o;

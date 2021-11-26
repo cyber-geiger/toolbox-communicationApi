@@ -7,12 +7,12 @@ import 'plugin_listener.dart';
 typedef MessageFilter = bool Function(Message msg);
 
 class Listener with PluginListener {
-  final MessageFilter filter;
   final GeigerApi api;
   final Object obj = Object();
+  Message tmsg;
   Message? msg;
 
-  Listener(this.api, this.filter);
+  Listener(this.api, this.tmsg);
 
   Future<void> register() async {
     await api.registerListener(<MessageType>[MessageType.allEvents], this);
@@ -20,11 +20,10 @@ class Listener with PluginListener {
 
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {
-    if (filter(msg)) {
+    if (tmsg.id == msg.id &&
+        tmsg.targetId == msg.sourceId &&
+        tmsg.sourceId == msg.targetId) {
       this.msg = msg;
-      // synchronized(obj, {
-      // obj.notifyAll();
-      // });
     }
   }
 
@@ -56,10 +55,9 @@ class CommunicationHelper {
   /// milliseconds. Specify `-1` to remove any time limit.
   ///
   /// Throws [CommunicationException] if communication with master fails
-  static Future<Message> sendAndWait(
-      GeigerApi api, Message msg, MessageFilter filter,
+  static Future<Message> sendAndWait(GeigerApi api, Message msg,
       [int timeout = 10000]) async {
-    var l = Listener(api, filter);
+    var l = Listener(api, msg);
     await l.register();
     await api.sendMessage(msg);
     var result = await l.waitForResult(timeout);

@@ -46,7 +46,7 @@ void main() {
       });
       test('Is Menu enabled after set True', () {
         menu.enabled = true;
-        expect(menu.enabled, isTrue, reason:'Menu is not enabled as expected');
+        expect(menu.enabled, isTrue, reason: 'Menu is not enabled as expected');
       });
       test('Is Menu disabled after set False', () {
         menu.enabled = false;
@@ -82,7 +82,8 @@ void main() {
     MenuItem menu4 = MenuItem(menuName, url, false);
     test('1: true, 2: false', () {
       expect(menu, menu2, reason: 'MenuItem with identical constructor failed');
-      expect(menu, menu3, reason: 'MenuItem with default value constructor failed');
+      expect(menu, menu3,
+          reason: 'MenuItem with default value constructor failed');
       expect(menu.equals(menu4), isFalse,
           reason: 'MenuItem with different constructor failed');
       menu2.enabled = false;
@@ -99,8 +100,9 @@ void main() {
     });
     MenuItem menu3 = MenuItem(menuName, url, true);
     MenuItem menu4 = MenuItem(menuName, url, false);
-    test('Test inequality of HashCode when having a different equality level', () {
-      expect(menu3.hashCode!=menu4.hashCode,isTrue);
+    test('Test inequality of HashCode when having a different equality level',
+        () {
+      expect(menu3.hashCode != menu4.hashCode, isTrue);
       menu3.enabled = false;
       expect(menu3.hashCode, menu4.hashCode);
     });

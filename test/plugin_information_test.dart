@@ -17,13 +17,12 @@ void main() {
   ];
 
   group('ConstructorGetter', () {
-    for (final CommunicationSecret secret in secrets) {
-      print(secret);
-    }
     for (final int port in ports) {
       for (final String executable in executables) {
         for (CommunicationSecret secret in secrets) {
-          group('Testing with port=$port; executable=$executable; secret=$secret', () {
+          group(
+              'Testing with port=$port; executable=$executable; secret=$secret',
+              () {
             //Constructor without secret
             PluginInformation info = PluginInformation(executable, port);
             test('checking Executable', () {
@@ -31,13 +30,6 @@ void main() {
             });
             test('checking Port', () {
               expect(info.getPort(), port);
-            });
-            test('checking Secret', () {
-              bool isNull = false;
-              if (info.getSecret() == null) {
-                isNull = true;
-              }
-              expect(isNull, false);
             });
             //Constructor with secret
             PluginInformation info2 =

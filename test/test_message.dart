@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 library geiger_api;
 
 import 'package:geiger_api/geiger_api.dart';

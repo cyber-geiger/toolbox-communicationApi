@@ -17,3 +17,5 @@ pubspec.lock
 /testdb.mv.db
 /GeigerApi.__MASTERPLUGIN__.state
 /GeigerApi.plugin1.state
+/database
+/GeigerApi.myPluginIdentifier.state

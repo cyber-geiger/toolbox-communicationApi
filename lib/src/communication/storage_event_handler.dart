@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:geiger_api/src/communication/communication_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:logging/logging.dart';
 
 import 'geiger_api.dart';
 import 'geiger_url.dart';
@@ -15,7 +16,10 @@ import 'plugin_listener.dart';
 class StorageEventHandler with PluginListener {
   final CommunicationApi _api;
   final StorageController _controller;
+
   bool _isMaster = false;
+
+  static final Logger log = Logger("GeigerApi");
 
   StorageEventHandler(this._api, this._controller);
 
@@ -97,14 +101,13 @@ class StorageEventHandler with PluginListener {
       node.toByteArrayStream(bos);
       bos.close();
       final List<int> payload = await bos.bytes;
-      await _api.sendMessage(
-          Message(
-              msg.targetId ?? 'UNKONWN_TARGET',
-              msg.sourceId,
-              MessageType.storageSuccess,
-              GeigerUrl(
-                  null, msg.sourceId, (('getNode/' + identifier) + '/') + path),
-              payload));
+      await _api.sendMessage(Message(
+          msg.targetId ?? 'UNKONWN_TARGET',
+          msg.sourceId,
+          MessageType.storageSuccess,
+          GeigerUrl(
+              null, msg.sourceId, (('getNode/' + identifier) + '/') + path),
+          payload));
     } on IOException catch (e) {
       try {
         ByteSink bos = ByteSink();
@@ -112,22 +115,23 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-
-                GeigerUrl(null,msg.sourceId, 'getNode/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'getNode/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
   /// Calls [GenericController.addNode].
   ///
   /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> addNode(Message msg, String identifier, List<String> optionalArgs) async {
+  Future<void> addNode(
+      Message msg, String identifier, List<String> optionalArgs) async {
     Node node;
     try {
       node = await NodeImpl.fromByteArrayStream(ByteStream(null, msg.payload));
@@ -138,21 +142,23 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not add Node', null, e).toByteArrayStream(bos);
         bos.close();
         final List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null,msg.sourceId, 'addNode/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'addNode/' + identifier),
+            payload));
+      } on IOException {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
   /// Calls [GenericController.updateNode].
   ///
   /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> updateNode(Message msg, String identifier, List<String> optionalArgs) async {
+  Future<void> updateNode(
+      Message msg, String identifier, List<String> optionalArgs) async {
     Node node;
     try {
       node = await NodeImpl.fromByteArrayStream(ByteStream(null, msg.payload));
@@ -164,14 +170,15 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         final List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null, msg.sourceId, 'updateNode/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'updateNode/' + identifier),
+            payload));
+      } on IOException {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -180,23 +187,16 @@ class StorageEventHandler with PluginListener {
       Message msg, String identifier, List<String> optionalArgs) async {
     try {
       final NodeImpl node = _controller.delete(optionalArgs[0]) as NodeImpl;
-      if (node != null) {
-        final ByteSink bos = ByteSink();
-        node.toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageSuccess,
-                GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier),
-                payload));
-      } else {
-        await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.storageSuccess,
-                GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier)));
-      }
+      final ByteSink bos = ByteSink();
+      node.toByteArrayStream(bos);
+      bos.close();
+      List<int> payload = await bos.bytes;
+      await _api.sendMessage(Message(
+          msg.targetId!,
+          msg.sourceId,
+          MessageType.storageSuccess,
+          GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier),
+          payload));
     } on Exception catch (e) {
       try {
         final ByteSink bos = ByteSink();
@@ -204,14 +204,15 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         final List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null,msg.sourceId, 'deleteNode/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'deleteNode/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -219,40 +220,34 @@ class StorageEventHandler with PluginListener {
   Future<void> getValue(
       Message msg, String identifier, List<String> optionalArgs) async {
     try {
-      NodeImpl nodeValue = _controller.getValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
-      if (nodeValue != null) {
-        ByteSink bos = ByteSink();
-        nodeValue.toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageSuccess,
-                GeigerUrl(null, msg.targetId!, 'getValue/' + identifier),
-                payload));
-      } else {
-        await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.storageSuccess,
-                GeigerUrl(null, msg.targetId!, 'getValue/' + identifier)));
-      }
-    } on Exception catch (e,st) {
+      NodeImpl nodeValue =
+          _controller.getValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
+      ByteSink bos = ByteSink();
+      nodeValue.toByteArrayStream(bos);
+      bos.close();
+      List<int> payload = await bos.bytes;
+      await _api.sendMessage(Message(
+          msg.targetId!,
+          msg.sourceId,
+          MessageType.storageSuccess,
+          GeigerUrl(null, msg.targetId!, 'getValue/' + identifier),
+          payload));
+    } on Exception catch (e) {
       try {
         ByteSink bos = ByteSink();
         StorageException('Could not get NodeValue', null, e)
             .toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null,msg.sourceId, 'getValue/' + identifier),
-                payload));
-      } on IOException catch (e,s) {
-        throw StorageException('Unable to send Storage exception to endpoint',null,e,s);
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'getValue/' + identifier),
+            payload));
+      } on IOException catch (e, s) {
+        throw StorageException(
+            'Unable to send Storage exception to endpoint', null, e, s);
       }
     }
   }
@@ -274,15 +269,15 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null, msg.sourceId, 'addValue/' + identifier),
-                payload));
-      } on IOException catch(e,s)  {
-        throw StorageException('Unable to send exception on adding value to endpoint',null,e,s);
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'addValue/' + identifier),
+            payload));
+      } on IOException catch (e, s) {
+        throw StorageException(
+            'Unable to send exception on adding value to endpoint', null, e, s);
       }
     }
   }
@@ -304,14 +299,15 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null, msg.sourceId, 'updateValue/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'updateValue/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -320,18 +316,18 @@ class StorageEventHandler with PluginListener {
   Future<void> deleteValue(
       Message msg, String identifier, List<String> optionalArgs) async {
     try {
-      NodeImpl nodeValue = _controller.deleteValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
+      NodeImpl nodeValue =
+          _controller.deleteValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
       ByteSink bos = ByteSink();
       nodeValue.toByteArrayStream(bos);
       bos.close();
       List<int> payload = await bos.bytes;
-      await _api.sendMessage(
-          Message(
-              msg.targetId!,
-              msg.sourceId,
-              MessageType.storageSuccess,
-              GeigerUrl(null, msg.targetId!, 'deleteNodeValue/' + identifier),
-              payload));
+      await _api.sendMessage(Message(
+          msg.targetId!,
+          msg.sourceId,
+          MessageType.storageSuccess,
+          GeigerUrl(null, msg.targetId!, 'deleteNodeValue/' + identifier),
+          payload));
     } on Exception catch (e) {
       try {
         ByteSink bos = ByteSink();
@@ -339,14 +335,15 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         final List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null, msg.sourceId, 'deleteValue/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'deleteValue/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -364,14 +361,15 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         final List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null, msg.sourceId, 'rename/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'rename/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -383,7 +381,7 @@ class StorageEventHandler with PluginListener {
           await SearchCriteria.fromByteArrayStream(
               ByteStream(null, msg.payload));
       List<Node> nodes = await _controller.search(searchCriteria);
-      if (nodes.length > 0) {
+      if (nodes.isNotEmpty) {
         List<int> payload;
         ByteSink bos = ByteSink();
         for (NodeImpl n in nodes as List<NodeImpl>) {
@@ -391,17 +389,18 @@ class StorageEventHandler with PluginListener {
         }
         bos.close();
         payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageSuccess,
-                GeigerUrl(null, msg.targetId!, 'search/' + identifier),
-                payload));
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageSuccess,
+            GeigerUrl(null, msg.targetId!, 'search/' + identifier),
+            payload));
       } else {
-        await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.storageSuccess,
-                GeigerUrl(null, msg.targetId!, 'search/' + identifier)));
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageSuccess,
+            GeigerUrl(null, msg.targetId!, 'search/' + identifier)));
       }
     } on Exception catch (e) {
       try {
@@ -410,14 +409,15 @@ class StorageEventHandler with PluginListener {
             .toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null, msg.sourceId, 'search/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'search/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -434,14 +434,15 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not close', null, e).toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null,msg.sourceId, 'close/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'close/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -458,14 +459,15 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not flush', null, e).toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(
-                msg.targetId!,
-                msg.sourceId,
-                MessageType.storageError,
-                GeigerUrl(null,msg.sourceId, 'flush/' + identifier),
-                payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'flush/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 
@@ -482,10 +484,15 @@ class StorageEventHandler with PluginListener {
         StorageException('Could not zap', null, e).toByteArrayStream(bos);
         bos.close();
         List<int> payload = await bos.bytes;
-        await _api.sendMessage(
-            Message(msg.targetId!, msg.sourceId, MessageType.storageError,
-                GeigerUrl(null, msg.sourceId, 'zap/' + identifier), payload));
-      } on IOException {}
+        await _api.sendMessage(Message(
+            msg.targetId!,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'zap/' + identifier),
+            payload));
+      } on IOException catch (e) {
+        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      }
     }
   }
 

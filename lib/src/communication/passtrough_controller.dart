@@ -1,24 +1,22 @@
 library geiger_api;
 
-
-
 // TODO(mgwerder): completely redo this concept
-/*
 
+/*
 /// Class for handling storage events in Plugins.
 class PasstroughController implements StorageController, PluginListener {
   final GeigerApi localApi;
   final String id;
   final Object comm = Object();
-  final Map<String, Message> receivedMessages = HashMap();
+  final Map<String, Message> receivedMessages = <String,Message>{};
 
   /// Creates a [PasstroughController] for the given [api] and plugin (provide its [id]).
   PasstroughController(this.localApi, this.id) {
     localApi.registerListener([
-      MessageType.STORAGE_EVENT,
-      MessageType.STORAGE_SUCCESS,
-      MessageType.STORAGE_ERROR
-    ], this, true);
+      MessageType.storageError,
+      MessageType.storageEvent,
+      MessageType.storageSuccess
+    ], this);
   }
 
   Message? waitForResult(String command, String identifier) {
@@ -27,14 +25,7 @@ class PasstroughController implements StorageController, PluginListener {
         .now()
         .millisecondsSinceEpoch;
     while (receivedMessages[token] == null) {
-      // try {
-      // synchronized(comm, {
-      // comm.wait(1000);
-      sleep(Duration(seconds: 1))
-      // });
-      /*} on InterruptedException catch (e) {
-                e.printStackTrace();
-            }*/
+      Future.delayed(const Duration(seconds: 1));
       if ((DateTime
           .now()
           .millisecondsSinceEpoch - start) > 5000) {
@@ -47,24 +38,20 @@ class PasstroughController implements StorageController, PluginListener {
   @override
   Future<Node> get(String path) async {
     var command = 'getNode';
-    var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
+    String identifier = ExtendedTimestamp.extendedNow();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(id, (((command + '/') + identifier) + '/') + path)));
-    } on MalformedUrlException catch (e) {}
-    Message response = waitForResult(command, identifier);
-    try {
-      if (response.getType() == MessageType.STORAGE_ERROR) {
+      Message response = await CommunicationHelper.sendAndWait(localApi,Message(
+          id, GeigerApi.masterId, MessageType.storageEvent,
+          GeigerUrl(null,id, (((command + '/') + identifier) + '/') + path)));
+      if (response.type == MessageType.storageError) {
         throw StorageException.fromByteArrayStream(
-            ByteStream(null, response.getPayload()));
+            ByteStream(null, response.payload));
       } else {
         return NodeImpl.fromByteArrayStream(
-            ch_fhnw_geiger_totalcross_ByteArrayInputStream(
-                response.getPayload()));
+            ByteStream(null, response.payload));
       }
-    } on IOException catch (e) {
-      throw StorageException('Could not get Node', e);
+    } on Exception catch (e) {
+      throw CommunicationException('Could not get Node', e);
     }
   }
 

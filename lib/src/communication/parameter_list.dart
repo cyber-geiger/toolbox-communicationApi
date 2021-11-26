@@ -36,7 +36,6 @@ class ParameterList with Serializer {
   /// @param in ByteArrayInputStream to be used
   /// @return the ParameterList read from byte stream
   /// @throws IOException if value cannot be read
-  @override
   static Future<ParameterList> fromByteArrayStream(ByteStream in_) async {
     List<String> l = <String>[];
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
@@ -63,13 +62,9 @@ class ParameterList with Serializer {
       } else {
         first = false;
       }
-      if (p == null) {
-        sb.write('null');
-      } else {
-        sb.write('"');
-        sb.write(p);
-        sb.write('"');
-      }
+      sb.write('"');
+      sb.write(p);
+      sb.write('"');
     }
     sb.write(']'.codeUnitAt(0));
     return sb.toString();

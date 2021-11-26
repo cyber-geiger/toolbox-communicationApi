@@ -43,9 +43,7 @@ void main() {
           }
         }
       }
-    } on MalformedUrlException catch (e, st) {
-      print(e);
-      print(st);
+    } on MalformedUrlException {
       fail('MalformedUrlException was thrown');
     }
 
@@ -80,9 +78,7 @@ void main() {
           expect(path, url.path, reason: 'checking path');
         }
       }
-    } on MalformedUrlException catch (e, st) {
-      print(e);
-      print(st);
+    } on MalformedUrlException {
       fail('MalformerUrlException was thrown');
     }
 
@@ -110,9 +106,7 @@ void main() {
           }
         }
       }
-    } on MalformedUrlException catch (e, st) {
-      print(e);
-      print(st);
+    } on MalformedUrlException {
       fail('MalformerUrlException was thrown');
     }
 
@@ -155,9 +149,7 @@ void main() {
           expect(expectedFormat, url.toString(), reason: 'checking toString');
         }
       }
-    } on MalformedUrlException catch (e, st) {
-      print(e);
-      print(st);
+    } on MalformedUrlException {
       fail('MalformerUrlException was thrown');
     }
   });
@@ -201,9 +193,7 @@ void main() {
       final GeigerUrl url6 =
           GeigerUrl.fromSpec('geiger://plugin/path/something/else');
       expect(url5, isNot(equals(url6)));
-    } on MalformedUrlException catch (e, st) {
-      print(e);
-      print(st);
+    } on MalformedUrlException {
       fail('MalformerUrlException was thrown');
     }
   });
@@ -247,9 +237,7 @@ void main() {
       final GeigerUrl url6 =
           GeigerUrl.fromSpec('geiger://plugin/path/something/else');
       expect(url5.hashCode, isNot(equals(url6.hashCode)));
-    } on MalformedUrlException catch (e, st) {
-      print(e);
-      print(st);
+    } on MalformedUrlException {
       fail('MalformerUrlException was thrown');
     }
   });

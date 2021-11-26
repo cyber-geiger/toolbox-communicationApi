@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:collection/collection.dart';
+
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/communication_secret.dart';
@@ -21,8 +21,8 @@ void main() {
         PluginInformation('./plugin1', 5555, CommunicationSecret.empty());
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
-    final Message reply = await CommunicationHelper.sendAndWait(localMaster,
-        request, (Message msg) => msg.type == MessageType.comapiSuccess);
+    final Message reply =
+        await CommunicationHelper.sendAndWait(localMaster, request);
     expect(MessageType.comapiSuccess, reply.type,
         reason: 'checking message type');
     expect(request.sourceId, reply.targetId,
@@ -42,12 +42,8 @@ void main() {
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.deregisterPlugin, testUrl);
-    final Message reply = await CommunicationHelper.sendAndWait(
-        localMaster,
-        request,
-        (Message msg) =>
-            (msg.type == MessageType.comapiSuccess) &&
-            msg.action!.path == 'deregisterPlugin');
+    final Message reply =
+        await CommunicationHelper.sendAndWait(localMaster, request);
     expect(MessageType.comapiSuccess, reply.type,
         reason: 'checking message type');
     expect(request.sourceId, reply.targetId,
@@ -71,8 +67,7 @@ void main() {
     // Pregister plugin
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
-    await CommunicationHelper.sendAndWait(localMaster, request,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    await CommunicationHelper.sendAndWait(localMaster, request);
     // activate plugin
     const int payloadActivate = 255; //ToDo correct 8bit bytevalue before 5555
     final Message requestActivate = Message(
@@ -81,10 +76,8 @@ void main() {
         MessageType.activatePlugin,
         testUrl,
         SerializerHelper.intToByteArray(payloadActivate));
-    final Message replyActivate = await CommunicationHelper.sendAndWait(
-        localMaster,
-        requestActivate,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    final Message replyActivate =
+        await CommunicationHelper.sendAndWait(localMaster, requestActivate);
     expect(MessageType.comapiSuccess, replyActivate.type,
         reason: 'checking message type');
     expect(request.sourceId, replyActivate.targetId,
@@ -108,8 +101,7 @@ void main() {
     // Pregister plugin
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
-    await CommunicationHelper.sendAndWait(localMaster, request,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    await CommunicationHelper.sendAndWait(localMaster, request);
     // activate plugin
     const int payloadActivate = 255; //ToDo: Correct 8bit bytevalue, before 5555
     final Message requestActivate = Message(
@@ -118,15 +110,12 @@ void main() {
         MessageType.activatePlugin,
         testUrl,
         SerializerHelper.intToByteArray(payloadActivate));
-    await CommunicationHelper.sendAndWait(localMaster, requestActivate,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    await CommunicationHelper.sendAndWait(localMaster, requestActivate);
     // deactivate Plugin
     final Message requestDeactivate = Message(GeigerApi.masterId,
         GeigerApi.masterId, MessageType.deactivatePlugin, testUrl);
-    final Message replyDeactivate = await CommunicationHelper.sendAndWait(
-        localMaster,
-        requestDeactivate,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    final Message replyDeactivate =
+        await CommunicationHelper.sendAndWait(localMaster, requestDeactivate);
     expect(MessageType.comapiSuccess, replyDeactivate.type,
         reason: 'checking message type');
     expect(request.sourceId, replyDeactivate.targetId,
@@ -168,8 +157,8 @@ void main() {
     final MenuItem payload = MenuItem('plugin1Score', menuUrl);
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
-    final Message reply = await CommunicationHelper.sendAndWait(localMaster,
-        request, (Message msg) => msg.type == MessageType.comapiSuccess);
+    final Message reply =
+        await CommunicationHelper.sendAndWait(localMaster, request);
 
     expect(MessageType.comapiSuccess, reply.type,
         reason: 'checking message type');
@@ -197,13 +186,12 @@ void main() {
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a MenuItem
-    await CommunicationHelper.sendAndWait(localMaster, request,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    await CommunicationHelper.sendAndWait(localMaster, request);
 
     final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.deregisterMenu, testUrl, utf8.encode(payload.menu));
-    final Message reply2 = await CommunicationHelper.sendAndWait(localMaster,
-        request2, (Message msg) => msg.type == MessageType.comapiSuccess);
+    final Message reply2 =
+        await CommunicationHelper.sendAndWait(localMaster, request2);
 
     expect(MessageType.comapiSuccess, reply2.type,
         reason: 'checking message type');
@@ -229,14 +217,13 @@ void main() {
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a disabled menuItem
-    await CommunicationHelper.sendAndWait(localMaster, request,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    await CommunicationHelper.sendAndWait(localMaster, request);
 
     // enable the menuItem
     final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.enableMenu, testUrl, utf8.encode(payload.menu));
-    final Message reply2 = await CommunicationHelper.sendAndWait(localMaster,
-        request2, (Message msg) => msg.type == MessageType.comapiSuccess);
+    final Message reply2 =
+        await CommunicationHelper.sendAndWait(localMaster, request2);
 
     expect(MessageType.comapiSuccess, reply2.type,
         reason: 'checking message type');
@@ -266,14 +253,13 @@ void main() {
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a disabled menuItem
-    await CommunicationHelper.sendAndWait(localMaster, request,
-        (Message msg) => msg.type == MessageType.comapiSuccess);
+    await CommunicationHelper.sendAndWait(localMaster, request);
 
     // enable the menuItem
     final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.disableMenu, testUrl, utf8.encode(payload.menu));
-    final Message reply2 = await CommunicationHelper.sendAndWait(localMaster,
-        request2, (Message msg) => msg.type == MessageType.comapiSuccess);
+    final Message reply2 =
+        await CommunicationHelper.sendAndWait(localMaster, request2);
 
     expect(MessageType.comapiSuccess, reply2.type,
         reason: 'checking message type');
@@ -299,12 +285,8 @@ void main() {
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.ping, testUrl, utf8.encode('payload'));
-    final Message reply = await CommunicationHelper.sendAndWait(
-        localMaster,
-        request,
-        (Message msg) =>
-            const ListEquality<int>().equals(msg.payload, request.payload) &&
-            msg.type == MessageType.pong);
+    final Message reply =
+        await CommunicationHelper.sendAndWait(localMaster, request);
     expect(utf8.decode(request.payload), utf8.decode(reply.payload),
         reason: 'comparing payloads');
     expect(MessageType.pong, reply.type, reason: 'checking message type');

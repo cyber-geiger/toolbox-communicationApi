@@ -32,7 +32,7 @@ class Message with Serializer {
   /// Creates a [Message] with the provided properties.
   Message(this.sourceId, this.targetId, this.type, this.action,
       [List<int>? payload, String? requestId]) {
-    this.requestId = requestId ?? const Uuid().v4();
+    this.requestId = requestId ?? '${ExtendedTimestamp.now(false)}';
     if (payload != null) {
       _payloadString = base64.encode(payload);
     }

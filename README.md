@@ -11,4 +11,8 @@ GeigerApi? api = await getGeigerApi('<unspecified>', 'myPluginIdentifier');
 
 The specification of the executor is not clear yet but it is there so that code remains functional 
 when the feature is implemented. The plugin ID ('myPluginIdentifier') needs to be unique in the 
-ecosystem. Failure to choose a unique ID will result in unreliable communication behavior. 
+ecosystem. Failure to choose a unique ID will result in unreliable communication behavior.
+
+### Running tests
+
+Run tests with `--concurrency=1`. Else some tests will try to get the same port simultaneously.

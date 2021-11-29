@@ -11,8 +11,10 @@ import 'package:test/test.dart';
 
 void main() {
   test('testRegisterPlugin', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final PluginInformation payload =
@@ -28,11 +30,14 @@ void main() {
     expect(request.targetId, reply.sourceId,
         reason: 'checking sender of reply');
     expect('registerPlugin', reply.action!.path, reason: 'checking geigerURL');
+    await localMaster.close();
   });
 
   test('testDeregisterPlugin', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
@@ -47,11 +52,14 @@ void main() {
         reason: 'checking sender of reply');
     expect('deregisterPlugin', reply.action!.path,
         reason: 'checking geigerURL');
+    await localMaster.close();
   });
 
   test('testActivatePlugin', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final PluginInformation payload =
@@ -78,11 +86,14 @@ void main() {
         reason: 'checking sender of reply');
     expect('activatePlugin', replyActivate.action!.path,
         reason: 'checking geigerURL');
+    await localMaster.close();
   });
 
   test('testDeactivatePlugin', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final PluginInformation payload =
@@ -113,12 +124,15 @@ void main() {
         reason: 'checking sender of reply');
     expect('deactivatePlugin', replyDeactivate.action!.path,
         reason: 'checking geigerURL');
+    await localMaster.close();
   });
 
   test('testGetStorage', () async {
+    flushGeigerApiCache();
     // check master
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final StorageController? masterController = localMaster.getStorage();
     expect(true, masterController is GenericController);
 
@@ -128,11 +142,15 @@ void main() {
     final StorageController? pluginController = pluginApi!.getStorage();
     expect(true, pluginController is StorageController);
     // TODO(mgwerder): test with PasstroughController
+    await localMaster.close();
+    await pluginApi.close();
   });
 
   test('testRegisterMenu', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -153,11 +171,14 @@ void main() {
 
     expect(payload, localMaster.getMenuList()[0],
         reason: 'checking stored menuItem');
+    await localMaster.close();
   });
 
   test('testDeregisterMenu', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -180,11 +201,14 @@ void main() {
         reason: 'checking sender of reply');
     expect('deregisterMenu', reply2.action!.path, reason: 'checking geigerURL');
     expect(0, localMaster.getMenuList().length);
+    await localMaster.close();
   });
 
   test('testEnableMenu', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -213,11 +237,14 @@ void main() {
     payload.enabled = true;
     expect(payload, isNot(equals(localMaster.getMenuList()[0])),
         reason: 'checking stored menuItem');
+    await localMaster.close();
   });
 
   test('testDisableMenu', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -246,11 +273,14 @@ void main() {
     payload.enabled = false;
     expect(payload, isNot(equals(localMaster.getMenuList()[0])),
         reason: 'checking stored menuItem');
+    await localMaster.close();
   });
 
   test('testPing', () async {
+    flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
@@ -264,5 +294,6 @@ void main() {
         reason: 'checking recipient of reply');
     expect(request.targetId, reply.sourceId,
         reason: 'checking sender of reply');
+    await localMaster.close();
   });
 }

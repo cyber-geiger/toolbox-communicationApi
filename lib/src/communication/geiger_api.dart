@@ -64,4 +64,8 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
 
   /// get the declaration of data sharing provided when establishing the agreement.
   Declaration get declaration;
+
+  Future<void> zapState();
+
+  Future<void> close();
 }

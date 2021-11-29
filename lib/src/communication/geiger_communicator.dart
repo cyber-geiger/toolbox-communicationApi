@@ -1,43 +1,55 @@
 library geiger_api;
 
-import 'geiger_api.dart';
+import 'dart:async';
+import 'dart:io';
+
+import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
+
+import 'communication_api.dart';
 import 'message.dart';
-import 'message_listener.dart';
-import 'plugin_information.dart';
 
-abstract class GeigerCommunicator {
-  static const int defaultMasterPort = 12348;
+class GeigerCommunicator {
+  static const int masterPort = 12348;
 
-  MessageListener? listener;
-  final GeigerApi _communicationEndpoint;
-  int port = defaultMasterPort;
+  final CommunicationApi api;
 
-  GeigerCommunicator(this._communicationEndpoint, bool isMaster) {
-    if (isMaster) {
-      // TODO(mgwerder): start communicator wirth port [defaultMasterPort]
-    } else {
-      // TODO(mgwerder): start communicator with port -1
-    }
+  late ServerSocket? _server;
+
+  get isActive {
+    return _server != null;
   }
 
-  void setListener(MessageListener listener) {
-    this.listener = listener;
+  get port {
+    return _server?.port ?? 0;
   }
 
-  Future<void> sendMessage(PluginInformation pluginInformation, Message msg);
+  GeigerCommunicator(this.api);
 
-  void start();
-
-  /// Convert a bytearray to int.
-  ///
-  /// The provided [bytes] can only be 4 long.
-  /// TODO(mgwerder): this is a specialized implementation of the writeIntLong implementatio. Please collapse sensibly
-  MessageListener? getListener() {
-    return listener;
+  Future<void> start() async {
+    var server = await ServerSocket.bind(
+        InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
+    server.listen((socket) async {
+      api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
+    });
+    _server = server;
   }
 
-  int getPort();
+  Future<void> close() async {
+    await _server?.close();
+    _server = null;
+  }
 
-  /// Start a plugin of [pluginInformation] by using the stored executable String.
-  void startPlugin(PluginInformation pluginInformation);
+  Future<void> sendMessage(int port, Message message) async {
+    var socket = await Socket.connect(
+      InternetAddress.loopbackIPv4,
+      port, /*sourceAddress: InternetAddress('localhost:$port')*/
+    );
+    ByteSink sink = ByteSink();
+    message.toByteArrayStream(sink);
+    sink.close();
+    socket.add(await sink.bytes);
+    await socket.flush();
+    socket.destroy();
+  }
 }

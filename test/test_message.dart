@@ -51,51 +51,56 @@ void main() {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
     MessageType messageType = MessageType.allEvents;
+    String requestId = 'some-id';
     List<int> payload = 'payload'.codeUnits;
-    GeigerUrl? url;
-    try {
-      url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch (e) {
-      print(e);
-    }
+    GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
 
     //without payload
-    Message msg = Message(sourceId, targetId, messageType, url);
-    Message msg2 = Message(sourceId, targetId, messageType, url);
-    expect(msg2.equals(msg), true);
+    Message msg =
+        Message(sourceId, targetId, messageType, url, null, requestId);
+    Message msg2 =
+        Message(sourceId, targetId, messageType, url, null, requestId);
+    expect(msg2, msg);
 
     //with payload
-    Message msg3 = Message(sourceId, targetId, messageType, url, payload);
-    Message msg4 = Message(sourceId, targetId, messageType, url, payload);
-    expect(msg3.equals(msg4), true);
-    expect(!msg.equals(msg3), true);
+    Message msg3 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
+    Message msg4 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
+    expect(msg3, msg4);
+    expect(msg, isNot(msg3));
 
     //negative tests
     List<int> payload2 = 'payload2'.codeUnits;
     Message msg5 = Message(sourceId, targetId, messageType, url, payload2);
-    expect(!msg5.equals(msg3), true);
+    expect(msg5, isNot(msg3));
+
+    String requestId2 = 'some-other-id';
+    Message msg6 =
+        Message(sourceId, targetId, messageType, url, null, requestId2);
+    expect(msg6, isNot(msg));
   });
 
   test('testHashCode', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';
     MessageType messageType = MessageType.allEvents;
+    String requestId = 'some-id';
     List<int> payload = 'payload'.codeUnits;
-    GeigerUrl? url;
-    try {
-      url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    } catch (e) {
-      print(e);
-    }
+    GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
 
     //without payload
-    Message msg = Message(sourceId, targetId, messageType, url);
-    Message msg2 = Message(sourceId, targetId, messageType, url);
+    Message msg =
+        Message(sourceId, targetId, messageType, url, null, requestId);
+    Message msg2 =
+        Message(sourceId, targetId, messageType, url, null, requestId);
     expect(msg.hashCode == msg2.hashCode, true);
 
     //with payload
-    Message msg3 = Message(sourceId, targetId, messageType, url, payload);
-    Message msg4 = Message(sourceId, targetId, messageType, url, payload);
+    Message msg3 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
+    Message msg4 =
+        Message(sourceId, targetId, messageType, url, payload, requestId);
     expect(msg3.hashCode == msg4.hashCode, true);
 
     //negative tests

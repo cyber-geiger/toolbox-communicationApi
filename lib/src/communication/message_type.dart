@@ -44,7 +44,7 @@ class MessageType {
   static const enableMenu = MessageType._(
       'ENABLE_MENU', 221); // Menu entry is active (a user may select it)
   static const disableMenu = MessageType._(
-      'DISABLE_MENU', 220); // Menu entry is inactive (a user may not select it)
+      'DISABLE_MENU', 222); // Menu entry is inactive (a user may not select it)
   static const deregisterMenu = MessageType._(
       'DEREGISTER_MENU', 230); // der-register a registered menu entry
 

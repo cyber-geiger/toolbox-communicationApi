@@ -1,7 +1,5 @@
 library geiger_api;
 
-import 'dart:io';
-
 import '../../geiger_api.dart';
 import 'plugin_listener.dart';
 
@@ -22,7 +20,8 @@ class Listener with PluginListener {
 
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {
-    if (tmsg.id == msg.id &&
+    if (this.msg == null &&
+        tmsg.requestId == msg.requestId &&
         tmsg.targetId == msg.sourceId &&
         tmsg.sourceId == msg.targetId) {
       this.msg = msg;
@@ -33,12 +32,12 @@ class Listener with PluginListener {
     api.deregisterListener([MessageType.allEvents], this);
   }
 
-  Message waitForResult(int timeout) {
+  Future<Message> waitForResult(int timeout) async {
     var startTime = DateTime.now().millisecondsSinceEpoch;
     while ((msg == null) &&
         ((timeout < 0) ||
             ((DateTime.now().millisecondsSinceEpoch - startTime) < timeout))) {
-      sleep(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 100));
     }
     var message = msg;
     if (message == null) {
@@ -62,7 +61,7 @@ class CommunicationHelper {
     var l = Listener(api, msg);
     await l.register();
     await api.sendMessage(msg);
-    var result = l.waitForResult(timeout);
+    var result = await l.waitForResult(timeout);
     l.dispose();
     return result;
   }

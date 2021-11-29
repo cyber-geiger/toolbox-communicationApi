@@ -175,20 +175,19 @@ class CommunicationApi implements GeigerApi {
     if (plugins[StorableString(id)] == null) {
       throw ArgumentError('no communication secret found for id "$id"');
     }
-    // first deactivate, then deregister at Master, before deleting my own entries.
-    await deactivatePlugin();
     await CommunicationHelper.sendAndWait(
         this,
         Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
             GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
-    zapState();
+    await zapState();
   }
 
   /// Deletes all current registered items.
-  void zapState() {
+  @override
+  Future<void> zapState() async {
     menuItems.clear();
     plugins.clear();
-    storeState();
+    await storeState();
   }
 
   Future<void> storeState() async {

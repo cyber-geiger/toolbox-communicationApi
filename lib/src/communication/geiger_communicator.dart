@@ -15,7 +15,6 @@ class GeigerCommunicator {
   final CommunicationApi api;
 
   late ServerSocket? _server;
-  Map<String, Completer<Message>> responseFutures = {};
 
   get isActive {
     return _server != null;
@@ -42,9 +41,6 @@ class GeigerCommunicator {
   }
 
   Future<void> sendMessage(int port, Message message) async {
-    if (_server == null) {
-      throw CommunicationException('GeigerCommunicator not started.');
-    }
     var socket = await Socket.connect(
       InternetAddress.loopbackIPv4,
       port, /*sourceAddress: InternetAddress('localhost:$port')*/

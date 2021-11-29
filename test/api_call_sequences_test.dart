@@ -14,7 +14,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final PluginInformation payload =
@@ -37,7 +37,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
@@ -59,7 +59,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final PluginInformation payload =
@@ -93,7 +93,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final PluginInformation payload =
@@ -132,7 +132,7 @@ void main() {
     // check master
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final StorageController? masterController = localMaster.getStorage();
     expect(true, masterController is GenericController);
 
@@ -150,7 +150,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -178,7 +178,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -208,7 +208,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -244,7 +244,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
@@ -280,7 +280,7 @@ void main() {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,

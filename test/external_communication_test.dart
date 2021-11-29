@@ -10,7 +10,7 @@ void main() {
     flushGeigerApiCache();
     GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     SimpleEventListener masterListener = SimpleEventListener('master');
     List<MessageType> allEvents = [MessageType.allEvents];
     await localMaster.registerListener(allEvents, masterListener);
@@ -36,7 +36,7 @@ void main() {
     flushGeigerApiCache();
     var localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     SimpleEventListener masterListener = SimpleEventListener('master');
     List<MessageType> allEvents = [MessageType.allEvents];
     await localMaster.registerListener(allEvents, masterListener);
@@ -58,7 +58,7 @@ void main() {
     flushGeigerApiCache();
     var localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    localMaster.zapState();
+    await localMaster.zapState();
     SimpleEventListener masterListener = SimpleEventListener('master');
     List<MessageType> allEvents = [MessageType.allEvents];
     await localMaster.registerListener(allEvents, masterListener);
@@ -72,13 +72,8 @@ void main() {
 
     List<Message> receivedEventsMaster = masterListener.getEvents();
     //print(masterListener);
-    expect(receivedEventsMaster.length, 4);
-    Message rcvdMessage = receivedEventsMaster[1];
-    expect(rcvdMessage.type, MessageType.activatePlugin);
-    expect(rcvdMessage.sourceId, 'plugin1');
-    expect(rcvdMessage.action, null);
-
-    rcvdMessage = receivedEventsMaster[3];
+    expect(receivedEventsMaster.length, 3);
+    Message rcvdMessage = receivedEventsMaster[2];
     expect(rcvdMessage.type, MessageType.deregisterPlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
     expect(rcvdMessage.action?.protocol, 'geiger');
@@ -87,13 +82,13 @@ void main() {
 
     //print(pluginListener);
     List<Message> receivedEventsPlugin = pluginListener.getEvents();
-    expect(receivedEventsPlugin.length, 2);
+    expect(receivedEventsPlugin.length, 1);
     rcvdMessage = receivedEventsPlugin[0];
     expect(rcvdMessage.type, MessageType.comapiSuccess);
     expect(rcvdMessage.sourceId, GeigerApi.masterId);
     expect(rcvdMessage.action?.protocol, 'geiger');
     expect(rcvdMessage.action?.plugin, 'plugin1');
-    expect(rcvdMessage.action?.path, 'deactivatePlugin');
+    expect(rcvdMessage.action?.path, 'deregisterPlugin');
     await localMaster.close();
     await plugin.close();
   });
@@ -102,7 +97,7 @@ void main() {
       flushGeigerApiCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.masterId, Declaration.doNotShareData))!;
-      localMaster.zapState();
+      await localMaster.zapState();
       SimpleEventListener masterListener = SimpleEventListener('master');
       List<MessageType> allEvents = [MessageType.allEvents];
       await localMaster.registerListener(allEvents, masterListener);
@@ -145,7 +140,7 @@ void main() {
       flushGeigerApiCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.masterId, Declaration.doNotShareData))!;
-      localMaster.zapState();
+      await localMaster.zapState();
       SimpleEventListener masterListener = SimpleEventListener('master');
       List<MessageType> allEvents = [MessageType.allEvents];
       await localMaster.registerListener(allEvents, masterListener);
@@ -186,7 +181,7 @@ void main() {
       flushGeigerApiCache();
       var localMaster = (await getGeigerApi(
           '', GeigerApi.masterId, Declaration.doNotShareData))!;
-      localMaster.zapState();
+      await localMaster.zapState();
       SimpleEventListener masterListener = SimpleEventListener('master');
       List<MessageType> allEvents = [MessageType.allEvents];
       await localMaster.registerListener(allEvents, masterListener);

@@ -528,10 +528,8 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> menuPressed(GeigerUrl url) async {
-    await CommunicationHelper.sendAndWait(
-        this,
-        Message(GeigerApi.masterId, url.plugin, MessageType.menuPressed, url,
-            null));
+    await sendMessage(Message(
+        GeigerApi.masterId, url.plugin, MessageType.menuPressed, url, null));
   }
 
   @override

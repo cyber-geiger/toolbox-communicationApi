@@ -194,6 +194,7 @@ void main() {
       await plugin.registerMenu(
           'testMenu', GeigerUrl(null, 'plugin1', 'testMenu'));
       await localMaster.menuPressed(GeigerUrl(null, 'plugin1', 'testMenu'));
+      await Future.delayed(const Duration(seconds: 1));
 
       List<Message> receivedEventsMaster = masterListener.getEvents();
       expect(receivedEventsMaster.length, 3);

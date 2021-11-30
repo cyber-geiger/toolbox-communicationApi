@@ -288,7 +288,7 @@ class CommunicationApi implements GeigerApi {
       // Message to this plugin
       await receivedMessage(msg);
     } else {
-      print('## Sending message to plugin $pluginId ($msg)');
+      _logger.log(Level.INFO, '## Sending message to plugin $pluginId ($msg)');
       // Message to external plugin
       PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
           PluginInformation(

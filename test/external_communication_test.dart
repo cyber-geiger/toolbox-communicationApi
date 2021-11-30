@@ -51,6 +51,7 @@ void main() {
     await localMaster.close();
     await plugin.close();
   });
+
   test('Deactivate Plugin', () async {
     flushGeigerApiCache();
     var localMaster = (await getGeigerApi(
@@ -89,6 +90,7 @@ void main() {
     await localMaster.close();
     await plugin.close();
   });
+
   group('register Menu', () {
     test('check Master', () async {
       flushGeigerApiCache();
@@ -133,6 +135,7 @@ void main() {
       await plugin.close();
     });
   });
+
   group('Disable Menu', () {
     test('check Master', () async {
       flushGeigerApiCache();
@@ -174,6 +177,7 @@ void main() {
       await plugin.close();
     });
   });
+
   group('menu pressed', () {
     test('check Master', () async {
       flushGeigerApiCache();
@@ -216,15 +220,19 @@ void main() {
       await plugin.close();
     });
   });
+
   group('register Listener', () {
     //TODO(mgwerder): not implemented
   });
+
   group('Deregister Listener', () {
     //TODO(mgwerder): not implemented
   });
+
   group('get Menu List', () {
     //TODO(mgwerder): not implemented
   });
+
   group('Scan Button Pressed', () {
     //TODO(mgwerder): not implemented
   });

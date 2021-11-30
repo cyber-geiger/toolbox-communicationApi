@@ -23,6 +23,8 @@ class StorageEventHandler with PluginListener {
 
   StorageEventHandler(this._api, this._controller);
 
+  bool get isMaster => _isMaster;
+
   /// Decides which storage method has been called for [msg].
   Future<void> storageEventParser(Message msg) async {
     if (GeigerApi.masterId == msg.targetId) {
@@ -505,9 +507,6 @@ class StorageEventHandler with PluginListener {
   Future<void> registerChangeListener(
       Message msg, String identifier, List<String> optionalArgs) async {
     msg.payloadString;
-    StorageListener? listener;
-    SearchCriteria criteria =
-        await SearchCriteria.fromByteArrayStream(ByteStream(null, msg.payload));
   }
 
   List<SearchCriteria> deregisterChangeListener(StorageListener listener) {

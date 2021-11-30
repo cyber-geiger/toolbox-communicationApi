@@ -2,6 +2,7 @@ library geiger_api;
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
+import 'communication_exception.dart';
 import 'geiger_api.dart';
 import 'malformed_url_exception.dart';
 
@@ -17,7 +18,6 @@ class GeigerUrl implements Serializer {
   ///
   /// Throws [MalformedUrlException] if a malformed URL was received
   GeigerUrl.fromSpec(String uri) {
-    /*try {*/
     var m = _urlPattern.firstMatch(uri);
     if (m == null) {
       throw MalformedUrlException('Matcher was unable to match the string "' +
@@ -27,12 +27,6 @@ class GeigerUrl implements Serializer {
     }
     _protocol = m[1]!;
     init(m[2]!, m[3]!);
-    /*} on IllegalStateException catch (e) {
-      throw MalformedUrlException('Matcher was unable to match the string \"' +
-          spec +
-          '\" to regexp ' +
-          urlPattern.pattern);
-    }*/
   }
 
   /// Create a [GeigerUrl] with the provided [pluginId], [path], and optionally [protocol].
@@ -84,20 +78,25 @@ class GeigerUrl implements Serializer {
     SerializerHelper.writeString(out, protocol);
     SerializerHelper.writeString(out, _pluginId);
     SerializerHelper.writeString(out, path);
+    SerializerHelper.writeLong(out, serialVersionUID);
   }
 
-  /// Convert ByteArrayInputStream to GeigerUrl.
-  /// @param in ByteArrayInputStream to read from
-  /// @return the converted GeigerUrl
-  /// @throws IOException if GeigerUrl cannot be read
+  /// Convert start of [ByteStream] to a [GeigerUrl].
+  ///
+  /// If the stream does not contain a [GeigerUrl] a [CommunicationException] is
+  /// thrown.
   static Future<GeigerUrl> fromByteArrayStream(ByteStream in_) async {
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('cannot cast');
+      throw CommunicationException('cannot cast');
     }
-    return GeigerUrl(
+    GeigerUrl ret = GeigerUrl(
         await SerializerHelper.readString(in_) ?? '',
         await SerializerHelper.readString(in_) ?? '',
         await SerializerHelper.readString(in_) ?? '');
+    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
+      throw CommunicationException('cannot cast');
+    }
+    return ret;
   }
 
   @override

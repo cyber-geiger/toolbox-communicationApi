@@ -110,21 +110,22 @@ void main() {
    * <p>Tests the serialization of the a serializable Hashmap object.</p>
    */
   test('storableMapSerializationTest', () async {
-    StorableHashMap<GeigerUrl, GeigerUrl> hm =
-        StorableHashMap<GeigerUrl, GeigerUrl>();
-    Map<GeigerUrl, GeigerUrl> it = <GeigerUrl, GeigerUrl>{
-      GeigerUrl(null, GeigerApi.masterId, 'path'):
-          GeigerUrl(null, GeigerApi.masterId, 'path')
+    StorableHashMap<GeigerUrl, Serializer> hm =
+        StorableHashMap<GeigerUrl, Serializer>();
+    GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'path');
+    Map<GeigerUrl, Serializer> it = <GeigerUrl, Serializer>{
+      url: url,
+      url: MenuItem('string', url)
     };
     hm.addAll(it);
     ByteSink bout = ByteSink();
     hm.toByteArrayStream(bout);
     bout.close();
-    ByteStream bin = ByteStream(Stream<List<int>>.value(await bout.bytes));
+    ByteStream bin = ByteStream(null, await bout.bytes);
     StorableHashMap hm2 = StorableHashMap();
     await StorableHashMap.fromByteArrayStream(bin, hm2);
     expect(hm2.toString() == hm.toString(), true,
-        reason: 'Cloned Plugininformation using stream are not equal');
+        reason: 'Cloned PluginInformation using stream are not equal');
   });
 
   /**

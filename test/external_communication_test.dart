@@ -1,8 +1,5 @@
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/communication/geiger_api.dart';
-import 'package:geiger_api/src/communication/geiger_url.dart';
-import 'package:geiger_api/src/communication/menu_item.dart';
-import 'package:geiger_api/src/communication/plugin_listener.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -119,7 +116,8 @@ void main() {
       expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'registerMenu');
       expect(
-          await MenuItem.fromByteArray(rcvdMessage.payload),
+          await MenuItem.fromByteArrayStream(
+              ByteStream(null, rcvdMessage.payload)),
           MenuItem(
               'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu')));
 

@@ -1,14 +1,13 @@
 library geiger_api;
 
 // TODO(mgwerder): completely redo this concept
-
 /*
 /// Class for handling storage events in Plugins.
 class PasstroughController implements StorageController, PluginListener {
   final GeigerApi localApi;
   final String id;
   final Object comm = Object();
-  final Map<String, Message> receivedMessages = <String,Message>{};
+  final Map<String, Message> receivedMessages = <String, Message>{};
 
   /// Creates a [PasstroughController] for the given [api] and plugin (provide its [id]).
   PasstroughController(this.localApi, this.id) {
@@ -21,14 +20,10 @@ class PasstroughController implements StorageController, PluginListener {
 
   Message? waitForResult(String command, String identifier) {
     var token = command + '/' + identifier;
-    var start = DateTime
-        .now()
-        .millisecondsSinceEpoch;
+    var start = DateTime.now().millisecondsSinceEpoch;
     while (receivedMessages[token] == null) {
       Future.delayed(const Duration(seconds: 1));
-      if ((DateTime
-          .now()
-          .millisecondsSinceEpoch - start) > 5000) {
+      if ((DateTime.now().millisecondsSinceEpoch - start) > 5000) {
         throw Exception('Lost communication while waiting for ' + token);
       }
     }
@@ -40,15 +35,19 @@ class PasstroughController implements StorageController, PluginListener {
     var command = 'getNode';
     String identifier = ExtendedTimestamp.extendedNow();
     try {
-      Message response = await CommunicationHelper.sendAndWait(localApi,Message(
-          id, GeigerApi.masterId, MessageType.storageEvent,
-          GeigerUrl(null,id, (((command + '/') + identifier) + '/') + path)));
+      Message response = await CommunicationHelper.sendAndWait(
+          localApi,
+          Message(
+              id,
+              GeigerApi.masterId,
+              MessageType.storageEvent,
+              GeigerUrl(
+                  null, id, (((command + '/') + identifier) + '/') + path)));
       if (response.type == MessageType.storageError) {
         throw StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
-        return NodeImpl.fromByteArrayStream(
-            ByteStream(null, response.payload));
+        return NodeImpl.fromByteArrayStream(ByteStream(null, response.payload));
       }
     } on Exception catch (e) {
       throw CommunicationException('Could not get Node', e);
@@ -56,13 +55,13 @@ class PasstroughController implements StorageController, PluginListener {
   }
 
   @override
-  Node getNodeOrTombstone(String path) {
+  Future<Node> getNodeOrTombstone(String path) {
     var command = 'getNodeOrTombstone';
-    var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(id, (((command + '/') + identifier) + '/') + path)));
+      Message msg = await CommunicationHelper.sendAndWait(
+          localApi,
+          Message(id, GeigerApi.masterId, MessageType.storageEvent,
+              GeigerUrl(null, id, '$command/$path')));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     try {
@@ -148,15 +147,16 @@ class PasstroughController implements StorageController, PluginListener {
     var command = 'deleteNode';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(id, (((command + '/') + identifier) + '/') + path)));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
+              GeigerUrl(id, (((command + '/') + identifier) + '/') + path)));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     try {
       if (response.getType() == MessageType.STORAGE_ERROR) {
         throw await StorageException.fromByteArrayStream(
-            ByteStream(null,response.getPayload()));
+            ByteStream(null, response.getPayload()));
       } else {
         return await NodeImpl.fromByteArrayStream(
             ByteStream(null, response.getPayload()));
@@ -171,9 +171,16 @@ class PasstroughController implements StorageController, PluginListener {
     var command = 'getValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT, GeigerUrl(
-          id, (((((command + '/') + identifier) + '/') + path) + '/') + key)));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(
+              id,
+              GeigerApi.MASTER,
+              MessageType.STORAGE_EVENT,
+              GeigerUrl(
+                  id,
+                  (((((command + '/') + identifier) + '/') + path) + '/') +
+                      key)));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     try {
@@ -181,8 +188,8 @@ class PasstroughController implements StorageController, PluginListener {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.getPayload()));
       } else {
-        return NodeValueImpl.fromByteArrayStream(ByteStream(null,
-                response.getPayload()));
+        return NodeValueImpl.fromByteArrayStream(
+            ByteStream(null, response.getPayload()));
       }
     } on IOException catch (e) {
       throw StorageException('Could not get Value', e);
@@ -190,7 +197,7 @@ class PasstroughController implements StorageController, PluginListener {
   }
 
   @override
-  Future <void> addValue(String path, NodeValue value) async {
+  Future<void> addValue(String path, NodeValue value) async {
     var command = 'addValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
@@ -198,7 +205,10 @@ class PasstroughController implements StorageController, PluginListener {
       value.toByteArrayStream(bos);
       bos.close();
       List<int> payload = await bos.bytes;
-      var m = Message(id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
+      var m = Message(
+          id,
+          GeigerApi.MASTER,
+          MessageType.STORAGE_EVENT,
           GeigerUrl(id, (((command + '/') + identifier) + '/') + path),
           payload);
       localApi.sendMessage(GeigerApi.MASTER, m);
@@ -222,7 +232,10 @@ class PasstroughController implements StorageController, PluginListener {
       value.toByteArrayStream(bos);
       bos.close();
       List<int> payload = await bos.bytes;
-      var m = Message(id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
+      var m = Message(
+          id,
+          GeigerApi.MASTER,
+          MessageType.STORAGE_EVENT,
           GeigerUrl(id, (((command + '/') + identifier) + '/') + nodeName),
           payload);
       localApi.sendMessage(GeigerApi.MASTER, m);
@@ -237,13 +250,20 @@ class PasstroughController implements StorageController, PluginListener {
   }
 
   @override
-  Future <NodeValue> deleteValue(String path, String key) async {
+  Future<NodeValue> deleteValue(String path, String key) async {
     var command = 'deleteValue';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT, GeigerUrl(
-          id, (((((command + '/') + identifier) + '/') + path) + '/') + key)));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(
+              id,
+              GeigerApi.MASTER,
+              MessageType.STORAGE_EVENT,
+              GeigerUrl(
+                  id,
+                  (((((command + '/') + identifier) + '/') + path) + '/') +
+                      key)));
     } on MalformedUrlException catch (e) {}
     Message response = await waitForResult(command, identifier);
     try {
@@ -265,17 +285,22 @@ class PasstroughController implements StorageController, PluginListener {
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
       // this will not work if either the old or the new path contains any "/"
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT, GeigerUrl(id,
-          (((((command + '/') + identifier) + '/') + oldPath) + '/') +
-              newPathOrName)));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(
+              id,
+              GeigerApi.MASTER,
+              MessageType.STORAGE_EVENT,
+              GeigerUrl(
+                  id,
+                  (((((command + '/') + identifier) + '/') + oldPath) + '/') +
+                      newPathOrName)));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw await StorageException.fromByteArrayStream(
-            ByteStream(null,
-                response.getPayload()));
+            ByteStream(null, response.getPayload()));
       } on IOException catch (e) {
         throw StorageException('Could not rename Node', e);
       }
@@ -300,10 +325,9 @@ class PasstroughController implements StorageController, PluginListener {
             ByteStream(null, response.getPayload()));
       } else {
         var receivedPayload = response.getPayload();
-        int numNodes = GeigerCommunicator.byteArrayToInt(
-            receivedPayload?.sublist(0, 4));
-        var receivedNodes = receivedPayload?.sublist(
-            5, receivedPayload.length);
+        int numNodes =
+            GeigerCommunicator.byteArrayToInt(receivedPayload?.sublist(0, 4));
+        var receivedNodes = receivedPayload?.sublist(5, receivedPayload.length);
         var nodes = List<Node>.empty(growable: true);
         for (var i = 0; i < numNodes; (++i)) {
           // does this advance the stream? after every read the next one needs to start at
@@ -323,16 +347,16 @@ class PasstroughController implements StorageController, PluginListener {
     var command = 'close';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(id, (command + '/') + identifier)));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
+              GeigerUrl(id, (command + '/') + identifier)));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw await StorageException.fromByteArrayStream(
-            ByteStream(null,
-                response.getPayload()));
+            ByteStream(null, response.getPayload()));
       } on IOException catch (e) {
         throw StorageException('Could not close', e);
       }
@@ -344,16 +368,16 @@ class PasstroughController implements StorageController, PluginListener {
     var command = 'flush';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(id, (command + '/') + identifier)));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
+              GeigerUrl(id, (command + '/') + identifier)));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw StorageException.fromByteArrayStream(
-            ByteStream(null,
-                response.getPayload()));
+            ByteStream(null, response.getPayload()));
       } on IOException catch (e) {
         throw StorageException('Could not flush', e);
       }
@@ -365,16 +389,16 @@ class PasstroughController implements StorageController, PluginListener {
     var command = 'zap';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(id, (command + '/') + identifier)));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
+              GeigerUrl(id, (command + '/') + identifier)));
     } on MalformedUrlException catch (e) {}
     Message response = await waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw await StorageException.fromByteArrayStream(
-            ByteStream( null,
-                response.getPayload()));
+            ByteStream(null, response.getPayload()));
       } on IOException catch (e) {
         throw StorageException('Could not zap', e);
       }
@@ -383,8 +407,7 @@ class PasstroughController implements StorageController, PluginListener {
 
   @override
   void pluginEvent(GeigerUrl url, Message msg) {
-
-    receivedMessages[url.getPath()]=msg;
+    receivedMessages[url.getPath()] = msg;
     // FIXME(mgwerder): notify all comm.notifyAll();
   }
 
@@ -392,24 +415,27 @@ class PasstroughController implements StorageController, PluginListener {
   ///
   /// Throws a [StorageException] if the listener could not be registered.
   @override
-  Future<void> registerChangeListener(StorageListener listener,
-      SearchCriteria criteria) async {
+  Future<void> registerChangeListener(
+      StorageListener listener, SearchCriteria criteria) async {
     var command = 'registerChangeListener';
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     ByteSink byteArrayOutputStream = ByteSink();
     byteArrayOutputStream.sink.add(await criteria.toByteArray());
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(GeigerApi.MASTER, (command + '/') + identifier),
-          byteArrayOutputStream.toByteArray()));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(
+              id,
+              GeigerApi.MASTER,
+              MessageType.STORAGE_EVENT,
+              GeigerUrl(GeigerApi.MASTER, (command + '/') + identifier),
+              byteArrayOutputStream.toByteArray()));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw StorageException.fromByteArrayStream(
-            ByteStream(null,
-                response.getPayload()));
+            ByteStream(null, response.getPayload()));
       } on IOException catch (e) {
         throw StorageException('Could not rename Node', e);
       }
@@ -425,27 +451,28 @@ class PasstroughController implements StorageController, PluginListener {
     var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
     ByteStream byteArrayOutputStream = ByteStream();
     try {
-      localApi.sendMessage(GeigerApi.MASTER, Message(
-          id, GeigerApi.MASTER, MessageType.STORAGE_EVENT,
-          GeigerUrl(GeigerApi.MASTER, (command + '/') + identifier),
-          byteArrayOutputStream.toByteArray()));
+      localApi.sendMessage(
+          GeigerApi.MASTER,
+          Message(
+              id,
+              GeigerApi.MASTER,
+              MessageType.STORAGE_EVENT,
+              GeigerUrl(GeigerApi.MASTER, (command + '/') + identifier),
+              byteArrayOutputStream.toByteArray()));
     } on MalformedUrlException catch (e) {}
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
         throw StorageException.fromByteArrayStream(
-            ByteStream(null,
-                response.payload));
+            ByteStream(null, response.payload));
       } on IOException catch (e) {
         throw StorageException('Could not rename Node', e);
       }
     } else {
-      SearchCriteria.fromByteArrayStream(ByteStream(null,response.getPayload()));
+      SearchCriteria.fromByteArrayStream(
+          ByteStream(null, response.getPayload()));
       return [];
     }
   }
-
 }
-
-
- */
+*/

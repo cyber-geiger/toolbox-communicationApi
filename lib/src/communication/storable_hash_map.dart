@@ -3,7 +3,7 @@ library geiger_api;
 import 'package:geiger_api/src/serialization/communication_serializer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-// TODO: Maybe use quiver's DelegatingMap:
+// TODO(unassigned): Maybe use quiver's DelegatingMap:
 // https://pub.dev/documentation/quiver/latest/quiver.collection/DelegatingMap-class.html
 
 /// Serializable Hashmap.
@@ -38,7 +38,9 @@ class StorableHashMap<K extends Serializer, V extends Serializer>
     map.clear();
     int size = await SerializerHelper.readInt(in_);
     for (int i = 0; i < size; i++) {
-      map[(await readObject(in_))!] = (await readObject(in_))!;
+      var key = await readObject(in_);
+      var value = await readObject(in_);
+      map[key] = value;
     }
     if (await SerializerHelper.readLong(in_) != serialVersionUID) {
       throw Exception('cannot cast');

@@ -41,7 +41,8 @@ class CommunicationApi implements GeigerApi {
   ///
   /// Whether this api [isMaster] and its privacy [_declaration] must also be provided.
   CommunicationApi(
-      String executor, this.id, this.isMaster, Declaration declaration) {
+      String executor, this.id, this.isMaster, Declaration declaration,
+      {statePath}) {
     _executor = executor;
     _declaration = declaration;
     _geigerCommunicator = GeigerCommunicator(this);
@@ -53,20 +54,18 @@ class CommunicationApi implements GeigerApi {
 
   static final Logger _logger = Logger('GeigerAPI');
 
-  static Mapper? _mapper;
   static const Mapper defaultMapper = Mapper.sqliteMapper;
 
-  static final StorableHashMap<StorableString, PluginInformation> plugins =
+  final StorableHashMap<StorableString, PluginInformation> plugins =
       StorableHashMap();
-  static final StorableHashMap<StorableString, MenuItem> menuItems =
-      StorableHashMap();
-
-  static final Logger log = Logger("GeigerApi");
+  final StorableHashMap<StorableString, MenuItem> menuItems = StorableHashMap();
 
   late String _executor;
   final String id;
   late final bool isMaster;
   late Declaration _declaration;
+  Mapper? _mapper;
+  String? statePath;
 
   final Map<MessageType, List<PluginListener>> _listeners =
       <MessageType, List<PluginListener>>{};
@@ -191,26 +190,30 @@ class CommunicationApi implements GeigerApi {
   }
 
   Future<void> storeState() async {
+    await StorageMapper.initDatabaseExpander();
+    statePath ??= StorageMapper.expandDbFileName('');
     // store plugin state
     try {
+      _logger.log(Level.INFO, 'storing state to $statePath');
       final ByteSink out = ByteSink();
       plugins.toByteArrayStream(out);
       menuItems.toByteArrayStream(out);
       out.close();
-      final IOSink file = File('GeigerApi.$id.state').openWrite();
+      final IOSink file = File('$statePath/GeigerApi.$id.state').openWrite();
       file.add(await out.bytes);
       file.close();
     } catch (ioe) {
-      // FIXME
-      //System.out.println("===============================================U");
-      //ioe.printStackTrace();
-      //System.out.println("===============================================L");
+      _logger.log(
+          Level.SEVERE, 'unable to write state file to $statePath', ioe);
     }
   }
 
   Future<void> restoreState() async {
+    await StorageMapper.initDatabaseExpander();
+    statePath ??= StorageMapper.expandDbFileName('');
     try {
-      final File file = File('GeigerApi.$id.state');
+      _logger.log(Level.INFO, 'loading state from $statePath');
+      final File file = File('$statePath/GeigerApi.$id.state');
       final List<int> buff =
           await file.exists() ? await file.readAsBytes() : [];
       final ByteStream in_ = ByteStream(null, buff);
@@ -220,6 +223,8 @@ class CommunicationApi implements GeigerApi {
       // restoring menu information
       await StorableHashMap.fromByteArrayStream(in_, menuItems);
     } catch (e) {
+      _logger.log(Level.WARNING,
+          'unable to read state file from $statePath... rewriting', e);
       storeState();
     }
   }
@@ -480,6 +485,10 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> registerMenu(String menu, GeigerUrl action) async {
+    MenuItem mi = MenuItem(menu, action);
+    ByteSink bout = ByteSink();
+    mi.toByteArrayStream(bout);
+    bout.close();
     await CommunicationHelper.sendAndWait(
         this,
         Message(
@@ -487,7 +496,7 @@ class CommunicationApi implements GeigerApi {
             GeigerApi.masterId,
             MessageType.registerMenu,
             GeigerUrl(null, GeigerApi.masterId, 'registerMenu'),
-            await MenuItem(menu, action).toByteArray()));
+            await bout.bytes));
   }
 
   @override

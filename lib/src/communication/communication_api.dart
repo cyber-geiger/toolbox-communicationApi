@@ -97,8 +97,7 @@ class CommunicationApi implements GeigerApi {
       // it is master
       final StorageEventHandler storageEventHandler =
           StorageEventHandler(this, getStorage()!);
-      await registerListener(
-          <MessageType>[MessageType.storageEvent], storageEventHandler);
+      await registerListener([MessageType.storageEvent], storageEventHandler);
     }
   }
 
@@ -255,7 +254,7 @@ class CommunicationApi implements GeigerApi {
   @override
   Future<void> registerListener(
       List<MessageType> events, PluginListener listener) async {
-    events.where((event) => event.id < 10000).map((event) {
+    events.map((event) {
       var listeners = _listeners[event];
       if (listeners == null) {
         listeners = [];

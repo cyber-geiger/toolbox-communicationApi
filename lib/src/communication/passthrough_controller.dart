@@ -21,7 +21,7 @@ class PassthroughController extends StorageController {
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'getNode/$path')));
       if (response.type == MessageType.storageError) {
-        throw StorageException.fromByteArrayStream(
+        throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
         return NodeImpl.fromByteArrayStream(ByteStream(null, response.payload));
@@ -39,7 +39,7 @@ class PassthroughController extends StorageController {
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'getNodeOrTombstone/$path')));
       if (response.type == MessageType.storageError) {
-        throw StorageException.fromByteArrayStream(
+        throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
         return NodeImpl.fromByteArrayStream(ByteStream(null, response.payload));
@@ -54,12 +54,13 @@ class PassthroughController extends StorageController {
     try {
       ByteSink bos = ByteSink();
       node.toByteArrayStream(bos);
+      bos.close();
       Message response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'addNode'), await bos.bytes));
       if (response.type == MessageType.storageError) {
-        throw StorageException.fromByteArrayStream(
+        throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
     } on Exception catch (e) {
@@ -72,12 +73,13 @@ class PassthroughController extends StorageController {
     try {
       ByteSink bos = ByteSink();
       node.toByteArrayStream(bos);
+      bos.close();
       var response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'updateNode'), await bos.bytes));
       if (response.type == MessageType.storageError) {
-        throw StorageException.fromByteArrayStream(
+        throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
     } on Exception catch (e) {
@@ -90,12 +92,13 @@ class PassthroughController extends StorageController {
     try {
       ByteSink bos = ByteSink();
       node.toByteArrayStream(bos);
+      bos.close();
       var response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'addOrUpdateNode'), await bos.bytes));
       if (response.type == MessageType.storageError) {
-        throw StorageException.fromByteArrayStream(
+        throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
       return true;
@@ -321,7 +324,7 @@ class PassthroughController extends StorageController {
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
-        throw StorageException.fromByteArrayStream(
+        throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.getPayload()));
       } on IOException catch (e) {
         throw StorageException('Could not rename Node', e);
@@ -351,7 +354,7 @@ class PassthroughController extends StorageController {
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
       try {
-        throw StorageException.fromByteArrayStream(
+        throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } on IOException catch (e) {
         throw StorageException('Could not rename Node', e);
@@ -361,5 +364,11 @@ class PassthroughController extends StorageController {
           ByteStream(null, response.getPayload()));
       return [];
     }*/
+  }
+
+  @override
+  Future<bool> addOrUpdateValue(String path, NodeValue value) {
+    // TODO: implement addOrUpdateValue
+    throw UnimplementedError();
   }
 }

@@ -5,6 +5,7 @@ import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/communication_secret.dart';
 import 'package:geiger_api/src/communication/geiger_url.dart';
 import 'package:geiger_api/src/communication/menu_item.dart';
+import 'package:geiger_api/src/communication/passthrough_controller.dart';
 import 'package:geiger_api/src/communication/plugin_information.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
@@ -140,7 +141,7 @@ void main() {
     final GeigerApi? pluginApi =
         await getGeigerApi('./plugin1', 'plugin1', Declaration.doNotShareData);
     final StorageController? pluginController = pluginApi!.getStorage();
-    expect(true, pluginController is StorageController);
+    expect(true, pluginController is PassthroughController);
     // TODO(mgwerder): test with PasstroughController
     await localMaster.close();
     await pluginApi.close();

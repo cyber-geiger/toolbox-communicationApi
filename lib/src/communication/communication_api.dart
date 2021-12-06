@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/communication/passthrough_controller.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
@@ -64,6 +65,7 @@ class CommunicationApi implements GeigerApi {
   static final Logger log = Logger("GeigerApi");
 
   late String _executor;
+  @override
   final String id;
   late final bool isMaster;
   late Declaration _declaration;
@@ -243,15 +245,9 @@ class CommunicationApi implements GeigerApi {
   @override
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
-    StorageController? ret;
-    if (isMaster) {
-      ret = GenericController(id, _mapper!.getMapper());
-    } else {
-      // local only
-      ret = GenericController(id, _mapper!.getMapper());
-      // TODO: Add support for remote storage
-      //return PasstroughController(this, _id);
-    }
+    StorageController ret = isMaster
+        ? GenericController(id, _mapper!.getMapper())
+        : PassthroughController(this);
     ExtendedTimestamp.initializeTimestamp(ret);
     return ret;
   }

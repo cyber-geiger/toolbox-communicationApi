@@ -16,6 +16,8 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   static const String masterId = '__MASTERPLUGIN__';
   static const String masterExecutor = 'FIXME';
 
+  abstract final String id;
+
   Future<void> initialize();
 
   /// Activates the plugin and sets up communication on the specified [port].

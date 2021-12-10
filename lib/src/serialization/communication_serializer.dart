@@ -12,7 +12,7 @@ import '../../geiger_api.dart';
 /// @param in the byteArrayInputStream to use
 /// @return return the object read
 /// @throws IOException if object cannot be read
-Future<Serializer?> readObject(final ByteStream inStream) async {
+Future<Serializer> readObject(final ByteStream inStream) async {
   if (SerializerHelper.byteArrayToInt(
           await inStream.peekBytes(SerializerHelper.longSize)) ==
       StorableString.serialVersionUID) {
@@ -38,7 +38,8 @@ Future<Serializer?> readObject(final ByteStream inStream) async {
       GeigerUrl.serialVersionUID) {
     return GeigerUrl.fromByteArrayStream(inStream);
   } else {
-    return null;
+    throw StorageException(
+        'unable to parse ${SerializerHelper.byteArrayToInt(await inStream.peekBytes(SerializerHelper.longSize))}');
   }
 }
 

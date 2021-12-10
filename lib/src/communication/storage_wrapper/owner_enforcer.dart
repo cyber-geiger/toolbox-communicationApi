@@ -127,4 +127,10 @@ class OwnerEnforcerWrapper extends StorageController {
     // nothing to do
     return _controller.zap();
   }
+
+  @override
+  Future<bool> addOrUpdateValue(String path, NodeValue value) {
+    // nothing to do (Is that so?)
+    return _controller.addOrUpdateValue(path, value);
+  }
 }

@@ -1,8 +1,5 @@
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/communication/geiger_api.dart';
-import 'package:geiger_api/src/communication/geiger_url.dart';
-import 'package:geiger_api/src/communication/menu_item.dart';
-import 'package:geiger_api/src/communication/plugin_listener.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -54,6 +51,7 @@ void main() {
     await localMaster.close();
     await plugin.close();
   });
+
   test('Deactivate Plugin', () async {
     flushGeigerApiCache();
     var localMaster = (await getGeigerApi(
@@ -92,6 +90,7 @@ void main() {
     await localMaster.close();
     await plugin.close();
   });
+
   group('register Menu', () {
     test('check Master', () async {
       flushGeigerApiCache();
@@ -119,7 +118,8 @@ void main() {
       expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'registerMenu');
       expect(
-          await MenuItem.fromByteArray(rcvdMessage.payload),
+          await MenuItem.fromByteArrayStream(
+              ByteStream(null, rcvdMessage.payload)),
           MenuItem(
               'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu')));
 
@@ -135,6 +135,7 @@ void main() {
       await plugin.close();
     });
   });
+
   group('Disable Menu', () {
     test('check Master', () async {
       flushGeigerApiCache();
@@ -176,6 +177,7 @@ void main() {
       await plugin.close();
     });
   });
+
   group('menu pressed', () {
     test('check Master', () async {
       flushGeigerApiCache();
@@ -218,15 +220,19 @@ void main() {
       await plugin.close();
     });
   });
+
   group('register Listener', () {
     //TODO(mgwerder): not implemented
   });
+
   group('Deregister Listener', () {
     //TODO(mgwerder): not implemented
   });
+
   group('get Menu List', () {
     //TODO(mgwerder): not implemented
   });
+
   group('Scan Button Pressed', () {
     //TODO(mgwerder): not implemented
   });

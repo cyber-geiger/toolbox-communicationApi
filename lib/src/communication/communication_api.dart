@@ -168,7 +168,7 @@ class CommunicationApi implements GeigerApi {
       // remove plugin secret
       plugins.remove(StorableString(pluginId));
 
-      storeState();
+      await storeState();
       return;
     }
 
@@ -221,7 +221,7 @@ class CommunicationApi implements GeigerApi {
       // restoring menu information
       await StorableHashMap.fromByteArrayStream(in_, menuItems);
     } catch (e) {
-      storeState();
+      await storeState();
     }
   }
 

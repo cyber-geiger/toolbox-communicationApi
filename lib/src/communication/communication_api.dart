@@ -4,16 +4,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/communication/communication_helper.dart';
+import 'package:geiger_api/src/communication/geiger_communicator.dart';
+import 'package:geiger_api/src/communication/plugin_information.dart';
+import 'package:geiger_api/src/communication/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
-import 'communication_helper.dart';
-import 'geiger_communicator.dart';
-import 'menu_item.dart';
-import 'plugin_information.dart';
-import 'plugin_listener.dart';
 import 'plugin_starter.dart';
-import 'storage_event_handler.dart';
 
 enum Mapper {
   dummyMapper,

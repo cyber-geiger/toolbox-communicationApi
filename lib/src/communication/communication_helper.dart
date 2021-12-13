@@ -1,7 +1,6 @@
 library geiger_api;
 
 import '../../geiger_api.dart';
-import 'plugin_listener.dart';
 
 /// Interface to denote a message filter.
 typedef MessageFilter = bool Function(Message msg);

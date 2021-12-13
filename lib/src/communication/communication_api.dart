@@ -169,11 +169,7 @@ class CommunicationApi implements GeigerApi {
       storeState();
       return;
     }
-
-    // TODO(mgwerder): getting the id of the plugin itself doesnt make sense
-    if (plugins[StorableString(id)] == null) {
-      throw ArgumentError('no communication secret found for id "$id"');
-    }
+    
     await CommunicationHelper.sendAndWait(
         this,
         Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,

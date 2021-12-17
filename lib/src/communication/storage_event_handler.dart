@@ -72,6 +72,9 @@ class StorageEventHandler with PluginListener {
       case 'zap':
         await zap(msg, optionalArgs);
         break;
+      case 'dump':
+        await dump(msg, optionalArgs);
+        break;
       default:
         break;
     }
@@ -579,6 +582,37 @@ class StorageEventHandler with PluginListener {
             msg.sourceId,
             MessageType.storageError,
             GeigerUrl(null, msg.sourceId, 'zap/'),
+            await bos.bytes,
+            msg.requestId));
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
+      }
+    }
+  }
+
+  Future<void> dump(Message msg, List<String> optionalArgs) async {
+    try {
+      var result = await _controller.dump(optionalArgs[0], optionalArgs[1]);
+      var bos = ByteSink();
+      SerializerHelper.writeString(bos, result);
+      bos.close();
+      await _api.sendMessage(Message(
+          _api.id,
+          msg.sourceId,
+          MessageType.storageSuccess,
+          GeigerUrl(null, msg.sourceId, 'dump/'),
+          await bos.bytes,
+          msg.requestId));
+    } on StorageException catch (e) {
+      try {
+        ByteSink bos = ByteSink();
+        StorageException('Could not dump', null, e).toByteArrayStream(bos);
+        bos.close();
+        await _api.sendMessage(Message(
+            _api.id,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'dump/'),
             await bos.bytes,
             msg.requestId));
       } on Exception catch (e) {

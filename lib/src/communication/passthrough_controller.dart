@@ -330,6 +330,24 @@ class PassthroughController extends StorageController {
     }
   }
 
+  @override
+  Future<String> dump([String rootNode = ':', String prefix = '']) async {
+    try {
+      var response = await CommunicationHelper.sendAndWait(
+          api,
+          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
+              GeigerUrl(null, api.id, 'dump/$rootNode/$prefix'), null));
+      if (response.type == MessageType.storageError) {
+        throw await StorageException.fromByteArrayStream(
+            ByteStream(null, response.payload));
+      }
+      return (await SerializerHelper.readString(
+          ByteStream(null, response.payload)))!;
+    } on Exception catch (e, st) {
+      throw StorageException('Could not dump', null, e, st);
+    }
+  }
+
   /// Register a [StorageListener] for a Node defined by [SearchCriteria].
   ///
   /// Throws a [StorageException] if the listener could not be registered.
@@ -394,11 +412,5 @@ class PassthroughController extends StorageController {
           ByteStream(null, response.getPayload()));
       return [];
     }*/
-  }
-
-  @override
-  Future<String> dump([String rootNode = ':', String prefix = '']) {
-    // TODO: implement dump
-    throw UnimplementedError();
   }
 }

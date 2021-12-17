@@ -18,6 +18,7 @@ dependencies:
   meta: ^1.7.0
   uuid: ^3.0.5
   collection: ^1.15.0
+  android_intent_plus: ^3.0.2
 
 dev_dependencies:
   flutter_test:

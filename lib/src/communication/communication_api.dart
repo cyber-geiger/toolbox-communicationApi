@@ -301,8 +301,7 @@ class CommunicationApi implements GeigerApi {
         if (!(pluginInfo.getPort() > 0)) {
           // is inactive -> start plugin
           // TODO: add plugin startup
-          throw UnimplementedError();
-          // _geigerCommunicator.startPlugin(pluginInfo);
+          startPlugin(pluginInfo);
         }
       }
       await _geigerCommunicator.sendMessage(pluginInfo.port, msg);

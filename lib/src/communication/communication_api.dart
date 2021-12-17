@@ -171,10 +171,6 @@ class CommunicationApi implements GeigerApi {
       return;
     }
 
-    // TODO(mgwerder): getting the id of the plugin itself doesnt make sense
-    if (plugins[StorableString(id)] == null) {
-      throw ArgumentError('no communication secret found for id "$id"');
-    }
     await CommunicationHelper.sendAndWait(
         this,
         Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
@@ -252,7 +248,6 @@ class CommunicationApi implements GeigerApi {
     StorageController ret = isMaster
         ? GenericController(id, _mapper!.getMapper())
         : PassthroughController(this);
-    ExtendedTimestamp.initializeTimestamp(ret);
     return ret;
   }
 

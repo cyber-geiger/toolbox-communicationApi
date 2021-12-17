@@ -371,4 +371,10 @@ class PassthroughController extends StorageController {
     // TODO: implement addOrUpdateValue
     throw UnimplementedError();
   }
+
+  @override
+  Future<String> dump([String rootNode = ':', String prefix = '']) {
+    // TODO: implement dump
+    throw UnimplementedError();
+  }
 }

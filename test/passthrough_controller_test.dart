@@ -125,7 +125,7 @@ Future<void> updateTests(final StorageController controller) async {
 Future<void> removeTests(StorageController controller) async {
   group('remove tests', () {
     test('remove node from storage', () async {
-      await controller.add(NodeImpl('removalNode1', 'testOwner', ''));
+      await controller.add(NodeImpl('removalNode1', 'testOwner', ':'));
       Node node = NodeImpl('name1', 'testOwner', ':removalNode1');
       NodeValue nv = NodeValueImpl('key', 'value');
       await node.addValue(nv);
@@ -164,10 +164,9 @@ Future<void> removeTests(StorageController controller) async {
 
 Future<void> renameTests(StorageController controller) async {
   group('rename tests', () {
-    setUp(() async {});
     test('rename node', () async {
       List<Node> nodes = <Node>[
-        NodeImpl('renameTests', 'testOwner'),
+        NodeImpl(':renameTests', 'testOwner'),
         NodeImpl('name1', 'testOwner', ':renameTests'),
         NodeImpl('name11', 'testOwner', ':renameTests:name1'),
         NodeImpl('name2', 'testOwner', ':renameTests'),
@@ -253,9 +252,9 @@ Future<void> renameTests(StorageController controller) async {
           throwsA(TypeMatcher<StorageException>()));
     });
 
-    test(' Rename node with values', () async {
+    test('Rename node with values', () async {
       List<Node> nodes = <Node>[
-        NodeImpl('renameTests3', 'testowner'),
+        NodeImpl(':renameTests3', 'testowner'),
         NodeImpl('name1', 'testowner', ':renameTests3'),
         NodeImpl('name2', 'testowner', ':renameTests3'),
         NodeImpl('name21', 'testowner', ':renameTests3:name2'),
@@ -299,32 +298,20 @@ Future<void> renameTests(StorageController controller) async {
           reason: 'renaming node seems unsuccessful (sub-node path wrong)');
 
       // check values
+      var value = await (await controller.get(':renameTests3')).getValue('key');
+      expect(value, nv, reason: 'value lost on parent');
       expect(
-          (await (await controller.get(':renameTests3')).getValue('key') ??
-                  NodeValueImpl('key2', ''))
-              .equals(nv),
-          true,
-          reason: 'value lost on parent');
-      expect(
-          (await (await controller.get(':renameTests3:name1'))
-                      .getValue('key1') ??
-                  NodeValueImpl('key2', ''))
-              .equals(nv1),
-          true,
+          await (await controller.get(':renameTests3:name1')).getValue('key1'),
+          nv1,
           reason: 'value lost on sibling');
       expect(
-          (await (await controller.get(':renameTests3:name2a'))
-                      .getValue('key2') ??
-                  NodeValueImpl('key2', ''))
-              .equals(nv2),
-          true,
+          await (await controller.get(':renameTests3:name2a')).getValue('key2'),
+          nv2,
           reason: 'value lost moved node');
       expect(
-          (await (await controller.get(':renameTests3:name2a:name21'))
-                      .getValue('key21') ??
-                  NodeValueImpl('key2', ''))
-              .equals(nv21),
-          true,
+          await (await controller.get(':renameTests3:name2a:name21'))
+              .getValue('key21'),
+          nv21,
           reason: 'value lost on sub-node');
 
       // check old values
@@ -357,4 +344,30 @@ void main() async {
 
   // all tests related to the removal of nodes
   await removeTests(controller);
+
+  test('Check addOrUpdateValue', () async {
+    String nodeName = ':addOrDeleteValueTest';
+    // make sure that node does not exist
+    try {
+      await controller.delete(nodeName);
+    } on StorageException {
+      // ignore the fact that the node does not exist
+    }
+    expect(
+        () async => await controller.addOrUpdateValue(
+            nodeName, NodeValueImpl('key', 'value')),
+        throwsA(const TypeMatcher<StorageException>()),
+        reason: 'unexpectedly successful missing node');
+    await controller.add(NodeImpl(nodeName, 'owner'));
+    expect(await controller.getValue(nodeName, 'key'), isNull);
+    expect(
+        await controller.addOrUpdateValue(
+            nodeName, NodeValueImpl('key', 'value')),
+        isTrue);
+    expect(await controller.getValue(nodeName, 'key'), isNotNull);
+    expect(
+        await controller.addOrUpdateValue(
+            nodeName, NodeValueImpl('key', 'value')),
+        isFalse);
+  });
 }

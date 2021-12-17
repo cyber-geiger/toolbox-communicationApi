@@ -26,8 +26,8 @@ class PassthroughController extends StorageController {
       } else {
         return NodeImpl.fromByteArrayStream(ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not get Node', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not get Node', null, e, st);
     }
   }
 
@@ -44,8 +44,8 @@ class PassthroughController extends StorageController {
       } else {
         return NodeImpl.fromByteArrayStream(ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not get Node', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not get Node', null, e, st);
     }
   }
 
@@ -63,8 +63,8 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not add Node', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not add Node', null, e, st);
     }
   }
 
@@ -82,8 +82,8 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not update Node', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not update Node', null, e, st);
     }
   }
 
@@ -101,9 +101,11 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-      return true;
-    } on Exception catch (e) {
-      throw StorageException('Could not add or update Node', null, e);
+      return (await SerializerHelper.readRawInt(
+              ByteStream(null, response.payload))) ==
+          1;
+    } on Exception catch (e, st) {
+      throw StorageException('Could not add or update Node', null, e, st);
     }
   }
 
@@ -121,13 +123,13 @@ class PassthroughController extends StorageController {
         return await NodeImpl.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not delete Node', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not delete Node', null, e, st);
     }
   }
 
   @override
-  Future<NodeValue> getValue(String path, String key) async {
+  Future<NodeValue?> getValue(String path, String key) async {
     try {
       var response = await CommunicationHelper.sendAndWait(
           api,
@@ -137,11 +139,13 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
-        return await NodeValueImpl.fromByteArrayStream(
-            ByteStream(null, response.payload));
+        return response.payload.isEmpty
+            ? null
+            : await NodeValueImpl.fromByteArrayStream(
+                ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not get Value', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not get Value', null, e, st);
     }
   }
 
@@ -159,8 +163,8 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not add NodeValue', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not add NodeValue', null, e, st);
     }
   }
 
@@ -182,8 +186,34 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not update NodeValue', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not update NodeValue', null, e, st);
+    }
+  }
+
+  @override
+  Future<bool> addOrUpdateValue(String path, NodeValue value) async {
+    try {
+      ByteSink bos = ByteSink();
+      value.toByteArrayStream(bos);
+      bos.close();
+      var response = await CommunicationHelper.sendAndWait(
+          api,
+          Message(
+              api.id,
+              GeigerApi.masterId,
+              MessageType.storageEvent,
+              GeigerUrl(null, api.id, 'addOrUpdateValue/$path'),
+              await bos.bytes));
+      if (response.type == MessageType.storageError) {
+        throw await StorageException.fromByteArrayStream(
+            ByteStream(null, response.payload));
+      }
+      return (await SerializerHelper.readRawInt(
+              ByteStream(null, response.payload))) ==
+          1;
+    } on Exception catch (e, st) {
+      throw StorageException('Could not update NodeValue', null, e, st);
     }
   }
 
@@ -201,8 +231,8 @@ class PassthroughController extends StorageController {
         return await NodeValueImpl.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not delete Value', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not delete Value', null, e, st);
     }
   }
 
@@ -213,13 +243,13 @@ class PassthroughController extends StorageController {
       var response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'deleteValue/$oldPath/$newName')));
+              GeigerUrl(null, api.id, 'rename/$oldPath/$newName')));
       if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not rename Node', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not rename Node', null, e, st);
     }
   }
 
@@ -247,8 +277,8 @@ class PassthroughController extends StorageController {
         }
         return nodes;
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not start Search', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not start Search', null, e, st);
     }
   }
 
@@ -263,8 +293,8 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not close', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not close', null, e, st);
     }
   }
 
@@ -279,8 +309,8 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not flush', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not flush', null, e, st);
     }
   }
 
@@ -295,8 +325,8 @@ class PassthroughController extends StorageController {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
-    } on Exception catch (e) {
-      throw StorageException('Could not zap', null, e);
+    } on Exception catch (e, st) {
+      throw StorageException('Could not zap', null, e, st);
     }
   }
 
@@ -364,12 +394,6 @@ class PassthroughController extends StorageController {
           ByteStream(null, response.getPayload()));
       return [];
     }*/
-  }
-
-  @override
-  Future<bool> addOrUpdateValue(String path, NodeValue value) {
-    // TODO: implement addOrUpdateValue
-    throw UnimplementedError();
   }
 
   @override

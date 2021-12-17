@@ -1,7 +1,5 @@
 library geiger_api;
 
-import 'dart:io';
-
 import 'package:geiger_api/src/communication/communication_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
@@ -35,6 +33,9 @@ class StorageEventHandler with PluginListener {
       case 'updateNode':
         updateNode(msg, optionalArgs);
         break;
+      case 'addOrUpdateNode':
+        await addOrUpdateNode(msg, optionalArgs);
+        break;
       case 'deleteNode':
         await deleteNode(msg, optionalArgs);
         break;
@@ -46,6 +47,9 @@ class StorageEventHandler with PluginListener {
         break;
       case 'updateValue':
         await updateValue(msg, optionalArgs);
+        break;
+      case 'addOrUpdateValue':
+        await addOrUpdateValue(msg, optionalArgs);
         break;
       case 'deleteValue':
         await deleteValue(msg, optionalArgs);
@@ -88,7 +92,7 @@ class StorageEventHandler with PluginListener {
           GeigerUrl(null, msg.sourceId, 'getNode/$path'),
           await bos.bytes,
           msg.requestId));
-    } on IOException catch (e) {
+    } on Exception catch (e) {
       try {
         ByteSink bos = ByteSink();
         StorageException('Could not get Node' + path, null, e)
@@ -101,8 +105,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'getNode/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -133,8 +137,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'addNode/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -166,8 +170,38 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'updateNode/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
+      }
+    }
+  }
+
+  Future<void> addOrUpdateNode(Message msg, List<String> optionalArgs) async {
+    try {
+      bool result = await _controller.addOrUpdate(
+          await NodeImpl.fromByteArrayStream(ByteStream(null, msg.payload)));
+      await _api.sendMessage(Message(
+          _api.id,
+          msg.sourceId,
+          MessageType.storageSuccess,
+          GeigerUrl(null, msg.sourceId, 'addOrUpdateNode/'),
+          SerializerHelper.intToByteArray(result ? 1 : 0),
+          msg.requestId));
+    } on Exception catch (e, st) {
+      try {
+        final ByteSink bos = ByteSink();
+        StorageException('Could not add or update Node', null, e, st)
+            .toByteArrayStream(bos);
+        bos.close();
+        await _api.sendMessage(Message(
+            _api.id,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'addOrUpdateNode/'),
+            await bos.bytes,
+            msg.requestId));
+      } on Exception {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -200,8 +234,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'deleteNode/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -209,10 +243,10 @@ class StorageEventHandler with PluginListener {
   /// Calls [GenericController.getValue] and sends the [NodeValue] back to the [msg] source.
   Future<void> getValue(Message msg, List<String> optionalArgs) async {
     try {
-      NodeImpl nodeValue = await _controller.getValue(
-          optionalArgs[0], optionalArgs[1]) as NodeImpl;
+      NodeValue? nodeValue =
+          await _controller.getValue(optionalArgs[0], optionalArgs[1]);
       ByteSink bos = ByteSink();
-      nodeValue.toByteArrayStream(bos);
+      nodeValue?.toByteArrayStream(bos);
       bos.close();
       await _api.sendMessage(Message(
           _api.id,
@@ -234,7 +268,7 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'getValue/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e, s) {
+      } on Exception catch (e, s) {
         throw StorageException(
             'Unable to send Storage exception to endpoint', null, e, s);
       }
@@ -270,7 +304,7 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'addValue/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e, s) {
+      } on Exception catch (e, s) {
         throw StorageException(
             'Unable to send exception on adding value to endpoint', null, e, s);
       }
@@ -306,8 +340,41 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'updateValue/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
+      }
+    }
+  }
+
+  Future<void> addOrUpdateValue(Message msg, List<String> optionalArgs) async {
+    NodeValue nodeValue;
+    try {
+      nodeValue = await NodeValueImpl.fromByteArrayStream(
+          ByteStream(null, msg.payload));
+      bool result =
+          await _controller.addOrUpdateValue(optionalArgs[0], nodeValue);
+      await _api.sendMessage(Message(
+          _api.id,
+          msg.sourceId,
+          MessageType.storageSuccess,
+          GeigerUrl(null, msg.sourceId, 'addOrUpdateValue/'),
+          SerializerHelper.intToByteArray(result ? 1 : 0),
+          msg.requestId));
+    } on Exception catch (e) {
+      try {
+        ByteSink bos = ByteSink();
+        StorageException('Could not add or update NodeValue', null, e)
+            .toByteArrayStream(bos);
+        bos.close();
+        await _api.sendMessage(Message(
+            _api.id,
+            msg.sourceId,
+            MessageType.storageError,
+            GeigerUrl(null, msg.sourceId, 'addOrUpdateValue/'),
+            await bos.bytes,
+            msg.requestId));
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -341,8 +408,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'deleteValue/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -373,8 +440,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'rename/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -421,8 +488,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'search/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -452,8 +519,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'close/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -483,8 +550,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'flush/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }
@@ -514,8 +581,8 @@ class StorageEventHandler with PluginListener {
             GeigerUrl(null, msg.sourceId, 'zap/'),
             await bos.bytes,
             msg.requestId));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
       }
     }
   }

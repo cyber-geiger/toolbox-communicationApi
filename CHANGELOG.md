@@ -1,3 +1,11 @@
+## 0.5.5
+Fixes:
+- Flutter analyze issues detected by the new flutter framework release
+- Upgrades dependencies
+
+Adds:
+- Many internal things. Mainly prep-work for the EoY release. 
+
 ## 0.5.4
 - Fixes Github issue #4 (FileSystemException: Cannot open file, path = 'GeigerApi.miCyberrangePlugin.state' (OS Error: Read-only file system, errno = 30)).
 - Extends capabilities and boosts to the most recent localstore

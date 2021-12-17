@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:geiger_api/src/communication/communication_secret.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
-import 'package:test/expect.dart';
 import 'package:test/test.dart';
 
 void main() {

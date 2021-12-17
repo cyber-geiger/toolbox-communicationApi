@@ -35,7 +35,7 @@ class StorageEventHandler with PluginListener {
       case 'updateNode':
         updateNode(msg, optionalArgs);
         break;
-      case 'removeNode':
+      case 'deleteNode':
         await deleteNode(msg, optionalArgs);
         break;
       case 'getValue':
@@ -47,7 +47,7 @@ class StorageEventHandler with PluginListener {
       case 'updateValue':
         await updateValue(msg, optionalArgs);
         break;
-      case 'removeValue':
+      case 'deleteValue':
         await deleteValue(msg, optionalArgs);
         break;
       case 'rename':
@@ -325,7 +325,7 @@ class StorageEventHandler with PluginListener {
           _api.id,
           msg.sourceId,
           MessageType.storageSuccess,
-          GeigerUrl(null, _api.id, 'deleteNodeValue/'),
+          GeigerUrl(null, _api.id, 'deleteValue/'),
           await bos.bytes,
           msg.requestId));
     } on Exception catch (e) {

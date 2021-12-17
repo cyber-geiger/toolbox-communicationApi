@@ -25,7 +25,7 @@ Future<void> updateTests(final StorageController controller) async {
     });
 
     test('Test Storage Node Add', () async {
-      await controller.add(NodeImpl('parent1', 'testOwner', ''));
+      await controller.add(NodeImpl('parent1', 'testOwner', ':'));
       await controller.add(NodeImpl('name2', 'testOwner', ':parent1'));
 
       // get the record
@@ -100,11 +100,7 @@ Future<void> updateTests(final StorageController controller) async {
       // get the record
       print('## testing updated value');
       Node n2 = await controller.get(':nodeCreateTest:testNode1');
-      expect(
-          (await n2.getValue(value2.key) ??
-                  NodeValueImpl(value2.key, 'INVALID'))
-              .value,
-          value2.value);
+      expect((await n2.getValue(value2.key))?.value, value2.value);
 
       print(
           '## testing removal of node ${n.first} with child nodes (${n.last.path})');

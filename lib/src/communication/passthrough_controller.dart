@@ -114,7 +114,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'deleteNode/$path')));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
@@ -133,7 +133,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'getValue/$path/$key')));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
@@ -155,7 +155,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'addValue/$path'), await bos.bytes));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
@@ -178,7 +178,7 @@ class PassthroughController extends StorageController {
               MessageType.storageEvent,
               GeigerUrl(null, api.id, 'updateValue/$nodeName'),
               await bos.bytes));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
@@ -194,7 +194,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'deleteValue/$path/$key')));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
@@ -214,7 +214,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'deleteValue/$oldPath/$newName')));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
@@ -235,7 +235,7 @@ class PassthroughController extends StorageController {
           MessageType.storageEvent,
           GeigerUrl(null, api.id, 'search'),
           await bos.bytes);
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       } else {
@@ -259,7 +259,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'close')));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
@@ -275,7 +275,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'flush')));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }
@@ -291,7 +291,7 @@ class PassthroughController extends StorageController {
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, api.id, 'command')));
-      if (response.type == MessageType.storageEvent) {
+      if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));
       }

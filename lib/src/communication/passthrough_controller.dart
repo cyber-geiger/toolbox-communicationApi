@@ -13,339 +13,151 @@ class PassthroughController extends StorageController {
   /// Creates a [PassthroughController] for the given [api] and plugin (provide its [api.id]).
   PassthroughController(this.api);
 
-  @override
-  Future<Node> get(String path) async {
+  Future<ByteStream> _remoteCall(String name,
+      [Function(ByteSink)? payloadSerializer]) async {
     try {
-      Message response = await CommunicationHelper.sendAndWait(
+      ByteSink? sink;
+      if (payloadSerializer != null) {
+        sink = ByteSink();
+        payloadSerializer(sink);
+        sink.close();
+      }
+      var response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'getNode/$path')));
+              GeigerUrl(null, api.id, name), await sink?.bytes));
+      var stream = ByteStream(null, response.payload);
       if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      } else {
-        return NodeImpl.fromByteArrayStream(ByteStream(null, response.payload));
+        throw await StorageException.fromByteArrayStream(stream);
       }
+      return stream;
     } on Exception catch (e, st) {
-      throw StorageException('Could not get Node', null, e, st);
+      throw StorageException('Remote call failed', null, e, st);
     }
+  }
+
+  @override
+  Future<Node> get(String path) async {
+    return NodeImpl.fromByteArrayStream(await _remoteCall(
+        'getNode', (sink) => SerializerHelper.writeString(sink, path)));
   }
 
   @override
   Future<Node> getNodeOrTombstone(String path) async {
-    try {
-      Message response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'getNodeOrTombstone/$path')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      } else {
-        return NodeImpl.fromByteArrayStream(ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not get Node', null, e, st);
-    }
+    return NodeImpl.fromByteArrayStream(await _remoteCall('getNodeOrTombstone',
+        (sink) => SerializerHelper.writeString(sink, path)));
   }
 
   @override
   Future<void> add(Node node) async {
-    try {
-      ByteSink bos = ByteSink();
-      node.toByteArrayStream(bos);
-      bos.close();
-      Message response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'addNode'), await bos.bytes));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not add Node', null, e, st);
-    }
+    await _remoteCall('addNode', (sink) => node.toByteArrayStream(sink));
   }
 
   @override
   Future<void> update(Node node) async {
-    try {
-      ByteSink bos = ByteSink();
-      node.toByteArrayStream(bos);
-      bos.close();
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'updateNode'), await bos.bytes));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not update Node', null, e, st);
-    }
+    await _remoteCall('updateNode', (sink) => node.toByteArrayStream(sink));
   }
 
   @override
   Future<bool> addOrUpdate(Node node) async {
-    try {
-      ByteSink bos = ByteSink();
-      node.toByteArrayStream(bos);
-      bos.close();
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'addOrUpdateNode'), await bos.bytes));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-      return (await SerializerHelper.readRawInt(
-              ByteStream(null, response.payload))) ==
-          1;
-    } on Exception catch (e, st) {
-      throw StorageException('Could not add or update Node', null, e, st);
-    }
+    var result = await _remoteCall(
+        'addOrUpdateNode', (sink) => node.toByteArrayStream(sink));
+    return (await SerializerHelper.readInt(result)) == 1;
   }
 
   @override
   Future<Node> delete(String path) async {
-    try {
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'deleteNode/$path')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      } else {
-        return await NodeImpl.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not delete Node', null, e, st);
-    }
+    return await NodeImpl.fromByteArrayStream(await _remoteCall(
+        'deleteNode', (sink) => SerializerHelper.writeString(sink, path)));
   }
 
   @override
   Future<NodeValue?> getValue(String path, String key) async {
-    try {
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'getValue/$path/$key')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      } else {
-        return response.payload.isEmpty
-            ? null
-            : await NodeValueImpl.fromByteArrayStream(
-                ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not get Value', null, e, st);
-    }
+    var result = await _remoteCall('getValue', (sink) {
+      SerializerHelper.writeString(sink, path);
+      SerializerHelper.writeString(sink, key);
+    });
+    return (await result.bytes).isEmpty
+        ? null
+        : await NodeValueImpl.fromByteArrayStream(result);
   }
 
   @override
   Future<void> addValue(String path, NodeValue value) async {
-    try {
-      ByteSink bos = ByteSink();
-      value.toByteArrayStream(bos);
-      bos.close();
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'addValue/$path'), await bos.bytes));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not add NodeValue', null, e, st);
-    }
+    await _remoteCall('addValue', (sink) {
+      SerializerHelper.writeString(sink, path);
+      value.toByteArrayStream(sink);
+    });
   }
 
   @override
   Future<void> updateValue(String nodeName, NodeValue value) async {
-    try {
-      ByteSink bos = ByteSink();
-      value.toByteArrayStream(bos);
-      bos.close();
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(
-              api.id,
-              GeigerApi.masterId,
-              MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'updateValue/$nodeName'),
-              await bos.bytes));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not update NodeValue', null, e, st);
-    }
+    await _remoteCall('updateValue', (sink) {
+      SerializerHelper.writeString(sink, nodeName);
+      value.toByteArrayStream(sink);
+    });
   }
 
   @override
   Future<bool> addOrUpdateValue(String path, NodeValue value) async {
-    try {
-      ByteSink bos = ByteSink();
-      value.toByteArrayStream(bos);
-      bos.close();
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(
-              api.id,
-              GeigerApi.masterId,
-              MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'addOrUpdateValue/$path'),
-              await bos.bytes));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-      return (await SerializerHelper.readRawInt(
-              ByteStream(null, response.payload))) ==
-          1;
-    } on Exception catch (e, st) {
-      throw StorageException('Could not update NodeValue', null, e, st);
-    }
+    var result = await _remoteCall('addOrUpdateValue', (sink) {
+      SerializerHelper.writeString(sink, path);
+      value.toByteArrayStream(sink);
+    });
+    return (await SerializerHelper.readRawInt(result)) == 1;
   }
 
   @override
   Future<NodeValue> deleteValue(String path, String key) async {
-    try {
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'deleteValue/$path/$key')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      } else {
-        return await NodeValueImpl.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not delete Value', null, e, st);
-    }
+    return await NodeValueImpl.fromByteArrayStream(
+        await _remoteCall('deleteValue', (sink) {
+      SerializerHelper.writeString(sink, path);
+      SerializerHelper.writeString(sink, key);
+    }));
   }
 
   @override
   Future<void> rename(String oldPath, String newName) async {
-    try {
-      // this will not work if either the old or the new path contains any "/"
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'rename/$oldPath/$newName')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not rename Node', null, e, st);
-    }
+    await _remoteCall('renameNode', (sink) {
+      SerializerHelper.writeString(sink, oldPath);
+      SerializerHelper.writeString(sink, newName);
+    });
   }
 
   @override
   Future<List<Node>> search(SearchCriteria criteria) async {
-    try {
-      ByteSink bos = ByteSink();
-      criteria.toByteArrayStream(bos);
-      bos.close();
-      var response = Message(
-          api.id,
-          GeigerApi.masterId,
-          MessageType.storageEvent,
-          GeigerUrl(null, api.id, 'search'),
-          await bos.bytes);
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      } else {
-        var receivedPayload = ByteStream(null, response.payload);
-        int numNodes = await SerializerHelper.readInt(receivedPayload);
-        List<Node> nodes = [];
-        for (var i = 0; i < numNodes; i++) {
-          nodes.add(await NodeImpl.fromByteArrayStream(receivedPayload));
-        }
-        return nodes;
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not start Search', null, e, st);
+    var result =
+        await _remoteCall('searchNodes', (sink) => criteria.toByteArrayStream(sink));
+    int nodeCount = await SerializerHelper.readInt(result);
+    List<Node> nodes = [];
+    for (var i = 0; i < nodeCount; i++) {
+      nodes.add(await NodeImpl.fromByteArrayStream(result));
     }
+    return nodes;
   }
 
   @override
   Future<void> close() async {
-    try {
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'close')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not close', null, e, st);
-    }
+    await _remoteCall('close');
   }
 
   @override
   Future<void> flush() async {
-    try {
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'flush')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not flush', null, e, st);
-    }
+    await _remoteCall('flush');
   }
 
   @override
   Future<void> zap() async {
-    try {
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'zap')));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-    } on Exception catch (e, st) {
-      throw StorageException('Could not zap', null, e, st);
-    }
+    await _remoteCall('zap');
   }
 
   @override
   Future<String> dump([String rootNode = ':', String prefix = '']) async {
-    try {
-      var response = await CommunicationHelper.sendAndWait(
-          api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'dump/$rootNode/$prefix'), null));
-      if (response.type == MessageType.storageError) {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      }
-      return (await SerializerHelper.readString(
-          ByteStream(null, response.payload)))!;
-    } on Exception catch (e, st) {
-      throw StorageException('Could not dump', null, e, st);
-    }
+    var result = await _remoteCall('dump', (sink) {
+      SerializerHelper.writeString(sink, rootNode);
+      SerializerHelper.writeString(sink, prefix);
+    });
+    return (await SerializerHelper.readString(result))!;
   }
 
   /// Register a [StorageListener] for a Node defined by [SearchCriteria].

@@ -1,515 +1,166 @@
 library geiger_api;
 
-import 'dart:io';
-
 import 'package:geiger_api/src/communication/communication_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
-import 'geiger_api.dart';
 import 'geiger_url.dart';
 import 'message.dart';
 import 'message_type.dart';
 import 'plugin_listener.dart';
+
+class _CallProcessor {
+  final String name;
+  final String errorMessage;
+  final Future<void Function(ByteSink)?> Function(ByteStream) process;
+
+  _CallProcessor(this.name, this.errorMessage, this.process);
+}
+
+class _SerializerCallProcessor extends _CallProcessor {
+  _SerializerCallProcessor(String name, String errorMessage,
+      Future<Serializer?> Function(ByteStream) processor)
+      : super(name, errorMessage, (stream) async {
+          var obj = await processor(stream);
+          return (sink) => obj?.toByteArrayStream(sink);
+        });
+}
 
 /// [StorageEventHandler] processes StorageEvents accordingly.
 class StorageEventHandler with PluginListener {
   final CommunicationApi _api;
   final StorageController _controller;
 
-  bool _isMaster = false;
-
   static final Logger log = Logger("GeigerApi");
 
-  StorageEventHandler(this._api, this._controller);
+  final Map<String, _CallProcessor> _processors = {};
 
-  bool get isMaster => _isMaster;
-
-  /// Decides which storage method has been called for [msg].
-  Future<void> storageEventParser(Message msg) async {
-    if (GeigerApi.masterId == msg.targetId) {
-      _isMaster = true;
-    }
-    final List<String> urlParts = ((msg.action!.path)).split('/');
-    final String action = urlParts[0];
-    final String identifier = urlParts[1];
-    final List<String> optionalArgs = urlParts.sublist(2, urlParts.length);
-    switch (action) {
-      case 'getNode':
-        await getNode(msg, identifier, optionalArgs);
-        break;
-      case 'addNode':
-        addNode(msg, identifier, optionalArgs);
-        break;
-      case 'updateNode':
-        updateNode(msg, identifier, optionalArgs);
-        break;
-      case 'removeNode':
-        await deleteNode(msg, identifier, optionalArgs);
-        break;
-      case 'getValue':
-        await getValue(msg, identifier, optionalArgs);
-        break;
-      case 'addValue':
-        await addValue(msg, identifier, optionalArgs);
-        break;
-      case 'updateValue':
-        await updateValue(msg, identifier, optionalArgs);
-        break;
-      case 'removeValue':
-        await deleteValue(msg, identifier, optionalArgs);
-        break;
-      case 'rename':
-        await rename(msg, identifier, optionalArgs);
-        break;
-      case 'search':
-        await search(msg, identifier, optionalArgs);
-        break;
-      case 'registerChangeListener':
-        await registerChangeListener(msg, identifier, optionalArgs);
-        break;
-      case 'close':
-        await close(msg, identifier, optionalArgs);
-        break;
-      case 'flush':
-        await flush(msg, identifier, optionalArgs);
-        break;
-      case 'zap':
-        await zap(msg, identifier, optionalArgs);
-        break;
-      default:
-        break;
-    }
-  }
-
-  static String join(String delimiter, List<String> args) {
-    var ret = StringBuffer();
-    for (var arg in args) {
-      if (ret.length > 0) {
-        ret.write(delimiter);
-      }
-      ret.write(arg);
-    }
-    return ret.toString();
-  }
-
-  /// Calls [GenericController.getNode] and sends the Node back to the [msg] source.
-  Future<void> getNode(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    var path = join('/', optionalArgs);
-    try {
-      final Node node = await _controller.get(path);
-      final ByteSink bos = ByteSink();
-      node.toByteArrayStream(bos);
-      bos.close();
-      final List<int> payload = await bos.bytes;
-      await _api.sendMessage(Message(
-          msg.targetId ?? 'UNKONWN_TARGET',
-          msg.sourceId,
-          MessageType.storageSuccess,
-          GeigerUrl(
-              null, msg.sourceId, (('getNode/' + identifier) + '/') + path),
-          payload));
-    } on IOException catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not get Node' + path, null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'getNode/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.addNode].
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> addNode(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    Node node;
-    try {
-      node = await NodeImpl.fromByteArrayStream(ByteStream(null, msg.payload));
-      _controller.add(node);
-    } on Exception catch (e) {
-      try {
-        final ByteSink bos = ByteSink();
-        StorageException('Could not add Node', null, e).toByteArrayStream(bos);
-        bos.close();
-        final List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'addNode/' + identifier),
-            payload));
-      } on IOException {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.updateNode].
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> updateNode(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    Node node;
-    try {
-      node = await NodeImpl.fromByteArrayStream(ByteStream(null, msg.payload));
-      _controller.update(node);
-    } on Exception catch (e, st) {
-      try {
-        final ByteSink bos = ByteSink();
-        StorageException('Could not update Node', null, e, st)
-            .toByteArrayStream(bos);
-        bos.close();
-        final List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'updateNode/' + identifier),
-            payload));
-      } on IOException {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.deleteNode] and sends the deleted node back to the [msg] source.
-  Future<void> deleteNode(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      final NodeImpl node = _controller.delete(optionalArgs[0]) as NodeImpl;
-      final ByteSink bos = ByteSink();
-      node.toByteArrayStream(bos);
-      bos.close();
-      List<int> payload = await bos.bytes;
-      await _api.sendMessage(Message(
-          msg.targetId!,
-          msg.sourceId,
-          MessageType.storageSuccess,
-          GeigerUrl(null, msg.targetId!, 'deleteNode/' + identifier),
-          payload));
-    } on Exception catch (e) {
-      try {
-        final ByteSink bos = ByteSink();
-        StorageException('Could not delete Node', null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        final List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'deleteNode/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.getValue] and sends the [NodeValue] back to the [msg] source.
-  Future<void> getValue(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      NodeImpl nodeValue =
-          _controller.getValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
-      ByteSink bos = ByteSink();
-      nodeValue.toByteArrayStream(bos);
-      bos.close();
-      List<int> payload = await bos.bytes;
-      await _api.sendMessage(Message(
-          msg.targetId!,
-          msg.sourceId,
-          MessageType.storageSuccess,
-          GeigerUrl(null, msg.targetId!, 'getValue/' + identifier),
-          payload));
-    } on Exception catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not get NodeValue', null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'getValue/' + identifier),
-            payload));
-      } on IOException catch (e, s) {
-        throw StorageException(
-            'Unable to send Storage exception to endpoint', null, e, s);
-      }
-    }
-  }
-
-  /// Calls [GenericController.addValue].
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> addValue(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    NodeValue nodeValue;
-    try {
-      nodeValue = await NodeValueImpl.fromByteArrayStream(
-          ByteStream(null, msg.payload));
-      _controller.addValue(optionalArgs[0], nodeValue);
-    } on Exception catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not add NodeValue', null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'addValue/' + identifier),
-            payload));
-      } on IOException catch (e, s) {
-        throw StorageException(
-            'Unable to send exception on adding value to endpoint', null, e, s);
-      }
-    }
-  }
-
-  /// Calls [GenericController.updateValue].
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> updateValue(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    NodeValue nodeValue;
-    try {
-      nodeValue = await NodeValueImpl.fromByteArrayStream(
-          ByteStream(null, msg.payload));
-      _controller.updateValue(optionalArgs[0], nodeValue);
-    } on Exception catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not update NodeValue', null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'updateValue/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Either calls [GenericController.removeValue] and sends the [NodeValue] back to the [msg] source
-  /// or stores the received [NodeValue] in the storageEventObject map.
-  Future<void> deleteValue(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      NodeImpl nodeValue =
-          _controller.deleteValue(optionalArgs[0], optionalArgs[1]) as NodeImpl;
-      ByteSink bos = ByteSink();
-      nodeValue.toByteArrayStream(bos);
-      bos.close();
-      List<int> payload = await bos.bytes;
-      await _api.sendMessage(Message(
-          msg.targetId!,
-          msg.sourceId,
-          MessageType.storageSuccess,
-          GeigerUrl(null, msg.targetId!, 'deleteNodeValue/' + identifier),
-          payload));
-    } on Exception catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not delete NodeValue', null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        final List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'deleteValue/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.rename]
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> rename(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      _controller.rename(optionalArgs[0], optionalArgs[1]);
-    } on StorageException catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not rename Node', null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        final List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'rename/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.search] and sends the List of Nodes back to the [msg] source.
-  Future<void> search(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      final SearchCriteria searchCriteria =
-          await SearchCriteria.fromByteArrayStream(
-              ByteStream(null, msg.payload));
-      List<Node> nodes = await _controller.search(searchCriteria);
-      if (nodes.isNotEmpty) {
-        List<int> payload;
-        ByteSink bos = ByteSink();
-        for (NodeImpl n in nodes as List<NodeImpl>) {
-          n.toByteArrayStream(bos);
-        }
-        bos.close();
-        payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageSuccess,
-            GeigerUrl(null, msg.targetId!, 'search/' + identifier),
-            payload));
-      } else {
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageSuccess,
-            GeigerUrl(null, msg.targetId!, 'search/' + identifier)));
-      }
-    } on Exception catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not search Node', null, e)
-            .toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'search/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.close].
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> close(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      _controller.close();
-    } on StorageException catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not close', null, e).toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'close/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.flush].
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> flush(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      _controller.flush();
-    } on StorageException catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not flush', null, e).toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'flush/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
-    }
-  }
-
-  /// Calls [GenericController.zap].
-  ///
-  /// If it fails it sends a [StorageException] to the [msg] source.
-  Future<void> zap(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    try {
-      _controller.zap();
-    } on StorageException catch (e) {
-      try {
-        ByteSink bos = ByteSink();
-        StorageException('Could not zap', null, e).toByteArrayStream(bos);
-        bos.close();
-        List<int> payload = await bos.bytes;
-        await _api.sendMessage(Message(
-            msg.targetId!,
-            msg.sourceId,
-            MessageType.storageError,
-            GeigerUrl(null, msg.sourceId, 'zap/' + identifier),
-            payload));
-      } on IOException catch (e) {
-        log.log(Level.SEVERE, 'got unexpected IOException', e);
-      }
+  StorageEventHandler(this._api, this._controller) {
+    var processors = [
+      _SerializerCallProcessor('getNode', 'Could not get node', (stream) async {
+        return _controller.get((await SerializerHelper.readString(stream))!);
+      }),
+      _SerializerCallProcessor(
+          'getNodeOrTombstone', 'Could not get node or tombstone',
+          (stream) async {
+        return _controller
+            .getNodeOrTombstone((await SerializerHelper.readString(stream))!);
+      }),
+      _CallProcessor('addNode', 'Could not add node', (stream) async {
+        await _controller.add(await NodeImpl.fromByteArrayStream(stream));
+      }),
+      _CallProcessor('updateNode', 'Could not update node', (stream) async {
+        await _controller.update(await NodeImpl.fromByteArrayStream(stream));
+      }),
+      _CallProcessor('addOrUpdateNode', 'Could not add or update node',
+          (stream) async {
+        var updated = await _controller
+            .addOrUpdate(await NodeImpl.fromByteArrayStream(stream));
+        return (sink) => SerializerHelper.writeInt(sink, updated ? 1 : 0);
+      }),
+      _SerializerCallProcessor('deleteNode', 'Could not delete node',
+          (stream) async {
+        return _controller.delete((await SerializerHelper.readString(stream))!);
+      }),
+      _SerializerCallProcessor('getValue', 'Could not get node value',
+          (stream) async {
+        return _controller.getValue(
+            (await SerializerHelper.readString(stream))!,
+            (await SerializerHelper.readString(stream))!);
+      }),
+      _CallProcessor('addValue', 'Could not add node value', (stream) async {
+        await _controller.addValue((await SerializerHelper.readString(stream))!,
+            await NodeValueImpl.fromByteArrayStream(stream));
+      }),
+      _CallProcessor('updateValue', 'Could not update node value',
+          (stream) async {
+        await _controller.updateValue(
+            (await SerializerHelper.readString(stream))!,
+            await NodeValueImpl.fromByteArrayStream(stream));
+      }),
+      _CallProcessor('addOrUpdateValue', 'Could not add or update node value',
+          (stream) async {
+        var updated = await _controller.addOrUpdateValue(
+            (await SerializerHelper.readString(stream))!,
+            await NodeValueImpl.fromByteArrayStream(stream));
+        return (sink) => SerializerHelper.writeInt(sink, updated ? 1 : 0);
+      }),
+      _SerializerCallProcessor('deleteValue', 'Could not delete node value',
+          (stream) async {
+        return _controller.deleteValue(
+            (await SerializerHelper.readString(stream))!,
+            (await SerializerHelper.readString(stream))!);
+      }),
+      _CallProcessor('renameNode', 'Could not rename node', (stream) async {
+        await _controller.rename((await SerializerHelper.readString(stream))!,
+            (await SerializerHelper.readString(stream))!);
+      }),
+      _CallProcessor('searchNodes', 'Could not search nodes', (stream) async {
+        var nodes = await _controller
+            .search(await SearchCriteria.fromByteArrayStream(stream));
+        return (sink) {
+          SerializerHelper.writeInt(sink, nodes.length);
+          for (final node in nodes) {
+            node.toByteArrayStream(sink);
+          }
+        };
+      }),
+      _CallProcessor('close', 'Could not close', (stream) async {
+        await _controller.close();
+      }),
+      _CallProcessor('flush', 'Could not flush', (stream) async {
+        await _controller.flush();
+      }),
+      _CallProcessor('zap', 'Could not zap', (stream) async {
+        await _controller.zap();
+      }),
+      _CallProcessor('dump', 'Could not dump', (stream) async {
+        var dump = await _controller.dump(
+            (await SerializerHelper.readString(stream))!,
+            (await SerializerHelper.readString(stream))!);
+        return (sink) => SerializerHelper.writeString(sink, dump);
+      })
+    ];
+    for (var processor in processors) {
+      _processors[processor.name] = processor;
     }
   }
 
   @override
   Future<void> pluginEvent(GeigerUrl? url, Message msg) async {
-    await storageEventParser(msg);
-  }
+    String? name = msg.action?.path;
+    _CallProcessor? processor = _processors[name];
+    if (processor == null) {
+      ByteSink sink = ByteSink();
+      StorageException('Could not find specified function.')
+          .toByteArrayStream(sink);
+      sink.close();
+      await _api.sendMessage(Message(_api.id, msg.sourceId,
+          MessageType.storageError, null, await sink.bytes, msg.requestId));
+      return;
+    }
 
-  /// Registers a [StorageListener].
-  Future<void> registerChangeListener(
-      Message msg, String identifier, List<String> optionalArgs) async {
-    msg.payloadString;
-  }
-
-  List<SearchCriteria> deregisterChangeListener(StorageListener listener) {
-    throw Exception('unimplemented');
+    try {
+      final serializer = await processor.process(ByteStream(null, msg.payload));
+      ByteSink? sink;
+      if (serializer != null) {
+        sink = ByteSink();
+        serializer(sink);
+        sink.close();
+      }
+      _api.sendMessage(Message(_api.id, msg.sourceId,
+          MessageType.storageSuccess, null, await sink?.bytes, msg.requestId));
+    } on Exception catch (e) {
+      try {
+        ByteSink sink = ByteSink();
+        StorageException(processor.errorMessage, null, e)
+            .toByteArrayStream(sink);
+        sink.close();
+        await _api.sendMessage(Message(_api.id, msg.sourceId,
+            MessageType.storageError, null, await sink.bytes, msg.requestId));
+      } on Exception catch (e) {
+        log.log(Level.SEVERE, 'got unexpected Exception', e);
+      }
+    }
   }
 }

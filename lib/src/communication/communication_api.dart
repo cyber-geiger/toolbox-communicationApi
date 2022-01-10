@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/communication/passthrough_controller.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
 import 'package:geiger_api/src/communication/plugin_information.dart';
@@ -59,6 +60,7 @@ class CommunicationApi implements GeigerApi {
   final StorableHashMap<StorableString, MenuItem> menuItems = StorableHashMap();
 
   late String _executor;
+  @override
   final String id;
   late final bool isMaster;
   late Declaration _declaration;
@@ -92,8 +94,7 @@ class CommunicationApi implements GeigerApi {
       // it is master
       final StorageEventHandler storageEventHandler =
           StorageEventHandler(this, getStorage()!);
-      await registerListener(
-          <MessageType>[MessageType.storageEvent], storageEventHandler);
+      await registerListener([MessageType.storageEvent], storageEventHandler);
     }
   }
 
@@ -164,10 +165,10 @@ class CommunicationApi implements GeigerApi {
       // remove plugin secret
       plugins.remove(StorableString(pluginId));
 
-      storeState();
+      await storeState();
       return;
     }
-    
+
     await CommunicationHelper.sendAndWait(
         this,
         Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
@@ -219,7 +220,7 @@ class CommunicationApi implements GeigerApi {
     } catch (e) {
       _logger.log(Level.WARNING,
           'unable to read state file from $statePath... rewriting', e);
-      storeState();
+      await storeState();
     }
   }
 
@@ -242,23 +243,16 @@ class CommunicationApi implements GeigerApi {
   @override
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
-    StorageController? ret;
-    if (isMaster) {
-      ret = GenericController(id, _mapper!.getMapper());
-    } else {
-      // local only
-      ret = GenericController(id, _mapper!.getMapper());
-      // TODO: Add support for remote storage
-      //return PasstroughController(this, _id);
-    }
-    ExtendedTimestamp.initializeTimestamp(ret);
+    StorageController ret = isMaster
+        ? GenericController(id, _mapper!.getMapper())
+        : PassthroughController(this);
     return ret;
   }
 
   @override
   Future<void> registerListener(
       List<MessageType> events, PluginListener listener) async {
-    events.where((event) => event.id < 10000).map((event) {
+    events.map((event) {
       var listeners = _listeners[event];
       if (listeners == null) {
         listeners = [];

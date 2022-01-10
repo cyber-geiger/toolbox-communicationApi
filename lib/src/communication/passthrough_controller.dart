@@ -320,7 +320,7 @@ class PassthroughController extends StorageController {
       var response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, 'command')));
+              GeigerUrl(null, api.id, 'zap')));
       if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(
             ByteStream(null, response.payload));

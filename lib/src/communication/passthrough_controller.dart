@@ -104,7 +104,7 @@ class PassthroughController extends StorageController {
       SerializerHelper.writeString(sink, path);
       value.toByteArrayStream(sink);
     });
-    return (await SerializerHelper.readRawInt(result)) == 1;
+    return (await SerializerHelper.readInt(result)) == 1;
   }
 
   @override
@@ -126,8 +126,8 @@ class PassthroughController extends StorageController {
 
   @override
   Future<List<Node>> search(SearchCriteria criteria) async {
-    var result =
-        await _remoteCall('searchNodes', (sink) => criteria.toByteArrayStream(sink));
+    var result = await _remoteCall(
+        'searchNodes', (sink) => criteria.toByteArrayStream(sink));
     int nodeCount = await SerializerHelper.readInt(result);
     List<Node> nodes = [];
     for (var i = 0; i < nodeCount; i++) {

@@ -25,6 +25,8 @@ void flushGeigerApiCache() {
 ///
 /// Throws [DeclarationMismatchException] if the plugin has been registered previously and the
 /// declaration does not match and [StorageException] if registration failed.
+
+//Returns GeigerApi ?
 Future<GeigerApi?> getGeigerApi(String executorOrId,
     [String? id, Declaration declaration = Declaration.doShareData]) async {
   if (id == null) {

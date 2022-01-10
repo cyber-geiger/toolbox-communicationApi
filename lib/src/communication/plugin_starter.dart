@@ -8,10 +8,12 @@ import "package:android_intent_plus/android_intent.dart";
 class PluginStarter {
   static Future<void> startPlugin(PluginInformation pi) async {
     //TODO(mgwerder): to be implemented at least for android (intent) and Windows (call)
+    //expected executable String: "package;component Name;windowsExecutable"
+    // example: "com.example;com.example.MainActivity;../../plugin.exe"
     var executables = pi.executable?.split(";");
-    var componentName= executables?.elementAt(0);
-    var package = executables?.elementAt(1);
-    var windowsExecutabele = executables?.elementAt(2);
+    var package= executables?.elementAt(0);
+    var componentName = executables?.elementAt(1);
+    var windowsExecutable = executables?.elementAt(2);
     if(Platform.isAndroid){
       AndroidIntent intent = AndroidIntent(
           package: package,
@@ -20,8 +22,8 @@ class PluginStarter {
       intent.launch();
     }
     else if(Platform.isWindows){
-      if(windowsExecutabele != null){
-        Process.run(windowsExecutabele,["/foreground"]);
+      if(windowsExecutable != null){
+        Process.run(windowsExecutable,["/foreground"]);
       }
     }
     else{

@@ -1,4 +1,7 @@
 
+import 'dart:isolate';
+import 'dart:math';
+
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -7,7 +10,6 @@ import 'package:geiger_api/geiger_api.dart';
 void main() {
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -64,19 +66,10 @@ class _MyHomePageState extends State<MyHomePage>{
 
       _counter++;
     });
-
-
+    GeigerApi? geigerApi = (await getGeigerApi("com.example.intent_test;com.example.intent_test.MainActivity;windowspath.exe", GeigerApi.masterId,Declaration.doShareData));
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    CommunicationApi api = CommunicationApi("com.example.intent_test;com.example.intent_test.MainActivity;windowspath.exe", "1l1k3ch1ck3n",true,Declaration.doShareData);
-    Message message = Message(api.id, null,MessageType.allEvents,url,null,"abc");
-    PluginInformation info = PluginInformation("com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe",0);
-    CommunicationApi? geigerApi = (await getGeigerApi("com.example.intent_test;com.example.intent_test.MainActivity;windowspath.exe", "1l1k3ch1ck3n",Declaration.doShareData)) as CommunicationApi?;
-    geigerApi?.initialize();
-    // geigerApi?.registerPlugin("22112252");
-    // geigerApi?.sendMessage(message,"221122");
-    api.registerPlugin("221122",info);
-    api.sendMessage(message,"221122");
-
+    Message message = Message(GeigerApi.masterId, 'testPlugin',MessageType.allEvents,url,null,"abc");
+    await geigerApi?.sendMessage(message,"testPlugin");
   }
 
   @override

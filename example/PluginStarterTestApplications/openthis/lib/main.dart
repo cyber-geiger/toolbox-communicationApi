@@ -1,7 +1,17 @@
-import 'package:flutter/material.dart';
+import 'dart:developer';
 
-void main() {
+import 'package:flutter/material.dart';
+import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
+
+void main()async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initialzePlugin();
   runApp(const MyApp());
+}
+
+Future<void> initialzePlugin()async {
+  GeigerApi? geigerApi = await getGeigerApi('com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe', 'testPlugin',Declaration.doShareData);
 }
 
 class MyApp extends StatelessWidget {
@@ -59,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+
   }
 
   @override
@@ -111,5 +122,35 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+}
+
+class SimpleEventListener implements PluginListener {
+  List<Message> events = [];
+
+  final String _id;
+
+  SimpleEventListener(this._id);
+
+  @override
+  void pluginEvent(GeigerUrl? url, Message msg) {
+    events.add(msg);
+    //print('## SimpleEventListener "$_id" received event ${msg.type} it currently has: ${events.length.toString()} events');
+  }
+
+  List<Message> getEvents() {
+    return events;
+  }
+
+  @override
+  String toString() {
+    String ret = '';
+    ret += 'Eventlistener "$_id" contains {\r\n';
+    getEvents().forEach((element) {
+      ret += '  ${element.toString()}\r\n';
+    });
+    ret += '}\r\n';
+    return ret;
   }
 }

@@ -11,27 +11,21 @@ class PluginStarter {
     //expected executable String: "package;component Name;windowsExecutable"
     // example: "com.example;com.example.MainActivity;../../plugin.exe"
     var executables = pi.executable?.split(";");
-    var package= executables?.elementAt(0);
+    var package = executables?.elementAt(0);
     var componentName = executables?.elementAt(1);
     var windowsExecutable = executables?.elementAt(2);
-    if(Platform.isAndroid){
-      AndroidIntent intent = AndroidIntent(
-          package: package,
-          componentName: componentName
-      );
+    if (Platform.isAndroid) {
+      AndroidIntent intent =
+          AndroidIntent(package: package, componentName: componentName);
       intent.launch();
-    }
-    else if(Platform.isWindows){
-      if(windowsExecutable != null){
-        Process.run(windowsExecutable,["/foreground"]);
+    } else if (Platform.isWindows) {
+      if (windowsExecutable != null) {
+        Process.run(windowsExecutable, ["/foreground"]);
       }
-    }
-    else{
+    } else {
       throw Exception("Platform not yet Supported");
     }
   }
-  static Future<void> startPluginInBackground(PluginInformation pi) async {
 
-  }
+  static Future<void> startPluginInBackground(PluginInformation pi) async {}
 }
-

@@ -1,3 +1,8 @@
+## 0.5.6 Bugfix Release
+Fixes:
+
+Known bugs
+
 ## 0.5.5
 Fixes:
 - Flutter analyze issues detected by the new flutter framework release

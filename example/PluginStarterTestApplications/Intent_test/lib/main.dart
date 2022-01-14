@@ -1,4 +1,3 @@
-
 import 'dart:isolate';
 import 'dart:math';
 
@@ -10,6 +9,7 @@ import 'package:geiger_api/geiger_api.dart';
 void main() {
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -53,10 +53,10 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>{
+class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter() async{
+  void _incrementCounter() async {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -66,10 +66,14 @@ class _MyHomePageState extends State<MyHomePage>{
 
       _counter++;
     });
-    GeigerApi? geigerApi = (await getGeigerApi("com.example.intent_test;com.example.intent_test.MainActivity;windowspath.exe", GeigerApi.masterId,Declaration.doShareData));
+    GeigerApi? geigerApi = (await getGeigerApi(
+        "com.example.intent_test;com.example.intent_test.MainActivity;windowspath.exe",
+        GeigerApi.masterId,
+        Declaration.doShareData));
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    Message message = Message(GeigerApi.masterId, 'testPlugin',MessageType.allEvents,url,null,"abc");
-    await geigerApi?.sendMessage(message,"testPlugin");
+    Message message = Message(GeigerApi.masterId, 'testPlugin',
+        MessageType.allEvents, url, null, "abc");
+    await geigerApi?.sendMessage(message, "testPlugin");
   }
 
   @override

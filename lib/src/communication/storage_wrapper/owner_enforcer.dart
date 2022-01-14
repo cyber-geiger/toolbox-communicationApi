@@ -62,9 +62,10 @@ class OwnerEnforcerWrapper extends StorageController {
   }
 
   @override
-  List<SearchCriteria> deregisterChangeListener(StorageListener listener) {
+  Future<List<SearchCriteria>> deregisterChangeListener(
+      StorageListener listener) async {
     // nothing to do
-    return _controller.deregisterChangeListener(listener);
+    return await _controller.deregisterChangeListener(listener);
   }
 
   @override
@@ -92,10 +93,10 @@ class OwnerEnforcerWrapper extends StorageController {
   }
 
   @override
-  void registerChangeListener(
-      StorageListener listener, SearchCriteria criteria) {
+  Future<void> registerChangeListener(
+      StorageListener listener, SearchCriteria criteria) async {
     // nothing to do
-    return _controller.registerChangeListener(listener, criteria);
+    return await _controller.registerChangeListener(listener, criteria);
   }
 
   @override

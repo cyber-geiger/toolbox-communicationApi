@@ -4,14 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-void main()async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initialzePlugin();
   runApp(const MyApp());
 }
 
-Future<void> initialzePlugin()async {
-  GeigerApi? geigerApi = await getGeigerApi('com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe', 'testPlugin',Declaration.doShareData);
+Future<void> initialzePlugin() async {
+  GeigerApi? geigerApi = await getGeigerApi(
+      'com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe',
+      'testPlugin',
+      Declaration.doShareData);
 }
 
 class MyApp extends StatelessWidget {
@@ -69,7 +72,6 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
-
   }
 
   @override
@@ -123,7 +125,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
-
 }
 
 class SimpleEventListener implements PluginListener {

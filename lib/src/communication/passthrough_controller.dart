@@ -2,16 +2,59 @@ library geiger_api;
 
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:logging/logging.dart';
 
 import 'communication_helper.dart';
 
 /// Class for handling storage events in Plugins.
-class PassthroughController extends StorageController {
+class PassthroughController extends StorageController
+    implements PluginListener {
   final GeigerApi api;
-  final Map<String, Message> receivedMessages = <String, Message>{};
+
+  final Map<String, StorageListener> _idToListener = {};
+  final Map<SearchCriteria, String> _listenerCriteriaToId = {};
+  final Map<String, SearchCriteria> _idToListenerCriteria = {};
 
   /// Creates a [PassthroughController] for the given [api] and plugin (provide its [api.id]).
   PassthroughController(this.api);
+
+  @override
+  void pluginEvent(GeigerUrl? url, Message msg) {
+    if (msg.action?.path.endsWith('changeEvent') != true) return;
+    _processChangeEvent(msg);
+  }
+
+  Future<void> _processChangeEvent(Message message) async {
+    try {
+      var stream = ByteStream(null, message.payload);
+      var id = (await SerializerHelper.readString(stream))!;
+      var listener = _idToListener[id];
+      if (listener == null) {
+        throw StorageException('Listener "$id" for change event not found.');
+      }
+
+      var typeString = (await SerializerHelper.readString(stream))!;
+      var type = EventTypeExtension.fromString(typeString);
+      if (type == null) {
+        throw StorageException(
+            'Change event contained invalid event type "$typeString".');
+      }
+
+      var nodeAvailability = await SerializerHelper.readInt(stream);
+      var oldNode = nodeAvailability & 1 == 0
+          ? null
+          : await NodeImpl.fromByteArrayStream(stream);
+      var newNode = nodeAvailability & 2 == 0
+          ? null
+          : await NodeImpl.fromByteArrayStream(stream);
+
+      // TODO: proper exception handling
+      listener.gotStorageChange(type, oldNode, newNode);
+    } on Exception catch (e, st) {
+      GeigerApi.logger.log(
+          Level.WARNING, 'Got exception while processing change event.', e, st);
+    }
+  }
 
   Future<ByteStream> _remoteCall(String name,
       [Function(ByteSink)? payloadSerializer]) async {
@@ -25,7 +68,7 @@ class PassthroughController extends StorageController {
       var response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, api.id, name), await sink?.bytes));
+              GeigerUrl(null, GeigerApi.masterId, name), await sink?.bytes));
       var stream = ByteStream(null, response.payload);
       if (response.type == MessageType.storageError) {
         throw await StorageException.fromByteArrayStream(stream);
@@ -160,69 +203,47 @@ class PassthroughController extends StorageController {
     return (await SerializerHelper.readString(result))!;
   }
 
-  /// Register a [StorageListener] for a Node defined by [SearchCriteria].
-  ///
-  /// Throws a [StorageException] if the listener could not be registered.
   @override
   Future<void> registerChangeListener(
       StorageListener listener, SearchCriteria criteria) async {
-    throw UnimplementedError();
-    /*var command = 'registerChangeListener';
-    var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
-    ByteSink byteArrayOutputStream = ByteSink();
-    byteArrayOutputStream.sink.add(await criteria.toByteArray());
-    try {
-      api.sendMessage(
-          GeigerApi.masterId,
-          Message(
-              api.id,
-              GeigerApi.masterId,
-              MessageType.storageEvent,
-              GeigerUrl(GeigerApi.masterId, (command + '/') + identifier),
-              byteArrayOutputStream.toByteArray()));
-    } on MalformedUrlException catch (e) {}
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
-      try {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.getPayload()));
-      } on IOException catch (e) {
-        throw StorageException('Could not rename Node', e);
-      }
-    }*/
+    var id = _listenerCriteriaToId[criteria];
+    if (id == null) {
+      final response = await _remoteCall(
+          'registerChangeListener', (sink) => criteria.toByteArrayStream(sink));
+      id = (await SerializerHelper.readString(response))!;
+      _listenerCriteriaToId[criteria] = id;
+      _idToListenerCriteria[id] = criteria;
+    }
+    _idToListener[id] = listener;
   }
 
-  /// Deregister a [StorageListener] from the Storage and returns the associated [SearchCriteria].
-  ///
-  /// Throws a [StorageException] if listener could not be deregistered.
   @override
-  List<SearchCriteria> deregisterChangeListener(StorageListener listener) {
-    throw UnimplementedError();
-    /*var command = 'deregisterChangeListener';
-    var identifier = Random().nextInt(pow(2, 53).toInt()).toString();
-    ByteStream byteArrayOutputStream = ByteStream();
-    try {
-      api.sendMessage(
-          GeigerApi.masterId,
-          Message(
-              api.id,
-              GeigerApi.masterId,
-              MessageType.storageEvent,
-              GeigerUrl(GeigerApi.masterId, (command + '/') + identifier),
-              byteArrayOutputStream.toByteArray()));
-    } on MalformedUrlException catch (e) {}
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
-      try {
-        throw await StorageException.fromByteArrayStream(
-            ByteStream(null, response.payload));
-      } on IOException catch (e) {
-        throw StorageException('Could not rename Node', e);
+  Future<List<SearchCriteria>> deregisterChangeListener(
+      StorageListener listener) async {
+    final ids = _idToListener.entries
+        .where((e) => e.value == listener)
+        .map((e) => e.key)
+        .toList();
+    if (ids.isEmpty) {
+      throw StorageException(
+          'Cannot unregistered not registered StorageListener.');
+    }
+
+    await _remoteCall('deregisterChangeListeners', (sink) {
+      SerializerHelper.writeInt(sink, ids.length);
+      for (final id in ids) {
+        SerializerHelper.writeString(sink, id);
       }
-    } else {
-      SearchCriteria.fromByteArrayStream(
-          ByteStream(null, response.getPayload()));
-      return [];
-    }*/
+    });
+
+    for (final id in ids) {
+      _idToListener.remove(id);
+    }
+    final criteriaList =
+        ids.map((id) => _idToListenerCriteria.remove(id)!).toList();
+    for (final criteria in criteriaList) {
+      _listenerCriteriaToId.remove(criteria);
+    }
+    return criteriaList;
   }
 }

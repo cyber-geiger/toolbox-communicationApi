@@ -326,23 +326,21 @@ Future<void> renameTests(StorageController controller) async {
   });
 }
 
-class NodeListener with StorageListener {
-  final Node _oldNode = NodeImpl(':', 'testowner');
-  final Node _newNode = NodeImpl(':', 'testowner');
+class ChangeEvent {
+  final EventType type;
+  final Node? oldNode;
+  final Node? newNode;
 
-  Future<Node> get oldnode async {
-    return await _oldNode.deepClone();
-  }
+  ChangeEvent(this.type, this.oldNode, this.newNode);
+}
 
-  Future<Node> get newnode async {
-    return await _newNode.deepClone();
-  }
+class CollectingListener with StorageListener {
+  final List<ChangeEvent> events = [];
 
   @override
   Future<void> gotStorageChange(
       EventType event, Node? oldNode, Node? newNode) async {
-    await _oldNode.update(oldNode ?? NodeImpl(':', 'testowner'));
-    await _newNode.update(newNode ?? NodeImpl(':', 'testowner'));
+    events.add(ChangeEvent(event, oldNode, newNode));
   }
 }
 
@@ -352,8 +350,9 @@ void main() async {
       (await getGeigerApi('', GeigerApi.masterId, Declaration.doNotShareData))!;
   await localMaster.zapState();
   await localMaster.getStorage()!.zap();
+  const owner = 'testOwner';
   final GeigerApi? pluginApi =
-      await getGeigerApi('./plugin1', 'testOwner', Declaration.doNotShareData);
+      await getGeigerApi('./plugin1', owner, Declaration.doNotShareData);
   final StorageController controller = pluginApi!.getStorage()!;
 
   // all tests related to updates of nodes and values
@@ -390,47 +389,105 @@ void main() async {
             nodeName, NodeValueImpl('key', 'value')),
         isFalse);
   });
-  test('Register and de-register tests', () async {
-    var sl = NodeListener();
+  group('change listener', () {
+    setUp(() async {
+      await controller.zap();
+      await ExtendedTimestamp.initializeTimestamp(controller);
+    });
 
-    //create a dummy search criteria
-    var sc = SearchCriteria();
+    test('register/deregister', () async {
+      var listener = CollectingListener();
+      var criteria = SearchCriteria();
 
-    // register the listener
-    await controller.registerChangeListener(sl, sc);
+      await controller.registerChangeListener(listener, criteria);
+      // test overwrite
+      await controller.registerChangeListener(listener, criteria);
+      var result = await controller.deregisterChangeListener(listener);
 
-    //deregister listener
-    var scr = await controller.deregisterChangeListener(sl);
+      expect(result.length, 1);
+      expect(result.first, criteria);
 
-    // check return values
-    expect(scr.length, 1,
-        reason:
-            'returned array does not contain only one search criteria when de-registering an known listener');
-    expect(scr.first, sc,
-        reason:
-            'returned array does not contain only one search criteria when de-registering a known listener');
+      // test deregister unregistered listener
+      expect(() => controller.deregisterChangeListener(listener),
+          throwsA(const TypeMatcher<StorageException>()));
+    });
 
-    // check de-registering unregistered listener
-    expect(() => controller.deregisterChangeListener(sl),
-        throwsA(TypeMatcher<StorageException>()));
-  });
-  test('test search criteria', () async {
-    String now = ExtendedTimestamp.extendedNow();
-    String nn = ':testnodeSearchCriteria1';
+    group('event types', () {
+      testEventType(EventType expectedType, Node? expectedOldNode,
+          Future<void> Function() setup, Future<Node?> Function() execute) {
+        test(expectedType.toValueString(), () async {
+          final listener = CollectingListener();
+          final criteria = SearchCriteria();
 
-    Node n = NodeImpl(nn, 'test');
+          await setup();
+          await controller.registerChangeListener(listener, criteria);
+          final expectedNewNode = await execute();
 
-    await controller.add(n);
+          expect(listener.events.length, 1);
+          var event = listener.events.first;
+          expect(event.type, expectedType);
+          expect(event.oldNode, expectedOldNode);
+          expect(event.newNode, expectedNewNode);
+        });
+      }
 
-    SearchCriteria sc = SearchCriteria(searchPath: nn);
-    sc.nodeValueLastModified = now;
-    List<Node> result = await controller.search(sc);
+      {
+        final node = NodeImpl(':testNode', owner);
+        testEventType(EventType.create, null, () async {}, () async {
+          await controller.add(node);
+          return node;
+        });
+      }
+      {
+        const path = ':testNode';
+        final oldNode = NodeImpl(path, owner);
+        final newNode = NodeImpl(path, owner, null, Visibility.amber);
+        testEventType(EventType.update, oldNode, () async {
+          await controller.add(oldNode);
+        }, () async {
+          await controller.update(newNode);
+          return newNode;
+        });
+      }
+      {
+        const path = ':testNode';
+        final node = NodeImpl(path, owner);
+        testEventType(EventType.delete, node, () async {
+          await controller.add(node);
+        }, () async {
+          await controller.delete(path);
+        });
+      }
+      {
+        const oldPath = ':oldTestNode';
+        const newPath = ':newTestNode';
+        final node = NodeImpl(oldPath, owner);
+        testEventType(EventType.rename, node, () async {
+          await controller.add(node);
+        }, () async {
+          await controller.rename(oldPath, newPath);
+          return await controller.get(newPath);
+        });
+      }
+    });
 
-    // check return values
-    expect(result.length, 1,
-        reason:
-            'returned array does not contain only one result (size: ${result.length}; Timestamps: $now<${n.lastModified})');
-    expect(result[0].path, nn,
-        reason: 'returned array does not contain the correct node');
+    test('with criteria', () async {
+      const path = ':testNode';
+      final node = NodeImpl(path, owner);
+      final otherNode = NodeImpl(':otherTestNode', owner);
+
+      final listener = CollectingListener();
+      final criteria = SearchCriteria(searchPath: path);
+
+      await controller.registerChangeListener(listener, criteria);
+      await controller.add(otherNode);
+      await controller.add(node);
+      otherNode.lastModified = 1640991600000;
+      await controller.update(otherNode);
+
+      expect(listener.events.length, 1);
+      expect(listener.events.first.newNode?.path, path,
+          reason: 'Received event for the wrong node.');
+    });
   });
 }

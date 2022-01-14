@@ -1,6 +1,7 @@
 library geiger_api;
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:logging/logging.dart';
 
 import 'declaration.dart';
 import 'geiger_url.dart';
@@ -15,6 +16,7 @@ import 'plugin_registrar.dart';
 abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   static const String masterId = '__MASTERPLUGIN__';
   static const String masterExecutor = 'FIXME';
+  static final Logger logger = Logger("GeigerApi");
 
   abstract final String id;
 

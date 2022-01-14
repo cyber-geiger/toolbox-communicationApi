@@ -326,6 +326,26 @@ Future<void> renameTests(StorageController controller) async {
   });
 }
 
+class NodeListener with StorageListener {
+  final Node _oldNode = NodeImpl(':', 'testowner');
+  final Node _newNode = NodeImpl(':', 'testowner');
+
+  Future<Node> get oldnode async {
+    return await _oldNode.deepClone();
+  }
+
+  Future<Node> get newnode async {
+    return await _newNode.deepClone();
+  }
+
+  @override
+  Future<void> gotStorageChange(
+      EventType event, Node? oldNode, Node? newNode) async {
+    await _oldNode.update(oldNode ?? NodeImpl(':', 'testowner'));
+    await _newNode.update(newNode ?? NodeImpl(':', 'testowner'));
+  }
+}
+
 void main() async {
   flushGeigerApiCache();
   final GeigerApi localMaster =
@@ -369,5 +389,48 @@ void main() async {
         await controller.addOrUpdateValue(
             nodeName, NodeValueImpl('key', 'value')),
         isFalse);
+  });
+  test('Register and de-register tests', () async {
+    var sl = NodeListener();
+
+    //create a dummy search criteria
+    var sc = SearchCriteria();
+
+    // register the listener
+    await controller.registerChangeListener(sl, sc);
+
+    //deregister listener
+    var scr = await controller.deregisterChangeListener(sl);
+
+    // check return values
+    expect(scr.length, 1,
+        reason:
+            'returned array does not contain only one search criteria when de-registering an known listener');
+    expect(scr.first, sc,
+        reason:
+            'returned array does not contain only one search criteria when de-registering a known listener');
+
+    // check de-registering unregistered listener
+    expect(() => controller.deregisterChangeListener(sl),
+        throwsA(TypeMatcher<StorageException>()));
+  });
+  test('test search criteria', () async {
+    String now = ExtendedTimestamp.extendedNow();
+    String nn = ':testnodeSearchCriteria1';
+
+    Node n = NodeImpl(nn, 'test');
+
+    await controller.add(n);
+
+    SearchCriteria sc = SearchCriteria(searchPath: nn);
+    sc.nodeValueLastModified = now;
+    List<Node> result = await controller.search(sc);
+
+    // check return values
+    expect(result.length, 1,
+        reason:
+            'returned array does not contain only one result (size: ${result.length}; Timestamps: $now<${n.lastModified})');
+    expect(result[0].path, nn,
+        reason: 'returned array does not contain the correct node');
   });
 }

@@ -80,7 +80,7 @@ class CommunicationApi implements GeigerApi {
       try {
         // setup listener
         await registerPlugin();
-        await activatePlugin(_geigerCommunicator.port);
+        await activatePlugin();
       } on IOException {
         rethrow;
       }
@@ -168,12 +168,11 @@ class CommunicationApi implements GeigerApi {
       await storeState();
       return;
     }
-
     await CommunicationHelper.sendAndWait(
         this,
         Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
             GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
-    await zapState();
+    //await zapState();
   }
 
   /// Deletes all current registered items.
@@ -225,11 +224,11 @@ class CommunicationApi implements GeigerApi {
   }
 
   @override
-  Future<void> activatePlugin(int port) async {
+  Future<void> activatePlugin() async {
     await CommunicationHelper.sendAndWait(
       this,
       Message(id, GeigerApi.masterId, MessageType.activatePlugin, null,
-          SerializerHelper.intToByteArray(port)),
+          SerializerHelper.intToByteArray(_geigerCommunicator.port)),
     );
   }
 
@@ -481,7 +480,7 @@ class CommunicationApi implements GeigerApi {
         Message(
             id,
             GeigerApi.masterId,
-            MessageType.comapiSuccess,
+            MessageType.registerMenu,
             GeigerUrl(null, GeigerApi.masterId, 'registerMenu'),
             await bout.bytes));
   }
@@ -493,7 +492,7 @@ class CommunicationApi implements GeigerApi {
         Message(
             id,
             GeigerApi.masterId,
-            MessageType.comapiSuccess,
+            MessageType.enableMenu,
             GeigerUrl(null, GeigerApi.masterId, 'enableMenu'),
             utf8.encode(menu)));
   }
@@ -503,7 +502,7 @@ class CommunicationApi implements GeigerApi {
     Message msg = Message(
       id,
       GeigerApi.masterId,
-      MessageType.comapiSuccess,
+      MessageType.disableMenu,
       GeigerUrl(null, GeigerApi.masterId, 'disableMenu'),
     );
     msg.payloadString = menu;
@@ -517,7 +516,7 @@ class CommunicationApi implements GeigerApi {
         Message(
             id,
             GeigerApi.masterId,
-            MessageType.comapiSuccess,
+            MessageType.deregisterPlugin,
             GeigerUrl(null, GeigerApi.masterId, 'deregisterMenu'),
             utf8.encode(menu)));
   }

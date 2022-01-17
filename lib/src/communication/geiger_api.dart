@@ -23,7 +23,7 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   Future<void> initialize();
 
   /// Activates the plugin and sets up communication on the specified [port].
-  Future<void> activatePlugin(int port);
+  Future<void> activatePlugin();
 
   /// Deactivates the plugin and makes sure that a plugin is started immediately if contacted.
   ///

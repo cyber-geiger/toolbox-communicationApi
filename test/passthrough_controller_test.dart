@@ -1,4 +1,6 @@
 // ignore_for_file: avoid_print, prefer_const_constructors
+import 'dart:async';
+
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
@@ -332,15 +334,59 @@ class ChangeEvent {
   final Node? newNode;
 
   ChangeEvent(this.type, this.oldNode, this.newNode);
+
+  @override
+  String toString() {
+    return 'ChangeEvent{type: $type, oldNode: $oldNode, newNode: $newNode}';
+  }
+}
+
+class _ConditionalCompleter {
+  final bool Function(List<ChangeEvent>) canComplete;
+  final List<ChangeEvent> Function(List<ChangeEvent>) createResult;
+
+  final _completer = Completer<List<ChangeEvent>>();
+
+  Future<List<ChangeEvent>> get future => _completer.future;
+
+  _ConditionalCompleter(this.canComplete, this.createResult);
+
+  void complete(List<ChangeEvent> events) {
+    if (!canComplete(events)) return;
+    _completer.complete(createResult(events));
+  }
 }
 
 class CollectingListener with StorageListener {
   final List<ChangeEvent> events = [];
 
+  final Set<_ConditionalCompleter> completers = {};
+
   @override
   Future<void> gotStorageChange(
       EventType event, Node? oldNode, Node? newNode) async {
     events.add(ChangeEvent(event, oldNode, newNode));
+    for (final completer in completers) {
+      completer.complete(events);
+    }
+  }
+
+  Future<List<ChangeEvent>> awaitCount(int count,
+      [Duration timeLimit = const Duration(seconds: 1)]) {
+    canComplete(List events) => events.length >= count;
+    createResult(List<ChangeEvent> events) =>
+        List<ChangeEvent>.from(events.getRange(0, count));
+    if (canComplete(events)) {
+      return Future.value(createResult(events));
+    }
+
+    final completer = _ConditionalCompleter(canComplete, createResult);
+    completers.add(completer);
+    return completer.future.timeout(timeLimit, onTimeout: () {
+      completers.remove(completer);
+      throw TimeoutException(
+          'Did not receive enough change events before timeout.', timeLimit);
+    });
   }
 }
 
@@ -396,8 +442,8 @@ void main() async {
     });
 
     test('register/deregister', () async {
-      var listener = CollectingListener();
-      var criteria = SearchCriteria();
+      final listener = CollectingListener();
+      final criteria = SearchCriteria();
 
       await controller.registerChangeListener(listener, criteria);
       // test overwrite
@@ -413,18 +459,22 @@ void main() async {
     });
 
     group('event types', () {
-      testEventType(EventType expectedType, Node? expectedOldNode,
-          Future<void> Function() setup, Future<Node?> Function() execute) {
+      testEventType(
+          EventType expectedType,
+          Node? expectedOldNode,
+          Future<void> Function(StorageController) setup,
+          Future<Node?> Function(StorageController) execute) {
         test(expectedType.toValueString(), () async {
           final listener = CollectingListener();
           final criteria = SearchCriteria();
 
-          await setup();
+          await setup(controller);
           await controller.registerChangeListener(listener, criteria);
-          final expectedNewNode = await execute();
+          final expectedNewNode = await execute(controller);
 
+          await listener.awaitCount(1);
           expect(listener.events.length, 1);
-          var event = listener.events.first;
+          final event = listener.events.first;
           expect(event.type, expectedType);
           expect(event.oldNode, expectedOldNode);
           expect(event.newNode, expectedNewNode);
@@ -433,7 +483,7 @@ void main() async {
 
       {
         final node = NodeImpl(':testNode', owner);
-        testEventType(EventType.create, null, () async {}, () async {
+        testEventType(EventType.create, null, (_) async {}, (controller) async {
           await controller.add(node);
           return node;
         });
@@ -442,9 +492,9 @@ void main() async {
         const path = ':testNode';
         final oldNode = NodeImpl(path, owner);
         final newNode = NodeImpl(path, owner, null, Visibility.amber);
-        testEventType(EventType.update, oldNode, () async {
+        testEventType(EventType.update, oldNode, (controller) async {
           await controller.add(oldNode);
-        }, () async {
+        }, (controller) async {
           await controller.update(newNode);
           return newNode;
         });
@@ -452,9 +502,9 @@ void main() async {
       {
         const path = ':testNode';
         final node = NodeImpl(path, owner);
-        testEventType(EventType.delete, node, () async {
+        testEventType(EventType.delete, node, (controller) async {
           await controller.add(node);
-        }, () async {
+        }, (controller) async {
           await controller.delete(path);
         });
       }
@@ -462,9 +512,9 @@ void main() async {
         const oldPath = ':oldTestNode';
         const newPath = ':newTestNode';
         final node = NodeImpl(oldPath, owner);
-        testEventType(EventType.rename, node, () async {
+        testEventType(EventType.rename, node, (controller) async {
           await controller.add(node);
-        }, () async {
+        }, (controller) async {
           await controller.rename(oldPath, newPath);
           return await controller.get(newPath);
         });
@@ -485,6 +535,7 @@ void main() async {
       otherNode.lastModified = 1640991600000;
       await controller.update(otherNode);
 
+      await listener.awaitCount(1);
       expect(listener.events.length, 1);
       expect(listener.events.first.newNode?.path, path,
           reason: 'Received event for the wrong node.');

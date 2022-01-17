@@ -144,7 +144,7 @@ class StorageEventHandler with PluginListener {
         var listener = _LambdaStorageListener((event, oldNode, newNode) =>
             sendChangeEvent(msg.sourceId, id, event, oldNode, newNode));
         idToListener[id] = listener;
-        _controller.registerChangeListener(listener, criteria);
+        await _controller.registerChangeListener(listener, criteria);
 
         return (sink) => SerializerHelper.writeString(sink, id);
       }),
@@ -159,7 +159,7 @@ class StorageEventHandler with PluginListener {
         final listeners = ids.map((id) => idToListener.remove(id));
         for (final listener in listeners) {
           if (listener == null) continue;
-          _controller.deregisterChangeListener(listener);
+          await _controller.deregisterChangeListener(listener);
         }
       })
     ];
@@ -174,7 +174,7 @@ class StorageEventHandler with PluginListener {
     SerializerHelper.writeString(sink, listenerId);
     SerializerHelper.writeString(sink, event.toValueString());
     SerializerHelper.writeInt(
-        sink, (oldNode != null ? 1 : 0) + (oldNode != null ? 2 : 0));
+        sink, (oldNode != null ? 1 : 0) + (newNode != null ? 2 : 0));
     oldNode?.toByteArrayStream(sink);
     newNode?.toByteArrayStream(sink);
     sink.close();

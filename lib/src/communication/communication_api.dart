@@ -481,7 +481,7 @@ class CommunicationApi implements GeigerApi {
         Message(
             id,
             GeigerApi.masterId,
-            MessageType.registerMenu,
+            MessageType.comapiSuccess,
             GeigerUrl(null, GeigerApi.masterId, 'registerMenu'),
             await bout.bytes));
   }
@@ -493,7 +493,7 @@ class CommunicationApi implements GeigerApi {
         Message(
             id,
             GeigerApi.masterId,
-            MessageType.enableMenu,
+            MessageType.comapiSuccess,
             GeigerUrl(null, GeigerApi.masterId, 'enableMenu'),
             utf8.encode(menu)));
   }
@@ -503,7 +503,7 @@ class CommunicationApi implements GeigerApi {
     Message msg = Message(
       id,
       GeigerApi.masterId,
-      MessageType.disableMenu,
+      MessageType.comapiSuccess,
       GeigerUrl(null, GeigerApi.masterId, 'disableMenu'),
     );
     msg.payloadString = menu;
@@ -517,7 +517,7 @@ class CommunicationApi implements GeigerApi {
         Message(
             id,
             GeigerApi.masterId,
-            MessageType.deregisterMenu,
+            MessageType.comapiSuccess,
             GeigerUrl(null, GeigerApi.masterId, 'deregisterMenu'),
             utf8.encode(menu)));
   }

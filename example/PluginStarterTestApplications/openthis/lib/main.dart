@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initialzePlugin();
   runApp(const MyApp());
 }
 
 Future<void> initialzePlugin() async {
-  await getGeigerApi(
+  List<MessageType> allEvents = [MessageType.allEvents];
+  GeigerApi plugin = (await getGeigerApi(
       'com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe',
       'testPlugin',
-      Declaration.doShareData);
+      Declaration.doShareData))!;
+  SimpleEventListener pluginListener = SimpleEventListener('plugin');
+  await plugin.registerListener(allEvents, pluginListener);
 }
 
 class MyApp extends StatelessWidget {
@@ -60,7 +61,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 200000000000;
 
-  void _incrementCounter() {
+  void _incrementCounter() async {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -69,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+    await initialzePlugin();
   }
 
   @override

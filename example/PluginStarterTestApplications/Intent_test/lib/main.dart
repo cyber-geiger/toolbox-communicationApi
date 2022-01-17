@@ -61,14 +61,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
       _counter++;
     });
-    GeigerApi? geigerApi = (await getGeigerApi(
-        "com.example.intent_test;com.example.intent_test.MainActivity;windowspath.exe",
-        GeigerApi.masterId,
-        Declaration.doShareData));
+    GeigerApi localMaster = (await getGeigerApi(
+        'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
+        GeigerApi.masterId, Declaration.doNotShareData))!;
+    await localMaster.zapState();
+    SimpleEventListener masterListener = SimpleEventListener('master');
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
+    List<MessageType> allEvents = [MessageType.allEvents];
+    await localMaster.registerListener(allEvents, masterListener);
     Message message = Message(GeigerApi.masterId, 'testPlugin',
         MessageType.allEvents, url, null, "abc");
-    await geigerApi?.sendMessage(message, "testPlugin");
+    await localMaster.sendMessage(message, "testPlugin");
   }
 
   @override
@@ -121,5 +124,35 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+}
+
+
+class SimpleEventListener implements PluginListener {
+  List<Message> events = [];
+
+  final String _id;
+
+  SimpleEventListener(this._id);
+
+  @override
+  void pluginEvent(GeigerUrl? url, Message msg) {
+    events.add(msg);
+    //print('## SimpleEventListener "$_id" received event ${msg.type} it currently has: ${events.length.toString()} events');
+  }
+
+  List<Message> getEvents() {
+    return events;
+  }
+
+  @override
+  String toString() {
+    String ret = '';
+    ret += 'Eventlistener "$_id" contains {\r\n';
+    getEvents().forEach((element) {
+      ret += '  ${element.toString()}\r\n';
+    });
+    ret += '}\r\n';
+    return ret;
   }
 }

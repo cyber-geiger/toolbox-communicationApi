@@ -5,7 +5,6 @@ import 'dart:async';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_secret.dart';
 import 'package:geiger_api/src/communication/parameter_list.dart';
-import 'package:geiger_api/src/communication/plugin_information.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';

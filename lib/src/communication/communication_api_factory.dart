@@ -2,8 +2,6 @@ library geiger_api;
 
 import 'package:geiger_api/geiger_api.dart';
 
-import 'communication_api.dart';
-
 final Map<String, GeigerApi> instances = {};
 
 void flushGeigerApiCache() {

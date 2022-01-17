@@ -1,7 +1,6 @@
 library geiger_api;
 
 import 'package:geiger_api/src/communication/parameter_list.dart';
-import 'package:geiger_api/src/communication/plugin_information.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import '../../geiger_api.dart';

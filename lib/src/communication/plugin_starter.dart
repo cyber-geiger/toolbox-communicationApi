@@ -1,9 +1,9 @@
 library geiger_api;
 
 import 'dart:io';
-import 'plugin_information.dart';
-import 'package:android_intent_plus/flag.dart';
+
 import "package:android_intent_plus/android_intent.dart";
+import 'package:geiger_api/geiger_api.dart';
 
 class PluginStarter {
   static Future<void> startPlugin(PluginInformation pi) async {

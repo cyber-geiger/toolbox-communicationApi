@@ -1,6 +1,5 @@
 library geiger_api;
 
-import 'package:geiger_api/src/communication/communication_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';

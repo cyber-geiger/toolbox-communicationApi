@@ -6,9 +6,6 @@ import 'dart:io';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'communication_api.dart';
-import 'message.dart';
-
 class GeigerCommunicator {
   static const int masterPort = 12348;
 

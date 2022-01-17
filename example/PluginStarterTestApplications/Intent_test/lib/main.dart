@@ -1,9 +1,4 @@
-import 'dart:isolate';
-import 'dart:math';
-
-import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:geiger_api/geiger_api.dart';
 
 void main() {

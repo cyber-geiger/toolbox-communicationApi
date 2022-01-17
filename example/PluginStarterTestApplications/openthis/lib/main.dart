@@ -1,8 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +8,7 @@ void main() async {
 }
 
 Future<void> initialzePlugin() async {
-  GeigerApi? geigerApi = await getGeigerApi(
+  await getGeigerApi(
       'com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe',
       'testPlugin',
       Declaration.doShareData);

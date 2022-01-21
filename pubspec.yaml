@@ -19,7 +19,6 @@ dependencies:
   uuid: ^3.0.5
   collection: ^1.15.0
   android_intent_plus: ^3.0.2
-  sqlite3_flutter_libs: ^0.5.3
 
 dev_dependencies:
   flutter_test:

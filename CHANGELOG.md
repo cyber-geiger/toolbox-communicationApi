@@ -1,7 +1,22 @@
-## 0.5.6 Bugfix Release
-Fixes:
+## 0.6.3 Bugfix Release
+Added:
+- Improved example code.
 
-Known bugs
+## 0.6.2 Bugfix Release (Minor breaking changes)
+Minor breaking changes:
+- registerChange listener is new async (BEWARE)
+- ```activatePlugin``` now determines the port automatically and specification of the port is no longer required.
+
+Fixes:
+- Github Issue #7 (Get a Storage from an external plugin)
+- Github issue #8 (StorageException:Whoops... error while upgrading database (offending: ALTER TABLE storage_node ADD COLUMN last_modified TEXT CHECK( LENGTH(last_modified) <= 20);)
+
+Known bugs:
+- There seems to be an intermitend issue with external change listeners missing changes
+- example project does not start in the background
+
+# 0.6.0 External communication release
+This is the first release of the external capabilities. From this point on external communication should work.
 
 ## 0.5.5
 Fixes:

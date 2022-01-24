@@ -14,7 +14,7 @@ class MessageType {
     scanPressed,
     scanCompleted,
     registerMenu,
-    deregisterMenu,
+    returningControl,
     allEvents,
     ping,
     pong,

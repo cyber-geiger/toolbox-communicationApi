@@ -7,6 +7,13 @@ homepage: https://github.com/cyber-geiger/toolbox-storage
 repository: https://github.com/cyber-geiger/toolbox-communicationApi
 documentation: https://github.com/cyber-geiger/toolbox-communicationApi/wiki
 
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: eu.cyber-geiger.communication
+        pluginClass: CommunicationPlugin
+
 environment:
   sdk: '>=2.12.0 <3.0.0'
 

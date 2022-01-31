@@ -1,14 +1,17 @@
 library geiger_localstorage;
 
+import 'dart:ffi';
+
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class OwnerEnforcerWrapper extends StorageController {
   final StorageController _controller;
   final String _owner;
   final bool _enforceTimestampUpdate;
+  final bool _pulledFromFactory;
 
   OwnerEnforcerWrapper(this._controller, this._owner,
-      [this._enforceTimestampUpdate = true]);
+      [this._enforceTimestampUpdate = true, this._pulledFromFactory = false]);
 
   String get owner => _owner;
 
@@ -39,7 +42,9 @@ class OwnerEnforcerWrapper extends StorageController {
     if (_enforceTimestampUpdate) {
       value.touch();
     }
-    return await _controller.addValue(path, value);
+    if((await _controller.getNodeOrTombstone(path)).owner == _owner) {
+      return await _controller.addValue(path, value);
+    }
   }
 
   @override
@@ -52,7 +57,10 @@ class OwnerEnforcerWrapper extends StorageController {
   Future<Node> delete(String path) async {
     // nothing to do
     // timestamp is updated anyway
-    return await _controller.delete(path);
+    if ((await _controller.getNodeOrTombstone(path)).owner == _owner) {
+      return await _controller.delete(path);
+    }
+    return NodeImpl("", "");
   }
 
   @override
@@ -77,7 +85,11 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<Node> get(String path) async {
     // nothing to do
-    return await _controller.get(path);
+    Node node = await _controller.get(path);
+    if(node.visibility == Visibility.green ||node.visibility == Visibility.white || node.owner == _owner) {
+      return await _controller.get(path);
+    }
+    return NodeImpl("", "");
   }
 
   @override
@@ -89,7 +101,10 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<NodeValue?> getValue(String path, String key) async {
     // nothing to do
-    return await _controller.getValue(path, key);
+    Node node = await _controller.get(path);
+    if(node.visibility == Visibility.green ||node.visibility == Visibility.white || node.owner == _owner) {
+      return await _controller.getValue(path, key);
+    }
   }
 
   @override
@@ -114,13 +129,17 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<void> update(Node node) async {
     // nothing to do
-    return await _controller.update(node);
+    if (node.owner == _owner) {
+      return await _controller.update(node);
+    }
   }
 
   @override
   Future<void> updateValue(String nodeName, NodeValue value) async {
     // nothing to do
-    return await _controller.updateValue(nodeName, value);
+    if ((await _controller.getNodeOrTombstone(nodeName)).owner == _owner) {
+      return await _controller.updateValue(nodeName, value);
+    }
   }
 
   @override
@@ -132,7 +151,10 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<bool> addOrUpdateValue(String path, NodeValue value) async {
     // nothing to do (Is that so?)
-    return await _controller.addOrUpdateValue(path, value);
+    if ((await _controller.getNodeOrTombstone(path)).owner == _owner) {
+      return await _controller.addOrUpdateValue(path, value);
+    }
+    return false;
   }
 
   @override

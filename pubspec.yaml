@@ -11,8 +11,8 @@ flutter:
   plugin:
     platforms:
       android:
-        package: eu.cyber-geiger.communication
-        pluginClass: CommunicationPlugin
+        package: eu.cybergeiger.communication
+        pluginClass: GeigerPlugin
 
 environment:
   sdk: '>=2.12.0 <3.0.0'

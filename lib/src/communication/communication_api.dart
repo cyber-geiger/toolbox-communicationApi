@@ -286,8 +286,11 @@ class CommunicationApi implements GeigerApi {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInfo.getPort() > 0)) {
           // is inactive -> start plugin
-          // TODO: add plugin startup
-          startPlugin(pluginInfo);
+          if (msg.type == MessageType.returningControl){
+            PluginStarter.startPlugin(pluginInfo);
+          }else {
+            PluginStarter.startPluginInBackground(pluginInfo);
+          }
         }
       }
       await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
@@ -543,11 +546,6 @@ class CommunicationApi implements GeigerApi {
       await broadcastMessage(
           Message(GeigerApi.masterId, null, MessageType.scanPressed, null));
     }
-  }
-
-  /// Start a plugin of [pluginInformation] by using the stored executable String.
-  void startPlugin(PluginInformation pluginInformation) {
-    PluginStarter.startPlugin(pluginInformation);
   }
 
   @override

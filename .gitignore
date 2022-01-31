@@ -9,7 +9,7 @@
 # https://dart.dev/guides/libraries/private-files#pubspeclock.
 pubspec.lock
 
-/.idea/
+.idea/
 /toolbox-communicationApi.iml
 /LocalAPI.__MASTERPLUGIN__.state
 /LocalAPI.plugin1.state

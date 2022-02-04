@@ -1,5 +1,6 @@
 library geiger_api;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
 import 'package:geiger_api/src/communication/passthrough_controller.dart';
+import 'package:geiger_api/src/communication/plugin_information_factory.dart';
 import 'package:geiger_api/src/communication/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
@@ -71,6 +73,10 @@ class CommunicationApi implements GeigerApi {
 
   late GeigerCommunicator _geigerCommunicator;
 
+  GeigerCommunicator get  communicator{
+    return _geigerCommunicator;
+}
+
   @override
   Future<void> initialize() async {
     await _geigerCommunicator.start();
@@ -134,15 +140,14 @@ class CommunicationApi implements GeigerApi {
     // request to register at Master
     final PluginInformation pluginInformation =
         PluginInformation(_executor, _geigerCommunicator.port);
-
-    await CommunicationHelper.sendAndWait(
-        this,
-        Message(
-            id,
-            GeigerApi.masterId,
-            MessageType.registerPlugin,
-            GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
-            await pluginInformation.toByteArray()));
+      await CommunicationHelper.sendAndWait(
+          this,
+          Message(
+              id,
+              GeigerApi.masterId,
+              MessageType.registerPlugin,
+              GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
+              await pluginInformation.toByteArray()));
   }
 
   @override
@@ -224,11 +229,11 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> activatePlugin() async {
-    await CommunicationHelper.sendAndWait(
-      this,
-      Message(id, GeigerApi.masterId, MessageType.activatePlugin, null,
-          SerializerHelper.intToByteArray(_geigerCommunicator.port)),
-    );
+      await CommunicationHelper.sendAndWait(
+        this,
+        Message(id, GeigerApi.masterId, MessageType.activatePlugin, null,
+            SerializerHelper.intToByteArray(_geigerCommunicator.port)),
+      );
   }
 
   @override
@@ -272,7 +277,7 @@ class CommunicationApi implements GeigerApi {
     pluginId ??= msg.targetId;
     if (id == pluginId) {
       // Message to this plugin
-      await receivedMessage(msg);
+        await receivedMessage(msg);
     } else {
       _logger.log(Level.INFO, '## Sending message to plugin $pluginId ($msg)');
       // Message to external plugin
@@ -287,7 +292,10 @@ class CommunicationApi implements GeigerApi {
         if (!(pluginInfo.getPort() > 0)) {
           // is inactive -> start plugin
           // TODO: add plugin startup
+          ActivatePluginListener activatePluginListener = ActivatePluginListener();
+          registerListener([MessageType.allEvents], activatePluginListener);
           startPlugin(pluginInfo);
+          await activatePluginListener.waitForActivatePlugin();
         }
       }
       await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
@@ -546,12 +554,39 @@ class CommunicationApi implements GeigerApi {
   }
 
   /// Start a plugin of [pluginInformation] by using the stored executable String.
-  void startPlugin(PluginInformation pluginInformation) {
-    PluginStarter.startPlugin(pluginInformation);
+  Future<void> startPlugin(PluginInformation pluginInformation) async {
+    await PluginStarter.startPlugin(pluginInformation,false);
   }
 
   @override
   Future<void> close() async {
     await _geigerCommunicator.close();
+  }
+}
+
+class ActivatePluginListener implements PluginListener {
+  List<Message> events = [];
+  final completer = Completer<bool>();
+  ActivatePluginListener();
+
+  @override
+  void pluginEvent(GeigerUrl? url, Message msg) {
+    events.add(msg);
+    if(msg.type == MessageType.activatePlugin){
+      print("activate Plugin Recived");
+      completer.complete(true);
+    }
+    //print('## SimpleEventListener "$_id" received event ${msg.type} it currently has: ${events.length.toString()} events');
+  }
+
+  Future<bool> waitForActivatePlugin() async {
+    return completer.future;
+  }
+
+
+  @override
+  String toString() {
+    String ret = '';
+    return ret;
   }
 }

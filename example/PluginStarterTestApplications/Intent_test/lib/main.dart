@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 
+late GeigerApi master;
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  init();
   runApp(const MyApp());
+}
+
+void init() async{
+  List<MessageType> allEvents = [MessageType.allEvents];
+  master = (await getGeigerApi(
+      'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
+      GeigerApi.masterId, Declaration.doNotShareData))!;
+  await master.zapState();
+  SimpleEventListener masterListener = SimpleEventListener('master');
+  master.registerListener(allEvents, masterListener);
 }
 
 class MyApp extends StatelessWidget {
@@ -61,17 +75,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
       _counter++;
     });
-    GeigerApi localMaster = (await getGeigerApi(
-        'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
-        GeigerApi.masterId, Declaration.doNotShareData))!;
-    await localMaster.zapState();
-    SimpleEventListener masterListener = SimpleEventListener('master');
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    List<MessageType> allEvents = [MessageType.allEvents];
-    await localMaster.registerListener(allEvents, masterListener);
     Message message = Message(GeigerApi.masterId, 'testPlugin',
         MessageType.allEvents, url, null, "abc");
-    await localMaster.sendMessage(message, "testPlugin");
+    await master.sendMessage(message, "testPlugin");
   }
 
   @override
@@ -109,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              'Master Of Disaster',
             ),
             Text(
               '$_counter',

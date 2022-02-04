@@ -1,24 +1,24 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 
+CommunicationApi? pluginGeiger;
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  initialzePlugin();
   runApp(const MyApp());
 }
 
 Future<void> initialzePlugin() async {
   List<MessageType> allEvents = [MessageType.allEvents];
-  GeigerApi localMaster = (await getGeigerApi(
-      'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
-      GeigerApi.masterId, Declaration.doNotShareData))!;
-  await localMaster.zapState();
-  SimpleEventListener masterListener = SimpleEventListener('master');
-  localMaster.registerListener(allEvents, masterListener);
-  GeigerApi plugin = (await getGeigerApi(
+  pluginGeiger = (await getGeigerApi(
       'com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe',
       'testPlugin',
-      Declaration.doShareData))!;
+      Declaration.doShareData))! as CommunicationApi;
   SimpleEventListener pluginListener = SimpleEventListener('plugin');
-  await plugin.registerListener(allEvents, pluginListener);
+  await pluginGeiger?.registerListener(allEvents, pluginListener);
+  WidgetsBinding.instance?.addObserver(LifecycleEventHandler());
 }
 
 class MyApp extends StatelessWidget {
@@ -65,18 +65,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 200000000000;
+  get _counter{
+    return pluginGeiger?.communicator.port ?? 0;
+  }
 
   void _incrementCounter() async {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
     });
-    await initialzePlugin();
   }
 
   @override
@@ -114,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              'PLUGINNNN',
             ),
             Text(
               '$_counter',
@@ -158,5 +153,29 @@ class SimpleEventListener implements PluginListener {
     });
     ret += '}\r\n';
     return ret;
+  }
+}
+
+class LifecycleEventHandler extends WidgetsBindingObserver {
+
+//  @override
+//  Future<bool> didPopRoute()
+
+//  @override
+//  void didHaveMemoryPressure()
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.paused:
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        await pluginGeiger?.deactivatePlugin();
+        break;
+      case AppLifecycleState.resumed:
+        await pluginGeiger?.activatePlugin();
+        break;
+    }
   }
 }

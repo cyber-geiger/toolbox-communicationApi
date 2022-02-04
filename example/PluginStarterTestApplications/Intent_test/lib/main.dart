@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 
-void main() {
+late GeigerApi api;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  api = (await getGeigerApi(
+      'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
+      GeigerApi.masterId,
+      Declaration.doNotShareData))!;
+  await api.zapState();
+  SimpleEventListener masterListener = SimpleEventListener('master');
+  await api.registerListener([MessageType.allEvents], masterListener);
   runApp(const MyApp());
 }
 
@@ -61,17 +71,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
       _counter++;
     });
-    GeigerApi localMaster = (await getGeigerApi(
-        'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
-        GeigerApi.masterId, Declaration.doNotShareData))!;
-    await localMaster.zapState();
-    SimpleEventListener masterListener = SimpleEventListener('master');
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
-    List<MessageType> allEvents = [MessageType.allEvents];
-    await localMaster.registerListener(allEvents, masterListener);
     Message message = Message(GeigerApi.masterId, 'testPlugin',
         MessageType.allEvents, url, null, "abc");
-    await localMaster.sendMessage(message, "testPlugin");
+    await api.sendMessage(message, "testPlugin");
   }
 
   @override
@@ -126,7 +129,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
 
 class SimpleEventListener implements PluginListener {
   List<Message> events = [];

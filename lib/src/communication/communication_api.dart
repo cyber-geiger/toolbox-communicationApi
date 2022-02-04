@@ -286,11 +286,13 @@ class CommunicationApi implements GeigerApi {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInfo.getPort() > 0)) {
           // is inactive -> start plugin
-          if (msg.type == MessageType.returningControl){
+          if (msg.type == MessageType.returningControl) {
             PluginStarter.startPlugin(pluginInfo);
-          }else {
+          } else {
             PluginStarter.startPluginInBackground(pluginInfo);
           }
+          // TODO: temporary solution to wait for the plugin to start
+          await Future.delayed(const Duration(seconds: 5));
         }
       }
       await _geigerCommunicator.sendMessage(pluginInfo.port, msg);

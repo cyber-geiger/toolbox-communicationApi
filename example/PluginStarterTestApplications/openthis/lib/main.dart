@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 
-void main() async {
-  runApp(const MyApp());
-}
+late GeigerApi plugin;
 
-Future<void> initialzePlugin() async {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   List<MessageType> allEvents = [MessageType.allEvents];
-  GeigerApi plugin = (await getGeigerApi(
+  plugin = (await getGeigerApi(
       'com.pleas.openthis;eu.cybergeiger.communication.GeigerService; windowspath.exe',
       'testPlugin',
       Declaration.doShareData))!;
   SimpleEventListener pluginListener = SimpleEventListener('plugin');
   await plugin.registerListener(allEvents, pluginListener);
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -58,7 +58,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   int _counter = 200000000000;
 
   void _incrementCounter() async {
@@ -70,7 +70,6 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
-    await initialzePlugin();
   }
 
   @override
@@ -123,6 +122,33 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.paused:
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        await plugin.deactivatePlugin();
+        break;
+      case AppLifecycleState.resumed:
+        await plugin.activatePlugin();
+        break;
+    }
   }
 }
 

@@ -31,4 +31,8 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <!-- TODO: figure out how to start plugin without this -->
+    <queries>
+        <package android:name="com.pleas.openthis" />
+    </queries>
 </manifest>

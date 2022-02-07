@@ -243,7 +243,7 @@ class CommunicationApi implements GeigerApi {
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
     if (isMaster) return GenericController(id, _mapper!.getMapper());
-    final controller = OwnerEnforcerWrapper(PassthroughController(this), "id");
+    final controller = OwnerEnforcerWrapper(PassthroughController(this), id);
     registerListener([MessageType.storageEvent], PassthroughController(this));
     return controller;
   }

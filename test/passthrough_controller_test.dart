@@ -506,6 +506,7 @@ void main() async {
           await controller.add(node);
         }, (controller) async {
           await controller.delete(path);
+          return null;
         });
       }
       {

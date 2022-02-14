@@ -57,9 +57,11 @@ class StorageEventHandler with PluginListener {
       }),
       _CallProcessor('addNode', 'Could not add node', (stream, _) async {
         await _controller.add(await NodeImpl.fromByteArrayStream(stream));
+        return null;
       }),
       _CallProcessor('updateNode', 'Could not update node', (stream, _) async {
         await _controller.update(await NodeImpl.fromByteArrayStream(stream));
+        return null;
       }),
       _CallProcessor('addOrUpdateNode', 'Could not add or update node',
           (stream, _) async {
@@ -80,12 +82,14 @@ class StorageEventHandler with PluginListener {
       _CallProcessor('addValue', 'Could not add node value', (stream, _) async {
         await _controller.addValue((await SerializerHelper.readString(stream))!,
             await NodeValueImpl.fromByteArrayStream(stream));
+        return null;
       }),
       _CallProcessor('updateValue', 'Could not update node value',
           (stream, _) async {
         await _controller.updateValue(
             (await SerializerHelper.readString(stream))!,
             await NodeValueImpl.fromByteArrayStream(stream));
+        return null;
       }),
       _CallProcessor('addOrUpdateValue', 'Could not add or update node value',
           (stream, _) async {
@@ -103,6 +107,7 @@ class StorageEventHandler with PluginListener {
       _CallProcessor('renameNode', 'Could not rename node', (stream, _) async {
         await _controller.rename((await SerializerHelper.readString(stream))!,
             (await SerializerHelper.readString(stream))!);
+        return null;
       }),
       _CallProcessor('searchNodes', 'Could not search nodes',
           (stream, _) async {
@@ -117,12 +122,15 @@ class StorageEventHandler with PluginListener {
       }),
       _CallProcessor('close', 'Could not close', (stream, _) async {
         await _controller.close();
+        return null;
       }),
       _CallProcessor('flush', 'Could not flush', (stream, _) async {
         await _controller.flush();
+        return null;
       }),
       _CallProcessor('zap', 'Could not zap', (stream, _) async {
         await _controller.zap();
+        return null;
       }),
       _CallProcessor('dump', 'Could not dump', (stream, _) async {
         var dump = await _controller.dump(
@@ -160,6 +168,7 @@ class StorageEventHandler with PluginListener {
           if (listener == null) continue;
           await _controller.deregisterChangeListener(listener);
         }
+        return null;
       })
     ];
     for (var processor in processors) {

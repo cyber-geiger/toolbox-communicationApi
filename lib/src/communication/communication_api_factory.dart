@@ -28,7 +28,8 @@ void flushGeigerApiCache() {
 Future<GeigerApi?> getGeigerApi(String executorOrId,
     [String? id, Declaration declaration = Declaration.doShareData]) async {
   if (id == null) {
-    return instances[GeigerApi.masterId];
+    id = executorOrId;
+    executorOrId = '';
   }
   // synchronized(instances, {
   if (!instances.containsKey(id)) {

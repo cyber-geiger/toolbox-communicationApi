@@ -201,9 +201,30 @@ class CommunicationApi implements GeigerApi {
     }
   }
 
+  static bool isWriteable([String path = "."]) {
+    bool res;
+    final f = File('$path${Platform.pathSeparator}test.tst');
+    final didExist = f.existsSync();
+    try {
+      // try appending nothing
+      f.writeAsStringSync('', mode: FileMode.append, flush: true);
+      res = true;
+      if (didExist) {
+        f.deleteSync();
+      }
+    } on FileSystemException {
+      res = false;
+    }
+    return res;
+  }
+
   Future<void> restoreState() async {
-    await StorageMapper.initDatabaseExpander();
-    statePath ??= StorageMapper.expandDbFileName('');
+    if (!isWriteable()) {
+      await StorageMapper.initDatabaseExpander();
+      statePath ??= StorageMapper.expandDbFileName('');
+    } else {
+      statePath = '.';
+    }
     try {
       _logger.log(Level.INFO, 'loading state from $statePath');
       final File file = File('$statePath/GeigerApi.$id.state');

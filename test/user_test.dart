@@ -1,8 +1,12 @@
 // ignore_for_file: avoid_print
 
+import 'dart:io';
+import 'dart:isolate';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart' as toolbox_api;
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class NodeListener implements toolbox_api.StorageListener {
   final List<EventChange> events = [];
@@ -27,6 +31,7 @@ class EventChange {
   final toolbox_api.Node? newNode;
 
   EventChange(this.type, this.oldNode, this.newNode);
+
   @override
   String toString() {
     return 'EventChange{type: $type, oldNode: $oldNode, newNode: $newNode}';
@@ -106,6 +111,53 @@ Future<void> algarclamTests() async {
   });
 }
 
+void isolatePluginTest1(SendPort snd) async {
+  print('## Initializing expander');
+  //await StorageMapper.initDatabaseExpander();
+  print('## Getting storage');
+  StorageController? geigerToolboxStorageController =
+      (await getGeigerApi('', "testplugin", Declaration.doNotShareData))!
+          .getStorage();
+  if (geigerToolboxStorageController == null) {
+    throw toolbox_api.StorageException('got null storage');
+  }
+  print('## adding value');
+  await geigerToolboxStorageController
+      .addOrUpdate(NodeImpl(':Users:test', 'testowner'));
+  expect(await geigerToolboxStorageController.get(':Users:Test'), isNotNull,
+      reason: 'User node not found');
+  print('## deleting value');
+  await geigerToolboxStorageController.delete(':Users:test');
+  print('## dumping on plugin');
+  print(await geigerToolboxStorageController.dump(':Users'));
+  print('## done');
+  sleep(const Duration(seconds: 1));
+}
+
+Future<void> luongTests() async {
+  group('luong test', () {
+    test('20220131 - Dump problem using sub-branches in external plugins',
+        () async {
+      await StorageMapper.initDatabaseExpander();
+      StorageController? geigerToolboxStorageController =
+          (await getGeigerApi("", GeigerApi.masterId))!.getStorage();
+      ReceivePort recv = ReceivePort();
+      ReceivePort err = ReceivePort();
+      err.listen((e) {
+        print('Exception occurred');
+        throw e;
+      });
+      ReceivePort ext = ReceivePort();
+      await Isolate.spawn(isolatePluginTest1, recv.sendPort,
+          onError: err.sendPort, onExit: ext.sendPort);
+      await ext.last;
+      print('## dumping on MASTER');
+      print(await geigerToolboxStorageController!.dump(':Users'));
+    });
+  });
+}
+
 Future<void> main() async {
   await algarclamTests();
+  //await luongTests();
 }

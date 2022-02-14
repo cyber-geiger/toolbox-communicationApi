@@ -9,7 +9,8 @@ Future<void> initialzePlugin() async {
   List<MessageType> allEvents = [MessageType.allEvents];
   GeigerApi localMaster = (await getGeigerApi(
       'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
-      GeigerApi.masterId, Declaration.doNotShareData))!;
+      GeigerApi.masterId,
+      Declaration.doNotShareData))!;
   await localMaster.zapState();
   SimpleEventListener masterListener = SimpleEventListener('master');
   localMaster.registerListener(allEvents, masterListener);

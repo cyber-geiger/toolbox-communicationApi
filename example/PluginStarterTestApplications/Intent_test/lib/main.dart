@@ -63,7 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     GeigerApi localMaster = (await getGeigerApi(
         'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
-        GeigerApi.masterId, Declaration.doNotShareData))!;
+        GeigerApi.masterId,
+        Declaration.doNotShareData))!;
     await localMaster.zapState();
     SimpleEventListener masterListener = SimpleEventListener('master');
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
@@ -126,7 +127,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
 
 class SimpleEventListener implements PluginListener {
   List<Message> events = [];

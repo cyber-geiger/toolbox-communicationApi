@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/communication_secret.dart';
-import 'package:geiger_api/src/communication/passthrough_controller.dart';
 import 'package:geiger_api/src/communication/storage_wrapper/owner_enforcer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';

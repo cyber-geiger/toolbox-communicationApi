@@ -47,7 +47,6 @@ class Listener with PluginListener {
 }
 
 /// A helper class for sending and waiting on [Message]s.
-/// TODO should this only be used for Testing?
 class CommunicationHelper {
   /// Sends [msg] and waits for the first message matching the provided [filter].
   ///

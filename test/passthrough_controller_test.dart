@@ -256,11 +256,11 @@ Future<void> renameTests(StorageController controller) async {
 
     test('Rename node with values', () async {
       List<Node> nodes = <Node>[
-        NodeImpl(':renameTests3', 'testowner'),
-        NodeImpl('name1', 'testowner', ':renameTests3'),
-        NodeImpl('name2', 'testowner', ':renameTests3'),
-        NodeImpl('name21', 'testowner', ':renameTests3:name2'),
-        NodeImpl('name3', 'testowner', ':renameTests3')
+        NodeImpl(':renameTests3', 'testOwner'),
+        NodeImpl('name1', 'testOwner', ':renameTests3'),
+        NodeImpl('name2', 'testOwner', ':renameTests3'),
+        NodeImpl('name21', 'testOwner', ':renameTests3:name2'),
+        NodeImpl('name3', 'testOwner', ':renameTests3')
       ];
 
       NodeValue nv = NodeValueImpl('key', 'value');
@@ -398,7 +398,7 @@ void main() async {
   await localMaster.getStorage()!.zap();
   const owner = 'testOwner';
   final GeigerApi? pluginApi =
-      await getGeigerApi('./plugin1', owner, Declaration.doNotShareData);
+      await getGeigerApi(';;./plugin1', owner, Declaration.doNotShareData);
   final StorageController controller = pluginApi!.getStorage()!;
 
   // all tests related to updates of nodes and values
@@ -423,7 +423,7 @@ void main() async {
             nodeName, NodeValueImpl('key', 'value')),
         throwsA(const TypeMatcher<StorageException>()),
         reason: 'unexpectedly successful missing node');
-    await controller.add(NodeImpl(nodeName, 'owner'));
+    await controller.add(NodeImpl(nodeName, 'testOwner'));
     expect(await controller.getValue(nodeName, 'key'), isNull);
     expect(
         await controller.addOrUpdateValue(
@@ -472,7 +472,8 @@ void main() async {
           await controller.registerChangeListener(listener, criteria);
           final expectedNewNode = await execute(controller);
 
-          await listener.awaitCount(1);
+          await listener.awaitCount(1, Duration(seconds: 30));
+          await controller.deregisterChangeListener(listener);
           expect(listener.events.length, 1);
           final event = listener.events.first;
           expect(event.type, expectedType);

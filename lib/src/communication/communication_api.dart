@@ -87,7 +87,7 @@ class CommunicationApi implements GeigerApi {
       // TODO(mgwerder): should the passtroughcontroller be listener?
       //storageEventHandler = PasstroughController(this, _id);
       // this code is duplicate from registerListener method
-      // it is currently not possible to determin between register internally and register on Master
+      // it is currently not possible to determine between register internally and register on Master
       // therefore this duplicate is necessary
       //registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
@@ -308,7 +308,6 @@ class CommunicationApi implements GeigerApi {
         // Check if plugin active by checking for a port greater than 0
         if (!(pluginInfo.getPort() > 0)) {
           // is inactive -> start plugin
-          // TODO: add plugin startup
           startPlugin(pluginInfo);
         }
       }
@@ -555,7 +554,6 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> scanButtonPressed() async {
-    // TODO
     if (!isMaster) {
       await CommunicationHelper.sendAndWait(
           this,

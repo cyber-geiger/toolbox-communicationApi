@@ -1,3 +1,16 @@
+## 0.6.4 Security features added (incomplete but functional)
+Added:
+- Custom message type ```CUSTOM_EVENT``` for plugins to send messages to the UI (or vice versa)
+- Added call ```authorizePlugin(...)```
+- Added ownerEnforcerWrapper to guarantee that plugins get only data destined for them
+
+Fixed:
+- Exceptions stacktraces are now properly deserialized
+
+Known bugs:
+- example project does not start in the background
+- Storage events may leak unaccessible information when nodes are modified.
+
 ## 0.6.3 Bugfix Release
 Added:
 - Improved example code.

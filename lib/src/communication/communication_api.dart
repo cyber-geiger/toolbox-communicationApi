@@ -574,4 +574,10 @@ class CommunicationApi implements GeigerApi {
   Future<void> close() async {
     await _geigerCommunicator.close();
   }
+
+  @override
+  void authorizePlugin(PluginInformation plugin) {
+    // locally authorize the plugin
+    plugins[StorableString(plugin.toString())] = plugin;
+  }
 }

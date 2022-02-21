@@ -8,7 +8,6 @@ import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
 import 'package:geiger_api/src/communication/passthrough_controller.dart';
 import 'package:geiger_api/src/communication/storage_event_handler.dart';
-import 'package:geiger_api/src/communication/storage_wrapper/owner_enforcer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
@@ -65,6 +64,7 @@ class CommunicationApi implements GeigerApi {
   late final bool isMaster;
   late Declaration _declaration;
   Mapper? _mapper;
+  StorageController? _controller;
   String? statePath;
 
   final Map<MessageType, List<PluginListener>> _listeners =
@@ -262,11 +262,16 @@ class CommunicationApi implements GeigerApi {
   /// Obtain [StorageController] to access the storage.
   @override
   StorageController? getStorage() {
-    _mapper ??= defaultMapper;
-    if (isMaster) return GenericController(id, _mapper!.getMapper());
-    final controller = OwnerEnforcerWrapper(PassthroughController(this), id);
-    registerListener([MessageType.storageEvent], PassthroughController(this));
-    return controller;
+    if (_controller == null) {
+      _mapper ??= defaultMapper;
+      if (isMaster) {
+        _controller = GenericController(id, _mapper!.getMapper());
+      } else {
+        final passthrough = _controller = PassthroughController(this);
+        registerListener([MessageType.storageEvent], passthrough);
+      }
+    }
+    return _controller;
   }
 
   @override

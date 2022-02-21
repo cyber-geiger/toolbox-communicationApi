@@ -8,6 +8,7 @@ import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
 import 'package:geiger_api/src/communication/passthrough_controller.dart';
 import 'package:geiger_api/src/communication/storage_event_handler.dart';
+import 'package:geiger_api/src/communication/storage_wrapper/owner_enforcer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
@@ -86,7 +87,7 @@ class CommunicationApi implements GeigerApi {
       // TODO(mgwerder): should the passtroughcontroller be listener?
       //storageEventHandler = PasstroughController(this, _id);
       // this code is duplicate from registerListener method
-      // it is currently not possible to determin between register internally and register on Master
+      // it is currently not possible to determine between register internally and register on Master
       // therefore this duplicate is necessary
       //registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
@@ -201,9 +202,30 @@ class CommunicationApi implements GeigerApi {
     }
   }
 
+  static bool isWriteable([String path = "."]) {
+    bool res;
+    final f = File('$path${Platform.pathSeparator}test.tst');
+    final didExist = f.existsSync();
+    try {
+      // try appending nothing
+      f.writeAsStringSync('', mode: FileMode.append, flush: true);
+      res = true;
+      if (didExist) {
+        f.deleteSync();
+      }
+    } on FileSystemException {
+      res = false;
+    }
+    return res;
+  }
+
   Future<void> restoreState() async {
-    await StorageMapper.initDatabaseExpander();
-    statePath ??= StorageMapper.expandDbFileName('');
+    if (!isWriteable()) {
+      await StorageMapper.initDatabaseExpander();
+      statePath ??= StorageMapper.expandDbFileName('');
+    } else {
+      statePath = '.';
+    }
     try {
       _logger.log(Level.INFO, 'loading state from $statePath');
       final File file = File('$statePath/GeigerApi.$id.state');
@@ -242,8 +264,8 @@ class CommunicationApi implements GeigerApi {
   StorageController? getStorage() {
     _mapper ??= defaultMapper;
     if (isMaster) return GenericController(id, _mapper!.getMapper());
-    final controller = PassthroughController(this);
-    registerListener([MessageType.storageEvent], controller);
+    final controller = OwnerEnforcerWrapper(PassthroughController(this), id);
+    registerListener([MessageType.storageEvent], PassthroughController(this));
     return controller;
   }
 
@@ -538,7 +560,6 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> scanButtonPressed() async {
-    // TODO
     if (!isMaster) {
       await CommunicationHelper.sendAndWait(
           this,

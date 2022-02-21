@@ -20,3 +20,4 @@ pubspec.lock
 /database
 /GeigerApi.myPluginIdentifier.state
 /coverage/
+*.state

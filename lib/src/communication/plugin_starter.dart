@@ -11,7 +11,7 @@ class PluginStarter {
       MethodChannel('cyber-geiger.eu/communication');
 
   static Future<void> startPlugin(PluginInformation pi) async {
-    //TODO(mgwerder): to be implemented at least for android (intent) and Windows (call)
+    // TODO(mgwerder): write executable spec into communication_api_factory
     //expected executable String: "package;component Name;windowsExecutable"
     // example: "com.example;com.example.MainActivity;../../plugin.exe"
     var executables = pi.executable?.split(";");

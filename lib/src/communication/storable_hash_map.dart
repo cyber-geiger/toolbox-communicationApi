@@ -3,9 +3,6 @@ library geiger_api;
 import 'package:geiger_api/src/serialization/communication_serializer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-// TODO(unassigned): Maybe use quiver's DelegatingMap:
-// https://pub.dev/documentation/quiver/latest/quiver.collection/DelegatingMap-class.html
-
 /// Serializable Hashmap.
 class StorableHashMap<K extends Serializer, V extends Serializer>
     with Serializer

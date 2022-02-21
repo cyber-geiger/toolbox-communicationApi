@@ -36,7 +36,7 @@ class PluginStarter {
     var packageName = executables?.elementAt(0);
     var componentName = executables?.elementAt(1);
     if (Platform.isAndroid) {
-      _channel.invokeMethod("", {
+      await _channel.invokeMethod("", {
         "package": packageName,
         "component": componentName,
         "inBackground": true

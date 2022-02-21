@@ -10,9 +10,7 @@ import io.flutter.FlutterInjector;
 class GeigerService : Service() {
 
     override fun onBind(intent: Intent): IBinder {
-        Log.i("Service", "testService");
-        if (GeigerPlugin.flutterEngine == null)
-            FlutterInjector.instance().flutterLoader().startInitialization(this);
+        Log.i("GeigerService", "service was bound");
         return Binder();
     }
 }

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.annotation.NonNull
-import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -15,10 +14,6 @@ import io.flutter.plugin.common.MethodChannel.Result
 
 
 class GeigerPlugin : FlutterPlugin, MethodCallHandler {
-    companion object {
-        var flutterEngine: FlutterEngine? = null
-    }
-
     private lateinit var context: Context
     private lateinit var channel: MethodChannel
 
@@ -36,7 +31,6 @@ class GeigerPlugin : FlutterPlugin, MethodCallHandler {
             "cyber-geiger.eu/communication"
         )
         channel.setMethodCallHandler(this)
-        flutterEngine = binding.flutterEngine
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -60,7 +54,6 @@ class GeigerPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-        flutterEngine = null
         channel.setMethodCallHandler(null)
         for (connection in connections.values)
             context.unbindService(connection)

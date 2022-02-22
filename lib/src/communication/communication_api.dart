@@ -351,7 +351,7 @@ class CommunicationApi implements GeigerApi {
       case MessageType.registerMenu:
         var item =
             await MenuItem.fromByteArrayStream(ByteStream(null, msg.payload));
-        menuItems[StorableString(item.menu)] = item;
+        menuItems[StorableString(item.menu.path)] = item;
         await sendMessage(Message(
             id,
             msg.sourceId,
@@ -495,7 +495,7 @@ class CommunicationApi implements GeigerApi {
   }
 
   @override
-  Future<void> registerMenu(String menu, GeigerUrl action) async {
+  Future<void> registerMenu(Node menu, GeigerUrl action) async {
     MenuItem mi = MenuItem(menu, action);
     ByteSink bout = ByteSink();
     mi.toByteArrayStream(bout);

@@ -50,15 +50,18 @@ void main() {
    * <p>Tests the serialization of the MenuItem object.</p>
    */
   test('menuItemSerializationTest', () async {
-    MenuItem p =
-        MenuItem('test', GeigerUrl(null, GeigerApi.masterId, 'path'), false);
+    final MenuItem p1 = MenuItem(
+        await NodeImpl.fromPath(':menu:1111-1111-111111-111113:testMenu', 'pid',
+            nodeValues: [NodeValueImpl('name', 'menuTest')]),
+        GeigerUrl(null, GeigerApi.masterId, 'testMenu'),
+        true);
 
     ByteSink bout = ByteSink();
-    p.toByteArrayStream(bout);
+    p1.toByteArrayStream(bout);
     bout.close();
     ByteStream bin = ByteStream(null, await bout.bytes);
     MenuItem p2 = await MenuItem.fromByteArrayStream(bin);
-    expect(p.toString() == p2.toString(), true,
+    expect(p1.toString() == p2.toString(), true,
         reason: 'Cloned MenuItems are unequal');
   });
 
@@ -112,7 +115,7 @@ void main() {
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'path');
     Map<GeigerUrl, Serializer> it = <GeigerUrl, Serializer>{
       url: url,
-      url: MenuItem('string', url)
+      url: ParameterList(['string'])
     };
     hm.addAll(it);
     ByteSink bout = ByteSink();

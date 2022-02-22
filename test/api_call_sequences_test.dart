@@ -140,7 +140,6 @@ void main() {
     final StorageController? pluginController = pluginApi!.getStorage();
     expect(pluginController is PassthroughController, isTrue,
         reason: 'Expected controller is not wrapped');
-    // TODO(mgwerder): test with PasstroughController
     await localMaster.close();
     await pluginApi.close();
   });
@@ -153,7 +152,10 @@ void main() {
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
-    final MenuItem payload = MenuItem('plugin1Score', menuUrl);
+    final MenuItem payload = MenuItem(
+        await NodeImpl.fromPath(':menu:1111-1111-111111-111111:test', 'pid',
+            nodeValues: [NodeValueImpl('name', 'testentry')]),
+        menuUrl);
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     final Message reply =
@@ -181,14 +183,17 @@ void main() {
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
-    final MenuItem payload = MenuItem('plugin1Score', menuUrl);
+    final MenuItem payload = MenuItem(
+        await NodeImpl.fromPath(':menu:1111-1111-111111-111112:test', 'pid',
+            nodeValues: [NodeValueImpl('name', 'Plugin1Score')]),
+        menuUrl);
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a MenuItem
     await CommunicationHelper.sendAndWait(localMaster, request);
 
     final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
-        MessageType.deregisterMenu, testUrl, utf8.encode(payload.menu));
+        MessageType.deregisterMenu, testUrl, utf8.encode(payload.menu.path));
     final Message reply2 =
         await CommunicationHelper.sendAndWait(localMaster, request2);
 
@@ -212,7 +217,11 @@ void main() {
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
     // create a disabled menu
-    final MenuItem payload = MenuItem('plugin1Score', menuUrl, false);
+    final MenuItem payload = MenuItem(
+        await NodeImpl.fromPath(':menu:1111-1111-111111-111113:test', 'pid',
+            nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
+        menuUrl,
+        false);
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a disabled menuItem
@@ -220,7 +229,7 @@ void main() {
 
     // enable the menuItem
     final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
-        MessageType.enableMenu, testUrl, utf8.encode(payload.menu));
+        MessageType.enableMenu, testUrl, utf8.encode(payload.menu.path));
     final Message reply2 =
         await CommunicationHelper.sendAndWait(localMaster, request2);
 
@@ -248,7 +257,11 @@ void main() {
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final GeigerUrl menuUrl = GeigerUrl.fromSpec('geiger://plugin1/Score');
     // create an enabled menu
-    final MenuItem payload = MenuItem('plugin1Score', menuUrl, true);
+    final MenuItem payload = MenuItem(
+        await NodeImpl.fromPath(':menu:1111-1111-111111-111113:test', 'pid',
+            nodeValues: [NodeValueImpl('name', 'Plugin3Score')]),
+        menuUrl,
+        true);
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a disabled menuItem
@@ -256,7 +269,7 @@ void main() {
 
     // enable the menuItem
     final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
-        MessageType.disableMenu, testUrl, utf8.encode(payload.menu));
+        MessageType.disableMenu, testUrl, utf8.encode(payload.menu.path));
     final Message reply2 =
         await CommunicationHelper.sendAndWait(localMaster, request2);
 

@@ -86,16 +86,14 @@ class GeigerUrl implements Serializer {
   /// If the stream does not contain a [GeigerUrl] a [CommunicationException] is
   /// thrown.
   static Future<GeigerUrl> fromByteArrayStream(ByteStream in_) async {
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw CommunicationException('cannot cast');
-    }
+    SerializerHelper.castTest(
+        'GeigerUrl', serialVersionUID, await SerializerHelper.readLong(in_), 1);
     GeigerUrl ret = GeigerUrl(
         await SerializerHelper.readString(in_) ?? '',
         await SerializerHelper.readString(in_) ?? '',
         await SerializerHelper.readString(in_) ?? '');
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw CommunicationException('cannot cast');
-    }
+    SerializerHelper.castTest(
+        'GeigerUrl', serialVersionUID, await SerializerHelper.readLong(in_), 2);
     return ret;
   }
 

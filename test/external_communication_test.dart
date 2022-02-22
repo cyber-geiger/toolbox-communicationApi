@@ -106,8 +106,13 @@ void main() {
       await plugin.registerListener(allEvents, pluginListener);
 
       //register Menu
-      await plugin.registerMenu(
-          'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu'));
+      final MenuItem menu = MenuItem(
+          await NodeImpl.fromPath(
+              ':menu:1111-1111-111111-111113:testMenu', 'pid',
+              nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
+          GeigerUrl(null, GeigerApi.masterId, 'testMenu'),
+          false);
+      await plugin.registerMenu(menu.menu, menu.action);
 
       List<Message> receivedEventsMaster = masterListener.getEvents();
       expect(receivedEventsMaster.length, 3);
@@ -120,8 +125,8 @@ void main() {
       expect(
           await MenuItem.fromByteArrayStream(
               ByteStream(null, rcvdMessage.payload)),
-          MenuItem(
-              'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu')));
+          menu,
+          reason: 'deserialized MenuItem does not match');
 
       List<Message> receivedEventsPlugin = pluginListener.getEvents();
       expect(receivedEventsPlugin.length, 1);
@@ -151,8 +156,13 @@ void main() {
       await plugin.registerListener(allEvents, pluginListener);
 
       //register and disable Menu
-      await plugin.registerMenu(
-          'testMenu', GeigerUrl(null, GeigerApi.masterId, 'testMenu'));
+      final MenuItem menu = MenuItem(
+          await NodeImpl.fromPath(
+              ':menu:1111-1111-111111-111113:testMenu', 'pid',
+              nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
+          GeigerUrl(null, GeigerApi.masterId, 'testMenu'),
+          false);
+      await plugin.registerMenu(menu.menu, menu.action);
       await plugin.disableMenu('testMenu');
 
       List<Message> receivedEventsMaster = masterListener.getEvents();
@@ -193,8 +203,13 @@ void main() {
       await plugin.registerListener(allEvents, pluginListener);
 
       //register Menu
-      await plugin.registerMenu(
-          'testMenu', GeigerUrl(null, 'plugin1', 'testMenu'));
+      final MenuItem menu = MenuItem(
+          await NodeImpl.fromPath(
+              ':menu:1111-1111-111111-111113:testMenu', 'pid',
+              nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
+          GeigerUrl(null, GeigerApi.masterId, 'testMenu'),
+          false);
+      await plugin.registerMenu(menu.menu, menu.action);
       await localMaster.menuPressed(GeigerUrl(null, 'plugin1', 'testMenu'));
       await Future.delayed(const Duration(seconds: 1));
 

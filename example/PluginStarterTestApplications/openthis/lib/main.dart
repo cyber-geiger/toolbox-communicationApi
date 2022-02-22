@@ -4,6 +4,8 @@ import 'package:geiger_api/geiger_api.dart';
 late GeigerApi plugin;
 
 void main() async {
+  PluginStarter.masterExecutor =
+      'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe';
   WidgetsFlutterBinding.ensureInitialized();
   List<MessageType> allEvents = [MessageType.allEvents];
   plugin = (await getGeigerApi(

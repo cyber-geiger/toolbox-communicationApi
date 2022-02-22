@@ -9,7 +9,7 @@ void main() async {
       'com.example.intent_test;com.example.intent_test.MainActivity;windowsexecutablepath.exe',
       GeigerApi.masterId,
       Declaration.doNotShareData))!;
-  await api.zapState();
+  await (api as CommunicationApi).restoreState();
   SimpleEventListener masterListener = SimpleEventListener('master');
   await api.registerListener([MessageType.allEvents], masterListener);
   runApp(const MyApp());

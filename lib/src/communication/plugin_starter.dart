@@ -2,45 +2,31 @@ library geiger_api;
 
 import 'dart:io';
 
-import "package:android_intent_plus/android_intent.dart";
 import 'package:flutter/services.dart';
 import 'package:geiger_api/geiger_api.dart';
 
 class PluginStarter {
+  static String? masterExecutor;
+
   static const MethodChannel _channel =
       MethodChannel('cyber-geiger.eu/communication');
 
-  static Future<void> startPlugin(PluginInformation pi) async {
+  static Future<void> startPlugin(
+      PluginInformation pi, bool inBackground) async {
     // TODO(mgwerder): write executable spec into communication_api_factory
-    //expected executable String: "package;component Name;windowsExecutable"
-    // example: "com.example;com.example.MainActivity;../../plugin.exe"
-    var executables = pi.executable?.split(";");
-    var package = executables?.elementAt(0);
-    var componentName = executables?.elementAt(1);
-    var windowsExecutable = executables?.elementAt(2);
-    if (Platform.isAndroid) {
-      AndroidIntent intent =
-          AndroidIntent(package: package, componentName: componentName);
-      intent.launch();
-    } else if (Platform.isWindows) {
-      if (windowsExecutable != null) {
-        Process.run(windowsExecutable, ["/foreground"]);
-      }
-    } else {
-      throw Exception("Platform not yet Supported");
-    }
-  }
-
-  static Future<void> startPluginInBackground(PluginInformation pi) async {
-    var executables = pi.executable?.split(";");
-    var packageName = executables?.elementAt(0);
-    var componentName = executables?.elementAt(1);
+    // expected executable String: "package;component_name;windows_executable"
+    final executables = pi.executable?.split(";");
+    final packageName = executables?.elementAt(0);
+    final componentName = executables?.elementAt(1);
+    final windowsExecutable = executables?.elementAt(2);
     if (Platform.isAndroid) {
       await _channel.invokeMethod("", {
-        "package": packageName,
-        "component": componentName,
-        "inBackground": true
+        "package": packageName!,
+        "component": componentName!,
+        "inBackground": inBackground
       });
+    } else if (Platform.isWindows) {
+      Process.run(windowsExecutable!, []);
     } else {
       throw Exception("Platform not yet Supported");
     }

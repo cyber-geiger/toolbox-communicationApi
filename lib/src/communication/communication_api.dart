@@ -160,6 +160,7 @@ class CommunicationApi implements GeigerApi {
       plugins[StorableString(pluginId)] = info;
       _logger.info(
           'registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
+      await storeState();
       return;
     }
 
@@ -336,24 +337,29 @@ class CommunicationApi implements GeigerApi {
       // Message to external plugin
       PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
           PluginInformation(
-              null,
+              PluginStarter.masterExecutor,
               pluginId == GeigerApi.masterId
                   ? GeigerCommunicator.masterPort
                   : 0);
-      if (isMaster) {
-        // Check if plugin active by checking for a port greater than 0
-        if (!(pluginInfo.getPort() > 0)) {
-          // is inactive -> start plugin
-          if (msg.type == MessageType.returningControl) {
-            PluginStarter.startPlugin(pluginInfo);
-          } else {
-            PluginStarter.startPluginInBackground(pluginInfo);
-          }
-          await _StartupWaiter(this, pluginId!).wait();
-          pluginInfo = plugins[StorableString(pluginId)]!;
-        }
+      final inBackground = msg.type != MessageType.returningControl;
+      if (pluginInfo.getPort() == 0) {
+        PluginStarter.startPlugin(pluginInfo, inBackground);
+        await _StartupWaiter(this, pluginId!).wait();
+        pluginInfo = plugins[StorableString(pluginId)]!;
+      } else if (!inBackground) {
+        // TODO: bring master to foreground
+        // Temporary solution for android
+        PluginStarter.startPlugin(pluginInfo, inBackground);
       }
-      await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
+      try {
+        await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
+      } on SocketException catch (e) {
+        if (pluginId != GeigerApi.masterId ||
+            e.osError?.message != 'Connection refused') return;
+        PluginStarter.startPlugin(pluginInfo, inBackground);
+        await Future.delayed(const Duration(seconds: 15));
+        await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
+      }
     }
   }
 

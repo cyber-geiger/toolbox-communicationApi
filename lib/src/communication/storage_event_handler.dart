@@ -5,20 +5,25 @@ import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../geiger_api.dart';
+import 'storage_wrapper/owner_enforcer.dart';
 
 class _CallProcessor {
   final String name;
   final String errorMessage;
-  final Future<void Function(ByteSink)?> Function(ByteStream, Message) process;
+  final Future<void Function(ByteSink)?> Function(
+      StorageController, ByteStream, Message) process;
 
   _CallProcessor(this.name, this.errorMessage, this.process);
 }
 
 class _SerializerCallProcessor extends _CallProcessor {
-  _SerializerCallProcessor(String name, String errorMessage,
-      Future<Serializer?> Function(ByteStream, Message) processor)
-      : super(name, errorMessage, (stream, msg) async {
-          var obj = await processor(stream, msg);
+  _SerializerCallProcessor(
+      String name,
+      String errorMessage,
+      Future<Serializer?> Function(StorageController, ByteStream, Message)
+          processor)
+      : super(name, errorMessage, (controller, stream, msg) async {
+          var obj = await processor(controller, stream, msg);
           return (sink) => obj?.toByteArrayStream(sink);
         });
 }
@@ -37,81 +42,85 @@ class _LambdaStorageListener extends StorageListener {
 /// [StorageEventHandler] processes StorageEvents accordingly.
 class StorageEventHandler with PluginListener {
   final CommunicationApi _api;
-  final StorageController _controller;
+  final StorageController _masterController;
+  final Map<String, OwnerEnforcerWrapper> _controllers = {};
 
   final Map<String, _CallProcessor> _processors = {};
 
   final Map<String, StorageListener> idToListener = {};
 
-  StorageEventHandler(this._api, this._controller) {
+  StorageEventHandler(this._api, this._masterController) {
     var processors = [
       _SerializerCallProcessor('getNode', 'Could not get node',
-          (stream, _) async {
-        return _controller.get((await SerializerHelper.readString(stream))!);
+          (controller, stream, _) async {
+        return controller.get((await SerializerHelper.readString(stream))!);
       }),
       _SerializerCallProcessor(
           'getNodeOrTombstone', 'Could not get node or tombstone',
-          (stream, _) async {
-        return _controller
+          (controller, stream, _) async {
+        return controller
             .getNodeOrTombstone((await SerializerHelper.readString(stream))!);
       }),
-      _CallProcessor('addNode', 'Could not add node', (stream, _) async {
-        await _controller.add(await NodeImpl.fromByteArrayStream(stream));
+      _CallProcessor('addNode', 'Could not add node',
+          (controller, stream, _) async {
+        await controller.add(await NodeImpl.fromByteArrayStream(stream));
         return null;
       }),
-      _CallProcessor('updateNode', 'Could not update node', (stream, _) async {
-        await _controller.update(await NodeImpl.fromByteArrayStream(stream));
+      _CallProcessor('updateNode', 'Could not update node',
+          (controller, stream, _) async {
+        await controller.update(await NodeImpl.fromByteArrayStream(stream));
         return null;
       }),
       _CallProcessor('addOrUpdateNode', 'Could not add or update node',
-          (stream, _) async {
-        var updated = await _controller
+          (controller, stream, _) async {
+        var updated = await controller
             .addOrUpdate(await NodeImpl.fromByteArrayStream(stream));
         return (sink) => SerializerHelper.writeInt(sink, updated ? 1 : 0);
       }),
       _SerializerCallProcessor('deleteNode', 'Could not delete node',
-          (stream, _) async {
-        return _controller.delete((await SerializerHelper.readString(stream))!);
+          (controller, stream, _) async {
+        return controller.delete((await SerializerHelper.readString(stream))!);
       }),
       _SerializerCallProcessor('getValue', 'Could not get node value',
-          (stream, _) async {
-        return _controller.getValue(
-            (await SerializerHelper.readString(stream))!,
+          (controller, stream, _) async {
+        return controller.getValue((await SerializerHelper.readString(stream))!,
             (await SerializerHelper.readString(stream))!);
       }),
-      _CallProcessor('addValue', 'Could not add node value', (stream, _) async {
-        await _controller.addValue((await SerializerHelper.readString(stream))!,
+      _CallProcessor('addValue', 'Could not add node value',
+          (controller, stream, _) async {
+        await controller.addValue((await SerializerHelper.readString(stream))!,
             await NodeValueImpl.fromByteArrayStream(stream));
         return null;
       }),
       _CallProcessor('updateValue', 'Could not update node value',
-          (stream, _) async {
-        await _controller.updateValue(
+          (controller, stream, _) async {
+        await controller.updateValue(
             (await SerializerHelper.readString(stream))!,
             await NodeValueImpl.fromByteArrayStream(stream));
         return null;
       }),
       _CallProcessor('addOrUpdateValue', 'Could not add or update node value',
-          (stream, _) async {
-        var updated = await _controller.addOrUpdateValue(
+          (controller, stream, _) async {
+        var updated = await controller.addOrUpdateValue(
             (await SerializerHelper.readString(stream))!,
             await NodeValueImpl.fromByteArrayStream(stream));
         return (sink) => SerializerHelper.writeInt(sink, updated ? 1 : 0);
       }),
       _SerializerCallProcessor('deleteValue', 'Could not delete node value',
-          (stream, _) async {
-        return _controller.deleteValue(
+          (controller, stream, _) async {
+        return controller.deleteValue(
             (await SerializerHelper.readString(stream))!,
             (await SerializerHelper.readString(stream))!);
       }),
-      _CallProcessor('renameNode', 'Could not rename node', (stream, _) async {
-        await _controller.rename((await SerializerHelper.readString(stream))!,
+      _CallProcessor('renameNode', 'Could not rename node',
+          (controller, stream, _) async {
+        await controller.rename((await SerializerHelper.readString(stream))!,
             (await SerializerHelper.readString(stream))!);
         return null;
       }),
       _CallProcessor('searchNodes', 'Could not search nodes',
-          (stream, _) async {
-        var nodes = await _controller
+          (controller, stream, _) async {
+        var nodes = await controller
             .search(await SearchCriteria.fromByteArrayStream(stream));
         return (sink) {
           SerializerHelper.writeInt(sink, nodes.length);
@@ -120,26 +129,26 @@ class StorageEventHandler with PluginListener {
           }
         };
       }),
-      _CallProcessor('close', 'Could not close', (stream, _) async {
-        await _controller.close();
+      _CallProcessor('close', 'Could not close', (controller, stream, _) async {
+        await controller.close();
         return null;
       }),
-      _CallProcessor('flush', 'Could not flush', (stream, _) async {
-        await _controller.flush();
+      _CallProcessor('flush', 'Could not flush', (controller, stream, _) async {
+        await controller.flush();
         return null;
       }),
-      _CallProcessor('zap', 'Could not zap', (stream, _) async {
-        await _controller.zap();
+      _CallProcessor('zap', 'Could not zap', (controller, stream, _) async {
+        await controller.zap();
         return null;
       }),
-      _CallProcessor('dump', 'Could not dump', (stream, _) async {
-        var dump = await _controller.dump(
+      _CallProcessor('dump', 'Could not dump', (controller, stream, _) async {
+        var dump = await controller.dump(
             (await SerializerHelper.readString(stream))!,
             (await SerializerHelper.readString(stream))!);
         return (sink) => SerializerHelper.writeString(sink, dump);
       }),
       _CallProcessor('registerChangeListener', 'Could not register listener',
-          (stream, msg) async {
+          (controller, stream, msg) async {
         var criteria = await SearchCriteria.fromByteArrayStream(stream);
 
         const uuid = Uuid();
@@ -151,13 +160,13 @@ class StorageEventHandler with PluginListener {
         var listener = _LambdaStorageListener((event, oldNode, newNode) =>
             sendChangeEvent(msg.sourceId, id, event, oldNode, newNode));
         idToListener[id] = listener;
-        await _controller.registerChangeListener(listener, criteria);
+        await controller.registerChangeListener(listener, criteria);
 
         return (sink) => SerializerHelper.writeString(sink, id);
       }),
       _CallProcessor(
           'deregisterChangeListeners', 'Could not deregister listeners',
-          (stream, _) async {
+          (controller, stream, _) async {
         final listenerCount = await SerializerHelper.readInt(stream);
         final ids = <String>[];
         for (int i = 0; i < listenerCount; i++) {
@@ -166,7 +175,7 @@ class StorageEventHandler with PluginListener {
         final listeners = ids.map((id) => idToListener.remove(id));
         for (final listener in listeners) {
           if (listener == null) continue;
-          await _controller.deregisterChangeListener(listener);
+          await controller.deregisterChangeListener(listener);
         }
         return null;
       })
@@ -205,9 +214,15 @@ class StorageEventHandler with PluginListener {
       return;
     }
 
+    var controller = _controllers[msg.sourceId];
+    if (controller == null) {
+      _controllers[msg.sourceId] =
+          controller = OwnerEnforcerWrapper(_masterController, msg.sourceId);
+    }
+
     try {
-      final serializer =
-          await processor.process(ByteStream(null, msg.payload), msg);
+      final serializer = await processor.process(
+          controller, ByteStream(null, msg.payload), msg);
       ByteSink? sink;
       if (serializer != null) {
         sink = ByteSink();

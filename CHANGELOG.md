@@ -1,3 +1,19 @@
+## 0.7.0 Security features added [BREAKING CHANGES] 
+This is a breaking change. Menus are new not just a string but a node containing all internationalizable strings. The MenuRegistrar new takes a whole MenuItem as parameter. 
+
+Added:
+- Custom message type ```CUSTOM_EVENT``` for plugins to send messages to the UI (or vice versa)
+- Added call ```authorizePlugin(...)```
+- Added ownerEnforcerWrapper to guarantee that plugins get only data destined for them
+
+Fixed:
+- Exceptions stacktraces are now properly deserialized
+- Github issue #9 (Typo error)
+
+Known bugs:
+- example project does not start in the background
+- Storage events may leak unaccessible information when nodes are modified.
+
 ## 0.6.3 Bugfix Release
 Added:
 - Improved example code.

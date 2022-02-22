@@ -68,9 +68,8 @@ class Message with Serializer {
   /// @return the converted Message
   /// @throws IOException if bytes cannot be read
   static Future<Message> fromByteArray(ByteStream in_) async {
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('cannot cast');
-    }
+    SerializerHelper.castTest(
+        'Message', serialVersionUID, await SerializerHelper.readLong(in_), 1);
     Message m = Message(
         await SerializerHelper.readString(in_) ?? '',
         (await SerializerHelper.readInt(in_) == 1)
@@ -86,6 +85,8 @@ class Message with Serializer {
     m.payloadString = (await SerializerHelper.readInt(in_) == 1)
         ? await SerializerHelper.readString(in_)
         : null;
+    SerializerHelper.castTest(
+        'Message', serialVersionUID, await SerializerHelper.readLong(in_), 2);
     return m;
   }
 
@@ -113,6 +114,7 @@ class Message with Serializer {
       SerializerHelper.writeInt(out, 1);
       SerializerHelper.writeString(out, payloadString);
     }
+    SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   @override

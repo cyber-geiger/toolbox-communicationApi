@@ -3,13 +3,8 @@ library geiger_api;
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
-import 'declaration.dart';
-import 'geiger_url.dart';
-import 'menu_item.dart';
+import '../../geiger_api.dart';
 import 'menu_registrar.dart';
-import 'message.dart';
-import 'message_type.dart';
-import 'plugin_listener.dart';
 import 'plugin_registrar.dart';
 
 /// The API provided by all communicator interfaces.
@@ -24,6 +19,9 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
 
   /// Activates the plugin and sets up communication on the specified [port].
   Future<void> activatePlugin();
+
+  /// Authorize the plugin
+  void authorizePlugin(PluginInformation plugin);
 
   /// Deactivates the plugin and makes sure that a plugin is started immediately if contacted.
   ///

@@ -49,16 +49,14 @@ class PluginInformation with Serializer {
   /// @return the deserialized Storable String
   /// @throws IOException if value cannot be read
   static Future<PluginInformation> fromByteArrayStream(ByteStream in_) async {
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('Cannot cast');
-    }
+    SerializerHelper.castTest('PluginInformation', serialVersionUID,
+        await SerializerHelper.readLong(in_), 1);
     String executable = await SerializerHelper.readString(in_) ?? '';
     int port = await SerializerHelper.readInt(in_);
     CommunicationSecret secret =
         await CommunicationSecret.fromByteArrayStream(in_);
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('Cannot cast');
-    }
+    SerializerHelper.castTest('PluginInformation', serialVersionUID,
+        await SerializerHelper.readLong(in_), 1);
     return PluginInformation(executable, port, secret);
   }
 

@@ -542,5 +542,24 @@ void main() async {
       expect(listener.events.first.newNode?.path, path,
           reason: 'Received event for the wrong node.');
     });
+
+    test('listen on master', () async {
+      final node = NodeImpl(':testNode', owner);
+
+      final listener = CollectingListener();
+      final criteria = SearchCriteria();
+      final masterController = localMaster.getStorage()!;
+
+      await masterController.registerChangeListener(listener, criteria);
+      await controller.add(node);
+
+      await listener.awaitCount(1);
+      await masterController.deregisterChangeListener(listener);
+      expect(listener.events.length, 1);
+      final event = listener.events.first;
+      expect(event.type, EventType.create);
+      expect(event.oldNode, null);
+      expect(event.newNode, node);
+    });
   });
 }

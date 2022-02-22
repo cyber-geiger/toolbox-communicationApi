@@ -67,15 +67,13 @@ class CommunicationSecret with Serializer {
   /// @return the deserialized Storable String
   /// @throws IOException if value cannot be read
   static Future<CommunicationSecret> fromByteArrayStream(ByteStream in_) async {
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('cannot cast');
-    }
+    SerializerHelper.castTest('CommunicationSecret', serialVersionUID,
+        await SerializerHelper.readLong(in_), 1);
     final List<int> secret =
         base64.decode(await SerializerHelper.readString(in_) ?? '');
     CommunicationSecret ret = CommunicationSecret(secret);
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('Reading end marker fails');
-    }
+    SerializerHelper.castTest('CommunicationSecret', serialVersionUID,
+        await SerializerHelper.readLong(in_), 2);
     return ret;
   }
 

@@ -38,16 +38,14 @@ class ParameterList with Serializer {
   /// @throws IOException if value cannot be read
   static Future<ParameterList> fromByteArrayStream(ByteStream in_) async {
     List<String> l = <String>[];
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('cannot cast');
-    }
+    SerializerHelper.castTest('ParameterList', serialVersionUID,
+        await SerializerHelper.readLong(in_), 1);
     int size = await SerializerHelper.readInt(in_);
     for (int i = 0; i < size; i++) {
       l.add(await SerializerHelper.readString(in_) ?? '');
     }
-    if (await SerializerHelper.readLong(in_) != serialVersionUID) {
-      throw Exception('cannot cast');
-    }
+    SerializerHelper.castTest('ParameterList', serialVersionUID,
+        await SerializerHelper.readLong(in_), 2);
     return ParameterList(l);
   }
 

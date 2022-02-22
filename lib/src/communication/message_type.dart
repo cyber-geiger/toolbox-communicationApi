@@ -15,6 +15,7 @@ class MessageType {
     scanCompleted,
     registerMenu,
     returningControl,
+    customEvent,
     allEvents,
     ping,
     pong,
@@ -61,6 +62,8 @@ class MessageType {
   static const registerListener = MessageType._('REGISTER_LISTENER', 500);
   static const deregisterListener = MessageType._('DEREGISTER_LISTENER', 530);
 
+  static const customEvent = MessageType._('CUSTOM_EVENT', 999);
+
   /* internal messages to the API */
   static const allEvents = MessageType._('ALL_EVENTS', 1000);
 
@@ -70,7 +73,7 @@ class MessageType {
 
   /* Messages related to the storage */
   static const storageEvent = MessageType._('STORAGE_EVENT', 20000);
-  static const storageSuccess = MessageType._('STORAGE_SUCESS', 20100);
+  static const storageSuccess = MessageType._('STORAGE_SUCCESS', 20100);
   static const storageError = MessageType._('STORAGE_ERROR', 20400);
 
   /* response messages*/

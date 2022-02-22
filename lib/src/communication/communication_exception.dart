@@ -20,9 +20,8 @@ class CommunicationException extends SerializedException implements Serializer {
   /// @throws IOException if not overridden or reached unexpectedly the end of stream
   static Future<CommunicationException> fromByteArrayStream(
       ByteStream in_) async {
-    if (await SerializerHelper.readLong(in_) != serialversionUID) {
-      throw Exception('cannot cast');
-    }
+    SerializerHelper.castTest('CommunicationException', serialversionUID,
+        await SerializerHelper.readLong(in_), 1);
 
     // read exception text
     final String message = (await SerializerHelper.readString(in_))!;
@@ -39,9 +38,8 @@ class CommunicationException extends SerializedException implements Serializer {
     }
 
     // read object end tag (identifier)
-    if (await SerializerHelper.readLong(in_) != serialversionUID) {
-      throw Exception('cannot cast');
-    }
+    SerializerHelper.castTest('CommunicationException', serialversionUID,
+        await SerializerHelper.readLong(in_), 2);
     return CommunicationException(message, t, ste);
   }
 }

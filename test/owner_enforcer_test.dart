@@ -23,7 +23,7 @@ Future<void> ownerEnforcerTests(final StorageController controller) async {
     nodeimpl.visibility = Visibility.white;
     await ownerEnforcerWrapper.add(nodeimpl);
     Node node = await ownerEnforcerWrapper2.get(':testNode2');
-    expect(node.owner, 'testOwner2');
+    expect(node.owner, 'testOwner');
   });
 
   test('update Node', () async {

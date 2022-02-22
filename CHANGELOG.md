@@ -1,4 +1,6 @@
-## 0.6.4 Security features added (incomplete but functional)
+## 0.7.0 Security features added [BREAKING CHANGES] 
+This is a breaking change. Menus are new not just a string but a node containing all internationalizable strings. The MenuRegistrar new takes a whole MenuItem as parameter. 
+
 Added:
 - Custom message type ```CUSTOM_EVENT``` for plugins to send messages to the UI (or vice versa)
 - Added call ```authorizePlugin(...)```

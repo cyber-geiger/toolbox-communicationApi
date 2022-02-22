@@ -1,8 +1,6 @@
 library geiger_api;
 
-import 'package:geiger_localstorage/geiger_localstorage.dart';
-
-import 'geiger_url.dart';
+import '../../geiger_api.dart';
 
 /// Registrar interface for Menus.
 abstract class MenuRegistrar {
@@ -14,7 +12,7 @@ abstract class MenuRegistrar {
   /// - 'tooltip' for the menu (internationalizable)
   /// - 'help' the help text (internationalizable)
   /// Must also provide the [action] to be triggered.
-  Future<void> registerMenu(Node menu, GeigerUrl action);
+  Future<void> registerMenu(MenuItem menu);
 
   /// Enable a previously registered [menuId].
   Future<void> enableMenu(String menuId);

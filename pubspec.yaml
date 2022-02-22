@@ -2,7 +2,7 @@ name: geiger_api
 description: >-
   A Communication API for the GEIGER ecosystem. It provides a unified interface for all plugins to
   communicate and transfer control between the components of the ecosystem.
-version: 0.6.3
+version: 0.7.0
 homepage: https://github.com/cyber-geiger/toolbox-storage
 repository: https://github.com/cyber-geiger/toolbox-communicationApi
 documentation: https://github.com/cyber-geiger/toolbox-communicationApi/wiki

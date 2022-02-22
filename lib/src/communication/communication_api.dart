@@ -495,10 +495,9 @@ class CommunicationApi implements GeigerApi {
   }
 
   @override
-  Future<void> registerMenu(Node menu, GeigerUrl action) async {
-    MenuItem mi = MenuItem(menu, action);
+  Future<void> registerMenu(MenuItem menu) async {
     ByteSink bout = ByteSink();
-    mi.toByteArrayStream(bout);
+    menu.toByteArrayStream(bout);
     bout.close();
     await CommunicationHelper.sendAndWait(
         this,

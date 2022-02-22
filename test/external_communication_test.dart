@@ -112,7 +112,7 @@ void main() {
               nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
           GeigerUrl(null, GeigerApi.masterId, 'testMenu'),
           false);
-      await plugin.registerMenu(menu.menu, menu.action);
+      await plugin.registerMenu(menu);
 
       List<Message> receivedEventsMaster = masterListener.getEvents();
       expect(receivedEventsMaster.length, 3);
@@ -162,7 +162,7 @@ void main() {
               nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
           GeigerUrl(null, GeigerApi.masterId, 'testMenu'),
           false);
-      await plugin.registerMenu(menu.menu, menu.action);
+      await plugin.registerMenu(menu);
       await plugin.disableMenu('testMenu');
 
       List<Message> receivedEventsMaster = masterListener.getEvents();
@@ -209,7 +209,7 @@ void main() {
               nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
           GeigerUrl(null, GeigerApi.masterId, 'testMenu'),
           false);
-      await plugin.registerMenu(menu.menu, menu.action);
+      await plugin.registerMenu(menu);
       await localMaster.menuPressed(GeigerUrl(null, 'plugin1', 'testMenu'));
       await Future.delayed(const Duration(seconds: 1));
 

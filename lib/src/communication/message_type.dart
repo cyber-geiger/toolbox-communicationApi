@@ -73,7 +73,7 @@ class MessageType {
 
   /* Messages related to the storage */
   static const storageEvent = MessageType._('STORAGE_EVENT', 20000);
-  static const storageSuccess = MessageType._('STORAGE_SUCESS', 20100);
+  static const storageSuccess = MessageType._('STORAGE_SUCCESS', 20100);
   static const storageError = MessageType._('STORAGE_ERROR', 20400);
 
   /* response messages*/

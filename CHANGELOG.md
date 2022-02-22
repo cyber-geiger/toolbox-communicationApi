@@ -6,6 +6,7 @@ Added:
 
 Fixed:
 - Exceptions stacktraces are now properly deserialized
+- Github issue #9 (Typo error)
 
 Known bugs:
 - example project does not start in the background

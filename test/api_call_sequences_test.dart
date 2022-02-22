@@ -138,7 +138,8 @@ void main() {
     final GeigerApi? pluginApi =
         await getGeigerApi('./plugin1', 'plugin1', Declaration.doNotShareData);
     final StorageController? pluginController = pluginApi!.getStorage();
-    expect(true, pluginController is OwnerEnforcerWrapper);
+    expect(pluginController is OwnerEnforcerWrapper, isTrue,
+        reason: 'Expected controller is not wrapped');
     // TODO(mgwerder): test with PasstroughController
     await localMaster.close();
     await pluginApi.close();

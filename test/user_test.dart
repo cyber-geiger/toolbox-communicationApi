@@ -143,8 +143,12 @@ Future<void> luongTests() async {
           (await getGeigerApi("", GeigerApi.masterId))!.getStorage();
       ReceivePort recv = ReceivePort();
       ReceivePort err = ReceivePort();
+      recv.listen((e) {
+        print('P: $e');
+      });
       err.listen((e) {
         print('Exception occurred');
+        print("P: $e");
         throw e;
       });
       ReceivePort ext = ReceivePort();
@@ -159,5 +163,5 @@ Future<void> luongTests() async {
 
 Future<void> main() async {
   await algarclamTests();
-  //await luongTests();
+  await luongTests();
 }

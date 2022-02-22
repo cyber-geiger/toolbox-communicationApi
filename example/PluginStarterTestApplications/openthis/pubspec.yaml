@@ -28,7 +28,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   geiger_api:
-    path: ../../..
+    path: ../../../
   flutter:
     sdk: flutter
 

@@ -314,7 +314,7 @@ class CommunicationApi implements GeigerApi {
             PluginStarter.startPluginInBackground(pluginInfo);
           }
           // TODO: temporary solution to wait for the plugin to start
-          await Future.delayed(const Duration(seconds: 5));
+          await Future.delayed(const Duration(seconds: 15));
         }
       }
       await _geigerCommunicator.sendMessage(pluginInfo.port, msg);

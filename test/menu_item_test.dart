@@ -110,7 +110,7 @@ void main() async {
     });
     test('Test inequality of HashCode when having a different equality level',
         () async {
-      MenuItem menu2 = await menu.clone();
+      // MenuItem menu2 = await menu.clone();
       MenuItem menu3 = await menu.clone();
       menu3.enabled = true;
       MenuItem menu4 = await menu.clone();

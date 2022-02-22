@@ -1,5 +1,6 @@
 library geiger_api;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -31,6 +32,38 @@ extension MapperExtension on Mapper {
         break;
     }
     return ret;
+  }
+}
+
+class _StartupWaiter implements PluginListener {
+  static const _events = [
+    MessageType.registerListener,
+    MessageType.activatePlugin
+  ];
+  final String pluginId;
+
+  final CommunicationApi _api;
+  final Completer _completer = Completer();
+
+  _StartupWaiter(this._api, this.pluginId) {
+    _api.registerListener(_events, this);
+  }
+
+  @override
+  void pluginEvent(GeigerUrl? _, Message msg) {
+    if (msg.sourceId != pluginId) return;
+    _completer.complete();
+  }
+
+  Future wait([Duration timeout = const Duration(seconds: 15)]) {
+    return _completer.future.timeout(timeout, onTimeout: () {
+      deregister();
+      throw TimeoutException('Plugin "{pluginId}" did not start in time.');
+    }).then((_) => deregister());
+  }
+
+  void deregister() {
+    _api.deregisterListener(_events, this);
   }
 }
 
@@ -124,11 +157,9 @@ class CommunicationApi implements GeigerApi {
       if (info == null) {
         throw NullThrownError();
       }
-      if (!plugins.containsKey(StorableString(pluginId))) {
-        plugins[StorableString(pluginId)] = info;
-        _logger.info(
-            'registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
-      }
+      plugins[StorableString(pluginId)] = info;
+      _logger.info(
+          'registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
       return;
     }
 
@@ -313,8 +344,8 @@ class CommunicationApi implements GeigerApi {
           } else {
             PluginStarter.startPluginInBackground(pluginInfo);
           }
-          // TODO: temporary solution to wait for the plugin to start
-          await Future.delayed(const Duration(seconds: 15));
+          await _StartupWaiter(this, pluginId!).wait();
+          pluginInfo = plugins[StorableString(pluginId)]!;
         }
       }
       await _geigerCommunicator.sendMessage(pluginInfo.port, msg);

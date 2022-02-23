@@ -24,7 +24,8 @@ void main() {
               'Testing with port=$port; executable=$executable; secret=$secret',
               () {
             //Constructor without secret
-            PluginInformation info = PluginInformation(executable, port);
+            PluginInformation info =
+                PluginInformation('plugin1', executable, port);
             test('checking Executable', () {
               expect(info.getExecutable(), executable);
             });
@@ -33,7 +34,7 @@ void main() {
             });
             //Constructor with secret
             PluginInformation info2 =
-                PluginInformation(executable, port, secret);
+                PluginInformation('plugin1', executable, port, secret);
             test('checking Executable', () {
               expect(info.getExecutable(), executable);
             });
@@ -54,9 +55,9 @@ void main() {
         for (final String executable in executables) {
           for (final CommunicationSecret secret in secrets) {
             final PluginInformation info =
-                PluginInformation(executable, port, secret);
+                PluginInformation('plugin1', executable, port, secret);
             final PluginInformation info2 =
-                PluginInformation(executable, port, secret);
+                PluginInformation('plugin1', executable, port, secret);
             expect(info.hashCode, info2.hashCode,
                 reason: 'Test failed with secret=$secret;');
           }

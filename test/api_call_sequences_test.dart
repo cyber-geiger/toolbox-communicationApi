@@ -15,8 +15,8 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final PluginInformation payload =
-        PluginInformation('./plugin1', 5555, CommunicationSecret.empty());
+    final PluginInformation payload = PluginInformation(
+        'plugin1', './plugin1', 5555, CommunicationSecret.empty());
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
     final Message reply =
@@ -60,8 +60,8 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final PluginInformation payload =
-        PluginInformation('./plugin1', 5555, CommunicationSecret.empty());
+    final PluginInformation payload = PluginInformation(
+        'plugin1', './plugin1', 5555, CommunicationSecret.empty());
     // Pregister plugin
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
@@ -94,8 +94,8 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final PluginInformation payload =
-        PluginInformation('./plugin1', 5555, CommunicationSecret.empty());
+    final PluginInformation payload = PluginInformation(
+        'plugin1', './plugin1', 5555, CommunicationSecret.empty());
     // Pregister plugin
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());

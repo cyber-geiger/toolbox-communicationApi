@@ -40,7 +40,7 @@ class Listener with PluginListener {
     }
     var message = msg;
     if (message == null) {
-      throw CommunicationException('timeout reached');
+      throw CommunicationException('timeout reached while waiting for reply');
     }
     return message;
   }
@@ -55,7 +55,7 @@ class CommunicationHelper {
   ///
   /// Throws [CommunicationException] if communication with master fails
   static Future<Message> sendAndWait(GeigerApi api, Message msg,
-      [int timeout = 10000]) async {
+      [int timeout = 30000]) async {
     var l = Listener(api, msg);
     await l.register();
     await api.sendMessage(msg);

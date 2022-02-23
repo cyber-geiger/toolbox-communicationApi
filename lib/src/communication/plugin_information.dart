@@ -7,6 +7,7 @@ import 'communication_secret.dart';
 /// Object for storing vital plugin information.
 class PluginInformation with Serializer {
   static const int serialVersionUID = 48032940912340;
+  final String id;
   final String? executable;
   final int port;
   late CommunicationSecret secret;
@@ -16,7 +17,8 @@ class PluginInformation with Serializer {
   /// - [executable] the string required for platform specific wakeup of a plugin
   /// - [port]       the port of the plugin to be contacted on
   /// - [secret]     the secret required for communicating (if null a new secret is generated)
-  PluginInformation(this.executable, this.port, [CommunicationSecret? secret]) {
+  PluginInformation(this.id, this.executable, this.port,
+      [CommunicationSecret? secret]) {
     this.secret = secret ?? CommunicationSecret.empty();
   }
 
@@ -38,6 +40,7 @@ class PluginInformation with Serializer {
   @override
   void toByteArrayStream(ByteSink out) {
     SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, id);
     SerializerHelper.writeString(out, executable);
     SerializerHelper.writeInt(out, port);
     secret.toByteArrayStream(out);
@@ -51,13 +54,14 @@ class PluginInformation with Serializer {
   static Future<PluginInformation> fromByteArrayStream(ByteStream in_) async {
     SerializerHelper.castTest('PluginInformation', serialVersionUID,
         await SerializerHelper.readLong(in_), 1);
+    String id = await SerializerHelper.readString(in_) ?? '';
     String executable = await SerializerHelper.readString(in_) ?? '';
     int port = await SerializerHelper.readInt(in_);
     CommunicationSecret secret =
         await CommunicationSecret.fromByteArrayStream(in_);
     SerializerHelper.castTest('PluginInformation', serialVersionUID,
         await SerializerHelper.readLong(in_), 1);
-    return PluginInformation(executable, port, secret);
+    return PluginInformation(id, executable, port, secret);
   }
 
   /// Wrapper function to simplify serialization.
@@ -94,5 +98,14 @@ class PluginInformation with Serializer {
             ':' +
             secret.toString())
         .hashCode;
+  }
+
+  Future<PluginInformation> shallowClone() async {
+    ByteSink bout = ByteSink();
+    toByteArrayStream(bout);
+    bout.close();
+    PluginInformation ret = await fromByteArray(await bout.bytes);
+    ret.secret.setRandomSecret(0);
+    return ret;
   }
 }

@@ -69,8 +69,8 @@ void main() {
    * <p>Tests the serialization of the ParameterList object.</p>
    */
   test('pluginInformationSerializationTest', () async {
-    PluginInformation p =
-        PluginInformation('exec', 1234, CommunicationSecret('Hello'.codeUnits));
+    PluginInformation p = PluginInformation(
+        'plugin1', 'exec', 1234, CommunicationSecret('Hello'.codeUnits));
     ByteSink bout = ByteSink();
     p.toByteArrayStream(bout);
     bout.close();

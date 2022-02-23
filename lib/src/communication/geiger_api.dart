@@ -70,4 +70,9 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   Future<void> zapState();
 
   Future<void> close();
+
+  /// Gets a list of PluginInformation of all registered plugins starting with [id].
+  ///
+  /// For security reasons all PluginInformation have empty secrets.
+  Future<List<PluginInformation>> getRegisteredPlugins([String? id]);
 }

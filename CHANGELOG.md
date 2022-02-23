@@ -1,3 +1,7 @@
+## 0.7.2 Extension Release
+Added:
+- Call to get the list of registered/Authorized plugins.
+
 ## 0.7.1 Bugfix release
 Fixes:
 - The known security bug of StorageEvent leaks 

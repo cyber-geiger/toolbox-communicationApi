@@ -43,7 +43,7 @@ class _LambdaStorageListener extends StorageListener {
 class StorageEventHandler with PluginListener {
   final CommunicationApi _api;
   final StorageController _masterController;
-  final Map<String, OwnerEnforcerWrapper> _controllers = {};
+  final Map<String, StorageController> _controllers = {};
 
   final Map<String, _CallProcessor> _processors = {};
 
@@ -216,8 +216,12 @@ class StorageEventHandler with PluginListener {
 
     var controller = _controllers[msg.sourceId];
     if (controller == null) {
-      _controllers[msg.sourceId] =
-          controller = OwnerEnforcerWrapper(_masterController, msg.sourceId);
+      if (msg.sourceId == GeigerApi.masterId) {
+        _controllers[msg.sourceId] = controller!;
+      } else {
+        _controllers[msg.sourceId] =
+            controller = OwnerEnforcerWrapper(_masterController, msg.sourceId);
+      }
     }
 
     try {

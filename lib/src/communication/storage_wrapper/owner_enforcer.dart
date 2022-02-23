@@ -2,14 +2,42 @@ library geiger_localstorage;
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
+class StorageListenerFilter extends StorageListener {
+  final StorageListener _listener;
+  final String _owner;
+
+  StorageListenerFilter(this._owner, this._listener);
+
+  @override
+  void gotStorageChange(EventType event, Node? oldNode, Node? newNode) {
+    if (oldNode != null &&
+        (oldNode.visibility != Visibility.white && oldNode.owner != _owner)) {
+      oldNode = null;
+    }
+    if (newNode != null &&
+        (newNode.visibility != Visibility.white && newNode.owner != _owner)) {
+      oldNode = null;
+    }
+
+    if (oldNode != null || newNode != null) {
+      _listener.gotStorageChange(event, oldNode, newNode);
+    }
+  }
+}
+
 class OwnerEnforcerWrapper extends StorageController {
   final StorageController _controller;
   final String _owner;
   final bool _enforceTimestampUpdate;
+  final bool _sharingFilter;
   final bool _pulledFromFactory;
 
+  final Map<StorageListener, StorageListener> _listeners = {};
+
   OwnerEnforcerWrapper(this._controller, this._owner,
-      [this._enforceTimestampUpdate = true, this._pulledFromFactory = false]);
+      [this._enforceTimestampUpdate = true,
+      this._pulledFromFactory = false,
+      this._sharingFilter = true]);
 
   String get owner => _owner;
 
@@ -77,8 +105,15 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<List<SearchCriteria>> deregisterChangeListener(
       StorageListener listener) async {
-    // nothing to do
-    return await _controller.deregisterChangeListener(listener);
+    if (_sharingFilter) {
+      StorageListener? pl = _listeners.remove(listener);
+      if (pl == null) {
+        return [];
+      }
+      return await _controller.deregisterChangeListener(pl);
+    } else {
+      return await _controller.deregisterChangeListener(listener);
+    }
   }
 
   @override
@@ -91,9 +126,9 @@ class OwnerEnforcerWrapper extends StorageController {
   Future<Node> get(String path) async {
     // nothing to do
     Node node = await _controller.get(path);
-    if (node.visibility == Visibility.green ||
-        node.visibility == Visibility.white ||
-        node.owner == _owner) {
+    if (node.visibility == Visibility.white ||
+        node.owner == _owner ||
+        !_sharingFilter) {
       return node;
     }
     throw StorageException('access denied');
@@ -102,9 +137,9 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<Node> getNodeOrTombstone(String path) async {
     Node node = await _controller.getNodeOrTombstone(path);
-    if (node.visibility == Visibility.green ||
-        node.visibility == Visibility.white ||
-        node.owner == _owner) {
+    if (node.visibility == Visibility.white ||
+        node.owner == _owner ||
+        !_sharingFilter) {
       return node;
     }
     throw StorageException('access denied');
@@ -114,9 +149,9 @@ class OwnerEnforcerWrapper extends StorageController {
   Future<NodeValue?> getValue(String path, String key) async {
     // nothing to do
     Node node = await _controller.get(path);
-    if (node.visibility == Visibility.green ||
-        node.visibility == Visibility.white ||
-        node.owner == _owner) {
+    if (node.visibility == Visibility.white ||
+        node.owner == _owner ||
+        !_sharingFilter) {
       return await _controller.getValue(path, key);
     }
     throw StorageException('access denied');
@@ -127,7 +162,14 @@ class OwnerEnforcerWrapper extends StorageController {
       StorageListener listener, SearchCriteria criteria) async {
     // nothing to do
     criteria.owner = owner;
-    return await _controller.registerChangeListener(listener, criteria);
+    if (_sharingFilter) {
+      _listeners[listener] = StorageListenerFilter(owner, listener);
+      return await _controller.registerChangeListener(
+          _listeners[listener]!, criteria);
+    } else {
+      _listeners[listener] = listener;
+      return await _controller.registerChangeListener(listener, criteria);
+    }
   }
 
   @override
@@ -142,9 +184,18 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<List<Node>> search(SearchCriteria criteria) async {
-    // nothing to do
     criteria.owner = owner;
-    return await _controller.search(criteria);
+    List<Node> nl = await _controller.search(criteria);
+    // filter search results
+    List<Node> ret = <Node>[];
+    for (Node node in nl) {
+      if (node.visibility == Visibility.white ||
+          node.owner == _owner ||
+          !_sharingFilter) {
+        ret.add(node);
+      }
+    }
+    return ret;
   }
 
   @override
@@ -168,7 +219,9 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<void> zap() async {
-    // nothing to do
+    // external plugins may not zap the database
+    // FIXME(mgwerder): Plugins should not be able to zap the database
+    // throw StorageException('access denied');
     return await _controller.zap();
   }
 

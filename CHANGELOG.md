@@ -1,3 +1,7 @@
+## 0.7.1 Bugfix release
+Fixes:
+- The known security bug of StorageEvent leaks 
+
 ## 0.7.0 Security features added [BREAKING CHANGES] 
 This is a breaking change. Menus are new not just a string but a node containing all internationalizable strings. The MenuRegistrar new takes a whole MenuItem as parameter. 
 

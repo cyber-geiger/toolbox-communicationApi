@@ -1,6 +1,5 @@
 // ignore_for_file: avoid_print
 
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -111,9 +110,9 @@ Future<void> algarclamTests() async {
   });
 }
 
-void isolatePluginTest1(SendPort snd) async {
+Future<void> isolatePluginTest1(SendPort ext) async {
   print('## Initializing expander');
-  //await StorageMapper.initDatabaseExpander();
+  await StorageMapper.initDatabaseExpander();
   print('## Getting storage');
   StorageController? geigerToolboxStorageController =
       (await getGeigerApi('', "testplugin", Declaration.doNotShareData))!
@@ -124,14 +123,16 @@ void isolatePluginTest1(SendPort snd) async {
   print('## adding value');
   await geigerToolboxStorageController
       .addOrUpdate(NodeImpl(':Users:test', 'testowner'));
-  expect(await geigerToolboxStorageController.get(':Users:Test'), isNotNull,
-      reason: 'User node not found');
-  print('## deleting value');
-  await geigerToolboxStorageController.delete(':Users:test');
+  await geigerToolboxStorageController.get(':Users:test');
+  await geigerToolboxStorageController
+      .addOrUpdate(NodeImpl(':Users:test:test1', 'testowner'));
+  await geigerToolboxStorageController
+      .addOrUpdate(NodeImpl(':Users:test:test2', 'testowner'));
+  await geigerToolboxStorageController.get(':Users:test:test1');
   print('## dumping on plugin');
   print(await geigerToolboxStorageController.dump(':Users'));
   print('## done');
-  sleep(const Duration(seconds: 1));
+  Isolate.exit(ext, 'end');
 }
 
 Future<void> luongTests() async {
@@ -139,8 +140,12 @@ Future<void> luongTests() async {
     test('20220131 - Dump problem using sub-branches in external plugins',
         () async {
       await StorageMapper.initDatabaseExpander();
-      StorageController? geigerToolboxStorageController =
-          (await getGeigerApi("", GeigerApi.masterId))!.getStorage();
+      StorageController geigerToolboxStorageController =
+          (await getGeigerApi("", GeigerApi.masterId))!.getStorage()!;
+      toolbox_api.StorageListener l =
+          NodeListener(geigerToolboxStorageController);
+      await geigerToolboxStorageController.registerChangeListener(
+          l, toolbox_api.SearchCriteria(searchPath: 'Users:test'));
       ReceivePort recv = ReceivePort();
       ReceivePort err = ReceivePort();
       recv.listen((e) {
@@ -152,16 +157,80 @@ Future<void> luongTests() async {
         throw e;
       });
       ReceivePort ext = ReceivePort();
-      await Isolate.spawn(isolatePluginTest1, recv.sendPort,
-          onError: err.sendPort, onExit: ext.sendPort);
-      await ext.last;
+      Isolate i = await Isolate.spawn(isolatePluginTest1, ext.sendPort,
+          onError: err.sendPort, onExit: ext.sendPort, paused: true);
+      i.addOnExitListener(ext.sendPort, response: 'ended');
+      i.resume(i.pauseCapability!);
+      await ext.elementAt(0);
       print('## dumping on MASTER');
       print(await geigerToolboxStorageController!.dump(':Users'));
+      await geigerToolboxStorageController.deregisterChangeListener(l);
+      print('## deleting values');
+      await geigerToolboxStorageController.delete(':Users:test:test1');
+      await geigerToolboxStorageController.delete(':Users:test:test2');
+      await geigerToolboxStorageController.delete(':Users:test');
     });
+    // test('',() {
+    //   GeigerApi? masterPlugin;
+    //   GeigerApi? externalPlugin;
+    //   StorageController? geigerStorage;
+    //
+    //   await initMasterPlugin();
+    //   await initExternalPlugin();
+    //
+    //   initExternalPlugin() async {
+    //     log('Going to initialize External Plugin');
+    //     try {
+    //       externalPlugin =
+    //       await getGeigerApi('', 'external-plugin-id', Declaration.doShareData);
+    //       if (externalPlugin != null) {
+    //         log('External Plugin: ${externalPlugin.hashCode}');
+    //         try {
+    //           geigerStorage = externalPlugin!.getStorage();
+    //           if (geigerStorage != null) {
+    //             log('External -> geigerStorage: ${geigerStorage.hashCode}');
+    //             try {
+    //               Node local = await geigerStorage!.get(':Local');
+    //               if (local != null) {
+    //                 log('External -> geigerStorage -> local: ${local.hashCode}');
+    //                 var temp = await local.getValue('currentUser');
+    //                 String? userId = temp?.getValue('en');
+    //                 log('Current user Id: $userId');
+    //               }
+    //             } catch (e3) {
+    //               log('Failed to get current user');
+    //               log(e3.toString());
+    //             }
+    //           }
+    //         } catch (e2) {
+    //           log('Failed to get local storage');
+    //           log(e2.toString());
+    //         }
+    //       }
+    //     } catch (e) {
+    //       log('Failed to init external plugin');
+    //       log(e.toString());
+    //     }
+    //   }
+    //
+    //   initMasterPlugin() async {
+    //     log('Going to initialize Master Plugin');
+    //     try {
+    //       flushGeigerApiCache();
+    //       masterPlugin =
+    //       await getGeigerApi('', GeigerApi.masterId, Declaration.doShareData);
+    //       masterPlugin!.zapState();
+    //       log('Master Plugin: ${masterPlugin.hashCode}');
+    //     } catch (e) {
+    //       log('Failed to init master plugin');
+    //       log(e.toString());
+    //     }
+    //   }
+    // });
   });
 }
 
 Future<void> main() async {
   await algarclamTests();
-  //await luongTests();
+  await luongTests();
 }

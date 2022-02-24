@@ -13,8 +13,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  geiger_localstorage: ^0.6.36
-  #  path: ../geiger_localstorage
+  geiger_localstorage: ^0.6.38
+    #path: ../geiger_localstorage
   logging: ^1.0.2
   meta: ^1.7.0
   uuid: ^3.0.6

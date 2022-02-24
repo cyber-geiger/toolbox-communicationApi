@@ -27,5 +27,35 @@ class PluginStarter {
     }
   }
 
-  static Future<void> startPluginInBackground(PluginInformation pi) async {}
+  static Future<PluginInformation> startPluginInBackground(
+      PluginInformation pi, GeigerApi api) async {
+    var executables = pi.executable?.split(";");
+    var package = executables?.elementAt(0);
+    var componentName = executables?.elementAt(1);
+    var windowsExecutable = executables?.elementAt(2);
+
+    if (Platform.isAndroid) {
+      // send intent
+      AndroidIntent intent =
+          AndroidIntent(package: package, componentName: componentName);
+      intent.launch();
+    } else if (Platform.isWindows) {
+      if (windowsExecutable != null) {
+        Process.run(windowsExecutable, ["/background"]);
+      }
+    } else {
+      throw Exception("Platform not yet Supported");
+    }
+
+    // wait for activated message
+    // TODO(unassigned)
+
+    // retrieve new pluginInformation
+    List<PluginInformation> pin = (await api.getRegisteredPlugins(pi.id));
+    if (pin.isEmpty) {
+      return pi;
+    } else {
+      return pin[0];
+    }
+  }
 }

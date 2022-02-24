@@ -311,7 +311,7 @@ class CommunicationApi implements GeigerApi {
           startPlugin(pluginInfo);
         }
       }
-      await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
+      await _geigerCommunicator.sendMessage(pluginInfo, msg, this);
     }
   }
 
@@ -324,7 +324,6 @@ class CommunicationApi implements GeigerApi {
   }
 
   Future<void> receivedMessage(Message msg) async {
-    // TODO(mgwerder): other messagetypes
     _logger.info('## got message in plugin $id => $msg');
     switch (msg.type) {
       case MessageType.enableMenu:

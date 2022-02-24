@@ -17,7 +17,7 @@ Future<void> initialzePlugin() async {
   GeigerApi plugin = (await getGeigerApi(
       'com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe',
       'testPlugin',
-      Declaration.doShareData))!;
+      Declaration.doNotShareData))!;
   SimpleEventListener pluginListener = SimpleEventListener('plugin');
   await plugin.registerListener(allEvents, pluginListener);
 }

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/communication/plugin_starter.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class GeigerCommunicator {
@@ -11,7 +12,7 @@ class GeigerCommunicator {
 
   final CommunicationApi api;
 
-  late ServerSocket? _server;
+  ServerSocket? _server;
 
   get isActive {
     return _server != null;
@@ -24,12 +25,14 @@ class GeigerCommunicator {
   GeigerCommunicator(this.api);
 
   Future<void> start() async {
-    var server = await ServerSocket.bind(
-        InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
-    server.listen((socket) async {
-      api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
-    });
-    _server = server;
+    if (!isActive) {
+      var server = await ServerSocket.bind(
+          InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
+      server.listen((socket) async {
+        api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
+      });
+      _server = server;
+    }
   }
 
   Future<void> close() async {
@@ -37,11 +40,23 @@ class GeigerCommunicator {
     _server = null;
   }
 
-  Future<void> sendMessage(int port, Message message) async {
-    var socket = await Socket.connect(
-      InternetAddress.loopbackIPv4,
-      port, /*sourceAddress: InternetAddress('localhost:$port')*/
-    );
+  Future<void> sendMessage(PluginInformation pluginInformation, Message message,
+      GeigerApi api) async {
+    Socket socket;
+    try {
+      socket = await Socket.connect(
+        InternetAddress.loopbackIPv4,
+        pluginInformation
+            .port, /*sourceAddress: InternetAddress('localhost:$port')*/
+      );
+    } catch (e) {
+      PluginStarter.startPluginInBackground(pluginInformation, api);
+      socket = await Socket.connect(
+        InternetAddress.loopbackIPv4,
+        pluginInformation
+            .port, /*sourceAddress: InternetAddress('localhost:$port')*/
+      );
+    }
     ByteSink sink = ByteSink();
     message.toByteArrayStream(sink);
     sink.close();

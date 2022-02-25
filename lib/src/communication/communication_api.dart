@@ -44,8 +44,6 @@ class CommunicationApi implements GeigerApi {
     _executor = executor;
     _declaration = declaration;
     _geigerCommunicator = GeigerCommunicator(this);
-
-    restoreState();
   }
 
   static const bool persistent = false;
@@ -74,6 +72,7 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> initialize() async {
+    await restoreState();
     await _geigerCommunicator.start();
     await StorageMapper.initDatabaseExpander();
     if (!isMaster) {
@@ -118,11 +117,10 @@ class CommunicationApi implements GeigerApi {
       if (info == null) {
         throw NullThrownError();
       }
-      if (!plugins.containsKey(StorableString(pluginId))) {
-        plugins[StorableString(pluginId)] = info;
-        _logger.info(
-            'registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
-      }
+      plugins[StorableString(pluginId)] = info;
+      _logger.info(
+          'registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
+      await storeState();
       return;
     }
 

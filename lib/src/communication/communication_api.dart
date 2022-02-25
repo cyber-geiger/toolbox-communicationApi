@@ -12,8 +12,6 @@ import 'package:geiger_api/src/communication/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
-import 'plugin_starter.dart';
-
 enum Mapper {
   dummyMapper,
   sqliteMapper,
@@ -68,6 +66,9 @@ class _StartupWaiter implements PluginListener {
 
 /// Offers an API for all plugins to access the local toolbox.
 class CommunicationApi implements GeigerApi {
+  static const maxReachMasterRetries = 10;
+  static const masterStartWaitTime = Duration(seconds: 1);
+
   /// Creates a [CommunicationApi] with the given [executor] and plugin [id].
   ///
   /// Whether this api [isMaster] and its privacy [_declaration] must also be provided.
@@ -345,15 +346,18 @@ class CommunicationApi implements GeigerApi {
         // Temporary solution for android
         PluginStarter.startPlugin(pluginInfo, inBackground);
       }
-      await _geigerCommunicator.sendMessage(pluginInfo, msg, this);
-      try {
-        await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
-      } on SocketException catch (e) {
-        if (pluginId != GeigerApi.masterId ||
-            e.osError?.message != 'Connection refused') return;
-        PluginStarter.startPlugin(pluginInfo, inBackground);
-        await Future.delayed(const Duration(seconds: 15));
-        await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
+      for (var retryCount = 0;
+          retryCount < maxReachMasterRetries;
+          retryCount++) {
+        try {
+          await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
+          break;
+        } on SocketException catch (e) {
+          if (pluginId != GeigerApi.masterId ||
+              e.osError?.message != 'Connection refused') rethrow;
+          PluginStarter.startPlugin(pluginInfo, inBackground);
+          await Future.delayed(masterStartWaitTime);
+        }
       }
     }
   }

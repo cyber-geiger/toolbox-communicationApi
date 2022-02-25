@@ -149,6 +149,7 @@ Future<void> luongTests() async {
       GeigerApi api = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       StorageController geigerToolboxStorageController = api.getStorage()!;
+      await geigerToolboxStorageController.zap();
       CollectingListener l = CollectingListener();
       await geigerToolboxStorageController.registerChangeListener(
           l, SearchCriteria(searchPath: ':Users:test'));
@@ -168,7 +169,7 @@ Future<void> luongTests() async {
       i.addOnExitListener(ext.sendPort, response: 'ended');
       i.resume(i.pauseCapability!);
       await ext.elementAt(0);
-      l.awaitCount(3);
+      await l.awaitCount(3);
       expect(l.events.length, 3);
       print("## dumping master events");
       for (ChangeEvent evt in l.events) {
@@ -217,13 +218,8 @@ Future<String> isolatePluginTest2(SendPort ext) async {
   print('## getting value');
   await geigerToolboxStorageController.get(':Users:hugetest');
 
-  // remove data
-  print('## deleting value');
-  await geigerToolboxStorageController.delete(':Users:hugetest');
-
   print('## done');
-  // Isolate.exit(ext, 'end');
-  return 'ended';
+  Isolate.exit(ext, 'end');
 }
 
 Future<void> reuvenTests() async {
@@ -242,9 +238,16 @@ Future<void> reuvenTests() async {
       s = s.substring(0, size);
       int start = DateTime.now().millisecondsSinceEpoch;
       print('## adding value on master');
-      await geigerToolboxStorageController.addOrUpdate(await NodeImpl.fromPath(
-          ':Users:hugetest2', 'testowner',
-          nodeValues: [NodeValueImpl('key', s)]));
+      try {
+        await geigerToolboxStorageController.addOrUpdate(
+            await NodeImpl.fromPath(':Users:hugetest2', 'testowner',
+                nodeValues: [NodeValueImpl('key', s)]));
+      } catch (e) {
+        // Original exception is too big and
+        // makes IntelliJ mark the test as passed
+        print(e);
+        fail("Unexpected exception");
+      }
       Node n = await geigerToolboxStorageController.get(':Users:hugetest2');
       expect(
           (await n.getValue('key'))!.toSimpleString()!.length > 9 * 1024 * 1024,
@@ -299,7 +302,8 @@ Future<void> reuvenTests() async {
       err.listen((e) {
         print('Exception occurred');
         print("P: $e");
-        throw e;
+        // Don't throw because error is too large
+        fail('Unexpected exception');
       });
       ReceivePort ext = ReceivePort();
       Isolate i = await Isolate.spawn(isolatePluginTest2, ext.sendPort,
@@ -307,7 +311,12 @@ Future<void> reuvenTests() async {
       i.addOnExitListener(ext.sendPort, response: 'ended');
       i.resume(i.pauseCapability!);
       await ext.elementAt(0);
-      await api!.close();
+
+      // remove data
+      print('## deleting value');
+      api!.getStorage()!.delete(':Users:hugetest');
+
+      await api.close();
     }, timeout: const Timeout(Duration(seconds: 120)));
   });
 }
@@ -324,6 +333,7 @@ Future<void> cftnTests() async {
 }
 
 Future<void> main() async {
+  setUp(() => flushGeigerApiCache());
   await algarclamTests();
   await luongTests();
   await reuvenTests();

@@ -55,7 +55,7 @@ class _StartupWaiter implements PluginListener {
   Future wait([Duration timeout = const Duration(seconds: 15)]) {
     return _completer.future.timeout(timeout, onTimeout: () {
       deregister();
-      throw TimeoutException('Plugin "{pluginId}" did not start in time.');
+      throw TimeoutException('Plugin "$pluginId" did not start in time.');
     }).then((_) => deregister());
   }
 

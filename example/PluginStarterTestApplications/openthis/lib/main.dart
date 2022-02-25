@@ -9,7 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   List<MessageType> allEvents = [MessageType.allEvents];
   plugin = (await getGeigerApi(
-      'com.pleas.openthis;eu.cybergeiger.communication.GeigerService; windowspath.exe',
+      'com.pleas.openthis;com.pleas.openthis.MainActivity; windowspath.exe',
       'testPlugin',
       Declaration.doNotShareData))!;
   SimpleEventListener pluginListener = SimpleEventListener('plugin');

@@ -61,6 +61,7 @@ class GeigerPlugin : FlutterPlugin, MethodCallHandler {
                 connections[connectionId] = connection
             }
         } else {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.applicationContext.startActivity(intent);
         }
         result.success(null)

@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'geiger://plugin/path');
     Message message = Message(GeigerApi.masterId, 'testPlugin',
-        MessageType.allEvents, url, null, "abc");
+        MessageType.returningControl, url, null, "abc");
     await api.sendMessage(message, "testPlugin");
   }
 

@@ -39,6 +39,7 @@ class StorableString implements Serializer {
 
   @override
   void toByteArrayStream(ByteSink out) {
+    SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, _value);
   }
 
@@ -47,6 +48,8 @@ class StorableString implements Serializer {
   /// @return the deserialized Storable String
   /// @throws IOException if value cannot be read
   static Future<StorableString> fromByteArrayStream(ByteStream in_) async {
+    SerializerHelper.castTest('StorableString', serialVersionUID,
+        await SerializerHelper.readLong(in_), 1);
     return StorableString(await SerializerHelper.readString(in_));
   }
 }

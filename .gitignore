@@ -21,3 +21,4 @@ pubspec.lock
 /GeigerApi.myPluginIdentifier.state
 /coverage/
 *.state
+/test.tst

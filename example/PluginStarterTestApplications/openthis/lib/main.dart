@@ -11,7 +11,7 @@ void main() async {
   plugin = (await getGeigerApi(
       'com.pleas.openthis;eu.cybergeiger.communication.GeigerService; windowspath.exe',
       'testPlugin',
-      Declaration.doShareData))!;
+      Declaration.doNotShareData))!;
   SimpleEventListener pluginListener = SimpleEventListener('plugin');
   await plugin.registerListener(allEvents, pluginListener);
   runApp(const MyApp());

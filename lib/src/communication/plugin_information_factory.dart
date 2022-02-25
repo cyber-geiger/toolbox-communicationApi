@@ -21,7 +21,7 @@ class PluginInformationFactory {
 
     var info = store[id.toLowerCase()];
     if (info == null) {
-      info = PluginInformation(executor, port, secret);
+      info = PluginInformation(id, executor, port, secret);
       setPluginInformation(id, info);
     }
     return info;

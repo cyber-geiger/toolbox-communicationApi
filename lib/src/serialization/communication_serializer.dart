@@ -10,33 +10,26 @@ import '../../geiger_api.dart';
 /// @return return the object read
 /// @throws IOException if object cannot be read
 Future<Serializer> readObject(final ByteStream inStream) async {
-  if (SerializerHelper.byteArrayToInt(
-          await inStream.peekBytes(SerializerHelper.longSize)) ==
-      StorableString.serialVersionUID) {
-    return StorableString.fromByteArrayStream(inStream);
-  } else if (SerializerHelper.byteArrayToInt(
-          await inStream.peekBytes(SerializerHelper.longSize)) ==
-      StorableHashMap.serialVersionUID) {
-    return StorableHashMap.fromByteArrayStream(inStream, StorableHashMap());
-  } else if (SerializerHelper.byteArrayToInt(
-          await inStream.peekBytes(SerializerHelper.longSize)) ==
-      PluginInformation.serialVersionUID) {
-    return PluginInformation.fromByteArrayStream(inStream);
-  } else if (SerializerHelper.byteArrayToInt(
-          await inStream.peekBytes(SerializerHelper.longSize)) ==
-      ParameterList.serialVersionUID) {
-    return ParameterList.fromByteArrayStream(inStream);
-  } else if (SerializerHelper.byteArrayToInt(
-          await inStream.peekBytes(SerializerHelper.longSize)) ==
-      MenuItem.serialVersionUID) {
-    return MenuItem.fromByteArrayStream(inStream);
-  } else if (SerializerHelper.byteArrayToInt(
-          await inStream.peekBytes(SerializerHelper.longSize)) ==
-      GeigerUrl.serialVersionUID) {
-    return GeigerUrl.fromByteArrayStream(inStream);
-  } else {
-    throw StorageException(
-        'unable to parse ${SerializerHelper.byteArrayToInt(await inStream.peekBytes(SerializerHelper.longSize))}');
+  final uidBytes = await inStream.peekBytes(SerializerHelper.longSize * 2);
+  final uid = SerializerHelper.byteArrayToInt(
+      // trim of long uid bytes
+      uidBytes.sublist(SerializerHelper.longSize),
+      SerializerHelper.longSize);
+  switch (uid) {
+    case StorableString.serialVersionUID:
+      return StorableString.fromByteArrayStream(inStream);
+    case StorableHashMap.serialVersionUID:
+      return StorableHashMap.fromByteArrayStream(inStream, StorableHashMap());
+    case PluginInformation.serialVersionUID:
+      return PluginInformation.fromByteArrayStream(inStream);
+    case ParameterList.serialVersionUID:
+      return ParameterList.fromByteArrayStream(inStream);
+    case MenuItem.serialVersionUID:
+      return MenuItem.fromByteArrayStream(inStream);
+    case GeigerUrl.serialVersionUID:
+      return GeigerUrl.fromByteArrayStream(inStream);
+    default:
+      throw StorageException('unable to parse $uid');
   }
 }
 

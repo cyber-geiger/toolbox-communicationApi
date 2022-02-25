@@ -77,8 +77,6 @@ class CommunicationApi implements GeigerApi {
     _executor = executor;
     _declaration = declaration;
     _geigerCommunicator = GeigerCommunicator(this);
-
-    restoreState();
   }
 
   static const bool persistent = false;
@@ -107,6 +105,7 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> initialize() async {
+    await restoreState();
     await _geigerCommunicator.start();
     await StorageMapper.initDatabaseExpander();
     if (!isMaster) {
@@ -117,12 +116,6 @@ class CommunicationApi implements GeigerApi {
       } on IOException {
         rethrow;
       }
-      // TODO(mgwerder): should the passtroughcontroller be listener?
-      //storageEventHandler = PasstroughController(this, _id);
-      // this code is duplicate from registerListener method
-      // it is currently not possible to determine between register internally and register on Master
-      // therefore this duplicate is necessary
-      //registerListener([MessageType.STORAGE_EVENT], storageEventHandler, true);
     } else {
       // it is master
       final StorageEventHandler storageEventHandler =
@@ -166,7 +159,7 @@ class CommunicationApi implements GeigerApi {
 
     // request to register at Master
     final PluginInformation pluginInformation =
-        PluginInformation(_executor, _geigerCommunicator.port);
+        PluginInformation(pluginId ?? id, _executor, _geigerCommunicator.port);
 
     await CommunicationHelper.sendAndWait(
         this,
@@ -337,6 +330,7 @@ class CommunicationApi implements GeigerApi {
       // Message to external plugin
       PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
           PluginInformation(
+              pluginId!,
               PluginStarter.masterExecutor,
               pluginId == GeigerApi.masterId
                   ? GeigerCommunicator.masterPort
@@ -351,6 +345,7 @@ class CommunicationApi implements GeigerApi {
         // Temporary solution for android
         PluginStarter.startPlugin(pluginInfo, inBackground);
       }
+      await _geigerCommunicator.sendMessage(pluginInfo, msg, this);
       try {
         await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
       } on SocketException catch (e) {
@@ -372,7 +367,6 @@ class CommunicationApi implements GeigerApi {
   }
 
   Future<void> receivedMessage(Message msg) async {
-    // TODO(mgwerder): other messagetypes
     _logger.info('## got message in plugin $id => $msg');
     switch (msg.type) {
       case MessageType.enableMenu:
@@ -444,7 +438,7 @@ class CommunicationApi implements GeigerApi {
           // put new info
           int port = SerializerHelper.byteArrayToInt(msg.payload);
           plugins[StorableString(msg.sourceId)] =
-              PluginInformation(pluginInfo.getExecutable(), port);
+              PluginInformation(msg.sourceId, pluginInfo.getExecutable(), port);
           await sendMessage(Message(
               id,
               msg.sourceId,
@@ -469,7 +463,7 @@ class CommunicationApi implements GeigerApi {
           plugins.remove(StorableString(msg.sourceId));
           // put new info
           plugins[StorableString(msg.sourceId)] =
-              PluginInformation(pluginInfo.getExecutable(), 0);
+              PluginInformation(msg.sourceId, pluginInfo.getExecutable(), 0);
           break;
         }
       case MessageType.registerListener:
@@ -621,5 +615,16 @@ class CommunicationApi implements GeigerApi {
   void authorizePlugin(PluginInformation plugin) {
     // locally authorize the plugin
     plugins[StorableString(plugin.toString())] = plugin;
+  }
+
+  @override
+  Future<List<PluginInformation>> getRegisteredPlugins([String? id]) async {
+    List<PluginInformation> ret = [];
+    for (PluginInformation pi in plugins.values) {
+      if (id == null || pi.toString().startsWith(id)) {
+        ret.add(await pi.shallowClone());
+      }
+    }
+    return ret;
   }
 }

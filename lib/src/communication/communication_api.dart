@@ -260,7 +260,10 @@ class CommunicationApi implements GeigerApi {
       final ByteStream in_ = ByteStream(null, buff);
       // restoring plugin information
       await StorableHashMap.fromByteArrayStream(in_, plugins);
-
+      for (final entry in plugins.entries) {
+        plugins[entry.key] = PluginInformation(
+            entry.value.id, entry.value.executable, 0, entry.value.secret);
+      }
       // restoring menu information
       await StorableHashMap.fromByteArrayStream(in_, menuItems);
     } catch (e) {

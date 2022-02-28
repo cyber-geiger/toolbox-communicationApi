@@ -69,4 +69,12 @@ jobs:
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/cyber-geiger/toolbox-replication/actions/workflows/external_workflow.yaml/dispatches \
           -d '{"ref":"refs/heads/development"}'
+    - name: -> Trigger the external_workflows on toolbox-indicator
+      run: |
+          curl \
+          -X POST \
+          -u '${{secrets.GEIGER_USERNAME}}:${{secrets.APPLICATION_ACCESS_TOKEN}}' \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/cyber-geiger/toolbox-indicator/actions/workflows/external_workflow.yaml/dispatches \
+          -d '{"ref":"refs/heads/development"}'
 

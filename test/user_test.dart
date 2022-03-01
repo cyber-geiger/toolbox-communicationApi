@@ -47,6 +47,7 @@ Future<void> algarclamTests() async {
       GeigerApi localMaster = (await f)!;
       expect(f, completes);
       StorageController storageController = localMaster.getStorage()!;
+      await storageController.zap();
       SearchCriteria sc = SearchCriteria(searchPath: ':Local');
       CollectingListener stListener = CollectingListener();
       await storageController.registerChangeListener(stListener, sc);
@@ -75,6 +76,7 @@ Future<void> algarclamTests() async {
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       // ignore: unused_local_variable
       StorageController storageController = localMaster.getStorage()!;
+      await storageController.zap();
       SearchCriteria sc = SearchCriteria(searchPath: ':');
       Node demoExample11 = NodeImpl(':Local:DemoExampleTest', 'CloudAdapter');
       await storageController.addOrUpdate(demoExample11);
@@ -96,6 +98,7 @@ Future<void> algarclamTests() async {
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       // ignore: unused_local_variable
       StorageController storageController = localMaster.getStorage()!;
+      await storageController.zap();
       SearchCriteria sc = SearchCriteria(searchPath: ':');
       Node demoExample11 = NodeImpl(':Local:DemoExampleTest', 'CloudAdapter');
       await storageController.addOrUpdate(demoExample11);

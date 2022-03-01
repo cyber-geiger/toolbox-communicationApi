@@ -22,13 +22,6 @@ void main() async {
   runApp(const App());
 }
 
-class EventLogger implements PluginListener {
-  @override
-  void pluginEvent(GeigerUrl? url, Message msg) {
-    print('## Received message: $msg');
-  }
-}
-
 class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
 

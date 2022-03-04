@@ -54,39 +54,51 @@ class _MessageViewState extends State<MessageView> {
         context: context,
         builder: (_) {
           return Dialog(
-              child: Column(
-            children: [
-              Text("Message ${widget.message.type}"),
-              Table(
-                children: [
-                  TableRow(children: [
-                    const TableCell(child: Text("Source:")),
-                    TableCell(child: Text(widget.message.sourceId))
-                  ]),
-                  TableRow(children: [
-                    const TableCell(child: Text("Target:")),
-                    TableCell(child: Text(widget.message.targetId ?? "Unknown"))
-                  ]),
-                  TableRow(children: [
-                    const TableCell(child: Text("Request ID:")),
-                    TableCell(child: Text(widget.message.requestId))
-                  ]),
-                  TableRow(children: [
-                    const TableCell(child: Text("Action:")),
-                    TableCell(
-                        child:
-                            Text(widget.message.action?.toString() ?? "None"))
-                  ]),
-                  TableRow(children: [
-                    const TableCell(child: Text("Has payload:")),
-                    TableCell(
-                        child:
-                            Text(widget.message.payload.isEmpty ? 'No' : 'Yes'))
-                  ]),
-                ],
-              )
-            ],
-          ));
+              child: Container(
+                  padding: const EdgeInsets.only(
+                      left: 20, right: 20, bottom: 15, top: 15),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Message ${widget.message.type}",
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 10),
+                      Table(
+                        children: [
+                          TableRow(children: [
+                            const TableCell(child: Text("Source:")),
+                            TableCell(child: Text(widget.message.sourceId))
+                          ]),
+                          TableRow(children: [
+                            const TableCell(child: Text("Target:")),
+                            TableCell(
+                                child:
+                                    Text(widget.message.targetId ?? "Unknown"))
+                          ]),
+                          TableRow(children: [
+                            const TableCell(child: Text("Request ID:")),
+                            TableCell(child: Text(widget.message.requestId))
+                          ]),
+                          TableRow(children: [
+                            const TableCell(child: Text("Action:")),
+                            TableCell(
+                                child: Text(widget.message.action?.toString() ??
+                                    "None"))
+                          ]),
+                          TableRow(children: [
+                            const TableCell(child: Text("Has payload:")),
+                            TableCell(
+                                child: Text(widget.message.payload.isEmpty
+                                    ? 'No'
+                                    : 'Yes'))
+                          ]),
+                        ],
+                      )
+                    ],
+                  )));
         });
   }
 

@@ -324,21 +324,9 @@ Future<void> reuvenTests() async {
   });
 }
 
-Future<void> cftnTests() async {
-  group("cftn tests", () {
-    test("initial data not found", () async {
-      GeigerApi localMaster = (await getGeigerApi(
-          "", GeigerApi.masterId, Declaration.doNotShareData))!;
-      StorageController sc = localMaster.getStorage()!;
-      expect((await sc.get(":Global:threats")).path, ':Global:threats');
-    });
-  });
-}
-
 Future<void> main() async {
   setUp(() => flushGeigerApiCache());
   await algarclamTests();
   await luongTests();
   await reuvenTests();
-  await cftnTests();
 }

@@ -66,7 +66,7 @@ class _StartupWaiter implements PluginListener {
 
 /// Offers an API for all plugins to access the local toolbox.
 class CommunicationApi implements GeigerApi {
-  static const maxReachMasterRetries = 10;
+  static const maxSendRetries = 10;
   static const masterStartWaitTime = Duration(seconds: 1);
 
   /// Creates a [CommunicationApi] with the given [executor] and plugin [id].
@@ -349,17 +349,18 @@ class CommunicationApi implements GeigerApi {
         // Temporary solution for android
         PluginStarter.startPlugin(pluginInfo, inBackground);
       }
-      for (var retryCount = 0;
-          retryCount < maxReachMasterRetries;
-          retryCount++) {
+      for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
         try {
           await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
           break;
         } on SocketException catch (e) {
-          if (pluginId != GeigerApi.masterId ||
-              e.osError?.message != 'Connection refused') rethrow;
+          if (e.osError?.message != 'Connection refused') rethrow;
           PluginStarter.startPlugin(pluginInfo, inBackground);
-          await Future.delayed(masterStartWaitTime);
+          if (pluginId == GeigerApi.masterId) {
+            await Future.delayed(masterStartWaitTime);
+          } else {
+            await _StartupWaiter(this, pluginId!).wait();
+          }
         }
       }
     }

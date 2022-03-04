@@ -76,7 +76,7 @@ class _MessageViewState extends State<MessageView> {
                             const TableCell(child: Text("Target:")),
                             TableCell(
                                 child:
-                                Text(widget.message.targetId ?? "Unknown"))
+                                    Text(widget.message.targetId ?? "Unknown"))
                           ]),
                           TableRow(children: [
                             const TableCell(child: Text("Request ID:")),
@@ -109,12 +109,12 @@ class _MessageViewState extends State<MessageView> {
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Flexible(
               child: Text.rich(TextSpan(children: [
-                TextSpan(
-                    text: widget.message.sourceId,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                const WidgetSpan(child: Icon(Icons.arrow_right_alt)),
-                TextSpan(text: " " + widget.message.type.toString())
-              ])))
+            TextSpan(
+                text: widget.message.sourceId,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const WidgetSpan(child: Icon(Icons.arrow_right_alt)),
+            TextSpan(text: " " + widget.message.type.toString())
+          ])))
         ]));
   }
 }
@@ -152,8 +152,8 @@ class _MessageLogViewState extends State<MessageLogView> {
         const Text('Received messages:'),
         Expanded(
             child: ListView(
-              children: widget.logger.messageWidgets.toList(),
-            ))
+          children: widget.logger.messageWidgets.toList(),
+        ))
       ],
     );
   }

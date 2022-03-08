@@ -2,9 +2,13 @@
 
 import 'dart:isolate';
 
+import 'package:dependency_visitor/dependency_visitor.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
+import 'package:universal_io/io.dart';
 
 import 'change_listener.dart';
 
@@ -324,9 +328,36 @@ Future<void> reuvenTests() async {
   });
 }
 
+Future<void> cftnTests() async {
+  group("cftn tests", () {
+    test("initial data not found", () async {
+      GeigerApi localMaster = (await getGeigerApi(
+          "", GeigerApi.masterId, Declaration.doNotShareData))!;
+      StorageController sc = localMaster.getStorage()!;
+
+      String? ret;
+      await DependencyVisitor(filePaths: ['assets', 'store.data'])
+          .run()
+          .forEach((dependencyFile) {
+        print('## $dependencyFile');
+      });
+      print(
+          '## path=${Platform.environment['FLUTTER_ROOT']}/.pub-cache/hosted/pub.dartlang.org/<packagename>');
+      WidgetsFlutterBinding.ensureInitialized();
+      expect(
+          await rootBundle.loadString(
+              'packages/geiger_localstorage/assets/store/store.data'),
+          isNotNull);
+
+      expect((await sc.get(":Global:threats")).path, ':Global:threats');
+    });
+  });
+}
+
 Future<void> main() async {
   setUp(() => flushGeigerApiCache());
   await algarclamTests();
   await luongTests();
   await reuvenTests();
+  await cftnTests();
 }

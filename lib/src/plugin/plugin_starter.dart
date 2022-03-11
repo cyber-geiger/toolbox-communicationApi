@@ -6,8 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:geiger_api/geiger_api.dart';
 
 class PluginStarter {
-  static String? masterExecutor;
-
   static const MethodChannel _channel =
       MethodChannel('cyber-geiger.eu/communication');
 

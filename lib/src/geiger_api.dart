@@ -10,7 +10,9 @@ import 'plugin/plugin_registrar.dart';
 /// The API provided by all communicator interfaces.
 abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   static const String masterId = '__MASTERPLUGIN__';
-  static const String masterExecutor = 'FIXME';
+
+  // Is writable to allow examples to specify another master.
+  static String masterExecutor = 'FIXME';
   static final Logger logger = Logger("GeigerApi");
 
   abstract final String id;

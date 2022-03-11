@@ -15,6 +15,5 @@ export 'src/message/message.dart';
 export 'src/message/message_listener.dart';
 export 'src/message/message_type.dart';
 export 'src/plugin/plugin_listener.dart';
-export 'src/plugin/plugin_starter.dart';
 export 'src/utils/storable_hash_map.dart';
 export 'src/utils/storable_string.dart';

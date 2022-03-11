@@ -16,7 +16,7 @@ final MessageLogger logger = MessageLogger();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  PluginStarter.masterExecutor = masterExecutor;
+  GeigerApi.masterExecutor = masterExecutor;
   api = (await getGeigerApi(pluginExecutor, pluginId))!;
   await api.registerListener([MessageType.allEvents], logger);
   runApp(const App());

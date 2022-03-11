@@ -12,6 +12,8 @@ import 'package:geiger_api/src/storage/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
+import 'plugin/plugin_starter.dart';
+
 enum Mapper {
   dummyMapper,
   sqliteMapper,
@@ -335,7 +337,7 @@ class CommunicationApi implements GeigerApi {
       PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
           PluginInformation(
               pluginId!,
-              PluginStarter.masterExecutor,
+              GeigerApi.masterExecutor,
               pluginId == GeigerApi.masterId
                   ? GeigerCommunicator.masterPort
                   : 0);

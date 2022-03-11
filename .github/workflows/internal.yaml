@@ -9,7 +9,7 @@ on:
 
 jobs:
   base:
-    uses: ./.gihub/workflows/base.yaml
+    uses: ./.github/workflows/base.yaml
 
   trigger-extenal:
     name: Trigger external workflows

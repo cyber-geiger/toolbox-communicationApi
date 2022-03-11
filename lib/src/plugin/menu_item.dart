@@ -2,7 +2,7 @@ library geiger_api;
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'geiger_url.dart';
+import '../message/geiger_url.dart';
 
 /// Represents a menu item for a list of items.
 class MenuItem implements Serializer {

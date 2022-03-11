@@ -1,6 +1,5 @@
 library geiger_api;
 
-import 'package:geiger_api/src/communication/parameter_list.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import '../../geiger_api.dart';
@@ -22,8 +21,6 @@ Future<Serializer> readObject(final ByteStream inStream) async {
       return StorableHashMap.fromByteArrayStream(inStream, StorableHashMap());
     case PluginInformation.serialVersionUID:
       return PluginInformation.fromByteArrayStream(inStream);
-    case ParameterList.serialVersionUID:
-      return ParameterList.fromByteArrayStream(inStream);
     case MenuItem.serialVersionUID:
       return MenuItem.fromByteArrayStream(inStream);
     case GeigerUrl.serialVersionUID:

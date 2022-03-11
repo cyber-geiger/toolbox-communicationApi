@@ -3,8 +3,7 @@ library geiger_api;
 import 'dart:async';
 
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/communication/communication_secret.dart';
-import 'package:geiger_api/src/communication/parameter_list.dart';
+import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
@@ -14,21 +13,6 @@ class TestSerialization {}
 
 /// Unit testing of serializable objects.
 void main() {
-  /**
-   * <p>Tests the serialization of the ParameterList object.</p>
-   */
-  test('parameterListSerializationTest', () async {
-    ParameterList p = ParameterList(['test', '', 'Test', 'null']);
-    ByteSink bout = ByteSink();
-    p.toByteArrayStream(bout);
-    bout.close();
-    ByteStream tempStream =
-        ByteStream(Stream<List<int>>.value(await bout.bytes));
-    ParameterList? p2 = await ParameterList.fromByteArrayStream(tempStream);
-    expect(p.toString() == p2.toString(), true,
-        reason: 'Cloned Parameter lists are not equal');
-  });
-
   /**
    * <p>Tests the serialization of the GeigerUrl object.</p>
    */
@@ -115,7 +99,7 @@ void main() {
     GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'path');
     Map<GeigerUrl, Serializer> it = <GeigerUrl, Serializer>{
       url: url,
-      url: ParameterList(['string'])
+      url: const StorableString('string')
     };
     hm.addAll(it);
     ByteSink bout = ByteSink();

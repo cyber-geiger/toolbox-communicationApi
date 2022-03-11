@@ -5,7 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../geiger_api.dart';
-import 'storage_wrapper/owner_enforcer.dart';
+import 'owner_enforcer.dart';
 
 class _CallProcessor {
   final String name;

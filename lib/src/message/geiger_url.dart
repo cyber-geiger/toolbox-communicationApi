@@ -2,9 +2,9 @@ library geiger_api;
 
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'communication_exception.dart';
-import 'geiger_api.dart';
-import 'malformed_url_exception.dart';
+import '../exceptions/communication_exception.dart';
+import '../geiger_api.dart';
+import '../exceptions/malformed_url_exception.dart';
 
 /// GEIGER communication URL object.
 class GeigerUrl implements Serializer {

@@ -4,7 +4,7 @@ import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
-import 'communication_helper.dart';
+import '../communication/communication_helper.dart';
 
 /// Class for handling storage events in Plugins.
 class PassthroughController extends StorageController

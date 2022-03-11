@@ -3,9 +3,9 @@ library geiger_api;
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
-import '../../geiger_api.dart';
-import 'menu_registrar.dart';
-import 'plugin_registrar.dart';
+import '../geiger_api.dart';
+import 'plugin/menu_registrar.dart';
+import 'plugin/plugin_registrar.dart';
 
 /// The API provided by all communicator interfaces.
 abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {

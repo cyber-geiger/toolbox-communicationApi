@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/communication/storage_wrapper/owner_enforcer.dart';
+import 'package:geiger_api/src/storage/owner_enforcer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 

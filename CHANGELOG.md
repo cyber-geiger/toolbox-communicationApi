@@ -1,3 +1,13 @@
+## 0.7.4 Bugfixing Release (pre-release)
+
+Fixes:
+- 
+
+## 0.7.3 Bugfixing Release
+Fixes:
+- Various improvments to stabilize the connection between plugin and toolbox master
+- Various fixes regarding speed and size constraints
+
 ## 0.7.2 Extension Release
 Added:
 - Call to get the list of registered/Authorized plugins.

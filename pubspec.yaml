@@ -2,7 +2,7 @@ name: geiger_api
 description: >-
   A Communication API for the GEIGER ecosystem. It provides a unified interface for all plugins to
   communicate and transfer control between the components of the ecosystem.
-version: 0.7.2
+version: 0.7.4
 homepage: https://github.com/cyber-geiger/toolbox-storage
 repository: https://github.com/cyber-geiger/toolbox-communicationApi
 documentation: https://github.com/cyber-geiger/toolbox-communicationApi/wiki
@@ -13,14 +13,17 @@ flutter:
       android:
         package: eu.cybergeiger.communication
         pluginClass: GeigerPlugin
+  assets:
+    - packages/geiger_localstorage/assets/store/store.data
 
 environment:
   sdk: '>=2.15.0 <3.0.0'
+  flutter: '>=2.10.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  geiger_localstorage: ^0.6.38
+  geiger_localstorage: ^0.6.42
     #path: ../geiger_localstorage
   logging: ^1.0.2
   meta: ^1.7.0

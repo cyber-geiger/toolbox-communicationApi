@@ -3,4 +3,4 @@ on: workflow_dispatch
 
 jobs:
   base:
-    uses: ./gihub/workflows/base.yaml
+    uses: ./.gihub/workflows/base.yaml

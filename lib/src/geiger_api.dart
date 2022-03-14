@@ -15,66 +15,69 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   static String masterExecutor = 'FIXME';
   static final Logger logger = Logger("GeigerApi");
 
-  abstract final String id;
+  /// Identifier of plugin.
+  String get id;
 
+  /// Data sharing [Declaration].
+  Declaration get declaration;
+
+  /// [StorageController] to access the master storage.
+  StorageController get storage;
+
+  /// Initialize asynchronous parts of the plugin.
+  ///
+  /// Must be called once after contruction.
   Future<void> initialize();
 
-  /// Activates the plugin and sets up communication on the specified [port].
-  Future<void> activatePlugin();
-
-  /// Authorize the plugin
-  void authorizePlugin(PluginInformation plugin);
-
-  /// Deactivates the plugin and makes sure that a plugin is started immediately if contacted.
+  /// Retrieve the [StorageController] to access the master storage.
   ///
-  /// If a plugin is properly deactivated no timeout is reached before contacting a plugin.
-  Future<void> deactivatePlugin();
+  /// Throws [StorageException] in case allocation of the storage backend fails.
+  @Deprecated('Use [storage]')
+  StorageController getStorage() {
+    return storage;
+  }
 
-  /// Obtain controller to access the storage.
+  /// Get the [PluginInformation] of all registered plugins.
   ///
-  /// Throws StorageException in case allocation of storage backed fails
-  StorageController? getStorage();
+  /// Only the plugins which ids start with [startId] are
+  /// returned if [startId] is specified.
+  /// For security reasons all [PluginInformation.secret]s are empty.
+  /// TODO: should only be available on master?
+  Future<List<PluginInformation>> getRegisteredPlugins([String? startId]);
 
-  /// Register a [listener] for specific [events] on the Master.
+  /// Register the [listener] for specific [events] on the master.
   ///
-  /// Use [MessageType.allEvents] to register for all messages.
+  /// Use [MessageType.allEvents] to register to all event types.
   Future<void> registerListener(
       List<MessageType> events, PluginListener listener);
 
-  /// Remove a [listener] waiting for [events].
+  /// Remove the [listener] from specific [events] on the master.
   ///
-  /// Specify `null` for [events] to remove the listener from all events.
+  /// Set [events] to `null` to remove the [listener] from all events.
   void deregisterListener(List<MessageType>? events, PluginListener listener);
 
-  /// Sends a custom, plugin-specific [message] to a peer plugin with the id [pluginId].
+  /// Send a [message] to a another plugin with the id [pluginId].
   ///
-  /// Mainly used for internal purposes. Plugins may only send messages to the toolbox core.
+  /// If [pluginId] is not specified, [message.targetId] is used.
+  /// Non-master plugins can only send messages to the master.
   Future<void> sendMessage(Message message, [String? pluginId]);
 
-  /// Notify plugin about a menu entry with a specific [url] being pressed.
-  ///
-  /// Wrapper function used by UI to notify plugins about pressed buttons/menu entries.
+  /// Notify plugin about a [MenuItem] with a specific [url] being pressed.
   Future<void> menuPressed(GeigerUrl url);
 
-  /// Returns the list of currently registered menu.
+  /// Get a list of all registered [MenuItem]s.
   ///
-  /// This call is for the toolbox core only.
+  /// Can only be called on the master.
   List<MenuItem> getMenuList();
 
-  /// Notify all plugins about the event that a scan button has been pressed.
+  /// Notify all plugins that the scan button was pressed.
   ///
-  /// This call is for the toolbox core only.
+  /// Can only be called on the master.
   Future<void> scanButtonPressed();
 
-  /// get the declaration of data sharing provided when establishing the agreement.
-  Declaration get declaration;
-
+  /// Reset the GeigerApi by removing all registered plugins and [MenuItem]s.
   Future<void> zapState();
 
+  /// Release all resources.
   Future<void> close();
-
-  /// Gets a list of PluginInformation of all registered plugins starting with [id].
-  ///
-  /// For security reasons all PluginInformation have empty secrets.
-  Future<List<PluginInformation>> getRegisteredPlugins([String? id]);
 }

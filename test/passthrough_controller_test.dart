@@ -395,11 +395,11 @@ void main() async {
   final GeigerApi localMaster =
       (await getGeigerApi('', GeigerApi.masterId, Declaration.doNotShareData))!;
   await localMaster.zapState();
-  await localMaster.getStorage()!.zap();
+  await localMaster.storage.zap();
   const owner = 'testOwner';
   final GeigerApi? pluginApi =
       await getGeigerApi(';;./plugin1', owner, Declaration.doNotShareData);
-  final StorageController controller = pluginApi!.getStorage()!;
+  final StorageController controller = pluginApi!.storage;
 
   // all tests related to updates of nodes and values
   await updateTests(controller);
@@ -548,7 +548,7 @@ void main() async {
 
       final listener = CollectingListener();
       final criteria = SearchCriteria();
-      final masterController = localMaster.getStorage()!;
+      final masterController = localMaster.storage;
 
       await masterController.registerChangeListener(listener, criteria);
       await controller.add(node);

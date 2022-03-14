@@ -131,13 +131,13 @@ void main() {
     final GeigerApi localMaster = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
     await localMaster.zapState();
-    final StorageController? masterController = localMaster.getStorage();
+    final StorageController masterController = localMaster.storage;
     expect(true, masterController is GenericController);
 
     // check plugin
     final GeigerApi? pluginApi =
         await getGeigerApi('./plugin1', 'plugin1', Declaration.doNotShareData);
-    final StorageController? pluginController = pluginApi!.getStorage();
+    final StorageController pluginController = pluginApi!.storage;
     expect(pluginController is PassthroughController, isTrue,
         reason: 'Expected controller is not wrapped');
     await localMaster.close();

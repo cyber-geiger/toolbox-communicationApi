@@ -14,26 +14,6 @@ import 'package:logging/logging.dart';
 
 import 'plugin/plugin_starter.dart';
 
-enum Mapper {
-  dummyMapper,
-  sqliteMapper,
-}
-
-extension MapperExtension on Mapper {
-  StorageMapper getMapper() {
-    StorageMapper ret;
-    switch (this) {
-      case Mapper.dummyMapper:
-        ret = DummyMapper('anyUser');
-        break;
-      case Mapper.sqliteMapper:
-        ret = SqliteMapper('database');
-        break;
-    }
-    return ret;
-  }
-}
-
 class _StartupWaiter implements PluginListener {
   static const _events = [
     MessageType.registerListener,
@@ -67,78 +47,76 @@ class _StartupWaiter implements PluginListener {
 }
 
 /// Offers an API for all plugins to access the local toolbox.
-class CommunicationApi implements GeigerApi {
+class CommunicationApi extends GeigerApi {
+  /// Maximum number of times a message gets resend
+  /// when a newly started plugin won't respond.
   static const maxSendRetries = 10;
+
+  /// Duration non-master plugins will wait for the master to start.
+  ///
+  /// Maximum total duration is [masterStartWaitTime] * [maxSendRetries].
   static const masterStartWaitTime = Duration(seconds: 1);
+
+  /// Default [StorageMapper] generator used by the master.
+  static StorageMapper defaultStorageMapper() => SqliteMapper('database');
+
+  @override
+  final String id;
+  @override
+  final Declaration declaration;
+  final String executor;
+  final bool isMaster;
+
+  @override
+  late final StorageController storage;
+  String? statePath;
+  late final GeigerCommunicator _communicator;
+
+  /// [PluginInformation] of all registered plugins mapped by their id.
+  final StorableHashMap<StorableString, PluginInformation> plugins =
+      StorableHashMap();
+
+  /// All registered [MenuItem]s mapped by their path.
+  final StorableHashMap<StorableString, MenuItem> menuItems = StorableHashMap();
+
+  /// All registered [PluginListener]s mapped by their [MessageType] filter.
+  final Map<MessageType, List<PluginListener>> _listeners = {};
 
   /// Creates a [CommunicationApi] with the given [executor] and plugin [id].
   ///
-  /// Whether this api [isMaster] and its privacy [_declaration] must also be provided.
-  CommunicationApi(
-      String executor, this.id, this.isMaster, Declaration declaration,
-      {statePath}) {
-    _executor = executor;
-    _declaration = declaration;
-    _geigerCommunicator = GeigerCommunicator(this);
+  /// Whether this api [isMaster] and its privacy [declaration] must also be provided.
+  CommunicationApi(this.executor, this.id, this.isMaster, this.declaration,
+      {this.statePath,
+      StorageMapper Function() mapper = defaultStorageMapper}) {
+    _communicator = GeigerCommunicator(this);
+    if (isMaster) {
+      storage = GenericController(id, mapper());
+    } else {
+      final passthrough = storage = PassthroughController(this);
+      registerListener([MessageType.storageEvent], passthrough);
+    }
   }
 
-  static const bool persistent = false;
-
-  static final Logger _logger = Logger('GeigerAPI');
-
-  static const Mapper defaultMapper = Mapper.sqliteMapper;
-
-  final StorableHashMap<StorableString, PluginInformation> plugins =
-      StorableHashMap();
-  final StorableHashMap<StorableString, MenuItem> menuItems = StorableHashMap();
-
-  late String _executor;
   @override
-  final String id;
-  late final bool isMaster;
-  late Declaration _declaration;
-  Mapper? _mapper;
-  StorageController? _controller;
-  String? statePath;
-
-  final Map<MessageType, List<PluginListener>> _listeners =
-      <MessageType, List<PluginListener>>{};
-
-  late GeigerCommunicator _geigerCommunicator;
+  Future<List<PluginInformation>> getRegisteredPlugins(
+      [String? startId]) async {
+    final selectedPlugins = startId == null
+        ? plugins.values
+        : plugins.values.where((info) => info.id.startsWith(id));
+    return Future.wait(selectedPlugins.map((info) => info.shallowClone()));
+  }
 
   @override
   Future<void> initialize() async {
     await restoreState();
-    await _geigerCommunicator.start();
-    await StorageMapper.initDatabaseExpander();
+    await _communicator.start();
     if (!isMaster) {
-      try {
-        // setup listener
-        await registerPlugin();
-        await activatePlugin();
-      } on IOException {
-        rethrow;
-      }
+      await registerPlugin();
+      await activatePlugin();
     } else {
-      // it is master
-      final StorageEventHandler storageEventHandler =
-          StorageEventHandler(this, getStorage()!);
-      await registerListener([MessageType.storageEvent], storageEventHandler);
+      await registerListener(
+          [MessageType.storageEvent], StorageEventHandler(this, storage));
     }
-  }
-
-  set mapper(Mapper m) {
-    if (_mapper == null) {
-      _mapper = m;
-    } else {
-      throw StorageException('Mapper is already set');
-    }
-  }
-
-  /// Returns the [Declaration] given upon creation.
-  @override
-  Declaration get declaration {
-    return _declaration;
   }
 
   @override
@@ -154,16 +132,14 @@ class CommunicationApi implements GeigerApi {
         throw NullThrownError();
       }
       plugins[StorableString(pluginId)] = info;
-      _logger.info(
-          'registered Plugin $pluginId executable: ${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
+      GeigerApi.logger.info('registered Plugin $pluginId executable: '
+          '${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
       await storeState();
       return;
     }
 
-    // request to register at Master
-    final PluginInformation pluginInformation =
-        PluginInformation(pluginId ?? id, _executor, _geigerCommunicator.port);
-
+    final pluginInformation =
+        PluginInformation(pluginId ?? id, executor, _communicator.port);
     await CommunicationHelper.sendAndWait(
         this,
         Message(
@@ -175,113 +151,18 @@ class CommunicationApi implements GeigerApi {
   }
 
   @override
-  Future<void> deregisterPlugin([String? pluginId]) async {
-    if (pluginId != null) {
-      // remove on master all menu items
-      if (isMaster) {
-        final List<String> l = <String>[];
-        for (final MapEntry<StorableString, MenuItem> i in menuItems.entries) {
-          if (i.value.action.plugin == pluginId) {
-            l.add(i.key.toString());
-          }
-        }
-        for (final String key in l) {
-          menuItems.remove(StorableString(key));
-        }
-      }
-
-      // remove plugin secret
-      plugins.remove(StorableString(pluginId));
-
-      await storeState();
-      return;
-    }
-    await CommunicationHelper.sendAndWait(
-        this,
-        Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
-            GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
-    //await zapState();
-  }
-
-  /// Deletes all current registered items.
-  @override
-  Future<void> zapState() async {
-    menuItems.clear();
-    plugins.clear();
-    await storeState();
-  }
-
-  Future<void> storeState() async {
-    await StorageMapper.initDatabaseExpander();
-    statePath ??= StorageMapper.expandDbFileName('');
-    // store plugin state
-    try {
-      _logger.log(Level.INFO, 'storing state to $statePath');
-      final ByteSink out = ByteSink();
-      plugins.toByteArrayStream(out);
-      menuItems.toByteArrayStream(out);
-      out.close();
-      final IOSink file = File('$statePath/GeigerApi.$id.state').openWrite();
-      file.add(await out.bytes);
-      file.close();
-    } catch (ioe) {
-      _logger.log(
-          Level.SEVERE, 'unable to write state file to $statePath', ioe);
-    }
-  }
-
-  static bool isWriteable([String path = "."]) {
-    bool res;
-    final f = File('$path${Platform.pathSeparator}test.tst');
-    final didExist = f.existsSync();
-    try {
-      // try appending nothing
-      f.writeAsStringSync('', mode: FileMode.append, flush: true);
-      res = true;
-      if (didExist) {
-        f.deleteSync();
-      }
-    } on FileSystemException {
-      res = false;
-    }
-    return res;
-  }
-
-  Future<void> restoreState() async {
-    if (!isWriteable()) {
-      await StorageMapper.initDatabaseExpander();
-      statePath ??= StorageMapper.expandDbFileName('');
-    } else {
-      statePath = '.';
-    }
-    try {
-      _logger.log(Level.INFO, 'loading state from $statePath');
-      final File file = File('$statePath/GeigerApi.$id.state');
-      final List<int> buff =
-          await file.exists() ? await file.readAsBytes() : [];
-      final ByteStream in_ = ByteStream(null, buff);
-      // restoring plugin information
-      await StorableHashMap.fromByteArrayStream(in_, plugins);
-      for (final entry in plugins.entries) {
-        plugins[entry.key] = PluginInformation(
-            entry.value.id, entry.value.executable, 0, entry.value.secret);
-      }
-      // restoring menu information
-      await StorableHashMap.fromByteArrayStream(in_, menuItems);
-    } catch (e) {
-      _logger.log(Level.WARNING,
-          'unable to read state file from $statePath... rewriting', e);
-      await storeState();
-    }
-  }
-
-  @override
   Future<void> activatePlugin() async {
     await CommunicationHelper.sendAndWait(
       this,
       Message(id, GeigerApi.masterId, MessageType.activatePlugin, null,
-          SerializerHelper.intToByteArray(_geigerCommunicator.port)),
+          SerializerHelper.intToByteArray(_communicator.port)),
     );
+  }
+
+  @override
+  void authorizePlugin(PluginInformation plugin) {
+    // locally authorize the plugin
+    plugins[StorableString(plugin.toString())] = plugin;
   }
 
   @override
@@ -290,19 +171,85 @@ class CommunicationApi implements GeigerApi {
         Message(id, GeigerApi.masterId, MessageType.deactivatePlugin, null));
   }
 
-  /// Obtain [StorageController] to access the storage.
   @override
-  StorageController? getStorage() {
-    if (_controller == null) {
-      _mapper ??= defaultMapper;
-      if (isMaster) {
-        _controller = GenericController(id, _mapper!.getMapper());
-      } else {
-        final passthrough = _controller = PassthroughController(this);
-        registerListener([MessageType.storageEvent], passthrough);
-      }
+  Future<void> deregisterPlugin([String? pluginId]) async {
+    if (pluginId != null) {
+      menuItems.removeWhere((_, value) => value.action.plugin == pluginId);
+      plugins.remove(StorableString(pluginId));
+      await storeState();
+      return;
     }
-    return _controller;
+
+    await CommunicationHelper.sendAndWait(
+        this,
+        Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
+            GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
+  }
+
+  Future<void> storeState() async {
+    await StorageMapper.initDatabaseExpander();
+    statePath ??= StorageMapper.expandDbFileName('');
+    try {
+      GeigerApi.logger.log(Level.INFO, 'storing state to $statePath');
+
+      final ByteSink out = ByteSink();
+      plugins.toByteArrayStream(out);
+      menuItems.toByteArrayStream(out);
+      out.close();
+
+      final IOSink file = File('$statePath/GeigerApi.$id.state').openWrite();
+      file.add(await out.bytes);
+      file.close();
+    } catch (ioe) {
+      GeigerApi.logger
+          .log(Level.SEVERE, 'unable to write state file to $statePath', ioe);
+    }
+  }
+
+  static Future<bool> _isWorkingDirectoryWriteable() async {
+    try {
+      final file = File('./test.tst');
+      // try appending nothing
+      await file.writeAsString('', mode: FileMode.append, flush: true);
+      await file.delete();
+      return true;
+    } on FileSystemException {
+      return false;
+    }
+  }
+
+  Future<void> restoreState() async {
+    if (await _isWorkingDirectoryWriteable()) {
+      statePath = '.';
+    } else {
+      await StorageMapper.initDatabaseExpander();
+      statePath ??= StorageMapper.expandDbFileName('');
+    }
+
+    try {
+      GeigerApi.logger.log(Level.INFO, 'loading state from $statePath');
+
+      final file = File('$statePath/GeigerApi.$id.state');
+      List<int> buffer;
+      try {
+        buffer = await file.readAsBytes();
+      } on FileSystemException {
+        buffer = [];
+      }
+      final ByteStream stream = ByteStream(null, buffer);
+
+      await StorableHashMap.fromByteArrayStream(stream, plugins);
+      // set all ports to 0
+      for (final entry in plugins.entries) {
+        plugins[entry.key] = PluginInformation(
+            entry.value.id, entry.value.executable, 0, entry.value.secret);
+      }
+      await StorableHashMap.fromByteArrayStream(stream, menuItems);
+    } catch (e) {
+      GeigerApi.logger.log(Level.WARNING,
+          'unable to read state file from $statePath... rewriting', e);
+      await storeState();
+    }
   }
 
   @override
@@ -326,43 +273,41 @@ class CommunicationApi implements GeigerApi {
   }
 
   @override
-  Future<void> sendMessage(Message msg, [String? pluginId]) async {
-    pluginId ??= msg.targetId;
+  Future<void> sendMessage(Message message, [String? pluginId]) async {
+    pluginId ??= message.targetId;
     if (id == pluginId) {
-      // Message to this plugin
-      await receivedMessage(msg);
-    } else {
-      _logger.log(Level.INFO, '## Sending message to plugin $pluginId ($msg)');
-      // Message to external plugin
-      PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
-          PluginInformation(
-              pluginId!,
-              GeigerApi.masterExecutor,
-              pluginId == GeigerApi.masterId
-                  ? GeigerCommunicator.masterPort
-                  : 0);
-      final inBackground = msg.type != MessageType.returningControl;
-      if (pluginInfo.getPort() == 0) {
+      await receivedMessage(message);
+      return;
+    }
+
+    GeigerApi.logger
+        .log(Level.INFO, '## Sending message to plugin $pluginId ($message)');
+    PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
+        PluginInformation(pluginId!, GeigerApi.masterExecutor,
+            pluginId == GeigerApi.masterId ? GeigerCommunicator.masterPort : 0);
+    final inBackground = message.type != MessageType.returningControl;
+    if (pluginInfo.getPort() == 0) {
+      PluginStarter.startPlugin(pluginInfo, inBackground);
+      await _StartupWaiter(this, pluginId!).wait();
+      pluginInfo = plugins[StorableString(pluginId)]!;
+    } else if (!inBackground) {
+      // TODO: bring master to foreground
+      // Temporary solution for android
+      PluginStarter.startPlugin(pluginInfo, inBackground);
+    }
+
+    for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
+      try {
+        await _communicator.sendMessage(pluginInfo.port, message);
+        break;
+      } on SocketException catch (e) {
+        if (e.osError?.message != 'Connection refused') rethrow;
         PluginStarter.startPlugin(pluginInfo, inBackground);
-        await _StartupWaiter(this, pluginId!).wait();
-        pluginInfo = plugins[StorableString(pluginId)]!;
-      } else if (!inBackground) {
-        // TODO: bring master to foreground
-        // Temporary solution for android
-        PluginStarter.startPlugin(pluginInfo, inBackground);
-      }
-      for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
-        try {
-          await _geigerCommunicator.sendMessage(pluginInfo.port, msg);
-          break;
-        } on SocketException catch (e) {
-          if (e.osError?.message != 'Connection refused') rethrow;
-          PluginStarter.startPlugin(pluginInfo, inBackground);
-          if (pluginId == GeigerApi.masterId) {
-            await Future.delayed(masterStartWaitTime);
-          } else {
-            await _StartupWaiter(this, pluginId!).wait();
-          }
+        if (pluginId == GeigerApi.masterId) {
+          await Future.delayed(masterStartWaitTime);
+        } else {
+          await _StartupWaiter(this, pluginId!).wait();
+          pluginInfo = plugins[StorableString(pluginId)]!;
         }
       }
     }
@@ -377,10 +322,10 @@ class CommunicationApi implements GeigerApi {
   }
 
   Future<void> receivedMessage(Message msg) async {
-    _logger.info('## got message in plugin $id => $msg');
+    GeigerApi.logger.info('## got message in plugin $id => $msg');
     switch (msg.type) {
       case MessageType.enableMenu:
-        var item = menuItems[StorableString(msg.payloadString)];
+        final item = menuItems[StorableString(msg.payloadString)];
         if (item != null) {
           item.enabled = true;
         }
@@ -388,7 +333,7 @@ class CommunicationApi implements GeigerApi {
             GeigerUrl(null, msg.sourceId, 'enableMenu'), null, msg.requestId));
         break;
       case MessageType.disableMenu:
-        var item = menuItems[StorableString(msg.payloadString)];
+        final item = menuItems[StorableString(msg.payloadString)];
         if (item != null) {
           item.enabled = false;
         }
@@ -396,7 +341,7 @@ class CommunicationApi implements GeigerApi {
             GeigerUrl(null, msg.sourceId, 'disableMenu'), null, msg.requestId));
         break;
       case MessageType.registerMenu:
-        var item =
+        final item =
             await MenuItem.fromByteArrayStream(ByteStream(null, msg.payload));
         menuItems[StorableString(item.menu.path)] = item;
         await sendMessage(Message(
@@ -408,7 +353,7 @@ class CommunicationApi implements GeigerApi {
             msg.requestId));
         break;
       case MessageType.deregisterMenu:
-        var menuString = utf8.fuse(base64).decode(msg.payloadString.toString());
+        final menuString = utf8.fuse(base64).decode(msg.payloadString!);
         menuItems.remove(StorableString(menuString));
         await sendMessage(Message(
             id,
@@ -441,12 +386,9 @@ class CommunicationApi implements GeigerApi {
         break;
       case MessageType.activatePlugin:
         {
-          // get and remove old info
           final PluginInformation pluginInfo =
               plugins[StorableString(msg.sourceId)]!;
-          plugins.remove(StorableString(msg.sourceId));
-          // put new info
-          int port = SerializerHelper.byteArrayToInt(msg.payload);
+          final port = SerializerHelper.byteArrayToInt(msg.payload);
           plugins[StorableString(msg.sourceId)] =
               PluginInformation(msg.sourceId, pluginInfo.getExecutable(), port);
           await sendMessage(Message(
@@ -460,8 +402,6 @@ class CommunicationApi implements GeigerApi {
         }
       case MessageType.deactivatePlugin:
         {
-          // remove port from plugin info
-          // get and remove old info
           var pluginInfo = plugins[StorableString(msg.sourceId)]!;
           await sendMessage(Message(
               id,
@@ -470,8 +410,6 @@ class CommunicationApi implements GeigerApi {
               GeigerUrl(null, msg.sourceId, 'deactivatePlugin'),
               null,
               msg.requestId));
-          plugins.remove(StorableString(msg.sourceId));
-          // put new info
           plugins[StorableString(msg.sourceId)] =
               PluginInformation(msg.sourceId, pluginInfo.getExecutable(), 0);
           break;
@@ -479,11 +417,11 @@ class CommunicationApi implements GeigerApi {
       case MessageType.registerListener:
         {
           // TODO(mgwerder): after pluginListener serialization
-          ByteStream in_ = ByteStream(null, msg.payload);
-          int length = await SerializerHelper.readInt(in_);
+          final stream = ByteStream(null, msg.payload);
+          int length = await SerializerHelper.readInt(stream);
           List<MessageType> events = [
             for (var i = 0; i < length; ++i)
-              MessageType.getById(await SerializerHelper.readInt(in_))!
+              MessageType.getById(await SerializerHelper.readInt(stream))!
           ];
           // TODO(mgwerder): deserialize Pluginlistener... WTF... this is most likely incorrect
           PluginListener? listener;
@@ -516,27 +454,24 @@ class CommunicationApi implements GeigerApi {
         break;
       case MessageType.ping:
         {
-          // answer with PONG
           await sendMessage(Message(id, msg.sourceId, MessageType.pong,
               GeigerUrl(null, msg.sourceId, ''), msg.payload, msg.requestId));
           break;
         }
       default:
-        // all other messages are not handled internally
         break;
     }
-    for (var mt in [MessageType.allEvents, msg.type]) {
-      var l = _listeners[mt];
-      if (l != null) {
-        for (var pl in l) {
-          // ignore: avoid_print
-          print(
-              '## notifying PluginListener ${pl.toString()} for msg ${msg.type.toString()} ${msg.action.toString()}');
-          pl.pluginEvent(msg.action, msg);
+    for (final type in [MessageType.allEvents, msg.type]) {
+      final listeners = _listeners[type];
+      if (listeners == null) continue;
+      for (var pl in listeners) {
+        // ignore: avoid_print
+        GeigerApi.logger.info(
+            '## notifying PluginListener ${pl.toString()} for msg ${msg.type.toString()} ${msg.action.toString()}');
+        pl.pluginEvent(msg.action, msg);
 
-          // ignore: avoid_print
-          print('## PluginEvent fired');
-        }
+        // ignore: avoid_print
+        print('## PluginEvent fired');
       }
     }
   }
@@ -570,12 +505,8 @@ class CommunicationApi implements GeigerApi {
 
   @override
   Future<void> disableMenu(String menu) async {
-    Message msg = Message(
-      id,
-      GeigerApi.masterId,
-      MessageType.disableMenu,
-      GeigerUrl(null, GeigerApi.masterId, 'disableMenu'),
-    );
+    Message msg = Message(id, GeigerApi.masterId, MessageType.disableMenu,
+        GeigerUrl(null, GeigerApi.masterId, 'disableMenu'));
     msg.payloadString = menu;
     await CommunicationHelper.sendAndWait(this, msg);
   }
@@ -617,24 +548,14 @@ class CommunicationApi implements GeigerApi {
   }
 
   @override
+  Future<void> zapState() async {
+    menuItems.clear();
+    plugins.clear();
+    await storeState();
+  }
+
+  @override
   Future<void> close() async {
-    await _geigerCommunicator.close();
-  }
-
-  @override
-  void authorizePlugin(PluginInformation plugin) {
-    // locally authorize the plugin
-    plugins[StorableString(plugin.toString())] = plugin;
-  }
-
-  @override
-  Future<List<PluginInformation>> getRegisteredPlugins([String? id]) async {
-    List<PluginInformation> ret = [];
-    for (PluginInformation pi in plugins.values) {
-      if (id == null || pi.toString().startsWith(id)) {
-        ret.add(await pi.shallowClone());
-      }
-    }
-    return ret;
+    await _communicator.close();
   }
 }

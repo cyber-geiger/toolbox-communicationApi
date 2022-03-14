@@ -62,11 +62,11 @@ void main() async {
   final GeigerApi localMaster =
       (await getGeigerApi('', GeigerApi.masterId, Declaration.doNotShareData))!;
   await localMaster.zapState();
-  await localMaster.getStorage()!.zap();
+  await localMaster.storage.zap();
   const owner = 'testOwner';
-  final GeigerApi? pluginApi =
-      await getGeigerApi('./plugin1', owner, Declaration.doNotShareData);
-  final StorageController controller = pluginApi!.getStorage()!;
+  final GeigerApi pluginApi =
+      (await getGeigerApi('./plugin1', owner, Declaration.doNotShareData))!;
+  final StorageController controller = pluginApi.storage;
 
   await ownerEnforcerTests(controller);
 }

@@ -46,7 +46,7 @@ Future<void> algarclamTests() async {
           getGeigerApi("", GeigerApi.masterId, Declaration.doNotShareData);
       GeigerApi localMaster = (await f)!;
       expect(f, completes);
-      StorageController storageController = localMaster.getStorage()!;
+      StorageController storageController = localMaster.storage;
       await storageController.zap();
       SearchCriteria sc = SearchCriteria(searchPath: ':Local');
       CollectingListener stListener = CollectingListener();
@@ -75,7 +75,7 @@ Future<void> algarclamTests() async {
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       // ignore: unused_local_variable
-      StorageController storageController = localMaster.getStorage()!;
+      StorageController storageController = localMaster.storage;
       await storageController.zap();
       SearchCriteria sc = SearchCriteria(searchPath: ':');
       Node demoExample11 = NodeImpl(':Local:DemoExampleTest', 'CloudAdapter');
@@ -97,7 +97,7 @@ Future<void> algarclamTests() async {
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       // ignore: unused_local_variable
-      StorageController storageController = localMaster.getStorage()!;
+      StorageController storageController = localMaster.storage;
       await storageController.zap();
       SearchCriteria sc = SearchCriteria(searchPath: ':');
       Node demoExample11 = NodeImpl(':Local:DemoExampleTest', 'CloudAdapter');
@@ -128,7 +128,7 @@ Future<void> isolatePluginTest1(SendPort ext) async {
   GeigerApi api =
       (await getGeigerApi('', "testplugin", Declaration.doNotShareData))!;
   await api.zapState();
-  StorageController geigerToolboxStorageController = api.getStorage()!;
+  StorageController geigerToolboxStorageController = api.storage;
   print('## adding value');
   await geigerToolboxStorageController
       .addOrUpdate(NodeImpl(':Users:test', 'testowner'));
@@ -151,7 +151,7 @@ Future<void> luongTests() async {
       await StorageMapper.initDatabaseExpander();
       GeigerApi api = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
-      StorageController geigerToolboxStorageController = api.getStorage()!;
+      StorageController geigerToolboxStorageController = api.storage;
       await geigerToolboxStorageController.zap();
       CollectingListener l = CollectingListener();
       await geigerToolboxStorageController.registerChangeListener(
@@ -195,12 +195,9 @@ Future<String> isolatePluginTest2(SendPort ext) async {
   print('## Initializing expander');
   await StorageMapper.initDatabaseExpander();
   print('## Getting storage');
-  StorageController? geigerToolboxStorageController =
+  StorageController geigerToolboxStorageController =
       (await getGeigerApi('', "testplugin", Declaration.doNotShareData))!
-          .getStorage();
-  if (geigerToolboxStorageController == null) {
-    throw StorageException('got null storage');
-  }
+          .storage;
 
   // create huge String by exponenting and truncating
   print('## creating huge value');
@@ -232,7 +229,7 @@ Future<void> reuvenTests() async {
       await StorageMapper.initDatabaseExpander();
       GeigerApi api = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
-      StorageController geigerToolboxStorageController = api.getStorage()!;
+      StorageController geigerToolboxStorageController = api.storage;
       print('## creating huge value on master');
       String s = "abcdefghijklmnopqrstuvwxyz";
       for (; s.length < size;) {
@@ -317,7 +314,7 @@ Future<void> reuvenTests() async {
 
       // remove data
       print('## deleting value');
-      api!.getStorage()!.delete(':Users:hugetest');
+      api!.storage.delete(':Users:hugetest');
 
       await api.close();
     }, timeout: const Timeout(Duration(seconds: 120)));
@@ -329,7 +326,7 @@ Future<void> cftnTests() async {
     test("initial data not found", () async {
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
-      StorageController sc = localMaster.getStorage()!;
+      StorageController sc = localMaster.storage;
       expect((await sc.get(":Global:threats")).path, ':Global:threats');
     });
   });

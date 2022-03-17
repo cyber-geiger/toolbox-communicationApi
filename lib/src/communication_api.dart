@@ -11,6 +11,7 @@ import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_api/src/storage/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
+import 'package:uuid/uuid.dart';
 
 import 'plugin/plugin_starter.dart';
 
@@ -46,6 +47,17 @@ class _StartupWaiter implements PluginListener {
   }
 }
 
+class _LambdaPluginListener extends PluginListener {
+  final Function(GeigerUrl? url, Message message) _callback;
+
+  _LambdaPluginListener(this._callback);
+
+  @override
+  void pluginEvent(GeigerUrl? url, Message message) {
+    _callback(url, message);
+  }
+}
+
 /// Offers an API for all plugins to access the local toolbox.
 class CommunicationApi extends GeigerApi {
   /// Maximum number of times a message gets resend
@@ -67,6 +79,7 @@ class CommunicationApi extends GeigerApi {
   final String executor;
   final bool isMaster;
 
+  late StorageMapper Function() _storageMapper;
   @override
   late final StorageController storage;
   String? statePath;
@@ -82,6 +95,9 @@ class CommunicationApi extends GeigerApi {
   /// All registered [PluginListener]s mapped by their [MessageType] filter.
   final Map<MessageType, List<PluginListener>> _listeners = {};
 
+  final Map<String, PluginListener> _idToListener = {};
+  final Map<PluginListener, String> _listenerToId = {};
+
   /// Creates a [CommunicationApi] with the given [executor] and plugin [id].
   ///
   /// Whether this api [isMaster] and its privacy [declaration] must also be provided.
@@ -89,12 +105,7 @@ class CommunicationApi extends GeigerApi {
       {this.statePath,
       StorageMapper Function() mapper = defaultStorageMapper}) {
     _communicator = GeigerCommunicator(this);
-    if (isMaster) {
-      storage = GenericController(id, mapper());
-    } else {
-      final passthrough = storage = PassthroughController(this);
-      registerListener([MessageType.storageEvent], passthrough);
-    }
+    _storageMapper = mapper;
   }
 
   @override
@@ -111,9 +122,12 @@ class CommunicationApi extends GeigerApi {
     await restoreState();
     await _communicator.start();
     if (!isMaster) {
+      final controller = storage = PassthroughController(this);
+      registerListener([MessageType.storageEvent], controller);
       await registerPlugin();
       await activatePlugin();
     } else {
+      storage = GenericController(id, _storageMapper());
       await registerListener(
           [MessageType.storageEvent], StorageEventHandler(this, storage));
     }
@@ -199,7 +213,7 @@ class CommunicationApi extends GeigerApi {
 
       final IOSink file = File('$statePath/GeigerApi.$id.state').openWrite();
       file.add(await out.bytes);
-      file.close();
+      await file.close();
     } catch (ioe) {
       GeigerApi.logger
           .log(Level.SEVERE, 'unable to write state file to $statePath', ioe);
@@ -230,13 +244,7 @@ class CommunicationApi extends GeigerApi {
       GeigerApi.logger.log(Level.INFO, 'loading state from $statePath');
 
       final file = File('$statePath/GeigerApi.$id.state');
-      List<int> buffer;
-      try {
-        buffer = await file.readAsBytes();
-      } on FileSystemException {
-        buffer = [];
-      }
-      final ByteStream stream = ByteStream(null, buffer);
+      final ByteStream stream = ByteStream(null, await file.readAsBytes());
 
       await StorableHashMap.fromByteArrayStream(stream, plugins);
       // set all ports to 0
@@ -266,10 +274,70 @@ class CommunicationApi extends GeigerApi {
   }
 
   @override
-  void deregisterListener(List<MessageType>? events, PluginListener listener) {
+  Future<void> deregisterListener(
+      List<MessageType>? events, PluginListener listener) async {
     for (var event in (events ?? MessageType.getAllValues())) {
       _listeners[event]?.remove(listener);
     }
+  }
+
+  @override
+  Future<void> registerMasterListener(
+      List<MessageType> events, PluginListener listener) async {
+    if (events.isEmpty) return;
+    if (isMaster) {
+      registerListener(events, listener);
+      return;
+    }
+
+    final listenerId = _listenerToId[listener];
+    final sink = ByteSink();
+    SerializerHelper.writeString(sink, listenerId);
+    SerializerHelper.writeInt(sink, events.length);
+    for (final event in events) {
+      SerializerHelper.writeInt(sink, event.id);
+    }
+    sink.close();
+
+    final result = await CommunicationHelper.sendAndWait(
+        this,
+        Message(id, GeigerApi.masterId, MessageType.registerListener, null,
+            await sink.bytes));
+    final stream = ByteStream(null, result.payload);
+    final newListenerId = (await SerializerHelper.readString(stream))!;
+    _listenerToId[listener] = newListenerId;
+    _idToListener[newListenerId] = listener;
+  }
+
+  @override
+  Future<void> deregisterMasterListener(
+      List<MessageType>? events, PluginListener listener) async {
+    if (isMaster) {
+      deregisterListener(events, listener);
+      return;
+    }
+
+    final listenerId = _listenerToId[listener];
+    if (listenerId == null) return;
+
+    final sink = ByteSink();
+    SerializerHelper.writeString(sink, listenerId);
+    SerializerHelper.writeInt(sink, events?.length ?? -1);
+    if (events != null) {
+      for (final event in events) {
+        SerializerHelper.writeInt(sink, event.id);
+      }
+    }
+    sink.close();
+
+    final result = await CommunicationHelper.sendAndWait(
+        this,
+        Message(id, GeigerApi.masterId, MessageType.deregisterListener, null,
+            await sink.bytes));
+    final isStillUsed = result.payload[0] == 1;
+    if (isStillUsed) return;
+    _listenerToId.remove(listener);
+    _idToListener.remove(listenerId);
   }
 
   @override
@@ -416,34 +484,84 @@ class CommunicationApi extends GeigerApi {
         }
       case MessageType.registerListener:
         {
-          // TODO(mgwerder): after pluginListener serialization
           final stream = ByteStream(null, msg.payload);
-          int length = await SerializerHelper.readInt(stream);
-          List<MessageType> events = [
+          var listenerId = await SerializerHelper.readString(stream);
+          final length = await SerializerHelper.readInt(stream);
+          final events = [
             for (var i = 0; i < length; ++i)
               MessageType.getById(await SerializerHelper.readInt(stream))!
           ];
-          // TODO(mgwerder): deserialize Pluginlistener... WTF... this is most likely incorrect
-          PluginListener? listener;
-          for (var event in events) {
-            // synchronized(listeners) {
-            var listeners = _listeners[event];
-            // short form with computeIfAbsent is not available in TotalCross
-            if (listeners == null) {
-              listeners = [];
-              _listeners[event] = listeners;
+
+          var listener = _idToListener[listenerId];
+          if (listener == null) {
+            const uuid = Uuid();
+            listenerId = uuid.v4();
+            while (_idToListener.containsKey(listenerId)) {
+              listenerId = uuid.v4();
             }
-            if (event.id < 10000 && listener != null) {
-              listeners.add(listener);
-            }
-            // }
+            _idToListener[listenerId as String] = listener =
+                _LambdaPluginListener((_, message) => _sendListenerEvent(
+                    msg.sourceId, listenerId as String, message));
           }
+
+          for (var event in events) {
+            // TODO: Filtered events can still be received when using MessageType.allEvents
+            if (event.id >= 10000) continue;
+            var listeners = _listeners[event];
+            if (listeners == null) {
+              _listeners[event] = listeners = [];
+            }
+            listeners.add(listener);
+          }
+
+          final sink = ByteSink();
+          SerializerHelper.writeString(sink, listenerId);
+          sink.close();
+          await sendMessage(Message(
+              id,
+              msg.sourceId,
+              MessageType.comapiSuccess,
+              GeigerUrl(null, msg.sourceId, 'registerListener'),
+              await sink.bytes,
+              msg.requestId));
           break;
         }
       case MessageType.deregisterListener:
         {
-          // TODO after PluginListener serialization
-          // remove listener from list if it is in list
+          final stream = ByteStream(null, msg.payload);
+          final listenerId = await SerializerHelper.readString(stream);
+          final length = await SerializerHelper.readInt(stream);
+          final events = length == -1
+              ? null
+              : [
+                  for (var i = 0; i < length; ++i)
+                    MessageType.getById(await SerializerHelper.readInt(stream))!
+                ];
+
+          final listener = _idToListener[listenerId];
+          var isStillUsed = false;
+          if (listener != null) {
+            deregisterListener(events, listener);
+            isStillUsed = _listeners.values
+                .any((listeners) => listeners.contains(listener));
+            if (!isStillUsed) _idToListener.remove(listenerId);
+          }
+
+          await sendMessage(Message(
+              id,
+              msg.sourceId,
+              MessageType.comapiSuccess,
+              GeigerUrl(null, msg.sourceId, 'deregisterListener'),
+              [isStillUsed ? 1 : 0],
+              msg.requestId));
+          break;
+        }
+      case MessageType.listenerEvent:
+        {
+          final stream = ByteStream(null, msg.payload);
+          final listenerId = await SerializerHelper.readString(stream);
+          final message = await Message.fromByteArray(stream);
+          _idToListener[listenerId]?.pluginEvent(message.action, message);
           break;
         }
       case MessageType.scanPressed:
@@ -474,6 +592,17 @@ class CommunicationApi extends GeigerApi {
         print('## PluginEvent fired');
       }
     }
+  }
+
+  Future<void> _sendListenerEvent(
+      String pluginId, String listenerid, Message message) async {
+    final sink = ByteSink();
+    SerializerHelper.writeString(sink, listenerid);
+    message.toByteArrayStream(sink);
+    sink.close();
+
+    await sendMessage(Message(
+        id, pluginId, MessageType.listenerEvent, null, await sink.bytes));
   }
 
   @override

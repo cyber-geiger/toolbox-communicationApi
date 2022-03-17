@@ -76,7 +76,7 @@ class Message with Serializer {
             ? await SerializerHelper.readString(in_)
             : null,
         MessageType.getById(await SerializerHelper.readInt(in_)) ??
-            MessageType.storageError,
+            MessageType.comapiError,
         (await SerializerHelper.readInt(in_) == 1)
             ? await GeigerUrl.fromByteArrayStream(in_)
             : null,

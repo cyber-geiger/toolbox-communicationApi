@@ -13,8 +13,10 @@ class MessageType {
     deregisterMenu,
     scanPressed,
     scanCompleted,
-    registerMenu,
     returningControl,
+    registerListener,
+    deregisterListener,
+    listenerEvent,
     customEvent,
     allEvents,
     ping,
@@ -61,6 +63,7 @@ class MessageType {
   /* Messages related to listeners*/
   static const registerListener = MessageType._('REGISTER_LISTENER', 500);
   static const deregisterListener = MessageType._('DEREGISTER_LISTENER', 530);
+  static const listenerEvent = MessageType._('LISTENER_EVENT', 560);
 
   static const customEvent = MessageType._('CUSTOM_EVENT', 999);
 

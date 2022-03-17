@@ -29,13 +29,13 @@ class _SerializerCallProcessor extends _CallProcessor {
 }
 
 class _LambdaStorageListener extends StorageListener {
-  final Function(EventType event, Node? oldNode, Node? newNode) callback;
+  final Function(EventType event, Node? oldNode, Node? newNode) _callback;
 
-  _LambdaStorageListener(this.callback);
+  _LambdaStorageListener(this._callback);
 
   @override
   void gotStorageChange(EventType event, Node? oldNode, Node? newNode) {
-    callback(event, oldNode, newNode);
+    _callback(event, oldNode, newNode);
   }
 }
 

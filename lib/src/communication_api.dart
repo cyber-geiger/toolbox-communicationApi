@@ -79,7 +79,6 @@ class CommunicationApi extends GeigerApi {
   final String executor;
   final bool isMaster;
 
-  late StorageMapper Function() _storageMapper;
   @override
   late final StorageController storage;
   String? statePath;
@@ -105,7 +104,14 @@ class CommunicationApi extends GeigerApi {
       {this.statePath,
       StorageMapper Function() mapper = defaultStorageMapper}) {
     _communicator = GeigerCommunicator(this);
-    _storageMapper = mapper;
+    if (isMaster) {
+      storage = GenericController(id, mapper());
+      registerListener(
+          [MessageType.storageEvent], StorageEventHandler(this, storage));
+    } else {
+      final controller = storage = PassthroughController(this);
+      registerListener([MessageType.storageEvent], controller);
+    }
   }
 
   @override
@@ -121,16 +127,9 @@ class CommunicationApi extends GeigerApi {
   Future<void> initialize() async {
     await restoreState();
     await _communicator.start();
-    if (!isMaster) {
-      final controller = storage = PassthroughController(this);
-      registerListener([MessageType.storageEvent], controller);
-      await registerPlugin();
-      await activatePlugin();
-    } else {
-      storage = GenericController(id, _storageMapper());
-      await registerListener(
-          [MessageType.storageEvent], StorageEventHandler(this, storage));
-    }
+    if (isMaster) return;
+    await registerPlugin();
+    await activatePlugin();
   }
 
   @override
@@ -261,7 +260,7 @@ class CommunicationApi extends GeigerApi {
   }
 
   @override
-  Future<void> registerListener(
+  void registerListener(
       List<MessageType> events, PluginListener listener) async {
     events.map((event) {
       var listeners = _listeners[event];
@@ -274,7 +273,7 @@ class CommunicationApi extends GeigerApi {
   }
 
   @override
-  Future<void> deregisterListener(
+  void deregisterListener(
       List<MessageType>? events, PluginListener listener) async {
     for (var event in (events ?? MessageType.getAllValues())) {
       _listeners[event]?.remove(listener);

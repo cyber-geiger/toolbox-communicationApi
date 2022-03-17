@@ -19,7 +19,7 @@ void callClientPlugin(MessageType type) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   api = (await getGeigerApi(pluginExecutor, GeigerApi.masterId))!;
-  await api.registerListener([MessageType.allEvents], logger);
+  api.registerListener([MessageType.allEvents], logger);
   runApp(const App());
 }
 

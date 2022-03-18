@@ -2,6 +2,8 @@ import 'package:geiger_api/src/message/geiger_url.dart';
 import 'package:geiger_api/src/exceptions/malformed_url_exception.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 const List<String> protocols = <String>[
   'geiger',
   'some-protocol',
@@ -28,6 +30,8 @@ const List<String?> paths = <String?>[
 ];
 
 void main() {
+  printLogger();
+
   test('specification sonstructor', () {
     try {
       for (final String protocol in protocols) {

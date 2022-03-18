@@ -5,7 +5,11 @@ import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 void main() {
+  printLogger();
+
   test('testConstructorGetterSetter', () {
     // default constructor
     for (int i = 0; i < 20; ++i) {

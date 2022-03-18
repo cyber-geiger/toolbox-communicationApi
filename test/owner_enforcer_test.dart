@@ -5,6 +5,8 @@ import 'package:geiger_api/src/storage/owner_enforcer.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 Future<void> ownerEnforcerTests(final StorageController controller) async {
   test('Owner get Node', () async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
@@ -58,6 +60,7 @@ Future<void> ownerEnforcerTests(final StorageController controller) async {
 }
 
 void main() async {
+  printLogger();
   flushGeigerApiCache();
   final GeigerApi localMaster =
       (await getGeigerApi('', GeigerApi.masterId, Declaration.doNotShareData))!;

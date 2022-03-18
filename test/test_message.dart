@@ -7,9 +7,12 @@ import 'package:geiger_api/geiger_api.dart';
 import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
 
+import 'print_logger.dart';
+
 class TestMessage {}
 
 void main() {
+  printLogger();
   test('testConstructionGetterSetter', () {
     String sourceId = 'sourceId';
     String targetId = 'targetId';

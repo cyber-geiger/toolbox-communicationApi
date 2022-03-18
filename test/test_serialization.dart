@@ -9,10 +9,13 @@ import 'package:test/expect.dart';
 import 'package:test/scaffolding.dart';
 import 'package:uuid/uuid.dart';
 
+import 'print_logger.dart';
+
 class TestSerialization {}
 
 /// Unit testing of serializable objects.
 void main() {
+  printLogger();
   /**
    * <p>Tests the serialization of the GeigerUrl object.</p>
    */

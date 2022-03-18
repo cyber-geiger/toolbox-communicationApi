@@ -7,6 +7,7 @@ import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'change_listener.dart';
+import 'print_logger.dart';
 
 class NodeListener implements StorageListener {
   final List<EventChange> events = [];
@@ -333,6 +334,7 @@ Future<void> cftnTests() async {
 }
 
 Future<void> main() async {
+  printLogger();
   setUp(() => flushGeigerApiCache());
   await algarclamTests();
   await luongTests();

@@ -5,6 +5,8 @@ import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 Future<void> updateTests(final StorageController controller) async {
   group('controller update tests', () {
     test('Owner Update On Node', () async {
@@ -391,6 +393,7 @@ class CollectingListener with StorageListener {
 }
 
 void main() async {
+  printLogger();
   flushGeigerApiCache();
   final GeigerApi localMaster =
       (await getGeigerApi('', GeigerApi.masterId, Declaration.doNotShareData))!;

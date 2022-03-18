@@ -7,7 +7,11 @@ import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 void main() {
+  printLogger();
+
   test('testRegisterPlugin', () async {
     flushGeigerApiCache();
     final GeigerApi localMaster = (await getGeigerApi(

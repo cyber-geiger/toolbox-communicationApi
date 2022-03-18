@@ -2,7 +2,10 @@ import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_api/src/plugin/plugin_information.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 void main() {
+  printLogger();
   var ports = [1025, 1700, 8000, 12500, 44555, 65535];
   var executables = [
     'thisApplication.jar',

@@ -1,13 +1,11 @@
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
-import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 void main() {
-  Logger.root.onRecord.listen((record) {
-    // ignore: avoid_print
-    print('${record.time} ${record.level.name}: ${record.message}');
-  });
+  printLogger();
 
   test('Register External Plugin', () async {
     flushGeigerApiCache();

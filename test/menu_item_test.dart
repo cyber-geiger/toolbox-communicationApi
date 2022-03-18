@@ -2,7 +2,11 @@ import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/test.dart';
 
+import 'print_logger.dart';
+
 void main() async {
+  printLogger();
+
   String menuName = 'testMenu';
   GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'testMenu');
   final MenuItem menu = MenuItem(

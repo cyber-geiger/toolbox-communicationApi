@@ -68,7 +68,11 @@ class PassthroughController extends StorageController
       var response = await CommunicationHelper.sendAndWait(
           api,
           Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
-              GeigerUrl(null, GeigerApi.masterId, name), await sink?.bytes));
+              GeigerUrl(null, GeigerApi.masterId, name), await sink?.bytes),
+          responseTypes: [
+            MessageType.storageSuccess,
+            MessageType.storageError
+          ]);
       var stream = ByteStream(null, response.payload);
       if (response.type == MessageType.storageError) {
         throw StorageException.fromSerializedException(

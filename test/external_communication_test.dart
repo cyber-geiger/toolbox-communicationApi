@@ -13,12 +13,11 @@ void main() {
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
     await localMaster.zapState();
     SimpleEventListener masterListener = SimpleEventListener('master');
-    List<MessageType> allEvents = [MessageType.allEvents];
-    localMaster.registerListener(allEvents, masterListener);
+    localMaster.registerListener(MessageType.values, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
-    plugin.registerListener(allEvents, pluginListener);
+    plugin.registerListener(MessageType.values, pluginListener);
     List<Message> receivedEventsMaster = masterListener.getEvents();
     //print(receivedEventsMaster.toString());
     //print(pluginListener.toString());
@@ -39,12 +38,11 @@ void main() {
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
     await localMaster.zapState();
     SimpleEventListener masterListener = SimpleEventListener('master');
-    List<MessageType> allEvents = [MessageType.allEvents];
-    localMaster.registerListener(allEvents, masterListener);
+    localMaster.registerListener(MessageType.values, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
-    plugin.registerListener(allEvents, pluginListener);
+    plugin.registerListener(MessageType.values, pluginListener);
     List<Message> receivedEventsMaster = masterListener.getEvents();
     //print(masterListener.toString());
     expect(receivedEventsMaster.length, 2);
@@ -62,12 +60,11 @@ void main() {
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
     await localMaster.zapState();
     SimpleEventListener masterListener = SimpleEventListener('master');
-    List<MessageType> allEvents = [MessageType.allEvents];
-    localMaster.registerListener(allEvents, masterListener);
+    localMaster.registerListener(MessageType.values, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
-    plugin.registerListener(allEvents, pluginListener);
+    plugin.registerListener(MessageType.values, pluginListener);
 
     //deregister Plugin
     await plugin.deregisterPlugin();
@@ -102,12 +99,11 @@ void main() {
           '', GeigerApi.masterId, Declaration.doNotShareData))!;
       await localMaster.zapState();
       SimpleEventListener masterListener = SimpleEventListener('master');
-      List<MessageType> allEvents = [MessageType.allEvents];
-      localMaster.registerListener(allEvents, masterListener);
+      localMaster.registerListener(MessageType.values, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener('plugin');
-      plugin.registerListener(allEvents, pluginListener);
+      plugin.registerListener(MessageType.values, pluginListener);
 
       //register Menu
       final MenuItem menu = MenuItem(
@@ -152,12 +148,11 @@ void main() {
           '', GeigerApi.masterId, Declaration.doNotShareData))!;
       await localMaster.zapState();
       SimpleEventListener masterListener = SimpleEventListener('master');
-      List<MessageType> allEvents = [MessageType.allEvents];
-      localMaster.registerListener(allEvents, masterListener);
+      localMaster.registerListener(MessageType.values, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener('plugin');
-      plugin.registerListener(allEvents, pluginListener);
+      plugin.registerListener(MessageType.values, pluginListener);
 
       //register and disable Menu
       final MenuItem menu = MenuItem(
@@ -199,12 +194,11 @@ void main() {
           '', GeigerApi.masterId, Declaration.doNotShareData))!;
       await localMaster.zapState();
       SimpleEventListener masterListener = SimpleEventListener('master');
-      List<MessageType> allEvents = [MessageType.allEvents];
-      localMaster.registerListener(allEvents, masterListener);
+      localMaster.registerListener(MessageType.values, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
       SimpleEventListener pluginListener = SimpleEventListener('plugin');
-      plugin.registerListener(allEvents, pluginListener);
+      plugin.registerListener(MessageType.values, pluginListener);
 
       //register Menu
       final MenuItem menu = MenuItem(

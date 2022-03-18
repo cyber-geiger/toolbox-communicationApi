@@ -1,7 +1,8 @@
 /// The type of message transferred.
 class MessageType {
   // TODO(mgwerder): replace with introspection
-  static final List<MessageType> _values = <MessageType>[
+  /// All unique message types. Does not include [allEvents].
+  static const List<MessageType> values = [
     registerPlugin,
     deregisterPlugin,
     activatePlugin,
@@ -15,7 +16,6 @@ class MessageType {
     scanCompleted,
     returningControl,
     customEvent,
-    allEvents,
     ping,
     pong,
     storageEvent,
@@ -88,7 +88,7 @@ class MessageType {
   ///
   /// Will return `null` if not found.
   static MessageType? getById(int id) {
-    for (MessageType mt in _values) {
+    for (MessageType mt in values) {
       if (mt.id == id) {
         return mt;
       }
@@ -96,9 +96,10 @@ class MessageType {
     return null;
   }
 
+  @Deprecated("Use [values]")
   static List<MessageType> getAllValues() {
     List<MessageType> ret = <MessageType>[];
-    for (MessageType mt in _values) {
+    for (MessageType mt in values) {
       if (mt.id < 1000) {
         ret.add(mt);
       }

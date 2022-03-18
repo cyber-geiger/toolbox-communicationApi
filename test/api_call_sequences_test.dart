@@ -301,8 +301,9 @@ void main() {
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.ping, testUrl, utf8.encode('payload'));
-    final Message reply =
-        await CommunicationHelper.sendAndWait(localMaster, request);
+    final Message reply = await CommunicationHelper.sendAndWait(
+        localMaster, request,
+        responseTypes: [MessageType.pong]);
     expect(utf8.decode(request.payload), utf8.decode(reply.payload),
         reason: 'comparing payloads');
     expect(MessageType.pong, reply.type, reason: 'checking message type');

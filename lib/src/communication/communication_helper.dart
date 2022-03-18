@@ -10,9 +10,10 @@ class Listener with PluginListener {
   final Object obj = Object();
   Message tmsg;
   Message? msg;
+  List<MessageType> responseTypes;
 
-  Listener(this.api, this.tmsg) {
-    api.registerListener(<MessageType>[MessageType.allEvents], this);
+  Listener(this.api, this.tmsg, this.responseTypes) {
+    api.registerListener(responseTypes, this);
   }
 
   @override
@@ -26,7 +27,7 @@ class Listener with PluginListener {
   }
 
   void dispose() {
-    api.deregisterListener([MessageType.allEvents], this);
+    api.deregisterListener(responseTypes, this);
   }
 
   Future<Message> waitForResult(int timeout) async {
@@ -53,8 +54,11 @@ class CommunicationHelper {
   ///
   /// Throws [CommunicationException] if communication with master fails
   static Future<Message> sendAndWait(GeigerApi api, Message msg,
-      [int timeout = 30000]) async {
-    var l = Listener(api, msg);
+      {int timeout = 30000,
+      List<MessageType> responseTypes = const [
+        MessageType.comapiSuccess
+      ]}) async {
+    var l = Listener(api, msg, responseTypes);
     await api.sendMessage(msg);
     var result = await l.waitForResult(timeout);
     l.dispose();

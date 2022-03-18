@@ -260,7 +260,7 @@ class CommunicationApi extends GeigerApi {
   @override
   void deregisterListener(
       List<MessageType>? events, PluginListener listener) async {
-    for (var event in (events ?? MessageType.getAllValues())) {
+    for (var event in (events ?? MessageType.values)) {
       _listeners[event]?.remove(listener);
     }
   }
@@ -422,18 +422,21 @@ class CommunicationApi extends GeigerApi {
       default:
         break;
     }
-    for (final type in [MessageType.allEvents, msg.type]) {
-      final listeners = _listeners[type];
-      if (listeners == null) continue;
-      for (var pl in listeners) {
-        // ignore: avoid_print
-        GeigerApi.logger.info(
-            '## notifying PluginListener ${pl.toString()} for msg ${msg.type.toString()} ${msg.action.toString()}');
-        pl.pluginEvent(msg.action, msg);
+    _notifyListeners(msg.type, msg);
+    if (msg.type.id < MessageType.allEvents.id) {
+      _notifyListeners(MessageType.allEvents, msg);
+    }
+  }
 
-        // ignore: avoid_print
-        print('## PluginEvent fired');
-      }
+  void _notifyListeners(MessageType type, Message message) {
+    final listeners = _listeners[type];
+    if (listeners == null) return;
+    for (var listener in listeners) {
+      GeigerApi.logger.info(
+          '## notifying PluginListener ${listener.toString()} '
+          'for msg ${message.type.toString()} ${message.action.toString()}');
+      listener.pluginEvent(message.action, message);
+      GeigerApi.logger.info('## PluginEvent fired');
     }
   }
 

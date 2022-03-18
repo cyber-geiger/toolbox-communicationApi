@@ -14,9 +14,6 @@ class MessageType {
     scanPressed,
     scanCompleted,
     returningControl,
-    registerListener,
-    deregisterListener,
-    listenerEvent,
     customEvent,
     allEvents,
     ping,
@@ -59,11 +56,6 @@ class MessageType {
 
   /* Messages related to the visual stack control */
   static const returningControl = MessageType._('RETURNING_CONTROL', 410);
-
-  /* Messages related to listeners*/
-  static const registerListener = MessageType._('REGISTER_LISTENER', 500);
-  static const deregisterListener = MessageType._('DEREGISTER_LISTENER', 530);
-  static const listenerEvent = MessageType._('LISTENER_EVENT', 560);
 
   static const customEvent = MessageType._('CUSTOM_EVENT', 999);
 

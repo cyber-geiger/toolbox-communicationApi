@@ -11,13 +11,12 @@ import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_api/src/storage/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
-import 'package:uuid/uuid.dart';
 
 import 'plugin/plugin_starter.dart';
 
 class _StartupWaiter implements PluginListener {
   static const _events = [
-    MessageType.registerListener,
+    MessageType.registerPlugin,
     MessageType.activatePlugin
   ];
   final String pluginId;
@@ -44,17 +43,6 @@ class _StartupWaiter implements PluginListener {
 
   void deregister() {
     _api.deregisterListener(_events, this);
-  }
-}
-
-class _LambdaPluginListener extends PluginListener {
-  final Function(GeigerUrl? url, Message message) _callback;
-
-  _LambdaPluginListener(this._callback);
-
-  @override
-  void pluginEvent(GeigerUrl? url, Message message) {
-    _callback(url, message);
   }
 }
 
@@ -93,9 +81,6 @@ class CommunicationApi extends GeigerApi {
 
   /// All registered [PluginListener]s mapped by their [MessageType] filter.
   final Map<MessageType, List<PluginListener>> _listeners = {};
-
-  final Map<String, PluginListener> _idToListener = {};
-  final Map<PluginListener, String> _listenerToId = {};
 
   /// Creates a [CommunicationApi] with the given [executor] and plugin [id].
   ///
@@ -281,65 +266,6 @@ class CommunicationApi extends GeigerApi {
   }
 
   @override
-  Future<void> registerMasterListener(
-      List<MessageType> events, PluginListener listener) async {
-    if (events.isEmpty) return;
-    if (isMaster) {
-      registerListener(events, listener);
-      return;
-    }
-
-    final listenerId = _listenerToId[listener];
-    final sink = ByteSink();
-    SerializerHelper.writeString(sink, listenerId);
-    SerializerHelper.writeInt(sink, events.length);
-    for (final event in events) {
-      SerializerHelper.writeInt(sink, event.id);
-    }
-    sink.close();
-
-    final result = await CommunicationHelper.sendAndWait(
-        this,
-        Message(id, GeigerApi.masterId, MessageType.registerListener, null,
-            await sink.bytes));
-    final stream = ByteStream(null, result.payload);
-    final newListenerId = (await SerializerHelper.readString(stream))!;
-    _listenerToId[listener] = newListenerId;
-    _idToListener[newListenerId] = listener;
-  }
-
-  @override
-  Future<void> deregisterMasterListener(
-      List<MessageType>? events, PluginListener listener) async {
-    if (isMaster) {
-      deregisterListener(events, listener);
-      return;
-    }
-
-    final listenerId = _listenerToId[listener];
-    if (listenerId == null) return;
-
-    final sink = ByteSink();
-    SerializerHelper.writeString(sink, listenerId);
-    SerializerHelper.writeInt(sink, events?.length ?? -1);
-    if (events != null) {
-      for (final event in events) {
-        SerializerHelper.writeInt(sink, event.id);
-      }
-    }
-    sink.close();
-
-    final result = await CommunicationHelper.sendAndWait(
-        this,
-        Message(id, GeigerApi.masterId, MessageType.deregisterListener, null,
-            await sink.bytes));
-    final isStillUsed = result.payload[0] == 1;
-    if (isStillUsed) return;
-    _listenerToId.remove(listener);
-    _idToListener.remove(listenerId);
-  }
-
-  @override
   Future<void> sendMessage(Message message, [String? pluginId]) async {
     pluginId ??= message.targetId;
     if (id == pluginId) {
@@ -481,88 +407,6 @@ class CommunicationApi extends GeigerApi {
               PluginInformation(msg.sourceId, pluginInfo.getExecutable(), 0);
           break;
         }
-      case MessageType.registerListener:
-        {
-          final stream = ByteStream(null, msg.payload);
-          var listenerId = await SerializerHelper.readString(stream);
-          final length = await SerializerHelper.readInt(stream);
-          final events = [
-            for (var i = 0; i < length; ++i)
-              MessageType.getById(await SerializerHelper.readInt(stream))!
-          ];
-
-          var listener = _idToListener[listenerId];
-          if (listener == null) {
-            const uuid = Uuid();
-            listenerId = uuid.v4();
-            while (_idToListener.containsKey(listenerId)) {
-              listenerId = uuid.v4();
-            }
-            _idToListener[listenerId as String] = listener =
-                _LambdaPluginListener((_, message) => _sendListenerEvent(
-                    msg.sourceId, listenerId as String, message));
-          }
-
-          for (var event in events) {
-            // TODO: Filtered events can still be received when using MessageType.allEvents
-            if (event.id >= 10000) continue;
-            var listeners = _listeners[event];
-            if (listeners == null) {
-              _listeners[event] = listeners = [];
-            }
-            listeners.add(listener);
-          }
-
-          final sink = ByteSink();
-          SerializerHelper.writeString(sink, listenerId);
-          sink.close();
-          await sendMessage(Message(
-              id,
-              msg.sourceId,
-              MessageType.comapiSuccess,
-              GeigerUrl(null, msg.sourceId, 'registerListener'),
-              await sink.bytes,
-              msg.requestId));
-          break;
-        }
-      case MessageType.deregisterListener:
-        {
-          final stream = ByteStream(null, msg.payload);
-          final listenerId = await SerializerHelper.readString(stream);
-          final length = await SerializerHelper.readInt(stream);
-          final events = length == -1
-              ? null
-              : [
-                  for (var i = 0; i < length; ++i)
-                    MessageType.getById(await SerializerHelper.readInt(stream))!
-                ];
-
-          final listener = _idToListener[listenerId];
-          var isStillUsed = false;
-          if (listener != null) {
-            deregisterListener(events, listener);
-            isStillUsed = _listeners.values
-                .any((listeners) => listeners.contains(listener));
-            if (!isStillUsed) _idToListener.remove(listenerId);
-          }
-
-          await sendMessage(Message(
-              id,
-              msg.sourceId,
-              MessageType.comapiSuccess,
-              GeigerUrl(null, msg.sourceId, 'deregisterListener'),
-              [isStillUsed ? 1 : 0],
-              msg.requestId));
-          break;
-        }
-      case MessageType.listenerEvent:
-        {
-          final stream = ByteStream(null, msg.payload);
-          final listenerId = await SerializerHelper.readString(stream);
-          final message = await Message.fromByteArray(stream);
-          _idToListener[listenerId]?.pluginEvent(message.action, message);
-          break;
-        }
       case MessageType.scanPressed:
         if (isMaster) {
           await scanButtonPressed();
@@ -591,17 +435,6 @@ class CommunicationApi extends GeigerApi {
         print('## PluginEvent fired');
       }
     }
-  }
-
-  Future<void> _sendListenerEvent(
-      String pluginId, String listenerid, Message message) async {
-    final sink = ByteSink();
-    SerializerHelper.writeString(sink, listenerid);
-    message.toByteArrayStream(sink);
-    sink.close();
-
-    await sendMessage(Message(
-        id, pluginId, MessageType.listenerEvent, null, await sink.bytes));
   }
 
   @override

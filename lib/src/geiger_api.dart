@@ -55,18 +55,6 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   /// Set [events] to `null` to remove the [listener] from all events.
   void deregisterListener(List<MessageType>? events, PluginListener listener);
 
-  /// Register the [listener] for specific [events] on the martin.
-  ///
-  /// Use [MessageType.allEvents] to register to all event types.
-  Future<void> registerMasterListener(
-      List<MessageType> events, PluginListener listener);
-
-  /// Remove the [listener] from specific [events] on the master.
-  ///
-  /// Set [events] to `null` to remove the [listener] from all events.
-  Future<void> deregisterMasterListener(
-      List<MessageType>? events, PluginListener listener);
-
   /// Send a [message] to a another plugin with the id [pluginId].
   ///
   /// If [pluginId] is not specified, [message.targetId] is used.

@@ -242,52 +242,6 @@ void main() {
     });
   });
 
-  test('plugin listener', () async {
-    flushGeigerApiCache();
-    final master = (await getGeigerApi(
-        '', GeigerApi.masterId, Declaration.doNotShareData))!;
-    await master.zapState();
-    final plugin1 =
-        (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
-    final plugin2 =
-        (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
-
-    final listener = SimpleEventListener(plugin1.id);
-    await plugin1.registerMasterListener([], listener);
-    await plugin1.registerMasterListener(
-        [MessageType.registerMenu, MessageType.customEvent], listener);
-
-    plugin2.sendMessage(
-        Message(plugin2.id, GeigerApi.masterId, MessageType.ping, null));
-    await Future.delayed(const Duration(seconds: 1));
-    expect(listener.events.length, 0,
-        reason: "Listener received wrong number of events.");
-
-    final action1 = GeigerUrl('geiger', GeigerApi.masterId, 'test1');
-    final action2 = GeigerUrl('geiger', GeigerApi.masterId, 'test2');
-    plugin2.sendMessage(Message(
-        plugin2.id, GeigerApi.masterId, MessageType.customEvent, action1));
-    plugin2.sendMessage(Message(
-        plugin2.id, GeigerApi.masterId, MessageType.customEvent, action2));
-    await Future.delayed(const Duration(seconds: 1));
-    expect(listener.events.length, 2,
-        reason: "Listener received wrong number of events.");
-    expect(listener.events[0].action, action1,
-        reason: "First event does not match up.");
-    expect(listener.events[1].action, action2,
-        reason: "Second event does not match up.");
-
-    await plugin1
-        .deregisterMasterListener([MessageType.registerMenu], listener);
-    await plugin1.deregisterMasterListener(null, listener);
-
-    plugin2.sendMessage(
-        Message(plugin2.id, GeigerApi.masterId, MessageType.customEvent, null));
-    await Future.delayed(const Duration(seconds: 1));
-    expect(listener.events.length, 2,
-        reason: "Listener received events after deregistration.");
-  });
-
   group('get Menu List', () {
     //TODO(mgwerder): not implemented
   });

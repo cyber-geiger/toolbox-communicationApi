@@ -56,7 +56,8 @@ class CommunicationHelper {
   static Future<Message> sendAndWait(GeigerApi api, Message msg,
       {int timeout = 30000,
       List<MessageType> responseTypes = const [
-        MessageType.comapiSuccess
+        MessageType.comapiSuccess,
+        MessageType.comapiError
       ]}) async {
     var l = Listener(api, msg, responseTypes);
     await api.sendMessage(msg);

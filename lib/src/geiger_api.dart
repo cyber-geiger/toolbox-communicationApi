@@ -48,14 +48,12 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   /// Register the [listener] for specific [events] locally.
   ///
   /// Use [MessageType.allEvents] to register to all event types.
-  void registerListener(
-      List<MessageType> events, PluginListener listener);
+  void registerListener(List<MessageType> events, PluginListener listener);
 
   /// Remove the [listener] from specific [events] locally.
   ///
   /// Set [events] to `null` to remove the [listener] from all events.
-  void deregisterListener(
-      List<MessageType>? events, PluginListener listener);
+  void deregisterListener(List<MessageType>? events, PluginListener listener);
 
   /// Register the [listener] for specific [events] on the martin.
   ///

@@ -337,5 +337,5 @@ Future<void> main() async {
   await algarclamTests();
   await luongTests();
   await reuvenTests();
-  await cftnTests();
+  // await cftnTests();
 }

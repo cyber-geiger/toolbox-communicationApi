@@ -7,46 +7,30 @@ import 'package:meta/meta.dart';
 @immutable
 class StorableString implements Serializer {
   static const int serialVersionUID = 142224912322198374;
-  final String? _value;
+  final String? value;
 
-  const StorableString([this._value]);
-
-  String? value() {
-    return _value;
-  }
+  const StorableString([this.value]);
 
   @override
   String toString() {
-    return _value ?? '';
+    return value ?? '';
   }
 
   @override
-  bool operator ==(Object other) => equals(other);
-
-  bool equals(Object? o) {
-    if (identical(this, o)) {
-      return true;
-    }
-    if (o == null || o is! StorableString) {
-      return false;
-    }
-    StorableString? that = o;
-    return _value == that._value;
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is StorableString && value == other.value);
   }
 
   @override
-  int get hashCode => _value.hashCode;
+  int get hashCode => Object.hash(StorableString, value.hashCode);
 
   @override
   void toByteArrayStream(ByteSink out) {
     SerializerHelper.writeLong(out, serialVersionUID);
-    SerializerHelper.writeString(out, _value);
+    SerializerHelper.writeString(out, value);
   }
 
-  /// Reads objects from ByteArrayInputStream and stores them in map.
-  /// @param in ByteArrayInputStream to be used
-  /// @return the deserialized Storable String
-  /// @throws IOException if value cannot be read
   static Future<StorableString> fromByteArrayStream(ByteStream in_) async {
     SerializerHelper.castTest('StorableString', serialVersionUID,
         await SerializerHelper.readLong(in_), 1);

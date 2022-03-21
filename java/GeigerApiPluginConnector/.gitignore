@@ -5,9 +5,6 @@ hs_err_pid*
 /.idea
 **/.gradle
 **/target
-**/gradlew
-**/gradlew.bat
-**/gradle
 /testdb.mv.db
 /*.state
 /testdb

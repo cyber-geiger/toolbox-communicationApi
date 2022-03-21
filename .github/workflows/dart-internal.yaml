@@ -1,4 +1,4 @@
-name: Internal Github Action Flow
+name: Internal Dart Action Flow
 on:
   push:
     branches:

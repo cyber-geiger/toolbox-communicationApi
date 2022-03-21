@@ -1,4 +1,4 @@
-name: External Github Action Flow
+name: External Dart Action Flow
 on: workflow_dispatch
 
 jobs:

@@ -1,5 +1,10 @@
 name: Setup project
 description: Setup project
+inputs:
+  directory:
+    description: 'Directory of flutter project to set up.'
+    required: false
+    default: './'
 runs:
   using: composite
   steps:
@@ -8,6 +13,8 @@ runs:
     - name: Print environment
       run: flutter doctor -v
       shell: bash
+      working-directory: ${{ inputs.directory }}
     - name: Get dependencies
       run: flutter pub get
       shell: bash
+      working-directory: ${{ inputs.directory }}

@@ -5,11 +5,17 @@ on:
       - main
       - development
       - master
+    paths:
+      - .github/**
+      - dart/**
   pull_request:
+    paths:
+      - .github/**
+      - dart/**
 
 jobs:
   base:
-    uses: ./.github/workflows/base.yaml
+    uses: ./.github/workflows/dart-base.yaml
 
   trigger-extenal:
     name: Trigger external workflows

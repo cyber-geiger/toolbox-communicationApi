@@ -1,5 +1,9 @@
-name: Base jobs (run unit tests, check linting, check formatting)
+name: Base dart jobs (run unit tests, check linting, check formatting)
 on: workflow_call
+
+defaults:
+  run:
+    working-directory: ./dart/geiger_api
 
 jobs:
   run-unit-test:
@@ -15,7 +19,7 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/flutter-setup
       - run: flutter test
 
   check-lint:
@@ -23,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/flutter-setup
       - run: flutter analyze
 
   check-format:
@@ -31,5 +35,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/flutter-setup
       - run: flutter format --set-exit-if-changed --dry-run .

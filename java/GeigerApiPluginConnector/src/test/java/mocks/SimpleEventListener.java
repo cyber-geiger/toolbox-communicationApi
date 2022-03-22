@@ -1,9 +1,9 @@
 package mocks;
 
-import eu.cybergeiger.communication.GeigerUrl;
-import eu.cybergeiger.communication.Message;
-import eu.cybergeiger.communication.PluginListener;
-import java.util.ArrayList;
+import eu.cybergeiger.api.message.GeigerUrl;
+import eu.cybergeiger.api.message.Message;
+import eu.cybergeiger.api.plugin.PluginListener;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 

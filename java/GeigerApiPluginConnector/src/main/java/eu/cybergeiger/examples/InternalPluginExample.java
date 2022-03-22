@@ -5,10 +5,10 @@ import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
-import eu.cybergeiger.communication.Declaration;
-import eu.cybergeiger.communication.DeclarationMismatchException;
-import eu.cybergeiger.communication.LocalApi;
-import eu.cybergeiger.communication.LocalApiFactory;
+import eu.cybergeiger.api.plugin.Declaration;
+import eu.cybergeiger.api.exceptions.DeclarationMismatchException;
+import eu.cybergeiger.api.CommunicationApi;
+import eu.cybergeiger.api.CommunicationApiFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,7 +16,7 @@ public class InternalPluginExample {
 
   public static void main(String[] args) {
     try {
-      LocalApi localMaster = LocalApiFactory.getLocalApi("NOT_YET_NEEDED_HERE", LocalApi.MASTER,
+      CommunicationApi localMaster = CommunicationApiFactory.getLocalApi("NOT_YET_NEEDED_HERE", CommunicationApi.MASTER,
           Declaration.DO_NOT_SHARE_DATA);
       StorageController controller = localMaster.getStorage();
 

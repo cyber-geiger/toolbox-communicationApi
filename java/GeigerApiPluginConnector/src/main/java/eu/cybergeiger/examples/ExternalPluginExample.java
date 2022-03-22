@@ -1,16 +1,14 @@
 package eu.cybergeiger.examples;
 
-import static eu.cybergeiger.communication.LocalApiFactory.MASTER_EXECUTOR;
+import static eu.cybergeiger.api.CommunicationApiFactory.MASTER_EXECUTOR;
 
 import ch.fhnw.geiger.localstorage.StorageController;
 import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.data.Node;
-import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
-import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
-import eu.cybergeiger.communication.Declaration;
-import eu.cybergeiger.communication.DeclarationMismatchException;
-import eu.cybergeiger.communication.LocalApi;
-import eu.cybergeiger.communication.LocalApiFactory;
+import eu.cybergeiger.api.plugin.Declaration;
+import eu.cybergeiger.api.exceptions.DeclarationMismatchException;
+import eu.cybergeiger.api.CommunicationApi;
+import eu.cybergeiger.api.CommunicationApiFactory;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,10 +20,10 @@ public class ExternalPluginExample {
   public static void main(String[] args) {
     try {
       // Make sure there is a master (For development only)
-      LocalApiFactory.getLocalApi(MASTER_EXECUTOR, LocalApi.MASTER,
+      CommunicationApiFactory.getLocalApi(MASTER_EXECUTOR, CommunicationApi.MASTER,
           Declaration.DO_NOT_SHARE_DATA);
 
-      LocalApi plugin = LocalApiFactory.getLocalApi("NOT_YET_NEEDED_HERE", "plugin1",
+      CommunicationApi plugin = CommunicationApiFactory.getLocalApi("NOT_YET_NEEDED_HERE", "plugin1",
           Declaration.DO_NOT_SHARE_DATA);
 
       StorageController controller = plugin.getStorage();

@@ -5,15 +5,15 @@ import ch.fhnw.geiger.localstorage.StorageException;
 import ch.fhnw.geiger.localstorage.db.data.Node;
 import ch.fhnw.geiger.localstorage.db.data.NodeImpl;
 import ch.fhnw.geiger.localstorage.db.data.NodeValueImpl;
-import eu.cybergeiger.communication.CommunicatorApi;
-import eu.cybergeiger.communication.Declaration;
-import eu.cybergeiger.communication.DeclarationMismatchException;
-import eu.cybergeiger.communication.GeigerUrl;
-import eu.cybergeiger.communication.LocalApi;
-import eu.cybergeiger.communication.LocalApiFactory;
-import eu.cybergeiger.communication.Message;
-import eu.cybergeiger.communication.MessageType;
-import eu.cybergeiger.communication.PluginListener;
+import eu.cybergeiger.api.GeigerApi;
+import eu.cybergeiger.api.plugin.Declaration;
+import eu.cybergeiger.api.exceptions.DeclarationMismatchException;
+import eu.cybergeiger.api.message.GeigerUrl;
+import eu.cybergeiger.api.CommunicationApi;
+import eu.cybergeiger.api.CommunicationApiFactory;
+import eu.cybergeiger.api.message.Message;
+import eu.cybergeiger.api.message.MessageType;
+import eu.cybergeiger.api.plugin.PluginListener;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -37,7 +37,7 @@ public class DemoPlugin {
     private DemoPluginStageProvider dataProvider;
 
     private int state;
-    private CommunicatorApi comm;
+    private GeigerApi comm;
     private StorageController store;
 
     private final String userUuid;
@@ -46,7 +46,7 @@ public class DemoPlugin {
 
     public DemoPluginRunner(long features) throws IOException {
       try {
-        comm = LocalApiFactory.getLocalApi("still undefined", LocalApi.MASTER,
+        comm = CommunicationApiFactory.getLocalApi("still undefined", CommunicationApi.MASTER,
             Declaration.DO_NOT_SHARE_DATA);
         store = comm.getStorage();
 
@@ -126,7 +126,7 @@ public class DemoPlugin {
       // remove heartbeat node
       if (DemoPluginFeatures.FEATURE_HEARTBEAT.containsFeature(features)) {
         try {
-          StorageController storageController = LocalApiFactory.getLocalApi(LocalApi.MASTER)
+          StorageController storageController = CommunicationApiFactory.getLocalApi(CommunicationApi.MASTER)
               .getStorage();
           storageController.delete(":Devices:" + deviceUuid + ":" + uuid);
         } catch (StorageException e) {
@@ -199,7 +199,7 @@ public class DemoPlugin {
       StorageController store = null;
       long lastHeartbeat = 0;
       try {
-        store = LocalApiFactory.getLocalApi("undefined", LocalApi.MASTER,
+        store = CommunicationApiFactory.getLocalApi("undefined", CommunicationApi.MASTER,
             Declaration.DO_NOT_SHARE_DATA).getStorage();
 
         // initialize database

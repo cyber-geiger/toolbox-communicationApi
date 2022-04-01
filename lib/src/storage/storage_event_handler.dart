@@ -79,7 +79,8 @@ class StorageEventHandler with PluginListener {
       }),
       _SerializerCallProcessor('deleteNode', 'Could not delete node',
           (controller, stream, _) async {
-        return controller.delete((await SerializerHelper.readString(stream))!);
+        return await controller
+            .delete((await SerializerHelper.readString(stream))!);
       }),
       _SerializerCallProcessor('getValue', 'Could not get node value',
           (controller, stream, _) async {
@@ -233,7 +234,7 @@ class StorageEventHandler with PluginListener {
         serializer(sink);
         sink.close();
       }
-      _api.sendMessage(Message(_api.id, msg.sourceId,
+      await _api.sendMessage(Message(_api.id, msg.sourceId,
           MessageType.storageSuccess, null, await sink?.bytes, msg.requestId));
     } on Exception catch (e) {
       try {

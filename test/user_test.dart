@@ -2,6 +2,8 @@
 
 import 'dart:isolate';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -224,8 +226,8 @@ Future<String> isolatePluginTest2(SendPort ext) async {
 }
 
 Future<void> reuvenTests() async {
+  const int size = 10 * 1024 * 1024 - 20000;
   group('reuven test', () {
-    int size = 10 * 1024 * 1024 - 20000;
     test('20220222 - huge values test 1 (on master)', () async {
       await StorageMapper.initDatabaseExpander();
       GeigerApi api = (await getGeigerApi(
@@ -315,7 +317,7 @@ Future<void> reuvenTests() async {
 
       // remove data
       print('## deleting value');
-      api!.storage.delete(':Users:hugetest');
+      await api!.storage.delete(':Users:hugetest');
 
       await api.close();
     }, timeout: const Timeout(Duration(seconds: 120)));
@@ -328,6 +330,8 @@ Future<void> cftnTests() async {
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       StorageController sc = localMaster.storage;
+      WidgetsFlutterBinding.ensureInitialized();
+      expect(await rootBundle.loadString('store.data'), isNotNull);
       expect((await sc.get(":Global:threats")).path, ':Global:threats');
     });
   });

@@ -13,6 +13,8 @@ flutter:
       android:
         package: eu.cybergeiger.communication
         pluginClass: GeigerPlugin
+  assets:
+    - packages/geiger_localstorage/lib/assets/store/store.data
 
 environment:
   sdk: '>=2.15.0 <3.0.0'

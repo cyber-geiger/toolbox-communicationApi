@@ -1,3 +1,7 @@
+## 0.7.5 Bugfixing Release
+Fixes:
+- Removes the asset dependency from the GEIGER localstorage
+
 ## 0.7.4 Bugfixing Release [Minor Breaking Changes]
 
 Fixes:

@@ -2,7 +2,6 @@ library geiger_api;
 
 import 'package:cryptography/dart.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
-import 'package:cryptography/cryptography.dart';
 import 'dart:convert';
 
 import 'communication_secret.dart';

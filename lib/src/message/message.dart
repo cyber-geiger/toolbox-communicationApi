@@ -127,14 +127,12 @@ class Message with Serializer {
     SerializerHelper.writeHash(out, hash);
   }
 
-
   /// Returns a peppered sha512 hash of the message.
   /// @return the hash as byte array
-  /// @throws ?? if 
+  /// @throws ?? if
   List<int> get hash {
     const algorithm = DartSha512();
-    final msg = utf8.encode(
-        sourceId +
+    final msg = utf8.encode(sourceId +
         (targetId ?? "") +
         type.id.toString() +
         (action?.toString() ?? "") +

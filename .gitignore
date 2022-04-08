@@ -22,3 +22,6 @@ pubspec.lock
 /coverage/
 *.state
 /test.tst
+example/client_app/windows/
+example/master_app/windows/
+example/master_app/database

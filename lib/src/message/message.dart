@@ -2,6 +2,9 @@ library geiger_api;
 
 import 'dart:convert';
 
+import 'package:cryptography/cryptography.dart';
+import 'package:cryptography/dart.dart';
+import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'geiger_url.dart';
@@ -28,12 +31,19 @@ class Message with Serializer {
 
   String? _payloadString = '';
 
+  PluginInformation? _pluginInformation;
+
   /// Creates a [Message] with the provided properties.
   Message(this.sourceId, this.targetId, this.type, this.action,
-      [List<int>? payload, String? requestId]) {
+      [List<int>? payload,
+      String? requestId,
+      PluginInformation? pluginInformation]) {
     this.requestId = requestId ?? '${ExtendedTimestamp.now(false)}';
     if (payload != null) {
       _payloadString = base64.encode(payload);
+    }
+    if (pluginInformation != null) {
+      _pluginInformation = pluginInformation;
     }
   }
 
@@ -87,6 +97,8 @@ class Message with Serializer {
         : null;
     SerializerHelper.castTest(
         'Message', serialVersionUID, await SerializerHelper.readLong(in_), 2);
+    List<int> messageHash = await SerializerHelper.readHash(in_);
+    SerializerHelper.integrityTest(Hash(m.hash), Hash(messageHash));
     return m;
   }
 
@@ -115,6 +127,25 @@ class Message with Serializer {
       SerializerHelper.writeString(out, payloadString);
     }
     SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeHash(out, hash);
+  }
+
+
+  /// Returns a peppered sha512 hash of the message.
+  /// @return the hash as byte array
+  /// @throws ?? if 
+  List<int> get hash {
+    const algorithm = DartSha512();
+    final msg = utf8.encode(
+        sourceId +
+        (targetId ?? "") +
+        type.id.toString() +
+        (action?.toString() ?? "") +
+        requestId +
+        (payloadString ?? "") +
+        utf8.decode(_pluginInformation?.secret.getSecret() ?? List.empty()));
+    Hash hash = algorithm.hashSync(msg);
+    return hash.bytes;
   }
 
   @override

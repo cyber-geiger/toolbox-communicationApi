@@ -7,9 +7,6 @@ import 'package:cryptography/dart.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'geiger_url.dart';
-import 'message_type.dart';
-
 /// Representation of a message.
 class Message with Serializer {
   static const int serialVersionUID = 143287432;

@@ -1,4 +1,10 @@
-## 0.7.4 Bugfixing Release (pre-release)
+## Next Release
+
+Fixes:
+
+- Apply visibility rules for `newNode` in a storage change event to `newNode` instead of `oldNode`.
+
+## 0.7.4 Bugfixing Release
 
 Fixes:
 

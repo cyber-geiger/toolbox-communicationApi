@@ -16,7 +16,7 @@ class StorageListenerFilter extends StorageListener {
     }
     if (newNode != null &&
         (newNode.visibility != Visibility.white && newNode.owner != _owner)) {
-      oldNode = null;
+      newNode = null;
     }
 
     if (oldNode != null || newNode != null) {

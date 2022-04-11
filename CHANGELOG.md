@@ -1,29 +1,31 @@
 ## Next Release
 
 Fixes:
-
 - Apply visibility rules for `newNode` in a storage change event to `newNode` instead of `oldNode`.
 
 ## 0.7.4 Bugfixing Release
 
+## 0.7.5 Bugfixing Release
 Fixes:
+- Removes the asset dependency from the GEIGER localstorage
 
+## 0.7.4 Bugfixing Release [Minor Breaking Changes]
+
+Fixes:
 - Listening to `MessageType.allEvents` no longer returns internal messages.
-    - Internal message types have an ID higher than `MessageType.allEvents`
+- Internal message types have an ID higher than `MessageType.allEvents`
+- Fixes GitHub issue #20 (Returning control is not possible in geiger_api:0.7.3)
 
-Breaking Changes:
-
+Changes:
 - `GeigerApi.registerListener` is no longer async.
 - `MessageType.registerListener` and `MessageType.deregisterListener` were removed.
 - The `timeout` optional parameter in `CommunicationHelper.sendAndWait` is now a named parameter.
 - `CommunicationHelper.sendAndWait` now by default only listens for `MessageType.comapiSuccess`
-  and `MessageType.comapiError`.
-    - This behavior can be changed using the `responseTypes` named parameter.
+  and `MessageType.comapiError`. This behavior can be changed using the `responseTypes` named parameter.
 
 ## 0.7.3 Bugfixing Release
 
 Fixes:
-
 - Various improvments to stabilize the connection between plugin and toolbox master
 - Various fixes regarding speed and size constraints
 

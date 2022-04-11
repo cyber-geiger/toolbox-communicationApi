@@ -23,7 +23,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  geiger_localstorage: ^0.6.42
+  geiger_localstorage: ^0.6.47
     #path: ../geiger_localstorage
   logging: ^1.0.2
   meta: ^1.7.0

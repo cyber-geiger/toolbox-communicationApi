@@ -1,4 +1,4 @@
-## Next Release
+## 0.7.7 Bugfixing Release
 Fixes:
 - Fix `Node` deserialization when only a `PassthroughController` has been created. 
 

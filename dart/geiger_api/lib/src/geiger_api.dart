@@ -37,14 +37,6 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
     return storage;
   }
 
-  /// Get the [PluginInformation] of all registered plugins.
-  ///
-  /// Only the plugins which ids start with [startId] are
-  /// returned if [startId] is specified.
-  /// For security reasons all [PluginInformation.secret]s are empty.
-  /// TODO: should only be available on master?
-  Future<List<PluginInformation>> getRegisteredPlugins([String? startId]);
-
   /// Register the [listener] for specific [events] locally.
   ///
   /// Use [MessageType.allEvents] to register to all event types.

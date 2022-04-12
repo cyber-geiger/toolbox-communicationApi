@@ -7,7 +7,6 @@ typedef MessageFilter = bool Function(Message msg);
 
 class Listener with PluginListener {
   final GeigerApi api;
-  final Object obj = Object();
   Message tmsg;
   Message? msg;
   List<MessageType> responseTypes;

@@ -3,6 +3,13 @@ library geiger_api;
 import 'plugin_information.dart';
 
 abstract class PluginRegistrar {
+  /// Get the [PluginInformation] of all registered plugins.
+  ///
+  /// Only the plugins which ids start with [startId] are
+  /// returned if [startId] is specified.
+  /// For security reasons all [PluginInformation.secret]s are empty.
+  Future<List<PluginInformation>> getRegisteredPlugins([String? startId]);
+
   /// Registers the plugin to the toolbox framework.
   ///
   /// Throws [CommunicationException] if registering in the master plugin failed.

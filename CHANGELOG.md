@@ -2,6 +2,10 @@
 Fixes:
 - (none so far)
 
+## 0.7.8 Bugfixing Release (upcomming)
+Fixes:
+- Adresses visibility issue of event nodes when secured (related to issue #22).
+
 ## 0.7.7 Bugfixing Release
 Fixes:
 - Fix `Node` deserialization when only a `PassthroughController` has been created.

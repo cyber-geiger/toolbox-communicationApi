@@ -1,21 +1,29 @@
 library geiger_localstorage;
 
+import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class StorageListenerFilter extends StorageListener {
   final StorageListener _listener;
   final String _owner;
+  final Declaration? _sharing;
 
-  StorageListenerFilter(this._owner, this._listener);
+  StorageListenerFilter(this._owner, this._listener, this._sharing);
 
   @override
   void gotStorageChange(EventType event, Node? oldNode, Node? newNode) {
     if (oldNode != null &&
-        (oldNode.visibility != Visibility.white && oldNode.owner != _owner)) {
+        (oldNode.visibility != Visibility.white &&
+            oldNode.owner != _owner &&
+            _sharing != null &&
+            _sharing != Declaration.doNotShareData)) {
       oldNode = null;
     }
     if (newNode != null &&
-        (newNode.visibility != Visibility.white && newNode.owner != _owner)) {
+        (newNode.visibility != Visibility.white &&
+            newNode.owner != _owner &&
+            _sharing != null &&
+            _sharing != Declaration.doNotShareData)) {
       newNode = null;
     }
 
@@ -163,7 +171,8 @@ class OwnerEnforcerWrapper extends StorageController {
     // nothing to do
     criteria.owner = owner;
     if (_sharingFilter) {
-      _listeners[listener] = StorageListenerFilter(owner, listener);
+      _listeners[listener] = StorageListenerFilter(
+          owner, listener, _sharingFilter ? Declaration.doShareData : null);
       return await _controller.registerChangeListener(
           _listeners[listener]!, criteria);
     } else {

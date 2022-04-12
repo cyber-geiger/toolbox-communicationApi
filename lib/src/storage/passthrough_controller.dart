@@ -16,7 +16,9 @@ class PassthroughController extends StorageController
   final Map<String, SearchCriteria> _idToListenerCriteria = {};
 
   /// Creates a [PassthroughController] for the given [api] and plugin (provide its [api.id]).
-  PassthroughController(this.api);
+  PassthroughController(this.api) {
+    GenericController.defaultController = this;
+  }
 
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {

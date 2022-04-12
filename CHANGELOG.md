@@ -1,3 +1,7 @@
+## Next Release
+Fixes:
+- Fix `Node` deserialization when only a `PassthroughController` has been created. 
+
 ## 0.7.6 Bugfixing Release
 Fixes:
 - Apply visibility rules for `newNode` in a storage change event to `newNode` instead of `oldNode`.

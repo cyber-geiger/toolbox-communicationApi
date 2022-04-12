@@ -1,8 +1,9 @@
-## 0.7.8 Bugfixing Release (upcomming)
+## 0.7.9 Bugfixing Release (upcoming)
 Fixes:
-- (none so far)
+- Fixes visibility rules of listener in the owner enforcer.
+- Added more test to hunt down issue #22
 
-## 0.7.8 Bugfixing Release (upcomming)
+## 0.7.8 Bugfixing Release
 Fixes:
 - Adresses visibility issue of event nodes when secured (related to issue #22).
 

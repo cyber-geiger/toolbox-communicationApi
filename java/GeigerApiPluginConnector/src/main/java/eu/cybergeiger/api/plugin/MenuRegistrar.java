@@ -13,22 +13,22 @@ public interface MenuRegistrar {
    * <p>The method only allows URL with protocol GEIGER (geiger://).
    * The host reflects the plugin ID.</p>
    *
-   * @param menu    menu string depicting menu hierarchy
-   * @param action  action URL to be triggered
+   * @param menu   menu string depicting menu hierarchy
+   * @param action action URL to be triggered
    */
   void registerMenu(String menu, GeigerUrl action);
 
   /**
    * <p>Enable a previously registered menu.</p>
    *
-   * @param menu  menu string depicting menu hierarchy
+   * @param menu menu string depicting menu hierarchy
    */
   void enableMenu(String menu);
 
   /**
    * <p>Disable a previously registered menu.</p>
    *
-   * @param menu  menu string depicting menu hierarchy
+   * @param menu menu string depicting menu hierarchy
    */
   void disableMenu(String menu);
 
@@ -37,7 +37,7 @@ public interface MenuRegistrar {
    *
    * <p>The method only allows URL with protocol GEIGER (geiger://).</p>
    *
-   * @param menu    menu string depicting menu hierarchy
+   * @param menu menu string depicting menu hierarchy
    */
   void deregisterMenu(String menu);
 

@@ -1,63 +1,76 @@
 package eu.cybergeiger.api.communication;
 
+import eu.cybergeiger.api.PluginApi;
 import eu.cybergeiger.api.message.Message;
-import eu.cybergeiger.api.message.MessageListener;
-import eu.cybergeiger.api.plugin.PluginInformation;
+import jdk.internal.jline.internal.Nullable;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Abstract class to define common methods for GeigerCommunicators.
  */
-public abstract class GeigerCommunicator {
-  private MessageListener listener = null;
+public class GeigerCommunicator {
+  public static final int MASTER_PORT = 12348;
 
-  void setListener(MessageListener listener) {
-    this.listener = listener;
+  private final PluginApi api;
+
+  @Nullable
+  private ServerSocket serverSocket;
+  @Nullable
+  private Thread client;
+  private final Executor executor;
+
+
+  public GeigerCommunicator(PluginApi api) {
+    this.api = api;
+    this.executor = Executors.newFixedThreadPool(
+      Runtime.getRuntime().availableProcessors()
+    );
   }
 
-  public abstract void sendMessage(PluginInformation pluginInformation, Message msg);
-
-  public abstract void start() throws IOException;
-
-  /**
-   * Convert bytearray to int.
-   *
-   * @param bytes bytearray containing 4 bytes
-   * @return int denoting the given bytes
-   */
-  public static int byteArrayToInt(byte[] bytes) {
-    return ((bytes[0] & 0xFF) << 24)
-        | ((bytes[1] & 0xFF) << 16)
-        | ((bytes[2] & 0xFF) << 8)
-        | ((bytes[3] & 0xFF));
+  public boolean isActive() {
+    return serverSocket != null;
   }
 
-  /**
-   * <p>Convert int to bytearray.</p>
-   *
-   * @param value the int to convert
-   * @return bytearray representing the int
-   */
-  public static byte[] intToByteArray(int value) {
-    return new byte[] {
-        (byte) (value >>> 24),
-        (byte) (value >>> 16),
-        (byte) (value >>> 8),
-        (byte) value};
+  public int getPort() {
+    if (serverSocket == null)
+      return 0;
+    return serverSocket.getLocalPort();
   }
 
-  public MessageListener getListener() {
-    return listener;
+  public void start() {
+    if (isActive()) return;
+    client = new Thread(() -> {
+      try {
+        serverSocket = new ServerSocket(0);
+        while (true) {
+          Socket socket = serverSocket.accept();
+          executor.execute(new MessageHandler(socket, api));
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
+    client.setDaemon(true);
+    client.start();
   }
 
-  public abstract int getPort();
+  public void sendMessage(int port, Message message) throws IOException {
+    Socket socket = new Socket("localhost", port);
+    OutputStream out = socket.getOutputStream();
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    message.toByteArrayStream(bos);
+    out.write(bos.toByteArray());
+  }
 
-  /**
-   * <p>Start a plugin by using the stored executable String.</p>
-   *
-   * @param pluginInformation the Information of the plugin to start
-   */
-  public abstract void startPlugin(PluginInformation pluginInformation);
-
+  public void close() throws IOException {
+    serverSocket.close();
+    client.interrupt();
+  }
 }

@@ -1,7 +1,8 @@
 package eu.cybergeiger.api.plugin;
 
-import ch.fhnw.geiger.serialization.Serializer;
-import ch.fhnw.geiger.serialization.SerializerHelper;
+import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.SerializerHelper;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,28 +14,32 @@ public class PluginInformation implements Serializer {
 
   private static final long serialVersionUID = 48032940912340L;
 
+  private final String id;
   private final String executable;
   private final int port;
-  private CommunicationSecret secret;
+  private final CommunicationSecret secret;
 
-  public PluginInformation(String executable, int port) {
-    this(executable, port, null);
+  public PluginInformation(String id, String executable, int port) {
+    this(id, executable, port, null);
   }
 
   /**
    * <p>Constructor for plugin information.</p>
    *
+   * @param id         ID of the plugin this information is about
    * @param executable the string required for platform specific wakeup of a plugin
    * @param port       the port of the plugin to be contacted on
    * @param secret     the secret required for communicating (if null a new secret is generated)
    */
-  public PluginInformation(String executable, int port, CommunicationSecret secret) {
+  public PluginInformation(String id, String executable, int port, CommunicationSecret secret) {
+    this.id = id;
     this.executable = executable;
     this.port = port;
-    this.secret = secret;
-    if (this.secret == null) {
-      this.secret = new CommunicationSecret();
-    }
+    this.secret = secret == null ? new CommunicationSecret() : secret;
+  }
+
+  public String getId() {
+    return this.id;
   }
 
   /**
@@ -67,6 +72,7 @@ public class PluginInformation implements Serializer {
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, id);
     SerializerHelper.writeString(out, executable);
     SerializerHelper.writeInt(out, port);
     secret.toByteArrayStream(out);
@@ -84,17 +90,14 @@ public class PluginInformation implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-
+    String id = SerializerHelper.readString(in);
     String executable = SerializerHelper.readString(in);
     int port = SerializerHelper.readInt(in);
     CommunicationSecret secret = CommunicationSecret.fromByteArrayStream(in);
-
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-
-    return new PluginInformation(executable, port, secret);
-
+    return new PluginInformation(id, executable, port, secret);
   }
 
   /**

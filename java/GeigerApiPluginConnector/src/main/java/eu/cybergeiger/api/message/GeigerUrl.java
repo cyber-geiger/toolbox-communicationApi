@@ -1,8 +1,8 @@
 package eu.cybergeiger.api.message;
 
-import ch.fhnw.geiger.serialization.Serializer;
-import ch.fhnw.geiger.serialization.SerializerHelper;
-import eu.cybergeiger.api.CommunicationApi;
+import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.SerializerHelper;
+import eu.cybergeiger.api.GeigerApi;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,73 +16,57 @@ import java.util.regex.Pattern;
  * <p>GEIGER communication URL object.</p>
  */
 public class GeigerUrl implements Serializer {
-
   private static final long serialVersionUID = 32411423L;
 
-  private String protocol = "geiger";
-  // pluginId must be unique and must not contain any slashes "/"
-  private String pluginId = CommunicationApi.MASTER;
-  private String path = "";
+  private final String protocol;
+  private final String pluginId;
+  private final String path;
 
-  // at least protocol and plugin must be present
   private static final Pattern urlPattern = Pattern.compile("(.+?)://([^/]+)/(.*)");
 
   /**
-   * <p>GeigerUrl constructor.</p>
+   * <p>Parse a URL into a GeigerUrl.</p>
    *
-   * @param spec a well formed URI
-   * @throws MalformedURLException if a malformed URL was received
+   * @param url URL to parse.
+   * @throws MalformedURLException If the provided URL is malformed.
    */
-  public GeigerUrl(String spec) throws MalformedURLException {
-    try {
-      Matcher m = urlPattern.matcher(spec);
-      if (!m.matches()) {
-        throw new MalformedURLException("Matcher was unable to match the string \"" + spec
-            + "\" to regexp " + urlPattern.pattern());
-      }
-      this.protocol = m.group(1);
-      init(m.group(2), m.group(3));
-    } catch (IllegalStateException e) {
-      throw new MalformedURLException("Matcher was unable to match the string \"" + spec
-          + "\" to regexp " + urlPattern.pattern());
-    }
+  public static GeigerUrl parse(String url) throws MalformedURLException {
+    Matcher matcher = urlPattern.matcher(url);
+    if (!matcher.matches())
+      throw new MalformedURLException("Matcher was unable to match the string \"" + url
+        + "\" to regexp " + urlPattern.pattern());
+    return new GeigerUrl(matcher.group(1), matcher.group(2), matcher.group(3));
   }
 
   /**
-   * <p>Constructor to create a GEIGER url from id and path.</p>
+   * <p>Create a GeigerUrl.</p>
+   *
+   * @param pluginId the plugin id name, may not be null nor empty
+   */
+  public GeigerUrl(String pluginId) {
+    this(pluginId, "");
+  }
+
+
+  /**
+   * <p>Create a GeigerUrl.</p>
    *
    * @param pluginId the plugin id name, may not be null nor empty
    * @param path     the path to call the respective function
-   * @throws MalformedURLException if the resulting URL is not fulfilling the minimum requirements
    */
-  public GeigerUrl(String pluginId, String path) throws MalformedURLException {
-    init(pluginId, path);
+  public GeigerUrl(String pluginId, String path) {
+    this("geiger", pluginId, path);
   }
 
   /**
-   * <p>Constructor to create a GEIGER url from id and path.</p>
+   * <p>Create a GeigerUrl.</p>
    *
    * @param protocol the protocol name, may not be null nor empty
    * @param pluginId the plugin id name, may not be null nor empty
    * @param path     the path to call the respective function
-   * @throws MalformedURLException if the resulting URL is not fulfilling the minimum requirements
    */
-  public GeigerUrl(String protocol, String pluginId, String path) throws MalformedURLException {
-    if (protocol == null || "".equals(protocol)) {
-      throw new MalformedURLException("protocol cannot be null nor empty");
-    }
-    init(pluginId, path);
+  public GeigerUrl(String protocol, String pluginId, String path) {
     this.protocol = protocol;
-  }
-
-  private void init(String pluginId, String path) throws MalformedURLException {
-    if (pluginId == null || pluginId.equals("")) {
-      throw new MalformedURLException("pluginId cannot be null nor empty");
-    }
-    // in order to reduce null value checks for subsequent access, path will be set to empty string
-    if (path == null || "null".equals(path)) {
-      path = "";
-    }
     this.pluginId = pluginId;
     this.path = path;
   }
@@ -126,24 +110,10 @@ public class GeigerUrl implements Serializer {
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
-    if (protocol == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, protocol);
-    }
-    if (pluginId == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, pluginId);
-    }
-    if (path == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, path);
-    }
+    SerializerHelper.writeString(out, protocol);
+    SerializerHelper.writeString(out, pluginId);
+    SerializerHelper.writeString(out, path);
+    SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   /**
@@ -154,28 +124,26 @@ public class GeigerUrl implements Serializer {
    * @throws IOException if GeigerUrl cannot be read
    */
   public static GeigerUrl fromByteArrayStream(ByteArrayInputStream in) throws IOException {
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
+    if (SerializerHelper.readLong(in) != serialVersionUID)
       throw new ClassCastException();
-    }
-    return new GeigerUrl(
-        (SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null),
-        (SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null),
-        (SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null)
+    GeigerUrl url = new GeigerUrl(
+      Objects.requireNonNull(SerializerHelper.readString(in)),
+      Objects.requireNonNull(SerializerHelper.readString(in)),
+      Objects.requireNonNull(SerializerHelper.readString(in))
     );
+    if (SerializerHelper.readLong(in) != serialVersionUID)
+      throw new ClassCastException();
+    return url;
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    GeigerUrl geigerUrl = (GeigerUrl) o;
-    return Objects.equals(protocol, geigerUrl.protocol)
-        && Objects.equals(pluginId, geigerUrl.pluginId)
-        && Objects.equals(path, geigerUrl.path);
+  public boolean equals(Object other) {
+    if (this == other) return true;
+    if (other == null || getClass() != other.getClass()) return false;
+    GeigerUrl url = (GeigerUrl) other;
+    return Objects.equals(protocol, url.protocol)
+      && Objects.equals(pluginId, url.pluginId)
+      && Objects.equals(path, url.path);
   }
 
   @Override

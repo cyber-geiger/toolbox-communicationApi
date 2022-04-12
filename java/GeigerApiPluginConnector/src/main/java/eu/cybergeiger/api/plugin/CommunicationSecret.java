@@ -1,7 +1,8 @@
 package eu.cybergeiger.api.plugin;
 
-import ch.fhnw.geiger.serialization.Serializer;
-import ch.fhnw.geiger.serialization.SerializerHelper;
+import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.SerializerHelper;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -111,7 +112,7 @@ public class CommunicationSecret implements Serializer {
    * @throws IOException if value cannot be read
    */
   public static CommunicationSecret fromByteArrayStream(ByteArrayInputStream in)
-      throws IOException {
+    throws IOException {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException("Reading start marker fails");
     }

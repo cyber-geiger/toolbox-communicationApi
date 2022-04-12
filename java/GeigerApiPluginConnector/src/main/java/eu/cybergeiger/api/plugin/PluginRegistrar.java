@@ -10,6 +10,18 @@ public interface PluginRegistrar {
    */
   void registerPlugin() throws CommunicationException;
 
+  /**
+   * <p>Activates the plugin and sets up communication.</p>
+   */
+  void activatePlugin() throws CommunicationException;
+
+  /**
+   * <p>deactivates the plugin and makes sure that a plugin is started immediately if contacted.</p>
+   *
+   * <p>If a plugin is properly deactivated no timeout is reached before contacting a plugin.</p>
+   */
+  void deactivatePlugin() throws CommunicationException;
+
   /***
    * <p>Unregisters an already registered plugin in the toolbox.</p>
    *

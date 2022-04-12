@@ -1,7 +1,8 @@
 package eu.cybergeiger.api.utils;
 
-import ch.fhnw.geiger.serialization.Serializer;
-import ch.fhnw.geiger.serialization.SerializerHelper;
+import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.SerializerHelper;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.Map;
  * @param <V> Valuetype
  */
 public class StorableHashMap<K extends Serializer, V extends Serializer>
-    extends HashMap<K, V> implements Serializer {
+  extends HashMap<K, V> implements Serializer {
 
   private static final long serialVersionUID = 14231491232L;
 
@@ -38,7 +39,7 @@ public class StorableHashMap<K extends Serializer, V extends Serializer>
    * @throws IOException if value cannot be read
    */
   public static void fromByteArrayStream(ByteArrayInputStream in, StorableHashMap map)
-      throws IOException {
+    throws IOException {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
@@ -57,7 +58,7 @@ public class StorableHashMap<K extends Serializer, V extends Serializer>
     StringBuilder sb = new StringBuilder();
     for (Map.Entry e : entrySet()) {
       sb.append(e.getKey().toString()).append('=').append(e.getValue())
-          .append(System.lineSeparator());
+        .append(System.lineSeparator());
     }
     return sb.toString();
   }

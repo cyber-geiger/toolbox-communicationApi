@@ -1,4 +1,4 @@
-package eu.cybergeiger.api.exceptions;
+package eu.cybergeiger.storage;
 
 import eu.cybergeiger.serialization.Serializer;
 import eu.cybergeiger.serialization.SerializerHelper;
@@ -7,17 +7,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-// FIXME This exception shares large portions of code with Storage Exception.
-//       Should have a common Ancestor Serializable Exception in storage
-
 /**
- * <p>Exception signalling wrong communication.</p>
+ * <p>Exception to be raised on any problems related to the local storage.</p>
  */
-public class CommunicationException extends IOException implements Serializer {
+public class StorageException extends IOException implements Serializer {
+
 
   private static class SerializedException extends Throwable implements Serializer {
 
-    private static final long serialversionUID = 2314567434567L;
+    private static final long serialversionUID = 721364991234L;
 
     private final String exceptionName;
     private final String message;
@@ -45,10 +43,10 @@ public class CommunicationException extends IOException implements Serializer {
       SerializerHelper.writeStackTraces(out, getStackTrace());
       if (getCause() != null) {
         SerializerHelper.writeInt(out, 1);
-        if (getCause() instanceof CommunicationException.SerializedException) {
-          ((CommunicationException.SerializedException) (getCause())).toByteArrayStream(out);
+        if (getCause() instanceof SerializedException) {
+          ((SerializedException) (getCause())).toByteArrayStream(out);
         } else {
-          new CommunicationException.SerializedException(getCause()).toByteArrayStream(out);
+          new SerializedException(getCause()).toByteArrayStream(out);
         }
       } else {
         SerializerHelper.writeInt(out, 0);
@@ -72,22 +70,22 @@ public class CommunicationException extends IOException implements Serializer {
       StackTraceElement[] ste = SerializerHelper.readStackTraces(in);
 
       // read cause (if any)
-      CommunicationException.SerializedException cause = null;
+      SerializedException cause = null;
       if (SerializerHelper.readInt(in) == 1) {
-        cause = CommunicationException.SerializedException.fromByteArrayStream(in);
+        cause = SerializedException.fromByteArrayStream(in);
       }
 
       // read object end tag (identifier)
       if (SerializerHelper.readLong(in) != serialversionUID) {
         throw new IOException("failed to parse NodeImpl (bad stream end?)");
       }
-      return new CommunicationException.SerializedException(name, message, ste, cause);
+      return new SerializedException(name, message, ste, cause);
     }
   }
 
-  private static final long serialversionUID = 2348142321L;
+  private static final long serialversionUID = 178324938L;
 
-  private CommunicationException(String txt, Throwable e, StackTraceElement[] ste) {
+  private StorageException(String txt, Throwable e, StackTraceElement[] ste) {
     super(txt, e);
     if (ste != null) {
       setStackTrace(ste);
@@ -95,22 +93,17 @@ public class CommunicationException extends IOException implements Serializer {
   }
 
   /**
-   * <p>Standard exception constructor for including a causing exception.</p>
+   * <p>Creates a StorageException with message and root cause.</p>
    *
-   * @param txt the exception message
+   * @param txt the message
    * @param e   the root cause
    */
-  public CommunicationException(String txt, Throwable e) {
-    super(txt, e);
+  public StorageException(String txt, Throwable e) {
+    this(txt, e, null);
   }
 
-  /**
-   * <p>Standard exception constructor.</p>
-   *
-   * @param txt the exception message.
-   */
-  public CommunicationException(String txt) {
-    this(txt, null);
+  public StorageException(String txt) {
+    this(txt, null, null);
   }
 
   @Override
@@ -122,12 +115,12 @@ public class CommunicationException extends IOException implements Serializer {
     SerializerHelper.writeStackTraces(out, getStackTrace());
 
     // serializing cause
-    CommunicationException.SerializedException cause = null;
-    if (getCause() != null) {
-      if (getCause() instanceof CommunicationException.SerializedException) {
-        cause = (CommunicationException.SerializedException) getCause();
+    SerializedException cause = null;
+    if (getCause() == null) {
+      if (getCause() instanceof SerializedException) {
+        cause = (SerializedException) getCause();
       } else {
-        cause = new CommunicationException.SerializedException(getCause());
+        cause = new SerializedException(getCause());
       }
     }
     if (cause != null) {
@@ -143,14 +136,13 @@ public class CommunicationException extends IOException implements Serializer {
   /**
    * <p>Static deserializer.</p>
    *
-   * <p>CReates a storage exception from the stream.</p>
+   * <p>Creates a storage exception from the stream.</p>
    *
    * @param in The input byte stream to be used
    * @return the object parsed from the input stream by the respective class
    * @throws IOException if not overridden or reached unexpectedly the end of stream
    */
-  public static CommunicationException fromByteArrayStream(ByteArrayInputStream in)
-    throws IOException {
+  public static StorageException fromByteArrayStream(ByteArrayInputStream in) throws IOException {
     if (SerializerHelper.readLong(in) != serialversionUID) {
       throw new IOException("failed to parse StorageException (bad stream?)");
     }
@@ -166,14 +158,13 @@ public class CommunicationException extends IOException implements Serializer {
     Throwable t = null;
 
     if (SerializerHelper.readInt(in) == 1) {
-      t = CommunicationException.SerializedException.fromByteArrayStream(in);
+      t = SerializedException.fromByteArrayStream(in);
     }
 
     // read object end tag (identifier)
     if (SerializerHelper.readLong(in) != serialversionUID) {
       throw new IOException("failed to parse NodeImpl (bad stream end?)");
     }
-    return new CommunicationException(txt, t, ste);
+    return new StorageException(txt, t, ste);
   }
-
 }

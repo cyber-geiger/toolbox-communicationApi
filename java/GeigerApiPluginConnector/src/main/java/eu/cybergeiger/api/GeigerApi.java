@@ -1,41 +1,32 @@
 package eu.cybergeiger.api;
 
-import ch.fhnw.geiger.localstorage.StorageController;
-import ch.fhnw.geiger.localstorage.StorageException;
+import eu.cybergeiger.storage.StorageController;
+import eu.cybergeiger.storage.StorageException;
 import eu.cybergeiger.api.message.GeigerUrl;
 import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.message.MessageType;
-import eu.cybergeiger.api.plugin.MenuItem;
-import eu.cybergeiger.api.plugin.MenuRegistrar;
-import eu.cybergeiger.api.plugin.PluginListener;
-import eu.cybergeiger.api.plugin.PluginRegistrar;
+import eu.cybergeiger.api.plugin.*;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * <p>The API provided by all communicator interfaces.</p>
  */
 public interface GeigerApi extends PluginRegistrar, MenuRegistrar {
+  String MASTER_ID = "__MASTERPLUGIN__";
+  String MASTER_EXECUTOR = "";
 
-  /**
-   * <p>Activates the plugin and sets up communication.</p>
-   *
-   * @param port the port to be occupied
-   */
-  void activatePlugin(int port);
+  Logger logger = Logger.getLogger("GeigerApi");
 
-  /**
-   * <p>deactivates the plugin and makes sure that a plugin is started immediately if contacted.</p>
-   *
-   * <p>If a plugin is properly deactivated no timeout is reached before contacting a plugin.</p>
-   */
-  void deactivatePlugin();
+  String getId();
+
+  Declaration getDeclaration();
 
   /**
    * <p>Obtain controller to access the storage.</p>
    *
    * @return a generic controller providing access to the local storage
-   *
    * @throws StorageException in case allocation of storage backed fails
    */
   StorageController getStorage() throws StorageException;
@@ -62,34 +53,17 @@ public interface GeigerApi extends PluginRegistrar, MenuRegistrar {
    *
    * <p>Mainly used for internal purposes. Plugins may only send messages to the toolbox core.</p>
    *
-   * @param pluginId The plugin id to be contacted
-   * @param msg      the message to be sent
+   * @param msg the message to be sent
    */
-  void sendMessage(String pluginId, Message msg);
+  void sendMessage(Message msg);
 
   /**
-   * <p>Notify plugin about a menu entry pressed.</p>
-   *
-   * <p>Wrapper function used by UI to notify plugins about pressed buttons/menu entries.</p>
-   *
-   * @param url the GeigerURL associated with the menu entry
+   * <p>Reset the GeigerApi by removing all registered plugins and MenuItems.</p>
    */
-  void menuPressed(GeigerUrl url);
+  void zapState();
 
   /**
-   * <p>Returns the List of currently registered menu.</p>
-   *
-   * <p>This call is for the toolbox core only.</p>
-   *
-   * @return the list of currently registered menus
+   * Release all resources.
    */
-  List<MenuItem> getMenuList();
-
-  /**
-   * <p>Notify all plugins about the event that a scan button has been pressed.</p>
-   *
-   * <p>This call is for the toolbox core only.</p>
-   */
-  void scanButtonPressed();
-
+  void close();
 }

@@ -25,13 +25,13 @@ public class TestPluginInformation {
             for (String executable : executables) {
                 for (CommunicationSecret secret : secrets) {
                     // Constructor without secret
-                    PluginInformation info = new PluginInformation(executable, port);
+                    PluginInformation info = new PluginInformation("", executable, port);
                     Assert.assertEquals("checking Executable", executable, info.getExecutable());
                     Assert.assertEquals("checking port", port, info.getPort());
                     Assert.assertNotNull("checking secret", info.getSecret());
                     System.out.println(secret.toString());
                     // Constructor with secret
-                    PluginInformation info2 = new PluginInformation(executable, port, secret);
+                    PluginInformation info2 = new PluginInformation("", executable, port, secret);
                     Assert.assertEquals("checking Executable", executable, info.getExecutable());
                     Assert.assertEquals("checking port", port, info.getPort());
                     Assert.assertArrayEquals("checking secret", secret.getSecret(), info.getSecret().getSecret());
@@ -39,14 +39,14 @@ public class TestPluginInformation {
             }
         }
     }
-    
+
     @Test
     public void testHashCode() {
         for (int port : ports) {
             for (String executable : executables) {
                 for (CommunicationSecret secret : secrets) {
-                    PluginInformation info = new PluginInformation(executable, port, secret);
-                    PluginInformation info2 = new PluginInformation(executable, port, secret);
+                    PluginInformation info = new PluginInformation("", executable, port, secret);
+                    PluginInformation info2 = new PluginInformation("", executable, port, secret);
                     Assert.assertEquals("checking Hashcode", info.hashCode(), info2.hashCode());
                 }
             }

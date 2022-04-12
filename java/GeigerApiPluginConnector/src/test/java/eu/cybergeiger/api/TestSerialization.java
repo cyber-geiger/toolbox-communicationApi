@@ -58,7 +58,7 @@ public class TestSerialization {
      */
     @Test
     public void pluginInformationSerializationTest() throws IOException {
-        PluginInformation p = new PluginInformation("exec", 1234);
+        PluginInformation p = new PluginInformation("", "exec", 1234);
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         p.toByteArrayStream(bout);
         ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
@@ -110,7 +110,15 @@ public class TestSerialization {
      */
     @Test
     public void messageSerializationTest() throws IOException {
-        for (Message m : new Message[]{new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("geiger://id1/path1"), null), new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, null, new byte[0]), new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id", "path2"), new byte[0]), new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id", null), new byte[0]), new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id1", null), new byte[0]), new Message("src", "target", null, null, new byte[0]), new Message("src", "target", null, null, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))}) {
+        for (Message m : new Message[]{
+                new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("geiger://id1/path1")),
+                new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, null),
+                new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id", "path2")),
+                new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id", null)),
+                new Message("src", "target", MessageType.DEACTIVATE_PLUGIN, new GeigerUrl("id1", null)),
+                new Message("src", "target", null, null, new byte[0]),
+                new Message("src", "target", null, null, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))
+        }) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             m.toByteArrayStream(bout);
             ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());

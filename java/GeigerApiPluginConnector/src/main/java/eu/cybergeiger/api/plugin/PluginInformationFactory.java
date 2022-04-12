@@ -13,7 +13,7 @@ public class PluginInformationFactory {
   /**
    * <p>Retrieves plugin information for a plugin.</p>
    *
-   * @param id the id of the the plugin
+   * @param id       the id of the the plugin
    * @param executor the executor string required to run the plugin
    * @param port     the current port of the plugin (-1 denotes unknown)
    * @param secret   the communication secret
@@ -23,7 +23,7 @@ public class PluginInformationFactory {
                                                        CommunicationSecret secret) {
     PluginInformation info = store.get(id.toLowerCase());
     if (info == null) {
-      info = new PluginInformation(executor, port, secret);
+      info = new PluginInformation(id, executor, port, secret);
       setPluginInformation(id, info);
     }
     return info;

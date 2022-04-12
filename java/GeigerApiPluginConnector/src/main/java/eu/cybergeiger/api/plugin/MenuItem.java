@@ -1,7 +1,7 @@
 package eu.cybergeiger.api.plugin;
 
-import ch.fhnw.geiger.serialization.Serializer;
-import ch.fhnw.geiger.serialization.SerializerHelper;
+import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.SerializerHelper;
 import eu.cybergeiger.api.message.GeigerUrl;
 
 import java.io.ByteArrayInputStream;
@@ -137,7 +137,7 @@ public class MenuItem implements Serializer {
     }
     MenuItem menuItem = (MenuItem) o;
     return enabled == menuItem.enabled && Objects.equals(menu, menuItem.menu)
-        && Objects.equals(action, menuItem.action);
+      && Objects.equals(action, menuItem.action);
   }
 
   @Override
@@ -166,14 +166,9 @@ public class MenuItem implements Serializer {
    * @param buf the buffer to be read
    * @return the deserialized object
    */
-  public static MenuItem fromByteArray(byte[] buf) {
-    try {
-      ByteArrayInputStream in = new ByteArrayInputStream(buf);
-      return fromByteArrayStream(in);
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-      return null;
-    }
+  public static MenuItem fromByteArray(byte[] buf) throws IOException {
+    ByteArrayInputStream in = new ByteArrayInputStream(buf);
+    return fromByteArrayStream(in);
   }
 
 

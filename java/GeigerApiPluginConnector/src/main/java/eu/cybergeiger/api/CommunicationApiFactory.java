@@ -1,9 +1,10 @@
 package eu.cybergeiger.api;
 
-import ch.fhnw.geiger.localstorage.StorageException;
+import eu.cybergeiger.storage.StorageException;
 import eu.cybergeiger.api.exceptions.DeclarationMismatchException;
 import eu.cybergeiger.api.plugin.Declaration;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,11 +12,8 @@ import java.util.Map;
  * <p>Implements a singleton pattern for local API.</p>
  */
 public class CommunicationApiFactory {
-
-  public static final String MASTER_EXECUTOR = "FIXME";
-
   // TODO check for threadsafety as concurrenthashmap is not supported
-  private static final Map<String, CommunicationApi> instances = new HashMap<>();
+  private static final Map<String, PluginApi> instances = new HashMap<>();
 
   /**
    * <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be
@@ -29,19 +27,14 @@ public class CommunicationApiFactory {
    *                                      declaration does not match
    * @throws StorageException             if registration failed
    */
-  public static CommunicationApi getLocalApi(String executor, String id, Declaration declaration)
-      throws DeclarationMismatchException, StorageException {
+  public static PluginApi getLocalApi(String executor, String id, Declaration declaration)
+    throws DeclarationMismatchException, IOException {
     synchronized (instances) {
       if (!instances.containsKey(id)) {
-        if (CommunicationApi.MASTER.equals(id)) {
-          // create master
-          instances.put(id, new CommunicationApi(executor, id, true, declaration));
-        } else {
-          instances.put(id, new CommunicationApi(executor, id, false, declaration));
-        }
+        instances.put(id, new PluginApi(executor, id, declaration));
       }
     }
-    CommunicationApi l = instances.get(id);
+    PluginApi l = instances.get(id);
     if (declaration != null && l.getDeclaration() != declaration) {
       throw new DeclarationMismatchException();
     }
@@ -54,7 +47,7 @@ public class CommunicationApiFactory {
    * @param id the id to be retrieved
    * @return the instance or null if not found
    */
-  public static CommunicationApi getLocalApi(String id) {
+  public static PluginApi getLocalApi(String id) {
     return instances.get(id);
   }
 }

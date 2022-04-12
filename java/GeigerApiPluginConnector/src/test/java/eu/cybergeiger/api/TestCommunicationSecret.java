@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import eu.cybergeiger.api.communication.GeigerCommunicator;
 import eu.cybergeiger.api.plugin.CommunicationSecret;
+import eu.cybergeiger.serialization.SerializerHelper;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,7 +34,7 @@ public class TestCommunicationSecret {
 
     // constructor with secret
     for (int i = 0; i < 20; ++i) {
-      byte[] sec = GeigerCommunicator.intToByteArray(new SecureRandom().nextInt(Integer.MAX_VALUE));
+      byte[] sec = SerializerHelper.intToByteArray(new SecureRandom().nextInt(Integer.MAX_VALUE));
       CommunicationSecret secret3 = new CommunicationSecret(sec);
       Assert.assertNotNull("checking existence", secret3.getSecret());
       Assert.assertEquals("checking size", sec.length, secret3.getSecret().length);
@@ -54,7 +55,7 @@ public class TestCommunicationSecret {
     for (int i = 0; i < 20; ++i) {
       CommunicationSecret secret4 = new CommunicationSecret();
       byte[] secretValue = secret4.getSecret();
-      byte[] newSecretValue = GeigerCommunicator.intToByteArray(new SecureRandom().nextInt(Integer.MAX_VALUE));
+      byte[] newSecretValue = SerializerHelper.intToByteArray(new SecureRandom().nextInt(Integer.MAX_VALUE));
       secret4.setSecret(newSecretValue);
       Assert.assertNotNull("checking existence", secret4.getSecret());
       Assert.assertFalse("checking if secret changed", Arrays.equals(secretValue,

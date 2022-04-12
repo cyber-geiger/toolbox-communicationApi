@@ -1,23 +1,25 @@
 package eu.cybergeiger.api.message;
 
-import ch.fhnw.geiger.serialization.Serializer;
-import ch.fhnw.geiger.serialization.SerializerHelper;
+import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.SerializerHelper;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * <p>Representation of a message.</p>
  */
 public class Message implements Serializer {
-
   private static final long serialVersionUID = 143287432L;
 
   private final String sourceId;
   private final String targetId;
   private final MessageType type;
+  private final String requestId;
   private final GeigerUrl action;
   private String payloadString = null;
 
@@ -30,9 +32,23 @@ public class Message implements Serializer {
    * @param action   the url of the event
    */
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action) {
+    this(sourceId, targetId, type, action, UUID.randomUUID().toString());
+  }
+
+  /**
+   * <p>A message object transported through the local communication api.</p>
+   *
+   * @param sourceId  the id of the source plugin
+   * @param targetId  the id of the target plugin
+   * @param type      the type of message
+   * @param requestId Unique ID of the request shared by the request message and the confirmation message.
+   * @param action    the url of the event
+   */
+  public Message(String sourceId, String targetId, MessageType type, GeigerUrl action, String requestId) {
     this.sourceId = sourceId;
     this.targetId = targetId;
     this.type = type;
+    this.requestId = requestId;
     this.action = action;
   }
 
@@ -48,6 +64,22 @@ public class Message implements Serializer {
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action,
                  byte[] payload) {
     this(sourceId, targetId, type, action);
+    setPayload(payload);
+  }
+
+  /**
+   * <p>A message object transported through the local communication api.</p>
+   *
+   * @param sourceId  the id of the source plugin
+   * @param targetId  the id of the target plugin
+   * @param type      the type of message
+   * @param action    the url of the event
+   * @param payload   the payload section of the message
+   * @param requestId Unique ID of the request shared by the request message and the confirmation message.
+   */
+  public Message(String sourceId, String targetId, MessageType type, GeigerUrl action,
+                 byte[] payload, String requestId) {
+    this(sourceId, targetId, type, action, requestId);
     setPayload(payload);
   }
 
@@ -76,6 +108,13 @@ public class Message implements Serializer {
    */
   public MessageType getType() {
     return this.type;
+  }
+
+  /**
+   * Unique ID of the request shared by the request message and the confirmation message.
+   */
+  public String getRequestId() {
+    return requestId;
   }
 
   /**
@@ -123,7 +162,6 @@ public class Message implements Serializer {
    * <p>Sets the payload as a string.</p>
    *
    * @param value the string to be used as payload
-   *
    * @return a string representing the payload
    */
   public String setPayloadString(String value) {
@@ -143,12 +181,12 @@ public class Message implements Serializer {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();
     }
-    Message m =  new Message(SerializerHelper.readInt(in) == 1
-        ? SerializerHelper.readString(in) : null,
-        SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
-        SerializerHelper.readInt(in) == 1
-            ? MessageType.getById(SerializerHelper.readInt(in)) : null,
-        SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null
+    Message m = new Message(SerializerHelper.readInt(in) == 1
+      ? SerializerHelper.readString(in) : null,
+      SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
+      SerializerHelper.readInt(in) == 1
+        ? MessageType.getById(SerializerHelper.readInt(in)) : null,
+      SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null
     );
     m.setPayloadString(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null);
     return m;
@@ -199,9 +237,9 @@ public class Message implements Serializer {
     }
     Message message = (Message) o;
     return Objects.equals(sourceId, message.sourceId)
-        && Objects.equals(targetId, message.targetId)
-        && type == message.type && Objects.equals(action, message.action)
-        && Objects.equals(payloadString, message.payloadString);
+      && Objects.equals(targetId, message.targetId)
+      && type == message.type && Objects.equals(action, message.action)
+      && Objects.equals(payloadString, message.payloadString);
   }
 
   @Override
@@ -211,6 +249,6 @@ public class Message implements Serializer {
 
   @Override
   public String toString() {
-    return getSourceId()+"=>"+getTargetId()+"{["+getType()+"] "+getAction()+"}";
+    return getSourceId() + "=>" + getTargetId() + "{[" + getType() + "] " + getAction() + "}";
   }
 }

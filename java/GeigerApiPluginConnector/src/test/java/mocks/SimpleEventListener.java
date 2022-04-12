@@ -12,14 +12,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class SimpleEventListener implements PluginListener {
 
-  CopyOnWriteArrayList<Message> events;
+  final CopyOnWriteArrayList<Message> events;
 
   public SimpleEventListener() {
     this.events = new CopyOnWriteArrayList<>();
   }
 
   @Override
-  public synchronized void pluginEvent(GeigerUrl url, Message msg) {
+  public synchronized void pluginEvent(Message msg) {
     synchronized (events) {
       events.add(msg);
     }

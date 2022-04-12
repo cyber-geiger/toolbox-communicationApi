@@ -7,102 +7,110 @@ import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.message.MessageType;
 import eu.cybergeiger.api.plugin.PluginListener;
 
+import java.util.Objects;
+
 /**
  * A helper class for sending and waiting on Messages.
  * TODO should this only be used for Testing?
  */
 public class CommunicationHelper {
 
-  /**
-   * Interface to denote a MessageFilter.
-   */
-  public interface MessageFilter {
-    boolean filter(Message msg);
-  }
 
   private static class Listener implements PluginListener {
 
-    private final MessageFilter filter;
-    private final CommunicationApi api;
-    private final Object obj = new Object();
-    private Message msg = null;
+    private final GeigerApi api;
+    private final Object receivedResponse = new Object();
+    private final Message requestMessage;
+    private final MessageType[] responseTypes;
+    private Message responseMessage = null;
 
 
-    public Listener(CommunicationApi api, MessageFilter filter) {
-      if (api == null) {
-        throw new NullPointerException("api may not be null");
-      }
-      if (filter == null) {
-        throw new NullPointerException("message filter may not be null");
-      }
-      this.filter = filter;
+    public Listener(GeigerApi api, Message requestMessage, MessageType[] responseTypes) {
       this.api = api;
-      this.api.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, this);
+      this.requestMessage = requestMessage;
+      this.responseTypes = responseTypes;
+      this.api.registerListener(responseTypes, this);
     }
 
     @Override
-    public void pluginEvent(GeigerUrl url, Message msg) {
-      if (filter.filter(msg)) {
-        this.msg = msg;
-        synchronized (obj) {
-          obj.notifyAll();
-        }
+    public void pluginEvent(Message message) {
+      if (responseMessage != null ||
+        !requestMessage.getRequestId().equals(message.getRequestId()) ||
+        !Objects.equals(requestMessage.getTargetId(), message.getSourceId()) ||
+        !Objects.equals(requestMessage.getSourceId(), message.getTargetId()))
+        return;
+      responseMessage = message;
+      synchronized (receivedResponse) {
+        receivedResponse.notifyAll();
       }
     }
 
     public void dispose() {
-      api.deregisterListener(new MessageType[]{MessageType.ALL_EVENTS}, this);
+      api.deregisterListener(responseTypes, this);
     }
 
-    public Message waitForResult(long timeout) throws CommunicationException {
-      long startTime = System.currentTimeMillis();
-      while (msg == null && (timeout < 0
-          || (System.currentTimeMillis() - startTime < timeout))) {
+    public Message waitForResult(long timeoutMillis) throws CommunicationException {
+      if (responseMessage == null) {
         try {
-          synchronized (obj) {
-            obj.wait(100);
+          synchronized (receivedResponse) {
+            receivedResponse.wait(timeoutMillis);
           }
         } catch (InterruptedException e) {
-          //safe to ignore
+          throw new CommunicationException("Timeout reached while waiting for reply.");
         }
       }
-      if (msg == null) {
-        throw new CommunicationException("timeout reached");
-      }
-      return msg;
+      return responseMessage;
     }
   }
 
+
   /**
-   * <p>Sends a message and waits for the first message matching the provided message filter.</p>
+   * <p>Sends a message and waits for the first
+   * returning message of a specific type with the same requestId.</p>
    *
-   * @param api    the API to be used as communication endpoint
-   * @param msg    the message to be sent
-   * @param filter the filter matching the expected reply
-   * @return the response Message
+   * @param api     GeigerAPI to communicate over.
+   * @param message Message to send.
+   * @return The response Message.
    * @throws CommunicationException if communication with master fails
    */
-  public static Message sendAndWait(CommunicationApi api, Message msg, MessageFilter filter)
-      throws CommunicationException {
-    return sendAndWait(api, msg, filter, 10000);
+  public static Message sendAndWait(GeigerApi api, Message message)
+    throws CommunicationException {
+    return sendAndWait(api, message, new MessageType[]{MessageType.COMAPI_SUCCESS});
   }
 
   /**
-   * <p>Sends a message and waits for the first message matching the provided message filter.</p>
+   * <p>Sends a message and waits for the first
+   * returning message of a specific type with the same requestId.</p>
    *
-   * @param api     the API to be used as communication endpoint
-   * @param msg     the message to be sent
-   * @param filter  the filter matching the expected reply
-   * @param timeout the timeout in milliseconds (-1 for infinite)
-   * @return the response Message
+   * @param api           GeigerAPI to communicate over.
+   * @param message       Message to send.
+   * @param responseTypes Possible message types of response message.
+   * @return The response Message.
    * @throws CommunicationException if communication with master fails
    */
-  public static Message sendAndWait(CommunicationApi api, Message msg, MessageFilter filter, long timeout)
-      throws CommunicationException {
-    Listener l = new Listener(api, filter);
-    api.sendMessage(msg.getTargetId(), msg);
-    Message result = l.waitForResult(timeout);
-    l.dispose();
+  public static Message sendAndWait(GeigerApi api, Message message, MessageType[] responseTypes)
+    throws CommunicationException {
+    return sendAndWait(api, message, responseTypes, 30000);
+  }
+
+  /**
+   * <p>Sends a message and waits for the first
+   * returning message of a specific type with the same requestId.</p>
+   *
+   * @param api           GeigerAPI to communicate over.
+   * @param message       Message to send.
+   * @param responseTypes Possible message types of response message.
+   * @param timeoutMillis Timeout in milliseconds.
+   * @return The response Message.
+   * @throws CommunicationException if communication with master fails
+   */
+  public static Message sendAndWait(GeigerApi api, Message message,
+                                    MessageType[] responseTypes, long timeoutMillis)
+    throws CommunicationException {
+    Listener listener = new Listener(api, message, responseTypes);
+    api.sendMessage(message);
+    Message result = listener.waitForResult(timeoutMillis);
+    listener.dispose();
     return result;
   }
 

@@ -1,6 +1,7 @@
 ## 0.7.9 Bugfixing Release (upcoming)
 Fixes:
 - Fixes visibility rules of listener in the owner enforcer.
+- Take the plugin's sharing declaration into account in the owner enforcer. 
 - Added more test to hunt down issue #22
 
 ## 0.7.8 Bugfixing Release

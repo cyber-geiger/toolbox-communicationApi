@@ -455,7 +455,7 @@ Future<void> reuvenTests() async {
 
       // remove data
       print('## deleting value');
-      await api!.storage.delete(':Users:test');
+      await api.storage.delete(':Users:test');
 
       await api.close();
     }, timeout: const Timeout(Duration(seconds: 120)));

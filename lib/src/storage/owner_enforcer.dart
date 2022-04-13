@@ -5,58 +5,43 @@ import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class StorageListenerFilter extends StorageListener {
   final StorageListener _listener;
-  final String _owner;
-  final Declaration? _sharing;
+  final PluginInformation _owner;
 
-  StorageListenerFilter(this._owner, this._listener, this._sharing);
+  StorageListenerFilter(this._owner, this._listener);
+
+  bool _canStay(Node node) {
+    return (node.visibility == Visibility.white && node.owner == _owner.id) ||
+        _owner.declaration == Declaration.doNotShareData;
+  }
 
   @override
   void gotStorageChange(EventType event, Node? oldNode, Node? newNode) {
-    if (oldNode != null &&
-        (oldNode.visibility != Visibility.white &&
-            oldNode.owner != _owner &&
-            _sharing != null &&
-            _sharing != Declaration.doNotShareData)) {
+    if (oldNode != null && !_canStay(oldNode)) {
       oldNode = null;
     }
-    if (newNode != null &&
-        (newNode.visibility != Visibility.white &&
-            newNode.owner != _owner &&
-            _sharing != null &&
-            _sharing != Declaration.doNotShareData)) {
+    if (newNode != null && !_canStay(newNode)) {
       newNode = null;
     }
 
-    if (oldNode != null || newNode != null) {
-      _listener.gotStorageChange(event, oldNode, newNode);
-    }
+    if (oldNode == null && newNode == null) return;
+    _listener.gotStorageChange(event, oldNode, newNode);
   }
 }
 
 class OwnerEnforcerWrapper extends StorageController {
   final StorageController _controller;
-  final String _owner;
-  final bool _enforceTimestampUpdate;
-  final bool _sharingFilter;
-  final bool _pulledFromFactory;
+  final PluginInformation owner;
+  final bool enforceTimestampUpdate;
 
   final Map<StorageListener, StorageListener> _listeners = {};
 
-  OwnerEnforcerWrapper(this._controller, this._owner,
-      [this._enforceTimestampUpdate = true,
-      this._pulledFromFactory = false,
-      this._sharingFilter = true]);
-
-  String get owner => _owner;
-
-  bool get enforceTimestampUpdate => _enforceTimestampUpdate;
-
-  bool get pulledFromFactory => _pulledFromFactory;
+  OwnerEnforcerWrapper(this._controller, this.owner,
+      {this.enforceTimestampUpdate = true});
 
   Node _updateOwnerAndTimestamp(Node n) {
-    if (n.owner != owner) {
-      (n as NodeImpl).set(Field.owner, owner);
-      if (_enforceTimestampUpdate) {
+    if (n.owner != owner.id) {
+      (n as NodeImpl).set(Field.owner, owner.id);
+      if (enforceTimestampUpdate) {
         n.touch();
       }
     }
@@ -79,25 +64,24 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<void> addValue(String path, NodeValue value) async {
-    if (_enforceTimestampUpdate) {
+    if (enforceTimestampUpdate) {
       value.touch();
     }
-    if ((await _controller.getNodeOrTombstone(path)).owner == _owner) {
+    final node = await _controller.getNodeOrTombstone(path);
+    if (node.owner == owner.id) {
       return await _controller.addValue(path, value);
     }
   }
 
   @override
   Future<void> close() async {
-    // nothing to do
     return await _controller.close();
   }
 
   @override
   Future<Node> delete(String path) async {
-    // nothing to do
-    // timestamp is updated anyway
-    if ((await _controller.getNodeOrTombstone(path)).owner == _owner) {
+    final node = await _controller.getNodeOrTombstone(path);
+    if (node.owner == owner.id) {
       return await _controller.delete(path);
     }
     throw StorageException(
@@ -106,14 +90,13 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<NodeValue> deleteValue(String path, String key) async {
-    // nothing to do
     return await _controller.deleteValue(path, key);
   }
 
   @override
   Future<List<SearchCriteria>> deregisterChangeListener(
       StorageListener listener) async {
-    if (_sharingFilter) {
+    if (owner.declaration == Declaration.doShareData) {
       StorageListener? pl = _listeners.remove(listener);
       if (pl == null) {
         return [];
@@ -126,7 +109,6 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<void> flush() async {
-    // nothing to do
     return await _controller.flush();
   }
 
@@ -135,8 +117,8 @@ class OwnerEnforcerWrapper extends StorageController {
     // nothing to do
     Node node = await _controller.get(path);
     if (node.visibility == Visibility.white ||
-        node.owner == _owner ||
-        !_sharingFilter) {
+        node.owner == owner.id ||
+        owner.declaration == Declaration.doNotShareData) {
       return node;
     }
     throw StorageException('access denied');
@@ -146,8 +128,8 @@ class OwnerEnforcerWrapper extends StorageController {
   Future<Node> getNodeOrTombstone(String path) async {
     Node node = await _controller.getNodeOrTombstone(path);
     if (node.visibility == Visibility.white ||
-        node.owner == _owner ||
-        !_sharingFilter) {
+        node.owner == owner.id ||
+        owner.declaration == Declaration.doNotShareData) {
       return node;
     }
     throw StorageException('access denied');
@@ -158,8 +140,8 @@ class OwnerEnforcerWrapper extends StorageController {
     // nothing to do
     Node node = await _controller.get(path);
     if (node.visibility == Visibility.white ||
-        node.owner == _owner ||
-        !_sharingFilter) {
+        node.owner == owner.id ||
+        owner.declaration == Declaration.doNotShareData) {
       return await _controller.getValue(path, key);
     }
     throw StorageException('access denied');
@@ -168,24 +150,18 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<void> registerChangeListener(
       StorageListener listener, SearchCriteria criteria) async {
-    // nothing to do
-    criteria.owner = owner;
-    if (_sharingFilter) {
-      _listeners[listener] = StorageListenerFilter(
-          owner, listener, _sharingFilter ? Declaration.doShareData : null);
-      return await _controller.registerChangeListener(
-          _listeners[listener]!, criteria);
+    if (owner.declaration == Declaration.doShareData) {
+      _listeners[listener] = listener = StorageListenerFilter(owner, listener);
     } else {
       _listeners[listener] = listener;
-      return await _controller.registerChangeListener(listener, criteria);
     }
+    return await _controller.registerChangeListener(listener, criteria);
   }
 
   @override
   Future<void> rename(String oldPath, String newName) async {
-    // nothing to do
     Node node = await _controller.get(oldPath);
-    if (node.owner == _owner) {
+    if (node.owner == owner.id) {
       return await _controller.rename(oldPath, newName);
     }
     throw StorageException('access denied');
@@ -193,14 +169,12 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<List<Node>> search(SearchCriteria criteria) async {
-    criteria.owner = owner;
     List<Node> nl = await _controller.search(criteria);
-    // filter search results
     List<Node> ret = <Node>[];
     for (Node node in nl) {
       if (node.visibility == Visibility.white ||
-          node.owner == _owner ||
-          !_sharingFilter) {
+          node.owner == owner.id ||
+          owner.declaration == Declaration.doNotShareData) {
         ret.add(node);
       }
     }
@@ -212,7 +186,7 @@ class OwnerEnforcerWrapper extends StorageController {
     // nothing to do
     node = _updateOwnerAndTimestamp(node);
     Node nodeOld = await _controller.get(node.path);
-    if (nodeOld.owner == _owner) {
+    if (nodeOld.owner == owner.id) {
       return await _controller.update(node);
     }
     throw StorageException('access denied');
@@ -220,7 +194,7 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<void> updateValue(String nodeName, NodeValue value) async {
-    if ((await _controller.get(nodeName)).owner == _owner) {
+    if ((await _controller.get(nodeName)).owner == owner.id) {
       return await _controller.updateValue(nodeName, value);
     }
     throw StorageException('access denied');
@@ -237,7 +211,7 @@ class OwnerEnforcerWrapper extends StorageController {
   @override
   Future<bool> addOrUpdateValue(String path, NodeValue value) async {
     // nothing to do (Is that so?)
-    if ((await _controller.get(path)).owner == _owner) {
+    if ((await _controller.get(path)).owner == owner.id) {
       return await _controller.addOrUpdateValue(path, value);
     }
     throw StorageException('access denied');

@@ -7,7 +7,7 @@ enum Declaration {
 
   /// Data sharing is done. As a result only access to own objects (any TLP) is granted and to all
   /// objects of TLP:WHITE
-  doShareData
+  doShareData,
 }
 
 extension DeclarationExtension on Declaration {

@@ -1,3 +1,7 @@
+## 0.7.9 Bugfixing Release (upcomming)
+Fixes:
+- (none so far)
+
 ## 0.7.8 Bugfixing Release
 Fixes:
 - Fixes visibility rules of listener in the owner enforcer.

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
+import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -21,7 +22,7 @@ void main() {
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
     final PluginInformation payload = PluginInformation(
         'plugin1', './plugin1', 5555, CommunicationSecret.empty());
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
     final Message reply =
         await CommunicationHelper.sendAndWait(localMaster, request);
@@ -42,7 +43,7 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.deregisterPlugin, testUrl);
     final Message reply =
         await CommunicationHelper.sendAndWait(localMaster, request);
@@ -67,12 +68,12 @@ void main() {
     final PluginInformation payload = PluginInformation(
         'plugin1', './plugin1', 5555, CommunicationSecret.empty());
     // Pregister plugin
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
     await CommunicationHelper.sendAndWait(localMaster, request);
     // activate plugin
     const int payloadActivate = 255; //ToDo correct 8bit bytevalue before 5555
-    final Message requestActivate = Message(
+    final Message requestActivate = SecuredMessage(
         GeigerApi.masterId,
         GeigerApi.masterId,
         MessageType.activatePlugin,
@@ -101,12 +102,12 @@ void main() {
     final PluginInformation payload = PluginInformation(
         'plugin1', './plugin1', 5555, CommunicationSecret.empty());
     // Pregister plugin
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
     await CommunicationHelper.sendAndWait(localMaster, request);
     // activate plugin
     const int payloadActivate = 255; //ToDo: Correct 8bit bytevalue, before 5555
-    final Message requestActivate = Message(
+    final Message requestActivate = SecuredMessage(
         GeigerApi.masterId,
         GeigerApi.masterId,
         MessageType.activatePlugin,
@@ -114,7 +115,7 @@ void main() {
         SerializerHelper.intToByteArray(payloadActivate));
     await CommunicationHelper.sendAndWait(localMaster, requestActivate);
     // deactivate Plugin
-    final Message requestDeactivate = Message(GeigerApi.masterId,
+    final Message requestDeactivate = SecuredMessage(GeigerApi.masterId,
         GeigerApi.masterId, MessageType.deactivatePlugin, testUrl);
     final Message replyDeactivate =
         await CommunicationHelper.sendAndWait(localMaster, requestDeactivate);
@@ -160,7 +161,7 @@ void main() {
         await NodeImpl.fromPath(':menu:1111-1111-111111-111111:test', 'pid',
             nodeValues: [NodeValueImpl('name', 'testentry')]),
         menuUrl);
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     final Message reply =
         await CommunicationHelper.sendAndWait(localMaster, request);
@@ -191,12 +192,12 @@ void main() {
         await NodeImpl.fromPath(':menu:1111-1111-111111-111112:test', 'pid',
             nodeValues: [NodeValueImpl('name', 'Plugin1Score')]),
         menuUrl);
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a MenuItem
     await CommunicationHelper.sendAndWait(localMaster, request);
 
-    final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request2 = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.deregisterMenu, testUrl, utf8.encode(payload.menu.path));
     final Message reply2 =
         await CommunicationHelper.sendAndWait(localMaster, request2);
@@ -226,13 +227,13 @@ void main() {
             nodeValues: [NodeValueImpl('name', 'Plugin2Score')]),
         menuUrl,
         false);
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a disabled menuItem
     await CommunicationHelper.sendAndWait(localMaster, request);
 
     // enable the menuItem
-    final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request2 = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.enableMenu, testUrl, utf8.encode(payload.menu.path));
     final Message reply2 =
         await CommunicationHelper.sendAndWait(localMaster, request2);
@@ -266,13 +267,13 @@ void main() {
             nodeValues: [NodeValueImpl('name', 'Plugin3Score')]),
         menuUrl,
         true);
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerMenu, testUrl, await payload.toByteArray());
     // register a disabled menuItem
     await CommunicationHelper.sendAndWait(localMaster, request);
 
     // enable the menuItem
-    final Message request2 = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request2 = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.disableMenu, testUrl, utf8.encode(payload.menu.path));
     final Message reply2 =
         await CommunicationHelper.sendAndWait(localMaster, request2);
@@ -299,7 +300,7 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+    final Message request = SecuredMessage(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.ping, testUrl, utf8.encode('payload'));
     final Message reply = await CommunicationHelper.sendAndWait(
         localMaster, request,

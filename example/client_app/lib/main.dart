@@ -3,10 +3,10 @@ import 'package:geiger_api/geiger_api.dart';
 
 import 'message_logger.dart';
 
-const masterExecutor = 'com.example.master_app;'
+const masterExecutor = 'C:\\Users\\IMVS1807024\\Projects\\toolbox-communicationApi\\example\\master_app\\build\\windows\\runner\\Debug\\master_app.exe;'
     'com.example.master_app.MainActivity;'
     'TODO';
-const pluginExecutor = 'com.example.client_app;'
+const pluginExecutor = 'C:\\Users\\IMVS1807024\\Projects\\toolbox-communicationApi\\example\\client_app\\build\\windows\\runner\\Debug\\client_app.exe;'
     'com.example.client_app.MainActivity;'
     'TODO';
 const pluginId = 'client-plugin';

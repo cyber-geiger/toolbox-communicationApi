@@ -31,6 +31,9 @@ class MessageLogger implements PluginListener {
       messages.removeAt(0);
       messageWidgets.removeAt(0);
     }
+    
+    debugPrint(msg.action?.path);
+
     messages.add(msg);
     messageWidgets.add(toWidget(msg));
     for (final listener in _listeners) {

@@ -1,5 +1,6 @@
 library geiger_api;
 
+import 'package:geiger_api/src/utils/storable_hash.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import '../../geiger_api.dart';
@@ -25,6 +26,8 @@ Future<Serializer> readObject(final ByteStream inStream) async {
       return MenuItem.fromByteArrayStream(inStream);
     case GeigerUrl.serialVersionUID:
       return GeigerUrl.fromByteArrayStream(inStream);
+    case StorableHash.serialVersionUID:
+      return StorableHash.fromByteArrayStream(inStream);
     default:
       throw StorageException('unable to parse $uid');
   }

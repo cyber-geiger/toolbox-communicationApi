@@ -1,6 +1,7 @@
 library geiger_api;
 
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
@@ -67,7 +68,7 @@ class PassthroughController extends StorageController
       }
       var response = await CommunicationHelper.sendAndWait(
           api,
-          Message(api.id, GeigerApi.masterId, MessageType.storageEvent,
+          SecuredMessage(api.id, GeigerApi.masterId, MessageType.storageEvent,
               GeigerUrl(null, GeigerApi.masterId, name), await sink?.bytes),
           responseTypes: [
             MessageType.storageSuccess,

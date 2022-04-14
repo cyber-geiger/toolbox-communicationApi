@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
+import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_api/src/storage/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -140,7 +141,7 @@ class CommunicationApi extends GeigerApi {
         PluginInformation(pluginId ?? id, executor, _communicator.port);
     await CommunicationHelper.sendAndWait(
         this,
-        Message(
+        SecuredMessage(
             id,
             GeigerApi.masterId,
             MessageType.registerPlugin,
@@ -152,7 +153,7 @@ class CommunicationApi extends GeigerApi {
   Future<void> activatePlugin() async {
     await CommunicationHelper.sendAndWait(
       this,
-      Message(id, GeigerApi.masterId, MessageType.activatePlugin, null,
+      SecuredMessage(id, GeigerApi.masterId, MessageType.activatePlugin, null,
           SerializerHelper.intToByteArray(_communicator.port)),
     );
   }
@@ -166,7 +167,7 @@ class CommunicationApi extends GeigerApi {
   @override
   Future<void> deactivatePlugin() async {
     await CommunicationHelper.sendAndWait(this,
-        Message(id, GeigerApi.masterId, MessageType.deactivatePlugin, null));
+        SecuredMessage(id, GeigerApi.masterId, MessageType.deactivatePlugin, null));
   }
 
   @override
@@ -180,7 +181,7 @@ class CommunicationApi extends GeigerApi {
 
     await CommunicationHelper.sendAndWait(
         this,
-        Message(id, GeigerApi.masterId, MessageType.deregisterPlugin,
+        SecuredMessage(id, GeigerApi.masterId, MessageType.deregisterPlugin,
             GeigerUrl(null, GeigerApi.masterId, 'deregisterPlugin')));
   }
 
@@ -309,7 +310,7 @@ class CommunicationApi extends GeigerApi {
   /// Broadcasts a [message] to all known plugins.
   Future<void> broadcastMessage(Message message) async {
     for (var plugin in plugins.entries) {
-      await sendMessage(Message(GeigerApi.masterId, plugin.key.toString(),
+      await sendMessage(SecuredMessage(GeigerApi.masterId, plugin.key.toString(),
           message.type, message.action, message.payload));
     }
   }
@@ -322,7 +323,7 @@ class CommunicationApi extends GeigerApi {
         if (item != null) {
           item.enabled = true;
         }
-        await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
+        await sendMessage(SecuredMessage(id, msg.sourceId, MessageType.comapiSuccess,
             GeigerUrl(null, msg.sourceId, 'enableMenu'), null, msg.requestId));
         break;
       case MessageType.disableMenu:
@@ -330,14 +331,14 @@ class CommunicationApi extends GeigerApi {
         if (item != null) {
           item.enabled = false;
         }
-        await sendMessage(Message(id, msg.sourceId, MessageType.comapiSuccess,
+        await sendMessage(SecuredMessage(id, msg.sourceId, MessageType.comapiSuccess,
             GeigerUrl(null, msg.sourceId, 'disableMenu'), null, msg.requestId));
         break;
       case MessageType.registerMenu:
         final item =
             await MenuItem.fromByteArrayStream(ByteStream(null, msg.payload));
         menuItems[StorableString(item.menu.path)] = item;
-        await sendMessage(Message(
+        await sendMessage(SecuredMessage(
             id,
             msg.sourceId,
             MessageType.comapiSuccess,
@@ -348,7 +349,7 @@ class CommunicationApi extends GeigerApi {
       case MessageType.deregisterMenu:
         final menuString = utf8.fuse(base64).decode(msg.payloadString!);
         menuItems.remove(StorableString(menuString));
-        await sendMessage(Message(
+        await sendMessage(SecuredMessage(
             id,
             msg.sourceId,
             MessageType.comapiSuccess,
@@ -359,7 +360,7 @@ class CommunicationApi extends GeigerApi {
       case MessageType.registerPlugin:
         await registerPlugin(
             msg.sourceId, await PluginInformation.fromByteArray(msg.payload));
-        await sendMessage(Message(
+        await sendMessage(SecuredMessage(
             id,
             msg.sourceId,
             MessageType.comapiSuccess,
@@ -368,7 +369,7 @@ class CommunicationApi extends GeigerApi {
             msg.requestId));
         break;
       case MessageType.deregisterPlugin:
-        await sendMessage(Message(
+        await sendMessage(SecuredMessage(
             id,
             msg.sourceId,
             MessageType.comapiSuccess,
@@ -384,7 +385,7 @@ class CommunicationApi extends GeigerApi {
           final port = SerializerHelper.byteArrayToInt(msg.payload);
           plugins[StorableString(msg.sourceId)] =
               PluginInformation(msg.sourceId, pluginInfo.getExecutable(), port);
-          await sendMessage(Message(
+          await sendMessage(SecuredMessage(
               id,
               msg.sourceId,
               MessageType.comapiSuccess,
@@ -396,7 +397,7 @@ class CommunicationApi extends GeigerApi {
       case MessageType.deactivatePlugin:
         {
           var pluginInfo = plugins[StorableString(msg.sourceId)]!;
-          await sendMessage(Message(
+          await sendMessage(SecuredMessage(
               id,
               msg.sourceId,
               MessageType.comapiSuccess,
@@ -415,7 +416,7 @@ class CommunicationApi extends GeigerApi {
         break;
       case MessageType.ping:
         {
-          await sendMessage(Message(id, msg.sourceId, MessageType.pong,
+          await sendMessage(SecuredMessage(id, msg.sourceId, MessageType.pong,
               GeigerUrl(null, msg.sourceId, ''), msg.payload, msg.requestId));
           break;
         }
@@ -447,7 +448,7 @@ class CommunicationApi extends GeigerApi {
     bout.close();
     await CommunicationHelper.sendAndWait(
         this,
-        Message(
+        SecuredMessage(
             id,
             GeigerApi.masterId,
             MessageType.registerMenu,
@@ -459,7 +460,7 @@ class CommunicationApi extends GeigerApi {
   Future<void> enableMenu(String menu) async {
     await CommunicationHelper.sendAndWait(
         this,
-        Message(
+        SecuredMessage(
             id,
             GeigerApi.masterId,
             MessageType.enableMenu,
@@ -469,7 +470,7 @@ class CommunicationApi extends GeigerApi {
 
   @override
   Future<void> disableMenu(String menu) async {
-    Message msg = Message(id, GeigerApi.masterId, MessageType.disableMenu,
+    Message msg = SecuredMessage(id, GeigerApi.masterId, MessageType.disableMenu,
         GeigerUrl(null, GeigerApi.masterId, 'disableMenu'));
     msg.payloadString = menu;
     await CommunicationHelper.sendAndWait(this, msg);
@@ -479,7 +480,7 @@ class CommunicationApi extends GeigerApi {
   Future<void> deregisterMenu(String menu) async {
     await CommunicationHelper.sendAndWait(
         this,
-        Message(
+        SecuredMessage(
             id,
             GeigerApi.masterId,
             MessageType.deregisterPlugin,
@@ -489,7 +490,7 @@ class CommunicationApi extends GeigerApi {
 
   @override
   Future<void> menuPressed(GeigerUrl url) async {
-    await sendMessage(Message(
+    await sendMessage(SecuredMessage(
         GeigerApi.masterId, url.plugin, MessageType.menuPressed, url, null));
   }
 
@@ -503,11 +504,11 @@ class CommunicationApi extends GeigerApi {
     if (!isMaster) {
       await CommunicationHelper.sendAndWait(
           this,
-          Message(id, GeigerApi.masterId, MessageType.scanPressed,
+          SecuredMessage(id, GeigerApi.masterId, MessageType.scanPressed,
               GeigerUrl(null, GeigerApi.masterId, 'scanPressed')));
     } else {
       await broadcastMessage(
-          Message(GeigerApi.masterId, null, MessageType.scanPressed, null));
+          SecuredMessage(GeigerApi.masterId, null, MessageType.scanPressed, null));
     }
   }
 

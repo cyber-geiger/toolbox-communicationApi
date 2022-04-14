@@ -2,7 +2,6 @@ library geiger_api;
 
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/utils/communication_serializer.dart';
-import 'package:geiger_api/src/utils/hash.dart';
 import 'package:geiger_api/src/utils/storable_hash.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
@@ -37,6 +36,9 @@ class SecuredMessage extends Message {
       SerializerHelper.writeInt(out, 1);
       SerializerHelper.writeString(out, payloadString);
     }
+    if (hash != null){
+      writeObject(out, hash as Serializer);
+    }
     SerializerHelper.writeLong(out, serialVersionUID);
   }
 
@@ -62,7 +64,7 @@ class SecuredMessage extends Message {
     m.payloadString = (await SerializerHelper.readInt(in_) == 1)
         ? await SerializerHelper.readString(in_)
         : null;
-        StorableHash? hash_ = await readObject(in_) as StorableHash;
+        StorableHash hash_ = await readObject(in_) as StorableHash;
         m.hash = hash_;
     SerializerHelper.castTest(
         'Message', serialVersionUID, await SerializerHelper.readLong(in_), 2);

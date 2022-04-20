@@ -4,6 +4,7 @@ library geiger_api;
 
 import 'package:collection/collection.dart';
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:test/test.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,7 +25,7 @@ void main() {
       print(e);
     }
 
-    Message msg = Message(sourceId, targetId, messageType, url);
+    Message msg = SecuredMessage(sourceId, targetId, messageType, url);
     expect(msg.sourceId == sourceId, true, reason: 'sourceId does not match');
     expect(msg.targetId == targetId, true, reason: 'targetId does not match');
     expect(msg.type == messageType, true, reason: 'messageType does not match');
@@ -33,7 +34,7 @@ void main() {
     expect(msg.payload.isEmpty, true, reason: 'payload is not empty');
 
     List<int> payload = 'payload'.codeUnits;
-    Message msg2 = Message(sourceId, targetId, messageType, url, payload);
+    Message msg2 = SecuredMessage(sourceId, targetId, messageType, url, payload);
     expect(msg2.sourceId == sourceId, true, reason: 'sourceId does not match');
     expect(msg2.targetId == targetId, true, reason: 'targetId does not match');
     expect(msg2.type == messageType, true,
@@ -59,27 +60,27 @@ void main() {
 
     //without payload
     Message msg =
-        Message(sourceId, targetId, messageType, url, null, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, null, requestId);
     Message msg2 =
-        Message(sourceId, targetId, messageType, url, null, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, null, requestId);
     expect(msg2, msg);
 
     //with payload
     Message msg3 =
-        Message(sourceId, targetId, messageType, url, payload, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, payload, requestId);
     Message msg4 =
-        Message(sourceId, targetId, messageType, url, payload, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, payload, requestId);
     expect(msg3, msg4);
     expect(msg, isNot(msg3));
 
     //negative tests
     List<int> payload2 = 'payload2'.codeUnits;
-    Message msg5 = Message(sourceId, targetId, messageType, url, payload2);
+    Message msg5 = SecuredMessage(sourceId, targetId, messageType, url, payload2);
     expect(msg5, isNot(msg3));
 
     String requestId2 = 'some-other-id';
     Message msg6 =
-        Message(sourceId, targetId, messageType, url, null, requestId2);
+        SecuredMessage(sourceId, targetId, messageType, url, null, requestId2);
     expect(msg6, isNot(msg));
   });
 
@@ -93,16 +94,16 @@ void main() {
 
     //without payload
     Message msg =
-        Message(sourceId, targetId, messageType, url, null, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, null, requestId);
     Message msg2 =
-        Message(sourceId, targetId, messageType, url, null, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, null, requestId);
     expect(msg.hashCode == msg2.hashCode, true);
 
     //with payload
     Message msg3 =
-        Message(sourceId, targetId, messageType, url, payload, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, payload, requestId);
     Message msg4 =
-        Message(sourceId, targetId, messageType, url, payload, requestId);
+        SecuredMessage(sourceId, targetId, messageType, url, payload, requestId);
     expect(msg3.hashCode == msg4.hashCode, true);
 
     //negative tests
@@ -111,7 +112,7 @@ void main() {
 
   test('payloadEncodingTest', () {
     Message m =
-        Message('src', 'target', MessageType.activatePlugin, null, null);
+        SecuredMessage('src', 'target', MessageType.activatePlugin, null, null);
     final List<String?> i = [null, '', const Uuid().v4()];
     for (final String? pl in i) {
       m.payloadString = pl;

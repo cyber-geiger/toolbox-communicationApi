@@ -3,6 +3,7 @@ library geiger_api;
 import 'dart:async';
 
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/expect.dart';
@@ -120,17 +121,17 @@ void main() {
    */
   test('messageSerializationTest', () async {
     List<Message> messageList = [
-      Message('src', 'target', MessageType.deactivatePlugin,
+      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, 'geiger://id1/path1'), null),
-      Message('src', 'target', MessageType.deactivatePlugin, null, []),
-      Message('src', 'target', MessageType.deactivatePlugin,
+      SecuredMessage('src', 'target', MessageType.deactivatePlugin, null, []),
+      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, 'path2'), []),
-      Message('src', 'target', MessageType.deactivatePlugin,
+      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, ''), <int>[]),
-      Message('src', 'target', MessageType.deactivatePlugin,
+      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, ''), <int>[]),
-      Message('src', 'target', MessageType.allEvents, null, <int>[]),
-      Message('src', 'target', MessageType.allEvents, null,
+      SecuredMessage('src', 'target', MessageType.allEvents, null, <int>[]),
+      SecuredMessage('src', 'target', MessageType.allEvents, null,
           const Uuid().v4().codeUnits)
     ];
 
@@ -139,7 +140,7 @@ void main() {
       m.toByteArrayStream(bout);
       bout.close();
       ByteStream bin = ByteStream(Stream<List<int>>.value(await bout.bytes));
-      Message m2 = await Message.fromByteArray(bin);
+      Message m2 = await SecuredMessage.fromByteArray(bin);
       expect(m == m2, true,
           reason: 'Cloned Plugininformation using stream are not equal');
     }

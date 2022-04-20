@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'change_listener.dart';
@@ -272,7 +273,7 @@ Future<void> reuvenTests() async {
       int start = DateTime.now().millisecondsSinceEpoch;
       print('## assembling message');
       Message m =
-          Message('hi', 'ha', MessageType.storageEvent, null, s.codeUnits);
+          SecuredMessage('hi', 'ha', MessageType.storageEvent, null, s.codeUnits);
       int i = DateTime.now().millisecondsSinceEpoch;
       print(
           '## assembly done in ${DateTime.now().millisecondsSinceEpoch - start} ms');
@@ -285,7 +286,7 @@ Future<void> reuvenTests() async {
       print('## deserializing message');
       bout.close();
       ByteStream bin = ByteStream(null, await bout.bytes);
-      Message m2 = await Message.fromByteArray(bin);
+      Message m2 = await SecuredMessage.fromByteArray(bin);
       print(
           '## deserialization done in ${DateTime.now().millisecondsSinceEpoch - i} ms');
       int time = DateTime.now().millisecondsSinceEpoch - start;

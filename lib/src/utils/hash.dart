@@ -7,9 +7,9 @@ import 'package:geiger_api/src/utils/hash_type.dart';
 class Hash {
   final HashType _hashType;
   final List<int> _bytes;
-  final cryptography.Hash hash;
+  final cryptography.Hash _hash;
 
-  Hash(this._hashType, this._bytes): hash = cryptography.Hash(_bytes);
+  Hash(this._hashType, this._bytes): _hash = cryptography.Hash(_bytes);
 
   List<int> get bytes => _bytes;
   HashType get hashType => _hashType;
@@ -20,7 +20,7 @@ class Hash {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is Hash && hash == other.hash);
+        (other is Hash && _hashType == other.hashType && _hash == other._hash);
   }
 
   @override

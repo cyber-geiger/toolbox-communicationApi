@@ -8,29 +8,32 @@ import 'package:test/test.dart';
 import 'print_logger.dart';
 
 Future<void> ownerEnforcerTests(final StorageController controller) async {
+  final owner1 = PluginInformation('owner1', '', 0, Declaration.doShareData);
+  final owner2 = PluginInformation('owner2', '', 0, Declaration.doShareData);
+
   test('Owner get Node', () async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
-        OwnerEnforcerWrapper(controller, 'testOwner');
-    await ownerEnforcerWrapper.add(NodeImpl(':testNode1', 'testOwner'));
+        OwnerEnforcerWrapper(controller, owner1);
+    await ownerEnforcerWrapper.add(NodeImpl(':testNode1', owner1.id));
     Node node = await ownerEnforcerWrapper.get(':testNode1');
-    expect(node.owner, 'testOwner');
+    expect(node.owner, owner1.id);
   });
 
   test('Owner get Node visibility', () async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
-        OwnerEnforcerWrapper(controller, 'testOwner');
+        OwnerEnforcerWrapper(controller, owner1);
     OwnerEnforcerWrapper ownerEnforcerWrapper2 =
-        OwnerEnforcerWrapper(controller, 'testOwner2');
-    Node nodeimpl = NodeImpl(':testNode2', 'testOwner2');
+        OwnerEnforcerWrapper(controller, owner2);
+    Node nodeimpl = NodeImpl(':testNode2', owner2.id);
     nodeimpl.visibility = Visibility.white;
     await ownerEnforcerWrapper.add(nodeimpl);
     Node node = await ownerEnforcerWrapper2.get(':testNode2');
-    expect(node.owner, 'testOwner');
+    expect(node.owner, owner1.id);
   });
 
   test('update Node', () async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
-        OwnerEnforcerWrapper(controller, 'testOwner');
+        OwnerEnforcerWrapper(controller, owner1);
     Node node = await ownerEnforcerWrapper.get(':testNode1');
     node.visibility = Visibility.amber;
     await ownerEnforcerWrapper.update(node);
@@ -40,7 +43,7 @@ Future<void> ownerEnforcerTests(final StorageController controller) async {
 
   test('get Value', () async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
-        OwnerEnforcerWrapper(controller, 'testOwner');
+        OwnerEnforcerWrapper(controller, owner1);
     await ownerEnforcerWrapper.addValue(
         ":testNode1", NodeValueImpl("key1", "value1"));
     NodeValue? value =
@@ -50,7 +53,7 @@ Future<void> ownerEnforcerTests(final StorageController controller) async {
 
   test('update Value', () async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
-        OwnerEnforcerWrapper(controller, 'testOwner');
+        OwnerEnforcerWrapper(controller, owner1);
     await ownerEnforcerWrapper.updateValue(
         ':testNode1', NodeValueImpl("key1", "value2"));
     NodeValue? value =

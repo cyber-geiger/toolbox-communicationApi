@@ -44,8 +44,8 @@ class EventChange {
 
 Future<void> algarclamTests() async {
   group('algarclam tests', () {
-    test('STORAGE LISTENER - LAST NODE UPDATED', () async {
-      print("LISTENER TEST - CHECKS DELETE BEHAVIOUR");
+    test('storage listener - last node updated', () async {
+      print("testing delete behaviour in listener");
       Future<GeigerApi?> f =
           getGeigerApi("", GeigerApi.masterId, Declaration.doNotShareData);
       GeigerApi localMaster = (await f)!;
@@ -55,10 +55,10 @@ Future<void> algarclamTests() async {
       SearchCriteria sc = SearchCriteria(searchPath: ':Local');
       CollectingListener stListener = CollectingListener();
       await storageController.registerChangeListener(stListener, sc);
-      print("UPDATE A NODE UNDER :LOCAL");
+      print("updating node in :Local");
       Node demoExample1 = NodeImpl(':Local:DemoExample', 'CloudAdapter');
       await storageController.addOrUpdate(demoExample1);
-      print("UPDATE A NODE NOT UNDER :LOCAL");
+      print("updating node outside :Local");
       Node demoExample11 = NodeImpl(':Devices:DemoExampleTest', 'CloudAdapter');
       await storageController.addOrUpdate(demoExample11);
       stListener.awaitCount(1);
@@ -74,8 +74,8 @@ Future<void> algarclamTests() async {
           reason: 'difference in DemoExample11');
       await localMaster.close();
     });
-    test('STORAGE LISTENER - LAST NODE DELETED', () async {
-      print("LISTENER TEST - CHECKS DELETE BEHAVIOUR");
+    test('storage node - last node deleted', () async {
+      print("check listener when deleting");
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       // ignore: unused_local_variable
@@ -86,17 +86,17 @@ Future<void> algarclamTests() async {
       await storageController.addOrUpdate(demoExample11);
       NodeListener stListener = NodeListener(storageController);
       storageController.registerChangeListener(stListener, sc);
-      print("UPDATE A NODE UNDER :LOCAL");
+      print("update a node under :LOCAL");
       Node demoExample1 = NodeImpl(':Local:DemoExample', 'CloudAdapter');
       await storageController.addOrUpdate(demoExample1);
       print(stListener.events);
-      print("DELETE A NODE UNDER :LOCAL");
+      print("delete node under :Local");
       await storageController.delete(':Local:DemoExampleTest');
       print(stListener.events);
       await storageController.deregisterChangeListener(stListener);
       await localMaster.close();
     });
-    test('STORAGE LISTENER - DELETE AND ADD A NODE', () async {
+    test('storage listener - delete and add a node', () async {
       print("LISTENER TEST - CHECKS DELETE BEHAVIOUR");
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
@@ -131,8 +131,30 @@ Future<void> isolatePluginTest1(SendPort ext) async {
   print('## Getting storage');
   GeigerApi api =
       (await getGeigerApi('', "testplugin", Declaration.doNotShareData))!;
-  await api.zapState();
   StorageController geigerToolboxStorageController = api.storage;
+
+  print('## dumping on plugin');
+  print(await geigerToolboxStorageController.dump(':Users'));
+
+  CollectingListener l = CollectingListener();
+  await geigerToolboxStorageController.registerChangeListener(
+      l, SearchCriteria(searchPath: ':Users:test'));
+
+  await l.awaitCount(2, const Duration(seconds: 10));
+
+  print('## done');
+  Isolate.exit(ext, 'end');
+}
+
+Future<void> isolatePluginTest1a(SendPort ext) async {
+  print('## Initializing expander');
+  await StorageMapper.initDatabaseExpander();
+
+  print('## Getting storage');
+  GeigerApi api =
+      (await getGeigerApi('', "testplugin", Declaration.doNotShareData))!;
+  StorageController geigerToolboxStorageController = api.storage;
+
   print('## adding value');
   await geigerToolboxStorageController
       .addOrUpdate(NodeImpl(':Users:test', 'testowner'));
@@ -142,8 +164,10 @@ Future<void> isolatePluginTest1(SendPort ext) async {
   await geigerToolboxStorageController
       .addOrUpdate(NodeImpl(':Users:test:test2', 'testowner'));
   await geigerToolboxStorageController.get(':Users:test:test1');
+
   print('## dumping on plugin');
   print(await geigerToolboxStorageController.dump(':Users'));
+
   print('## done');
   Isolate.exit(ext, 'end');
 }
@@ -171,7 +195,7 @@ Future<void> luongTests() async {
         throw e;
       });
       ReceivePort ext = ReceivePort();
-      Isolate i = await Isolate.spawn(isolatePluginTest1, ext.sendPort,
+      Isolate i = await Isolate.spawn(isolatePluginTest1a, ext.sendPort,
           onError: err.sendPort, onExit: ext.sendPort, paused: true);
       i.addOnExitListener(ext.sendPort, response: 'ended');
       i.resume(i.pauseCapability!);
@@ -191,6 +215,79 @@ Future<void> luongTests() async {
       await geigerToolboxStorageController.delete(':Users:test');
       await api.close();
     });
+    // test(
+    //     '20220131 - Testing event propagation from external plugin to other plugin',
+    //     () async {
+    //   // init
+    //   await StorageMapper.initDatabaseExpander();
+    //
+    //   // get master storage
+    //   GeigerApi api = (await getGeigerApi(
+    //       "", GeigerApi.masterId, Declaration.doNotShareData))!;
+    //   StorageController geigerToolboxStorageController = api.storage;
+    //   await geigerToolboxStorageController.zap();
+    //
+    //   // setup master listener
+    //   CollectingListener l = CollectingListener();
+    //   await geigerToolboxStorageController.registerChangeListener(
+    //       l, SearchCriteria(searchPath: ':Users:test'));
+    //
+    //   // setup isolate for plugin 1
+    //   ReceivePort recv = ReceivePort();
+    //   ReceivePort err = ReceivePort();
+    //   recv.listen((e) {
+    //     print('P: $e');
+    //   });
+    //   err.listen((e) {
+    //     print('Exception occurred');
+    //     print("P: $e");
+    //     throw e;
+    //   });
+    //   ReceivePort ext = ReceivePort();
+    //   Isolate i = await Isolate.spawn(isolatePluginTest1, ext.sendPort,
+    //       onError: err.sendPort, onExit: ext.sendPort, paused: true);
+    //   i.addOnExitListener(ext.sendPort, response: 'ended');
+    //   i.resume(i.pauseCapability!);
+    //
+    //   // setup isolate for plugin 2
+    //   ReceivePort recv2 = ReceivePort();
+    //   ReceivePort err2 = ReceivePort();
+    //   recv2.listen((e) {
+    //     print('P: $e');
+    //   });
+    //   err2.listen((e) {
+    //     print('Exception occurred');
+    //     print("P: $e");
+    //     throw e;
+    //   });
+    //   ReceivePort ext2 = ReceivePort();
+    //   Isolate i2 = await Isolate.spawn(isolatePluginTest1a, ext2.sendPort,
+    //       onError: err2.sendPort, onExit: ext2.sendPort, paused: true);
+    //   i2.addOnExitListener(ext2.sendPort, response: 'ended');
+    //   i2.resume(i2.pauseCapability!);
+    //
+    //   // wait for isolates to terminate
+    //   await ext.elementAt(1);
+    //   await ext2.elementAt(1);
+    //
+    //   // getting all event
+    //   await l.awaitCount(3);
+    //   expect(l.events.length, 3);
+    //   print("## dumping master events");
+    //   for (ChangeEvent evt in l.events) {
+    //     print(evt);
+    //   }
+    //
+    //   print('## dumping on MASTER');
+    //   print(await geigerToolboxStorageController.dump(':Users'));
+    //   await geigerToolboxStorageController.deregisterChangeListener(l);
+    //
+    //   print('## deleting values');
+    //   await geigerToolboxStorageController.delete(':Users:test:test1');
+    //   await geigerToolboxStorageController.delete(':Users:test:test2');
+    //   await geigerToolboxStorageController.delete(':Users:test');
+    //   await api.close();
+    // });
   });
 }
 
@@ -319,6 +416,47 @@ Future<void> reuvenTests() async {
       // remove data
       print('## deleting value');
       await api!.storage.delete(':Users:hugetest');
+
+      await api.close();
+    }, timeout: const Timeout(Duration(seconds: 120)));
+    test('20220412 - Plugin event propagation (issue #22)', () async {
+      await StorageMapper.initDatabaseExpander();
+
+      //setup endpoints
+      GeigerApi api = (await getGeigerApi(
+          "", GeigerApi.masterId, Declaration.doNotShareData))!;
+      await api.storage.zap();
+      GeigerApi papi1 =
+          (await getGeigerApi("", "plugin1", Declaration.doNotShareData))!;
+      GeigerApi papi2 =
+          (await getGeigerApi("", "plugin2", Declaration.doNotShareData))!;
+
+      // setup listeners
+      CollectingListener l = CollectingListener();
+      await api.storage
+          .registerChangeListener(l, SearchCriteria(searchPath: ':Users:test'));
+      CollectingListener l1 = CollectingListener();
+      await papi1.storage.registerChangeListener(
+          l1, SearchCriteria(searchPath: ':Users:test'));
+      CollectingListener l2 = CollectingListener();
+      await papi2.storage.registerChangeListener(
+          l2, SearchCriteria(searchPath: ':Users:test'));
+
+      // insert data in plugin 1
+      papi1.storage.add(NodeImpl(":Users:test", "testowner"));
+      print("waiting for event in plugin 1");
+      await l1.awaitCount(1);
+      print(l1.events);
+      print("waiting for event in master");
+      await l.awaitCount(1);
+      print(l.events);
+      print("waiting for event in plugin 2");
+      await l2.awaitCount(1);
+      print(l2.events);
+
+      // remove data
+      print('## deleting value');
+      await api.storage.delete(':Users:test');
 
       await api.close();
     }, timeout: const Timeout(Duration(seconds: 120)));

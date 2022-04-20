@@ -218,12 +218,11 @@ class StorageEventHandler with PluginListener {
 
     var controller = _controllers[msg.sourceId];
     if (controller == null) {
-      if (msg.sourceId == GeigerApi.masterId) {
-        _controllers[msg.sourceId] = controller!;
-      } else {
-        _controllers[msg.sourceId] =
-            controller = OwnerEnforcerWrapper(_masterController, msg.sourceId);
-      }
+      _controllers[msg.sourceId] = controller = msg.sourceId ==
+              GeigerApi.masterId
+          ? _masterController
+          : OwnerEnforcerWrapper(
+              _masterController, _api.plugins[StorableString(msg.sourceId)]!);
     }
 
     try {

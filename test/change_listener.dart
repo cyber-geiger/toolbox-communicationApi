@@ -47,7 +47,7 @@ class CollectingListener with StorageListener {
   }
 
   Future<List<ChangeEvent>> awaitCount(int count,
-      [Duration timeLimit = const Duration(seconds: 1)]) {
+      [Duration timeLimit = const Duration(seconds: 1000)]) {
     canComplete(List events) => events.length >= count;
     createResult(List<ChangeEvent> events) =>
         List<ChangeEvent>.from(events.getRange(0, count));

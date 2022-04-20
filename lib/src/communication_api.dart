@@ -137,8 +137,8 @@ class CommunicationApi extends GeigerApi {
       return;
     }
 
-    final pluginInformation =
-        PluginInformation(pluginId ?? id, executor, _communicator.port);
+    final pluginInformation = PluginInformation(
+        pluginId ?? id, executor, _communicator.port, declaration);
     await CommunicationHelper.sendAndWait(
         this,
         SecuredMessage(
@@ -235,7 +235,11 @@ class CommunicationApi extends GeigerApi {
       // set all ports to 0
       for (final entry in plugins.entries) {
         plugins[entry.key] = PluginInformation(
-            entry.value.id, entry.value.executable, 0, entry.value.secret);
+            entry.value.id,
+            entry.value.executable,
+            0,
+            entry.value.declaration,
+            entry.value.secret);
       }
       await StorableHashMap.fromByteArrayStream(stream, menuItems);
     } catch (e) {
@@ -277,8 +281,11 @@ class CommunicationApi extends GeigerApi {
     GeigerApi.logger
         .log(Level.INFO, '## Sending message to plugin $pluginId ($message)');
     PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
-        PluginInformation(pluginId!, GeigerApi.masterExecutor,
-            pluginId == GeigerApi.masterId ? GeigerCommunicator.masterPort : 0);
+        PluginInformation(
+            pluginId!,
+            GeigerApi.masterExecutor,
+            pluginId == GeigerApi.masterId ? GeigerCommunicator.masterPort : 0,
+            Declaration.doNotShareData);
     final inBackground = message.type != MessageType.returningControl;
     if (pluginInfo.getPort() == 0) {
       PluginStarter.startPlugin(pluginInfo, inBackground);
@@ -383,8 +390,12 @@ class CommunicationApi extends GeigerApi {
           final PluginInformation pluginInfo =
               plugins[StorableString(msg.sourceId)]!;
           final port = SerializerHelper.byteArrayToInt(msg.payload);
-          plugins[StorableString(msg.sourceId)] =
-              PluginInformation(msg.sourceId, pluginInfo.getExecutable(), port);
+          plugins[StorableString(msg.sourceId)] = PluginInformation(
+              msg.sourceId,
+              pluginInfo.getExecutable(),
+              port,
+              pluginInfo.declaration,
+              pluginInfo.secret);
           await sendMessage(SecuredMessage(
               id,
               msg.sourceId,
@@ -404,8 +415,12 @@ class CommunicationApi extends GeigerApi {
               GeigerUrl(null, msg.sourceId, 'deactivatePlugin'),
               null,
               msg.requestId));
-          plugins[StorableString(msg.sourceId)] =
-              PluginInformation(msg.sourceId, pluginInfo.getExecutable(), 0);
+          plugins[StorableString(msg.sourceId)] = PluginInformation(
+              msg.sourceId,
+              pluginInfo.getExecutable(),
+              0,
+              pluginInfo.declaration,
+              pluginInfo.secret);
           break;
         }
       case MessageType.scanPressed:

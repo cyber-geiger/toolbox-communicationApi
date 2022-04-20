@@ -1,13 +1,27 @@
-## 0.7.6 Bugfixing Release (upcoming)
+## 0.7.9 Bugfixing Release (upcomming)
 Fixes:
-- (Nothing yet)
+- (none so far)
+
+## 0.7.8 Bugfixing Release
+Fixes:
+- Fixes visibility rules of listener in the owner enforcer.
+- Take the plugin's sharing declaration into account in the owner enforcer. 
+- Added more test to hunt down issue #22
+- Adresses visibility issue of event nodes when secured (related to issue #22).
+
+## 0.7.7 Bugfixing Release
+Fixes:
+- Fix `Node` deserialization when only a `PassthroughController` has been created.
+
+## 0.7.6 Bugfixing Release
+Fixes:
+- Apply visibility rules for `newNode` in a storage change event to `newNode` instead of `oldNode`.
 
 ## 0.7.5 Bugfixing Release
 Fixes:
 - Removes the asset dependency from the GEIGER localstorage
 
 ## 0.7.4 Bugfixing Release [Minor Breaking Changes]
-
 Fixes:
 - Listening to `MessageType.allEvents` no longer returns internal messages.
 - Internal message types have an ID higher than `MessageType.allEvents`
@@ -21,7 +35,6 @@ Changes:
   and `MessageType.comapiError`. This behavior can be changed using the `responseTypes` named parameter.
 
 ## 0.7.3 Bugfixing Release
-
 Fixes:
 - Various improvments to stabilize the connection between plugin and toolbox master
 - Various fixes regarding speed and size constraints

@@ -31,10 +31,16 @@ class StorableHash implements Serializer {
 
     String? type = await SerializerHelper.readString(in_);
     if(type == null){
-      throw CommunicationException("Hash type not defined or serialized");
+      throw CommunicationException("Hash type not serialized");
     }
     
-    HashType hashType = HashType.values.byName(type);
+    HashType hashType;
+    try {
+      hashType = HashType.values.byName(type);
+    } on ArgumentError {
+      throw CommunicationException('Hash type is not defined / does not exist.');
+    }
+
     Hash hash = Hash(hashType, await in_.popArray(hashType.hashLength));
 
     SerializerHelper.castTest('StorableHash', serialVersionUID,
@@ -53,10 +59,4 @@ class StorableHash implements Serializer {
 
   @override
   int get hashCode => Object.hash(StorableHash, hash.hashCode);
-
-  X as<X>() => this as X;
-  StorableHash? asOrNull<X>() {
-    var self = this;
-    return self is X ? self : null;
-  }
 }

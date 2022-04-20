@@ -2,10 +2,6 @@ library geiger_api;
 
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/utils/communication_serializer.dart';
-import 'package:geiger_api/src/utils/hash.dart';
-import 'package:geiger_api/src/utils/hash_algorithm.dart';
-import 'package:geiger_api/src/utils/hash_type.dart';
-import 'package:geiger_api/src/utils/storable_hash.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class SecuredMessage extends Message {
@@ -86,7 +82,7 @@ class SecuredMessage extends Message {
   @override
   bool operator ==(Object other){
     return identical(this, other) ||
-        (other is Message &&
+        (other is SecuredMessage &&
             sourceId == other.sourceId &&
             targetId == other.targetId &&
             type == other.type &&

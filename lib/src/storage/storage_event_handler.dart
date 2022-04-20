@@ -1,6 +1,5 @@
 library geiger_api;
 
-import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
@@ -198,7 +197,7 @@ class StorageEventHandler with PluginListener {
     newNode?.toByteArrayStream(sink);
     sink.close();
 
-    await _api.sendMessage(SecuredMessage(_api.id, pluginId, MessageType.storageEvent,
+    await _api.sendMessage(Message(_api.id, pluginId, MessageType.storageEvent,
         GeigerUrl(null, pluginId, 'changeEvent'), await sink.bytes));
   }
 
@@ -211,7 +210,7 @@ class StorageEventHandler with PluginListener {
       StorageException('Could not find specified function.')
           .toByteArrayStream(sink);
       sink.close();
-      await _api.sendMessage(SecuredMessage(_api.id, msg.sourceId,
+      await _api.sendMessage(Message(_api.id, msg.sourceId,
           MessageType.storageError, null, await sink.bytes, msg.requestId));
       return;
     }
@@ -234,7 +233,7 @@ class StorageEventHandler with PluginListener {
         serializer(sink);
         sink.close();
       }
-      await _api.sendMessage(SecuredMessage(_api.id, msg.sourceId,
+      await _api.sendMessage(Message(_api.id, msg.sourceId,
           MessageType.storageSuccess, null, await sink?.bytes, msg.requestId));
     } on Exception catch (e) {
       try {
@@ -242,7 +241,7 @@ class StorageEventHandler with PluginListener {
         StorageException(processor.errorMessage, null, e)
             .toByteArrayStream(sink);
         sink.close();
-        await _api.sendMessage(SecuredMessage(_api.id, msg.sourceId,
+        await _api.sendMessage(Message(_api.id, msg.sourceId,
             MessageType.storageError, null, await sink.bytes, msg.requestId));
       } on Exception catch (e) {
         GeigerApi.logger.log(Level.SEVERE, 'got unexpected Exception', e);

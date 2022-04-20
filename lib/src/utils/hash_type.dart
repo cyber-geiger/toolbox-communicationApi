@@ -2,7 +2,6 @@ library geiger_api;
 
 import 'package:cryptography/dart.dart';
 import 'package:geiger_api/src/utils/hash.dart';
-import 'package:logging/logging.dart';
 
 enum HashType {
   sha512,

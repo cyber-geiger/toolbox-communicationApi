@@ -1,15 +1,12 @@
 
 library geiger_api;
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/utils/hash.dart';
-import 'package:geiger_api/src/utils/hash_algorithm.dart';
-import 'package:geiger_api/src/utils/hash_type.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class StorableHash implements Serializer {
 
   static const int serialVersionUID = 647930842152;
-  Hash _hash;
+  final Hash _hash;
 
   StorableHash(this._hash);
 

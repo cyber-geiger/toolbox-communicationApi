@@ -3,19 +3,18 @@ library geiger_api;
 import 'package:cryptography/cryptography.dart' as cryptography;
 import 'package:geiger_api/src/utils/hash_type.dart';
 
-
 class Hash {
   final HashType _hashType;
   final List<int> _bytes;
   final cryptography.Hash _hash;
 
-  Hash(this._hashType, this._bytes): _hash = cryptography.Hash(_bytes);
+  Hash(this._hashType, this._bytes) : _hash = cryptography.Hash(_bytes);
 
   List<int> get bytes => _bytes;
   HashType get hashType => _hashType;
 
   @override
-  String toString() => hash.toString();
+  String toString() => _hash.toString();
 
   @override
   bool operator ==(Object other) {
@@ -24,5 +23,5 @@ class Hash {
   }
 
   @override
-  int get hashCode => Object.hash(Hash, hash.hashCode);
+  int get hashCode => Object.hash(Hash, _hash.hashCode);
 }

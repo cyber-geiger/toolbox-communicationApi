@@ -1,6 +1,5 @@
 library geiger_api;
 
-import 'package:geiger_api/src/utils/storable_hash.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import '../../geiger_api.dart';

@@ -121,17 +121,17 @@ void main() {
    */
   test('messageSerializationTest', () async {
     List<Message> messageList = [
-      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
+      Message('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, 'geiger://id1/path1'), null),
-      SecuredMessage('src', 'target', MessageType.deactivatePlugin, null, []),
-      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
+      Message('src', 'target', MessageType.deactivatePlugin, null, []),
+      Message('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, 'path2'), []),
-      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
+      Message('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, ''), <int>[]),
-      SecuredMessage('src', 'target', MessageType.deactivatePlugin,
+      Message('src', 'target', MessageType.deactivatePlugin,
           GeigerUrl(null, GeigerApi.masterId, ''), <int>[]),
-      SecuredMessage('src', 'target', MessageType.allEvents, null, <int>[]),
-      SecuredMessage('src', 'target', MessageType.allEvents, null,
+      Message('src', 'target', MessageType.allEvents, null, <int>[]),
+      Message('src', 'target', MessageType.allEvents, null,
           const Uuid().v4().codeUnits)
     ];
 
@@ -140,7 +140,7 @@ void main() {
       m.toByteArrayStream(bout);
       bout.close();
       ByteStream bin = ByteStream(Stream<List<int>>.value(await bout.bytes));
-      Message m2 = await SecuredMessage.fromByteArray(bin);
+      Message m2 = await Message.fromByteArray(bin);
       expect(m == m2, true,
           reason: 'Cloned Plugininformation using stream are not equal');
     }

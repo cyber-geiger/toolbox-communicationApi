@@ -370,7 +370,7 @@ Future<void> reuvenTests() async {
       int start = DateTime.now().millisecondsSinceEpoch;
       print('## assembling message');
       Message m =
-          SecuredMessage('hi', 'ha', MessageType.storageEvent, null, s.codeUnits);
+          Message('hi', 'ha', MessageType.storageEvent, null, s.codeUnits);
       int i = DateTime.now().millisecondsSinceEpoch;
       print(
           '## assembly done in ${DateTime.now().millisecondsSinceEpoch - start} ms');
@@ -383,7 +383,7 @@ Future<void> reuvenTests() async {
       print('## deserializing message');
       bout.close();
       ByteStream bin = ByteStream(null, await bout.bytes);
-      Message m2 = await SecuredMessage.fromByteArray(bin);
+      Message m2 = await Message.fromByteArray(bin);
       print(
           '## deserialization done in ${DateTime.now().millisecondsSinceEpoch - i} ms');
       int time = DateTime.now().millisecondsSinceEpoch - start;

@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 class GeigerCommunicator {
@@ -29,7 +28,7 @@ class GeigerCommunicator {
     final server = await ServerSocket.bind(
         InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
     server.listen((socket) async {
-      api.receivedMessage(await SecuredMessage.fromByteArray(ByteStream(socket)));
+      api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
     });
     _server = server;
   }

@@ -22,3 +22,6 @@ pubspec.lock
 /coverage/
 *.state
 /test.tst
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/Generated.xcconfig

@@ -12,7 +12,8 @@ late GeigerApi api;
 final MessageLogger logger = MessageLogger();
 
 void callClientPlugin(MessageType type) async {
-  Message message = Message(GeigerApi.masterId, clientPluginId, type, null);
+  Message message =
+      SecuredMessage(GeigerApi.masterId, clientPluginId, type, null);
   await api.sendMessage(message, clientPluginId);
 }
 

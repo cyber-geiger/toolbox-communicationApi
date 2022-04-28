@@ -61,7 +61,7 @@ class Message {
   }
 
   void toByteArrayStream(ByteSink out) {
-        SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, sourceId);
     if (targetId == null) {
       SerializerHelper.writeInt(out, 0);
@@ -90,10 +90,10 @@ class Message {
   /// @param in the ByteArrayInputStream to use
   /// @return the converted Message
   /// @throws IOException if bytes cannot be read
-  static Future<Message> fromByteArray(ByteStream in_) async{
-     SerializerHelper.castTest(
-        'Message', serialVersionUID, await SerializerHelper.readLong(in_), 1);
-      Message m = Message(
+  static Future<Message> fromByteArray(ByteStream in_, int? uid) async {
+    SerializerHelper.castTest('Message', serialVersionUID,
+        uid ?? await SerializerHelper.readLong(in_), 1);
+    Message m = Message(
         await SerializerHelper.readString(in_) ?? '',
         (await SerializerHelper.readInt(in_) == 1)
             ? await SerializerHelper.readString(in_)
@@ -114,7 +114,7 @@ class Message {
   }
 
   @override
-  bool operator ==(Object other){
+  bool operator ==(Object other) {
     return identical(this, other) ||
         (other is Message &&
             sourceId == other.sourceId &&
@@ -125,9 +125,8 @@ class Message {
             payloadString == other.payloadString);
   }
 
-
   @override
-  int get hashCode{
+  int get hashCode {
     return (sourceId +
             (targetId ?? 'null') +
             type.hashCode.toString() +
@@ -138,7 +137,7 @@ class Message {
   }
 
   @override
-  String toString(){
+  String toString() {
     return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})}';
   }
 }

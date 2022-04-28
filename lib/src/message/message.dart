@@ -88,6 +88,7 @@ class Message {
 
   /// Convert ByteArrayInputStream to Message.
   /// @param in the ByteArrayInputStream to use
+  /// @param uid the uid of the message, pass it when the uid shouldn't be read
   /// @return the converted Message
   /// @throws IOException if bytes cannot be read
   static Future<Message> fromByteArray(ByteStream in_, int? uid) async {

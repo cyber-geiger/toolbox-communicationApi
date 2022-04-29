@@ -7,7 +7,6 @@ export 'src/exceptions/declaration_mismatch_exception.dart';
 
 export 'src/message/geiger_url.dart';
 export 'src/message/message.dart';
-export 'src/message/secured_message.dart';
 export 'src/message/message_listener.dart';
 export 'src/message/message_type.dart';
 

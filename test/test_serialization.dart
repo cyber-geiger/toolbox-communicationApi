@@ -3,7 +3,6 @@ library geiger_api;
 import 'dart:async';
 
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:test/expect.dart';

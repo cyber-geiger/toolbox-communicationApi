@@ -8,6 +8,9 @@ import 'package:geiger_localstorage/geiger_localstorage.dart';
 class Message {
   static const int serialVersionUID = 143287432;
 
+  // Hash of the data
+  StorableHash? hash;
+
   /// ID of the source plugin.
   final String sourceId;
 
@@ -83,17 +86,29 @@ class Message {
       SerializerHelper.writeInt(out, 1);
       SerializerHelper.writeString(out, payloadString);
     }
+
+    HashAlgorithm algorithm = HashAlgorithm(HashType.sha512);
+    String data = (sourceId +
+        (targetId ?? 'null') +
+        type.id.toString() +
+        (action?.path.toString() ?? 'null') +
+        requestId +
+        (payloadString ?? 'null'));
+    Hash hash = algorithm.hashString(data);
+    StorableHash storableHash = StorableHash(hash);
+    writeObject(out, storableHash);
+
     SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   /// Convert ByteArrayInputStream to Message.
   /// @param in the ByteArrayInputStream to use
-  /// @param uid the uid of the message, pass it when the uid shouldn't be read
   /// @return the converted Message
   /// @throws IOException if bytes cannot be read
-  static Future<Message> fromByteArray(ByteStream in_, int? uid) async {
-    SerializerHelper.castTest('Message', serialVersionUID,
-        uid ?? await SerializerHelper.readLong(in_), 1);
+  static Future<Message> fromByteArray(ByteStream in_) async {
+    SerializerHelper.castTest(
+        'Message', serialVersionUID, await SerializerHelper.readLong(in_), 1);
+
     Message m = Message(
         await SerializerHelper.readString(in_) ?? '',
         (await SerializerHelper.readInt(in_) == 1)
@@ -109,6 +124,7 @@ class Message {
     m.payloadString = (await SerializerHelper.readInt(in_) == 1)
         ? await SerializerHelper.readString(in_)
         : null;
+    m.hash = await readObject(in_) as StorableHash;
     SerializerHelper.castTest(
         'Message', serialVersionUID, await SerializerHelper.readLong(in_), 2);
     return m;
@@ -123,7 +139,8 @@ class Message {
             type == other.type &&
             action == other.action &&
             requestId == other.requestId &&
-            payloadString == other.payloadString);
+            payloadString == other.payloadString &&
+            hash == other.hash);
   }
 
   @override
@@ -133,12 +150,13 @@ class Message {
             type.hashCode.toString() +
             action.hashCode.toString() +
             requestId +
-            (payloadString ?? 'null'))
+            (payloadString ?? 'null') +
+            (hash != null ? hash.toString() : 'null'))
         .hashCode;
   }
 
   @override
   String toString() {
-    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})}';
+    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})[${hash!.hash.hashType.toString()}: ${hash.toString()}]}';
   }
 }

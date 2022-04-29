@@ -6,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'change_listener.dart';

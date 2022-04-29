@@ -7,7 +7,6 @@ import 'dart:io';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
-import 'package:geiger_api/src/message/secured_message.dart';
 import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_api/src/storage/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';

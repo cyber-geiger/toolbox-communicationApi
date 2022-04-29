@@ -28,18 +28,9 @@ class GeigerCommunicator {
     final server = await ServerSocket.bind(
         InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
     server.listen((socket) async {
-      ByteStream _in = ByteStream(socket);
-      final uid = await SerializerHelper.readLong(_in);
-
-      switch (uid) {
-        case SecuredMessage.serialVersionUID:
-          api.receivedMessage(await SecuredMessage.fromByteArray(_in, uid));
-          break;
-
-        default:
-          api.receivedMessage(await Message.fromByteArray(_in, uid));
-      }
+      api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
     });
+
     _server = server;
   }
 

@@ -31,7 +31,7 @@ class MessageLogger implements PluginListener {
       messages.removeAt(0);
       messageWidgets.removeAt(0);
     }
-    
+
     debugPrint(msg.action?.path);
 
     messages.add(msg);
@@ -97,6 +97,12 @@ class _MessageViewState extends State<MessageView> {
                                 child: Text(widget.message.payload.isEmpty
                                     ? 'No'
                                     : 'Yes'))
+                          ]),
+                          TableRow(children: [
+                            const TableCell(child: Text("Hash:")),
+                            TableCell(
+                                child: Text(widget.message.hash.toString())
+                            )
                           ]),
                         ],
                       )

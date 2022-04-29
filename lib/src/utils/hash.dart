@@ -13,8 +13,19 @@ class Hash {
   List<int> get bytes => _bytes;
   HashType get hashType => _hashType;
 
+  // source: https://pub.dev/packages/hash/example
+  String _encodeHEX(List<int> bytes) {
+    var str = '';
+    for (var i = 0; i < bytes.length; i++) {
+      var s = bytes[i].toRadixString(16);
+      str += s.padLeft(2 - s.length, '0');
+    }
+    return str;
+  }
+  
   @override
-  String toString() => _hash.toString();
+  String toString() => _encodeHEX(_hash.bytes);
+  
 
   @override
   bool operator ==(Object other) {

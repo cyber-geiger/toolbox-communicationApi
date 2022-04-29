@@ -157,6 +157,10 @@ class Message {
 
   @override
   String toString() {
-    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})[${hash!.hash.hashType.toString()}: ${hash.toString()}]}';
+    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})' +
+        (hash != null
+            ? '[${hash!.hash.hashType.toString()}: ${hash.toString()}]'
+            : "") +
+        '}';
   }
 }

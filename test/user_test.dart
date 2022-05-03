@@ -475,6 +475,46 @@ Future<void> cftnTests() async {
   });
 }
 
+Future<void> isolatePluginTest3(_) async {
+  const owner = 'testOwner';
+  final GeigerApi? pluginApi =
+      await getGeigerApi(';;./plugin1', owner, Declaration.doNotShareData);
+  final StorageController controller = pluginApi!.storage;
+
+  final node = NodeImpl('testNode', owner, ':');
+  final value = NodeValueImpl('testValue', 'test');
+  await node.addValue(value);
+
+  await controller.add(node);
+  final parent = await controller.get(':');
+  final children = await parent.getChildren();
+  final values = await children[node.name]!.getValues();
+  assert(values[value.key] == value);
+
+  Isolate.exit();
+}
+
+void bananaEggTests() {
+  group("bananaEgg tests", () {
+    test("SqliteMapper - node.getValues() when node from parent.getChildren()",
+        () async {
+      final GeigerApi localMaster = (await getGeigerApi(
+          '', GeigerApi.masterId, Declaration.doNotShareData))!;
+      await localMaster.zapState();
+      await localMaster.storage.zap();
+
+      final errorPort = ReceivePort();
+      errorPort.listen((m) {
+        throw m;
+      });
+      final exitPort = ReceivePort();
+      await Isolate.spawn(isolatePluginTest3, null,
+          onError: errorPort.sendPort, onExit: exitPort.sendPort);
+      await exitPort.elementAt(0);
+    });
+  });
+}
+
 Future<void> main() async {
   printLogger();
   setUp(() => flushGeigerApiCache());
@@ -482,4 +522,5 @@ Future<void> main() async {
   await luongTests();
   await reuvenTests();
   // await cftnTests();
+  bananaEggTests();
 }

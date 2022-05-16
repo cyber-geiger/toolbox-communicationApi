@@ -18,9 +18,7 @@ export 'src/plugin/plugin_listener.dart';
 export 'src/utils/communication_serializer.dart';
 export 'src/utils/storable_hash_map.dart';
 export 'src/utils/storable_string.dart';
-export 'src/utils/storable_hash.dart';
 export 'src/utils/hash.dart';
-export 'src/utils/hash_algorithm.dart';
 export 'src/utils/hash_type.dart';
 
 export 'src/communication_api.dart';

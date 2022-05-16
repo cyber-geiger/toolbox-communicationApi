@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
+import 'package:geiger_api/src/communication/geiger_communicator.dart';
 import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -19,8 +20,12 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final PluginInformation payload = PluginInformation('plugin1', './plugin1',
-        5555, Declaration.doNotShareData, CommunicationSecret.empty());
+    final PluginInformation payload = PluginInformation(
+        GeigerApi.masterId,
+        GeigerApi.masterExecutor,
+        GeigerCommunicator.masterPort,
+        Declaration.doNotShareData,
+        CommunicationSecret.empty());
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
     final Message reply =

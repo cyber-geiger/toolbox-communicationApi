@@ -74,6 +74,7 @@ class MessageType {
   /* response messages*/
   static const comapiSuccess = MessageType._('COMAPI_SUCCESS', 30100);
   static const comapiError = MessageType._('COMAPI_ERROR', 30400);
+  static const authError = MessageType._('AUTH_ERROR', 30700);
 
   const MessageType._(final this._value, final this._num);
 

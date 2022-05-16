@@ -5,11 +5,11 @@ import 'dart:convert';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
+import '../plugin/communication_secret.dart';
+
 class Message {
   static const int serialVersionUID = 143287432;
-
-  // Hash of the data
-  StorableHash? hash;
+  static const _hashType = HashType.sha512;
 
   /// ID of the source plugin.
   final String sourceId;
@@ -25,6 +25,9 @@ class Message {
 
   /// Returns the action URL of the message.
   final GeigerUrl? action;
+
+  /// Hash of the data
+  Hash? hash;
 
   String? _payloadString = '';
 
@@ -63,41 +66,31 @@ class Message {
     _payloadString = value;
   }
 
-  void toByteArrayStream(ByteSink out) {
+  Hash integrityHash(CommunicationSecret secret) {
+    return _hashType.hashBytes(utf8.encode(sourceId +
+            (targetId ?? 'null') +
+            type.id.toString() +
+            action.toString() +
+            requestId) +
+        payload +
+        secret.secret);
+  }
+
+  void toByteArrayStream(ByteSink out, [CommunicationSecret? secret]) {
+    secret ??= CommunicationSecret.empty();
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, sourceId);
-    if (targetId == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, targetId);
-    }
+    SerializerHelper.writeString(out, targetId);
     SerializerHelper.writeInt(out, type.id);
     if (action == null) {
       SerializerHelper.writeInt(out, 0);
     } else {
       SerializerHelper.writeInt(out, 1);
-      action?.toByteArrayStream(out);
+      action!.toByteArrayStream(out);
     }
     SerializerHelper.writeString(out, requestId);
-    if (payloadString == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, payloadString);
-    }
-
-    HashAlgorithm algorithm = HashAlgorithm(HashType.sha512);
-    String data = (sourceId +
-        (targetId ?? 'null') +
-        type.id.toString() +
-        (action?.path.toString() ?? 'null') +
-        requestId +
-        (payloadString ?? 'null'));
-    Hash hash = algorithm.hashString(data);
-    StorableHash storableHash = StorableHash(hash);
-    writeObject(out, storableHash);
-
+    SerializerHelper.writeString(out, payloadString);
+    integrityHash(secret).toByteArrayStream(out);
     SerializerHelper.writeLong(out, serialVersionUID);
   }
 
@@ -111,9 +104,7 @@ class Message {
 
     Message m = Message(
         await SerializerHelper.readString(in_) ?? '',
-        (await SerializerHelper.readInt(in_) == 1)
-            ? await SerializerHelper.readString(in_)
-            : null,
+        await SerializerHelper.readString(in_),
         MessageType.getById(await SerializerHelper.readInt(in_)) ??
             MessageType.comapiError,
         (await SerializerHelper.readInt(in_) == 1)
@@ -121,10 +112,9 @@ class Message {
             : null,
         null,
         await SerializerHelper.readString(in_));
-    m.payloadString = (await SerializerHelper.readInt(in_) == 1)
-        ? await SerializerHelper.readString(in_)
-        : null;
-    m.hash = await readObject(in_) as StorableHash;
+    m.payloadString = await SerializerHelper.readString(in_);
+    m.hash = await Hash.fromByteArrayStream(in_);
+
     SerializerHelper.castTest(
         'Message', serialVersionUID, await SerializerHelper.readLong(in_), 2);
     return m;
@@ -151,7 +141,7 @@ class Message {
             action.hashCode.toString() +
             requestId +
             (payloadString ?? 'null') +
-            (hash != null ? hash.toString() : 'null'))
+            (hash?.toString() ?? 'null'))
         .hashCode;
   }
 
@@ -159,7 +149,7 @@ class Message {
   String toString() {
     return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})' +
         (hash != null
-            ? '[${hash!.hash.hashType.toString()}: ${hash.toString()}]'
+            ? '[${hash!.hashType.toString()}: ${hash.toString()}]'
             : "") +
         '}';
   }

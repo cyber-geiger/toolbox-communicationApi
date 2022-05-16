@@ -1,38 +1,59 @@
 library geiger_api;
 
-import 'package:cryptography/cryptography.dart' as cryptography;
+import 'package:collection/collection.dart';
 import 'package:geiger_api/src/utils/hash_type.dart';
+import 'package:convert/convert.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-class Hash {
-  final HashType _hashType;
-  final List<int> _bytes;
-  final cryptography.Hash _hash;
+class Hash implements Serializer {
+  static const int serialVersionUID = 647930842152;
+  final HashType hashType;
+  final List<int> bytes;
 
-  Hash(this._hashType, this._bytes) : _hash = cryptography.Hash(_bytes);
+  Hash(this.hashType, this.bytes);
 
-  List<int> get bytes => _bytes;
-  HashType get hashType => _hashType;
-
-  // source: https://pub.dev/packages/hash/example
-  String _encodeHEX(List<int> bytes) {
-    var str = '';
-    for (var i = 0; i < bytes.length; i++) {
-      var s = bytes[i].toRadixString(16);
-      str += s.padLeft(2 - s.length, '0');
-    }
-    return str;
-  }
-  
   @override
-  String toString() => _encodeHEX(_hash.bytes);
-  
+  void toByteArrayStream(ByteSink out) {
+    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, hashType.name);
+    out.sink.add(bytes);
+    SerializerHelper.writeLong(out, serialVersionUID);
+  }
+
+  static Future<Hash> fromByteArrayStream(ByteStream in_) async {
+    SerializerHelper.castTest('Hash', serialVersionUID,
+        await SerializerHelper.readLong(in_), 1);
+
+    String? typeName = await SerializerHelper.readString(in_);
+    if (typeName == null) {
+      throw SerializedException('Hash type not defined.');
+    }
+
+    HashType type;
+    try {
+      type = HashType.values.byName(typeName);
+    } on ArgumentError {
+      throw SerializedException('Hash type "$typeName" does not exist.');
+    }
+
+    final bytes = await in_.popArray(type.hashLength);
+
+    SerializerHelper.castTest('Hash', serialVersionUID,
+        await SerializerHelper.readLong(in_), 1);
+    return Hash(type, bytes);
+  }
+
+  @override
+  String toString() => hex.encode(bytes);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is Hash && _hashType == other.hashType && _hash == other._hash);
+        (other is Hash &&
+            hashType == other.hashType &&
+            const ListEquality().equals(bytes, other.bytes));
   }
 
   @override
-  int get hashCode => Object.hash(Hash, _hash.hashCode);
+  int get hashCode => Object.hash(Hash, bytes);
 }

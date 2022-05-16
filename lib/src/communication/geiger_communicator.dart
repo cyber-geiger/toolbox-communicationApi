@@ -39,10 +39,10 @@ class GeigerCommunicator {
     _server = null;
   }
 
-  Future<void> sendMessage(int port, Message message) async {
-    final socket = await Socket.connect(InternetAddress.loopbackIPv4, port);
+  Future<void> sendMessage(PluginInformation plugin, Message message) async {
+    final socket = await Socket.connect(InternetAddress.loopbackIPv4, plugin.port);
     ByteSink sink = ByteSink();
-    message.toByteArrayStream(sink);
+    message.toByteArrayStream(sink, plugin.secret);
     sink.close();
     socket.add(await sink.bytes);
     await socket.flush();

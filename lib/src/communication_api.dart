@@ -280,6 +280,11 @@ class CommunicationApi extends GeigerApi {
   @override
   Future<void> sendMessage(Message message, [String? pluginId]) async {
     pluginId ??= message.targetId;
+    if (id == pluginId) {
+      await receivedMessage(message, skipAuth: true);
+      return;
+    }
+
     GeigerApi.logger
         .log(Level.INFO, '## Sending message to plugin $pluginId ($message)');
     PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
@@ -324,11 +329,12 @@ class CommunicationApi extends GeigerApi {
     }
   }
 
-  Future<void> receivedMessage(Message msg) async {
+  Future<void> receivedMessage(Message msg, {bool skipAuth = false}) async {
     GeigerApi.logger.info('## got message in plugin $id => $msg');
     if (!isMaster && msg.sourceId != GeigerApi.masterId) return;
-    var pluginInfo = plugins[StorableString(msg.sourceId)];
-    if (msg.type != MessageType.authError &&
+    final pluginInfo = plugins[StorableString(msg.sourceId)];
+    if (!skipAuth &&
+        msg.type != MessageType.authError &&
         msg.type != MessageType.registerPlugin &&
         ((isMaster &&
                 (pluginInfo == null ||

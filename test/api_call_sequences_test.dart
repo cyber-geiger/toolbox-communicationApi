@@ -25,7 +25,7 @@ void main() {
         GeigerApi.masterExecutor,
         GeigerCommunicator.masterPort,
         Declaration.doNotShareData,
-        CommunicationSecret.empty());
+        CommunicationSecret.random());
     final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
         MessageType.registerPlugin, testUrl, await payload.toByteArray());
     final Message reply =
@@ -69,30 +69,24 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final PluginInformation payload = PluginInformation('plugin1', './plugin1',
-        5555, Declaration.doNotShareData, CommunicationSecret.empty());
     // Pregister plugin
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
-        MessageType.registerPlugin, testUrl, await payload.toByteArray());
-    await CommunicationHelper.sendAndWait(localMaster, request);
+    await localMaster.registerPlugin();
     // activate plugin
-    const int payloadActivate = 255; //ToDo correct 8bit bytevalue before 5555
-    final Message requestActivate = Message(
+    final Message request = Message(
         GeigerApi.masterId,
         GeigerApi.masterId,
         MessageType.activatePlugin,
         testUrl,
-        SerializerHelper.intToByteArray(payloadActivate));
-    final Message replyActivate =
-        await CommunicationHelper.sendAndWait(localMaster, requestActivate);
-    expect(MessageType.comapiSuccess, replyActivate.type,
+        SerializerHelper.intToByteArray(GeigerCommunicator.masterPort));
+    final Message reply =
+        await CommunicationHelper.sendAndWait(localMaster, request);
+    expect(MessageType.comapiSuccess, reply.type,
         reason: 'checking message type');
-    expect(request.sourceId, replyActivate.targetId,
+    expect(request.sourceId, reply.targetId,
         reason: 'checking recipient of reply');
-    expect(request.targetId, replyActivate.sourceId,
+    expect(request.targetId, reply.sourceId,
         reason: 'checking sender of reply');
-    expect('activatePlugin', replyActivate.action!.path,
-        reason: 'checking geigerURL');
+    expect('activatePlugin', reply.action!.path, reason: 'checking geigerURL');
     await localMaster.close();
   });
 
@@ -103,33 +97,21 @@ void main() {
     await localMaster.zapState();
     final GeigerUrl testUrl =
         GeigerUrl.fromSpec('geiger://${GeigerApi.masterId}/test');
-    final PluginInformation payload = PluginInformation('plugin1', './plugin1',
-        5555, Declaration.doNotShareData, CommunicationSecret.empty());
     // Pregister plugin
-    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
-        MessageType.registerPlugin, testUrl, await payload.toByteArray());
-    await CommunicationHelper.sendAndWait(localMaster, request);
-    // activate plugin
-    const int payloadActivate = 255; //ToDo: Correct 8bit bytevalue, before 5555
-    final Message requestActivate = Message(
-        GeigerApi.masterId,
-        GeigerApi.masterId,
-        MessageType.activatePlugin,
-        testUrl,
-        SerializerHelper.intToByteArray(payloadActivate));
-    await CommunicationHelper.sendAndWait(localMaster, requestActivate);
+    await localMaster.registerPlugin();
+    await localMaster.activatePlugin();
     // deactivate Plugin
-    final Message requestDeactivate = Message(GeigerApi.masterId,
-        GeigerApi.masterId, MessageType.deactivatePlugin, testUrl);
-    final Message replyDeactivate =
-        await CommunicationHelper.sendAndWait(localMaster, requestDeactivate);
-    expect(MessageType.comapiSuccess, replyDeactivate.type,
+    final Message request = Message(GeigerApi.masterId, GeigerApi.masterId,
+        MessageType.deactivatePlugin, testUrl);
+    final Message reply =
+        await CommunicationHelper.sendAndWait(localMaster, request);
+    expect(MessageType.comapiSuccess, reply.type,
         reason: 'checking message type');
-    expect(request.sourceId, replyDeactivate.targetId,
+    expect(request.sourceId, reply.targetId,
         reason: 'checking recipient of reply');
-    expect(request.targetId, replyDeactivate.sourceId,
+    expect(request.targetId, reply.sourceId,
         reason: 'checking sender of reply');
-    expect('deactivatePlugin', replyDeactivate.action!.path,
+    expect('deactivatePlugin', reply.action!.path,
         reason: 'checking geigerURL');
     await localMaster.close();
   });

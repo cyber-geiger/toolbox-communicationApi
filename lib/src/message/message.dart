@@ -77,7 +77,7 @@ class Message {
   }
 
   void toByteArrayStream(ByteSink out, [CommunicationSecret? secret]) {
-    secret ??= CommunicationSecret.empty();
+    secret ??= CommunicationSecret([]);
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, sourceId);
     SerializerHelper.writeString(out, targetId);

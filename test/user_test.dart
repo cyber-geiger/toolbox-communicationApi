@@ -425,6 +425,7 @@ Future<void> reuvenTests() async {
       //setup endpoints
       GeigerApi api = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
+      await api.zapState();
       await api.storage.zap();
       GeigerApi papi1 =
           (await getGeigerApi("", "plugin1", Declaration.doNotShareData))!;
@@ -459,6 +460,8 @@ Future<void> reuvenTests() async {
       await api.storage.delete(':Users:test');
 
       await api.close();
+      await papi1.close();
+      await papi2.close();
     }, timeout: const Timeout(Duration(seconds: 120)));
   });
 }

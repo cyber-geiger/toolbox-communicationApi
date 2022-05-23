@@ -322,14 +322,14 @@ class CommunicationApi extends GeigerApi {
   }
 
   @override
-  Future<void> sendMessage(Message message, [PluginInformation? plugin]) async {
-    plugin ??= plugins[StorableString(message.targetId)] ??
+  Future<void> sendMessage(Message message,
+      [String? pluginId, PluginInformation? plugin]) async {
+    pluginId ??= message.targetId;
+    plugin ??= plugins[StorableString(pluginId)] ??
         PluginInformation(
-            message.targetId!,
+            pluginId!,
             GeigerApi.masterExecutor,
-            message.targetId == GeigerApi.masterId
-                ? GeigerCommunicator.masterPort
-                : 0,
+            pluginId == GeigerApi.masterId ? GeigerCommunicator.masterPort : 0,
             Declaration.doNotShareData);
     if (id == plugin.id) {
       await receivedMessage(message, skipAuth: true);
@@ -455,6 +455,7 @@ class CommunicationApi extends GeigerApi {
                 GeigerUrl(null, msg.sourceId, 'registerPlugin'),
                 (await keyPair.extractPublicKey()).bytes,
                 msg.requestId),
+            null,
             info);
         if (autoAcceptRegistration) {
           await _registerPlugin(info);

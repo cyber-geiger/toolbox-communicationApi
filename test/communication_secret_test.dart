@@ -86,8 +86,8 @@ void main() {
     // constructor with size
     final List<int> incorrectSizes = <int>[-1, -5, 0];
     for (final int size in incorrectSizes) {
-      expect(
-          () => CommunicationSecret.random(size), throwsA(isA<ArgumentError>()));
+      expect(() => CommunicationSecret.random(size),
+          throwsA(isA<ArgumentError>()));
     }
   });
 }

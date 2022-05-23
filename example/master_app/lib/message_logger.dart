@@ -98,8 +98,7 @@ class _MessageViewState extends State<MessageView> {
                           TableRow(children: [
                             const TableCell(child: Text("Hash:")),
                             TableCell(
-                                child: Text(widget.message.hash.toString())
-                            )
+                                child: Text(widget.message.hash.toString()))
                           ]),
                         ],
                       )

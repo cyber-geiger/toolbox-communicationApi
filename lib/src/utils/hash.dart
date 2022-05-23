@@ -21,8 +21,8 @@ class Hash implements Serializer {
   }
 
   static Future<Hash> fromByteArrayStream(ByteStream in_) async {
-    SerializerHelper.castTest('Hash', serialVersionUID,
-        await SerializerHelper.readLong(in_), 1);
+    SerializerHelper.castTest(
+        'Hash', serialVersionUID, await SerializerHelper.readLong(in_), 1);
 
     String? typeName = await SerializerHelper.readString(in_);
     if (typeName == null) {
@@ -38,8 +38,8 @@ class Hash implements Serializer {
 
     final bytes = await in_.popArray(type.hashLength);
 
-    SerializerHelper.castTest('Hash', serialVersionUID,
-        await SerializerHelper.readLong(in_), 1);
+    SerializerHelper.castTest(
+        'Hash', serialVersionUID, await SerializerHelper.readLong(in_), 1);
     return Hash(type, bytes);
   }
 

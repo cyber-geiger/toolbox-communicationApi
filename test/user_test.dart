@@ -45,6 +45,7 @@ Future<void> algarclamTests() async {
   group('algarclam tests', () {
     test('storage listener - last node updated', () async {
       print("testing delete behaviour in listener");
+      flushGeigerApiCache();
       Future<GeigerApi?> f =
           getGeigerApi("", GeigerApi.masterId, Declaration.doNotShareData);
       GeigerApi localMaster = (await f)!;
@@ -75,6 +76,7 @@ Future<void> algarclamTests() async {
     });
     test('storage node - last node deleted', () async {
       print("check listener when deleting");
+      flushGeigerApiCache();
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       // ignore: unused_local_variable
@@ -97,6 +99,7 @@ Future<void> algarclamTests() async {
     });
     test('storage listener - delete and add a node', () async {
       print("LISTENER TEST - CHECKS DELETE BEHAVIOUR");
+      flushGeigerApiCache();
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       // ignore: unused_local_variable
@@ -175,6 +178,7 @@ Future<void> luongTests() async {
   group('luong test', () {
     test('20220131 - Testing event propagation from external plugin to Master',
         () async {
+      flushGeigerApiCache();
       await StorageMapper.initDatabaseExpander();
       GeigerApi api = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
@@ -326,6 +330,7 @@ Future<void> reuvenTests() async {
   const int size = 10 * 1024 * 1024 - 20000;
   group('reuven test', () {
     test('20220222 - huge values test 1 (on master)', () async {
+      flushGeigerApiCache();
       await StorageMapper.initDatabaseExpander();
       GeigerApi api = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
@@ -360,6 +365,7 @@ Future<void> reuvenTests() async {
       await api.close();
     });
     test('huge message serialization', () async {
+      flushGeigerApiCache();
       print('## creating huge');
       String s = "abcdefghijklmnopqrstuvwxyz";
       for (; s.length < size;) {
@@ -391,6 +397,7 @@ Future<void> reuvenTests() async {
       print("## done in $time ms (Total)");
     });
     test('20220222 - huge values test 2 (on plugin)', () async {
+      flushGeigerApiCache();
       await StorageMapper.initDatabaseExpander();
       GeigerApi? api = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData));
@@ -420,6 +427,7 @@ Future<void> reuvenTests() async {
       await api.close();
     }, timeout: const Timeout(Duration(seconds: 120)));
     test('20220412 - Plugin event propagation (issue #22)', () async {
+      flushGeigerApiCache();
       await StorageMapper.initDatabaseExpander();
 
       //setup endpoints
@@ -469,6 +477,7 @@ Future<void> reuvenTests() async {
 Future<void> cftnTests() async {
   group("cftn tests", () {
     test("initial data not found", () async {
+      flushGeigerApiCache();
       GeigerApi localMaster = (await getGeigerApi(
           "", GeigerApi.masterId, Declaration.doNotShareData))!;
       StorageController sc = localMaster.storage;
@@ -502,6 +511,7 @@ void bananaEggTests() {
   group("bananaEgg tests", () {
     test("SqliteMapper - node.getValues() when node from parent.getChildren()",
         () async {
+      flushGeigerApiCache();
       final GeigerApi localMaster = (await getGeigerApi(
           '', GeigerApi.masterId, Declaration.doNotShareData))!;
       await localMaster.zapState();

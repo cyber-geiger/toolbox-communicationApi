@@ -468,8 +468,6 @@ Future<void> reuvenTests() async {
       await api.storage.delete(':Users:test');
 
       await api.close();
-      await papi1.close();
-      await papi2.close();
     }, timeout: const Timeout(Duration(seconds: 120)));
   });
 }

@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
+import 'package:geiger_api/src/geiger_api.dart';
 import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_api/src/storage/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -16,7 +17,6 @@ import 'plugin/plugin_starter.dart';
 
 class _StartupWaiter implements PluginListener {
   static const _events = [
-    MessageType.registerPlugin,
     MessageType.activatePlugin
   ];
   final String pluginId;
@@ -271,6 +271,7 @@ class CommunicationApi extends GeigerApi {
 
   @override
   Future<void> sendMessage(Message message, [String? pluginId]) async {
+    bool pluginIsRegisterd = false;
     pluginId ??= message.targetId;
     if (id == pluginId) {
       await receivedMessage(message);
@@ -286,23 +287,29 @@ class CommunicationApi extends GeigerApi {
             pluginId == GeigerApi.masterId ? GeigerCommunicator.masterPort : 0,
             Declaration.doNotShareData);
     final inBackground = message.type != MessageType.returningControl;
-    if (pluginInfo.getPort() == 0) {
+    if (pluginInfo.getPort()==0) {
       PluginStarter.startPlugin(pluginInfo, inBackground);
       await _StartupWaiter(this, pluginId!).wait();
       pluginInfo = plugins[StorableString(pluginId)]!;
     } else if (!inBackground) {
       // TODO: bring master to foreground
       // Temporary solution for android
+      pluginIsRegisterd = true;
       PluginStarter.startPlugin(pluginInfo, inBackground);
     }
 
+
     for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
       try {
+        if(!pluginIsRegisterd){
+          sleep(const Duration(microseconds: 1));
+        }
         await _communicator.sendMessage(pluginInfo.port, message);
         break;
       } on SocketException catch (e) {
         if (e.osError?.message != 'Connection refused') rethrow;
         PluginStarter.startPlugin(pluginInfo, inBackground);
+        pluginInfo = plugins[StorableString(pluginId)]!;
         if (pluginId == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
         } else {
@@ -312,6 +319,21 @@ class CommunicationApi extends GeigerApi {
       }
     }
   }
+
+  // //TODO(Maurice.Meier): Temp Remove i do not know where to put this
+  // Future<bool> isNotPluginRuning(int port, String source, String? target) async {
+  //   if(port == 0){
+  //     return true;
+  //   }else{
+  //     try {
+  //       Message message = Message(source, target, MessageType.ping, null);
+  //       await _communicator.sendMessage(port, message);
+  //     } on Exception catch (e) {
+  //       return true;
+  //     }
+  //   }
+  //   return false;
+  // }
 
   /// Broadcasts a [message] to all known plugins.
   Future<void> broadcastMessage(Message message) async {
@@ -438,9 +460,9 @@ class CommunicationApi extends GeigerApi {
         break;
     }
     _notifyListeners(msg.type, msg);
-    if (msg.type.id < MessageType.allEvents.id) {
+    // if (msg.type.id < MessageType.allEvents.id) {
       _notifyListeners(MessageType.allEvents, msg);
-    }
+    // }
   }
 
   void _notifyListeners(MessageType type, Message message) {

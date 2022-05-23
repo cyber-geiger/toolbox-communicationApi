@@ -13,7 +13,7 @@ void main() {
   test('testConstructorGetterSetter', () {
     // default constructor
     for (int i = 0; i < 20; ++i) {
-      final CommunicationSecret secret = CommunicationSecret.empty();
+      final CommunicationSecret secret = CommunicationSecret.random();
       expect(secret.getSecret(), isNotNull, reason: 'checking existence');
       expect(32, secret.getSecret().length, reason: 'checking size');
     }
@@ -21,7 +21,7 @@ void main() {
     // constructor with size
     final List<int> sizes = [1, 5, 50, 250, 2600, 10000];
     for (final int size in sizes) {
-      final CommunicationSecret secret2 = CommunicationSecret.empty(size);
+      final CommunicationSecret secret2 = CommunicationSecret.random(size);
       expect(secret2.getSecret(), isNotNull, reason: 'checking existence');
       expect(size, secret2.getSecret().length, reason: 'checking size');
     }
@@ -49,7 +49,7 @@ void main() {
 
     // setter
     for (int i = 0; i < 20; ++i) {
-      final CommunicationSecret secret4 = CommunicationSecret.empty();
+      final CommunicationSecret secret4 = CommunicationSecret.random();
       final List<int> secretValue = secret4.getSecret();
       final List<int> newSecretValue = SerializerHelper.intToByteArray(
           Random.secure().nextInt(pow(2, 32).toInt()));
@@ -64,7 +64,7 @@ void main() {
           reason: 'checking if secret is set correctly');
     }
     final List<int> value3 = [];
-    final CommunicationSecret secret4b = CommunicationSecret.empty();
+    final CommunicationSecret secret4b = CommunicationSecret.random();
     final List<int> prevSecret = secret4b.getSecret();
     secret4b.setSecret(value3);
     expect(secret4b.getSecret(), isNotNull, reason: 'checking existence');
@@ -87,7 +87,7 @@ void main() {
     final List<int> incorrectSizes = <int>[-1, -5, 0];
     for (final int size in incorrectSizes) {
       expect(
-          () => CommunicationSecret.empty(size), throwsA(isA<ArgumentError>()));
+          () => CommunicationSecret.random(size), throwsA(isA<ArgumentError>()));
     }
   });
 }

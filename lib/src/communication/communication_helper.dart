@@ -57,7 +57,8 @@ class CommunicationHelper {
       {int timeout = 30000,
       List<MessageType> responseTypes = const [
         MessageType.comapiSuccess,
-        MessageType.comapiError
+        MessageType.comapiError,
+        MessageType.authError
       ]}) async {
     var l = Listener(api, msg, responseTypes);
     await api.sendMessage(msg);

@@ -386,6 +386,7 @@ Future<void> reuvenTests() async {
       print(
           '## deserialization done in ${DateTime.now().millisecondsSinceEpoch - i} ms');
       int time = DateTime.now().millisecondsSinceEpoch - start;
+      m2.hash = null;
       expect(m, m2);
       print("## done in $time ms (Total)");
     });

@@ -25,6 +25,8 @@ Future<Serializer> readObject(final ByteStream inStream) async {
       return MenuItem.fromByteArrayStream(inStream);
     case GeigerUrl.serialVersionUID:
       return GeigerUrl.fromByteArrayStream(inStream);
+    case Hash.serialVersionUID:
+      return Hash.fromByteArrayStream(inStream);
     default:
       throw StorageException('unable to parse $uid');
   }

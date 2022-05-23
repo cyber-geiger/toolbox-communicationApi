@@ -10,6 +10,7 @@
 pubspec.lock
 
 .idea/
+.vs/
 /toolbox-communicationApi.iml
 /LocalAPI.__MASTERPLUGIN__.state
 /LocalAPI.plugin1.state
@@ -22,3 +23,6 @@ pubspec.lock
 /coverage/
 *.state
 /test.tst
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/Generated.xcconfig

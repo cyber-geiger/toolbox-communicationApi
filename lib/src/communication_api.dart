@@ -98,6 +98,7 @@ class CommunicationApi extends GeigerApi {
   final String executor;
   final bool isMaster;
   final bool autoAcceptRegistration;
+  final bool ignoreMessageSignature;
 
   @override
   late final StorageController storage;
@@ -120,7 +121,8 @@ class CommunicationApi extends GeigerApi {
   CommunicationApi(this.executor, this.id, this.isMaster, this.declaration,
       {this.statePath,
       StorageMapper Function() mapper = defaultStorageMapper,
-      this.autoAcceptRegistration = true}) {
+      this.autoAcceptRegistration = true,
+      this.ignoreMessageSignature = false}) {
     _communicator = GeigerCommunicator(this);
     if (isMaster) {
       storage = GenericController(id, mapper());
@@ -377,7 +379,8 @@ class CommunicationApi extends GeigerApi {
     GeigerApi.logger.info('## got message in plugin $id => $msg');
     if (!isMaster && msg.sourceId != GeigerApi.masterId) return;
     final pluginInfo = plugins[StorableString(msg.sourceId)];
-    if (!skipAuth &&
+    if (!ignoreMessageSignature &&
+        !skipAuth &&
         msg.type != MessageType.authError &&
         msg.type != MessageType.registerPlugin &&
         ((isMaster &&

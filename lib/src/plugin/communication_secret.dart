@@ -12,7 +12,7 @@ class CommunicationSecret with Serializer {
   List<int> secret = [];
 
   /// Creates a new secret with random content and specified [size] in bytes.
-  CommunicationSecret.empty([int size = defaultSize]) {
+  CommunicationSecret.random([int size = defaultSize]) {
     setRandomSecret(size);
   }
 

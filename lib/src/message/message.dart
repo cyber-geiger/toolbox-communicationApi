@@ -2,14 +2,14 @@ library geiger_api;
 
 import 'dart:convert';
 
+import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'geiger_url.dart';
-import 'message_type.dart';
+import '../plugin/communication_secret.dart';
 
-/// Representation of a message.
-class Message with Serializer {
+class Message {
   static const int serialVersionUID = 143287432;
+  static const _hashType = HashType.sha512;
 
   /// ID of the source plugin.
   final String sourceId;
@@ -25,6 +25,9 @@ class Message with Serializer {
 
   /// Returns the action URL of the message.
   final GeigerUrl? action;
+
+  /// Hash of the data
+  Hash? hash;
 
   String? _payloadString = '';
 
@@ -63,6 +66,34 @@ class Message with Serializer {
     _payloadString = value;
   }
 
+  Hash integrityHash(CommunicationSecret secret) {
+    return _hashType.hashBytes(utf8.encode(sourceId +
+            (targetId ?? 'null') +
+            type.id.toString() +
+            action.toString() +
+            requestId) +
+        payload +
+        secret.secret);
+  }
+
+  void toByteArrayStream(ByteSink out, [CommunicationSecret? secret]) {
+    secret ??= CommunicationSecret([]);
+    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeString(out, sourceId);
+    SerializerHelper.writeString(out, targetId);
+    SerializerHelper.writeInt(out, type.id);
+    if (action == null) {
+      SerializerHelper.writeInt(out, 0);
+    } else {
+      SerializerHelper.writeInt(out, 1);
+      action!.toByteArrayStream(out);
+    }
+    SerializerHelper.writeString(out, requestId);
+    SerializerHelper.writeString(out, payloadString);
+    integrityHash(secret).toByteArrayStream(out);
+    SerializerHelper.writeLong(out, serialVersionUID);
+  }
+
   /// Convert ByteArrayInputStream to Message.
   /// @param in the ByteArrayInputStream to use
   /// @return the converted Message
@@ -70,11 +101,10 @@ class Message with Serializer {
   static Future<Message> fromByteArray(ByteStream in_) async {
     SerializerHelper.castTest(
         'Message', serialVersionUID, await SerializerHelper.readLong(in_), 1);
+
     Message m = Message(
         await SerializerHelper.readString(in_) ?? '',
-        (await SerializerHelper.readInt(in_) == 1)
-            ? await SerializerHelper.readString(in_)
-            : null,
+        await SerializerHelper.readString(in_),
         MessageType.getById(await SerializerHelper.readInt(in_)) ??
             MessageType.comapiError,
         (await SerializerHelper.readInt(in_) == 1)
@@ -82,39 +112,12 @@ class Message with Serializer {
             : null,
         null,
         await SerializerHelper.readString(in_));
-    m.payloadString = (await SerializerHelper.readInt(in_) == 1)
-        ? await SerializerHelper.readString(in_)
-        : null;
+    m.payloadString = await SerializerHelper.readString(in_);
+    m.hash = await Hash.fromByteArrayStream(in_);
+
     SerializerHelper.castTest(
         'Message', serialVersionUID, await SerializerHelper.readLong(in_), 2);
     return m;
-  }
-
-  @override
-  void toByteArrayStream(ByteSink out) {
-    SerializerHelper.writeLong(out, serialVersionUID);
-    SerializerHelper.writeString(out, sourceId);
-    if (targetId == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, targetId);
-    }
-    SerializerHelper.writeInt(out, type.id);
-    if (action == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      action?.toByteArrayStream(out);
-    }
-    SerializerHelper.writeString(out, requestId);
-    if (payloadString == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, payloadString);
-    }
-    SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   @override
@@ -126,7 +129,8 @@ class Message with Serializer {
             type == other.type &&
             action == other.action &&
             requestId == other.requestId &&
-            payloadString == other.payloadString);
+            payloadString == other.payloadString &&
+            hash == other.hash);
   }
 
   @override
@@ -136,12 +140,17 @@ class Message with Serializer {
             type.hashCode.toString() +
             action.hashCode.toString() +
             requestId +
-            (payloadString ?? 'null'))
+            (payloadString ?? 'null') +
+            (hash?.toString() ?? 'null'))
         .hashCode;
   }
 
   @override
   String toString() {
-    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})}';
+    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})' +
+        (hash != null
+            ? '[${hash!.hashType.toString()}: ${hash.toString()}]'
+            : "") +
+        '}';
   }
 }

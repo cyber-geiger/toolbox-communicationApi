@@ -21,7 +21,7 @@ class PluginInformation with Serializer {
   /// - [secret]     the secret required for communicating (if null a new secret is generated)
   PluginInformation(this.id, this.executable, this.port, this.declaration,
       [CommunicationSecret? secret]) {
-    this.secret = secret ?? CommunicationSecret.empty();
+    this.secret = secret ?? CommunicationSecret.random();
   }
 
   /// Gets the port of the plugin.

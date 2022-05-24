@@ -4,10 +4,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_api/src/communication/communication_helper.dart';
 import 'package:geiger_api/src/communication/geiger_communicator.dart';
-import 'package:geiger_api/src/geiger_api.dart';
+import 'package:geiger_api/src/plugin/communication_secret.dart';
 import 'package:geiger_api/src/storage/passthrough_controller.dart';
 import 'package:geiger_api/src/storage/storage_event_handler.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -44,8 +45,37 @@ class _StartupWaiter implements PluginListener {
   }
 }
 
+class _RegisterResultWaiter implements PluginListener {
+  static const _events = [MessageType.authSuccess, MessageType.authError];
+  final Completer<bool> _completer = Completer();
+  final GeigerApi _api;
+
+  _RegisterResultWaiter(this._api) {
+    _api.registerListener(_events, this);
+  }
+
+  @override
+  void pluginEvent(GeigerUrl? _, Message msg) {
+    if (msg.action?.path != 'registerPlugin') return;
+    _completer.complete(msg.type == MessageType.authSuccess);
+  }
+
+  Future<bool> wait() {
+    return _completer.future.then((val) {
+      deregister();
+      return val;
+    });
+  }
+
+  void deregister() {
+    _api.deregisterListener(_events, this);
+  }
+}
+
 /// Offers an API for all plugins to access the local toolbox.
 class CommunicationApi extends GeigerApi {
+  static final _keyExchangeAlgorithm = X25519();
+
   /// Maximum number of times a message gets resend
   /// when a newly started plugin won't respond.
   static const maxSendRetries = 10;
@@ -64,6 +94,8 @@ class CommunicationApi extends GeigerApi {
   final Declaration declaration;
   final String executor;
   final bool isMaster;
+  final bool autoAcceptRegistration;
+  final bool ignoreMessageSignature;
 
   @override
   late final StorageController storage;
@@ -85,7 +117,9 @@ class CommunicationApi extends GeigerApi {
   /// Whether this api [isMaster] and its privacy [declaration] must also be provided.
   CommunicationApi(this.executor, this.id, this.isMaster, this.declaration,
       {this.statePath,
-      StorageMapper Function() mapper = defaultStorageMapper}) {
+      StorageMapper Function() mapper = defaultStorageMapper,
+      this.autoAcceptRegistration = true,
+      this.ignoreMessageSignature = false}) {
     _communicator = GeigerCommunicator(this);
     if (isMaster) {
       storage = GenericController(id, mapper());
@@ -113,28 +147,26 @@ class CommunicationApi extends GeigerApi {
     if (isMaster) return;
   }
 
+  Future<void> _registerPlugin(PluginInformation plugin) async {
+    plugins[StorableString(plugin.id)] = plugin;
+    GeigerApi.logger.info('registered Plugin ${plugin.id} executable: '
+        '${plugin.getExecutable() ?? 'null'} port: ${plugin.port}');
+    await storeState();
+  }
+
   @override
-  Future<void> registerPlugin(
-      [String? pluginId, PluginInformation? info]) async {
-    // TODO(mgwerder): share secret in a secure paired way....
-    //PluginInformation pi = new PluginInformation();
-    //CommunicationSecret secret = new CommunicationSecret();
-    //secrets.put(id, secret);
-
-    if (pluginId != null) {
-      if (info == null) {
-        throw NullThrownError();
-      }
-      plugins[StorableString(pluginId)] = info;
-      GeigerApi.logger.info('registered Plugin $pluginId executable: '
-          '${info.getExecutable() ?? 'null'} port: ${info.getPort().toString()}');
-      await storeState();
-      return;
-    }
-
+  Future<void> registerPlugin() async {
+    final keyPair = await _keyExchangeAlgorithm.newKeyPair();
     final pluginInformation = PluginInformation(
-        pluginId ?? id, executor, _communicator.port, declaration);
-    await CommunicationHelper.sendAndWait(
+        id,
+        executor,
+        _communicator.port,
+        declaration,
+        CommunicationSecret((await keyPair.extractPublicKey()).bytes));
+    // Needs to be registered before sending the registration request
+    // incase the master responds too fast
+    final resultWaiter = _RegisterResultWaiter(this);
+    final result = await CommunicationHelper.sendAndWait(
         this,
         Message(
             id,
@@ -142,6 +174,25 @@ class CommunicationApi extends GeigerApi {
             MessageType.registerPlugin,
             GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
             await pluginInformation.toByteArray()));
+    if (result.type == MessageType.comapiError) {
+      throw CommunicationException("Plugin registration failed");
+    }
+    final secret = await _keyExchangeAlgorithm.sharedSecretKey(
+        keyPair: keyPair,
+        remotePublicKey: SimplePublicKey(result.payload,
+            type: _keyExchangeAlgorithm.keyPairType));
+    final info = PluginInformation(
+        GeigerApi.masterId,
+        GeigerApi.masterExecutor,
+        GeigerCommunicator.masterPort,
+        Declaration.doNotShareData,
+        CommunicationSecret(await secret.extractBytes()));
+    // TODO: call listener to display fingerprint
+    final didSucceed = await resultWaiter.wait();
+    if (!didSucceed) {
+      throw CommunicationException("Plugin registration was denied.");
+    }
+    plugins[const StorableString(GeigerApi.masterId)] = info;
   }
 
   @override
@@ -266,45 +317,46 @@ class CommunicationApi extends GeigerApi {
   }
 
   @override
-  Future<void> sendMessage(Message message, [String? pluginId]) async {
+  Future<void> sendMessage(Message message,
+      [String? pluginId, PluginInformation? plugin]) async {
     pluginId ??= message.targetId;
-    if (id == pluginId) {
-      await receivedMessage(message);
-      return;
-    }
-    GeigerApi.logger
-        .log(Level.INFO, '## Sending message to plugin $pluginId ($message)');
-    PluginInformation pluginInfo = plugins[StorableString(pluginId)] ??
+    plugin ??= plugins[StorableString(pluginId)] ??
         PluginInformation(
             pluginId!,
             GeigerApi.masterExecutor,
             pluginId == GeigerApi.masterId ? GeigerCommunicator.masterPort : 0,
             Declaration.doNotShareData);
-    final inBackground = message.type != MessageType.returningControl;
-    if (pluginInfo.getPort() == 0) {
+    if (id == plugin.id) {
+      await receivedMessage(message, skipAuth: true);
+      return;
+    }
 
-      PluginStarter.startPlugin(pluginInfo, inBackground);
-      await _StartupWaiter(this, pluginId!).wait();
-      pluginInfo = plugins[StorableString(pluginId)]!;
+    GeigerApi.logger.log(
+        Level.INFO, '## Sending message to plugin ${plugin.id} ($message)');
+
+    final inBackground = message.type != MessageType.returningControl;
+    if (plugin.port == 0) {
+      PluginStarter.startPlugin(plugin, inBackground);
+      await _StartupWaiter(this, plugin.id).wait();
+      plugin = plugins[StorableString(plugin.id)]!;
     } else if (!inBackground) {
       // TODO: bring master to foreground
       // Temporary solution for android
-      PluginStarter.startPlugin(pluginInfo, inBackground);
+      PluginStarter.startPlugin(plugin, inBackground);
     }
 
     for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
-
       try {
-        await _communicator.sendMessage(pluginInfo.port, message);
+        await _communicator.sendMessage(plugin!, message);
         break;
       } on SocketException catch (e) {
         if (e.osError?.message != 'Connection refused') rethrow;
-        PluginStarter.startPlugin(pluginInfo, inBackground);
-        if (pluginId == GeigerApi.masterId) {
+        PluginStarter.startPlugin(plugin!, inBackground);
+        if (plugin.id == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
         } else {
-          await _StartupWaiter(this, pluginId!).wait();
-          pluginInfo = plugins[StorableString(pluginId)]!;
+          await _StartupWaiter(this, plugin.id).wait();
+          plugin = plugins[StorableString(plugin.id)]!;
         }
       }
     }
@@ -318,8 +370,25 @@ class CommunicationApi extends GeigerApi {
     }
   }
 
-  Future<void> receivedMessage(Message msg) async {
+  Future<void> receivedMessage(Message msg, {bool skipAuth = false}) async {
     GeigerApi.logger.info('## got message in plugin $id => $msg');
+    if (!isMaster && msg.sourceId != GeigerApi.masterId) return;
+    final pluginInfo = plugins[StorableString(msg.sourceId)];
+    if (!ignoreMessageSignature &&
+        !skipAuth &&
+        msg.type != MessageType.authError &&
+        msg.type != MessageType.registerPlugin &&
+        ((isMaster &&
+                (pluginInfo == null ||
+                    msg.hash != msg.integrityHash(pluginInfo.secret))) ||
+            (!isMaster &&
+                pluginInfo != null &&
+                msg.hash != msg.integrityHash(pluginInfo.secret)))) {
+      await sendMessage(Message(
+          id, msg.sourceId, MessageType.authError, null, null, msg.requestId));
+      return;
+    }
+
     switch (msg.type) {
       case MessageType.enableMenu:
         final item = menuItems[StorableString(msg.payloadString)];
@@ -361,15 +430,46 @@ class CommunicationApi extends GeigerApi {
             msg.requestId));
         break;
       case MessageType.registerPlugin:
-        await registerPlugin(
-            msg.sourceId, await PluginInformation.fromByteArray(msg.payload));
-        await sendMessage(Message(
-            id,
-            msg.sourceId,
-            MessageType.comapiSuccess,
-            GeigerUrl(null, msg.sourceId, 'registerPlugin'),
+        PluginInformation info =
+            await PluginInformation.fromByteArray(msg.payload);
+        final keyPair = await _keyExchangeAlgorithm.newKeyPair();
+        final secret = await _keyExchangeAlgorithm.sharedSecretKey(
+            keyPair: keyPair,
+            remotePublicKey: SimplePublicKey(info.secret.secret,
+                type: _keyExchangeAlgorithm.keyPairType));
+        info.secret = CommunicationSecret(await secret.extractBytes());
+        ByteSink sink = ByteSink();
+        info.toByteArrayStream(sink);
+        sink.close();
+        msg.payload = await sink.bytes;
+        await sendMessage(
+            Message(
+                id,
+                msg.sourceId,
+                MessageType.comapiSuccess,
+                GeigerUrl(null, msg.sourceId, 'registerPlugin'),
+                (await keyPair.extractPublicKey()).bytes,
+                msg.requestId),
             null,
-            msg.requestId));
+            info);
+        if (autoAcceptRegistration) {
+          await _registerPlugin(info);
+          await sendMessage(Message(id, info.id, MessageType.authSuccess,
+              GeigerUrl(null, info.id, 'registerPlugin')));
+        }
+        break;
+      case MessageType.authorizePlugin:
+        if (autoAcceptRegistration) break;
+        final stream = ByteStream(null, msg.payload);
+        final isAccepted = await SerializerHelper.readInt(stream) == 1;
+        final info = await PluginInformation.fromByteArrayStream(stream);
+        MessageType type = MessageType.authError;
+        if (isAccepted) {
+          await _registerPlugin(info);
+          type = MessageType.authSuccess;
+        }
+        await sendMessage(Message(
+            id, info.id, type, GeigerUrl(null, info.id, 'registerPlugin')));
         break;
       case MessageType.deregisterPlugin:
         await sendMessage(Message(

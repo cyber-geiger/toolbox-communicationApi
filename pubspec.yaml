@@ -29,6 +29,8 @@ dependencies:
   meta: ^1.7.0
   uuid: ^3.0.6
   collection: ^1.15.0
+  cryptography: ^2.0.5
+  convert: ^3.0.1
 
 dev_dependencies:
   flutter_test:

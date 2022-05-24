@@ -57,7 +57,13 @@ class CollectingListener with StorageListener {
 
     final completer = _ConditionalCompleter(canComplete, createResult);
     completers.add(completer);
-    return completer.future.timeout(timeLimit, onTimeout: () {
+    return completer.future.then((value) {
+      completers.remove(completer);
+      return value;
+    }, onError: (error) {
+      completers.remove(completer);
+      throw error;
+    }).timeout(timeLimit, onTimeout: () {
       completers.remove(completer);
       throw TimeoutException(
           'Did not receive enough change events before timeout.', timeLimit);

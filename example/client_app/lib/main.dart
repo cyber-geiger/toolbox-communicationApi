@@ -23,9 +23,12 @@ void main() async {
 }
 
 void callClientPlugin(MessageType type) async {
-  getAndStoreGeigerURLInStorage(logger.messages.last.action);
+  if(logger.messages.isNotEmpty) {
+    getAndStoreGeigerURLInStorage(logger.messages.last.action);
+  }
   Message message = Message(pluginId,GeigerApi.masterId, type, null);
   await api.sendMessage(message, GeigerApi.masterId);
+
 }
 
 void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
@@ -39,6 +42,9 @@ Future<void> initGeiger() async{
   api = (await getGeigerApi(pluginExecutor, pluginId))!;
   api.registerListener([MessageType.allEvents], logger);
 
+  // IMPORTANT: register and activate plugin after registering event listeners
+  await api.registerPlugin();
+  await api.activatePlugin();
 }
 
 class App extends StatelessWidget {

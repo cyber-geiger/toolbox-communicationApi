@@ -1,240 +1,157 @@
 package eu.cybergeiger.api;
 
-import static org.junit.Assert.fail;
-
 import java.net.MalformedURLException;
 
 import eu.cybergeiger.api.message.GeigerUrl;
-import org.junit.Assert;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Class to test the GeigerUrl implementation.
  */
 public class TestGeigerUrl {
+  static final String standardProtocol = "geiger";
+  static final String standardPlugin = "plugin";
+  static final String standardPath = "path";
 
-    // working strings
-    String[] protocols = new String[]{"geiger", "some-protocol", "protocol/subprotocol",
-            "protocol°+*ç%&/()=?`èà£!é_:;"};
-    String[] plugins = new String[]{"plugin", "some-plugin", "plugin-?!subplugin",
-            "plugin°+*ç%&()=?`èà£!é_:;", "plugin?some-plugin+some%path"};
-    String[] paths = new String[]{"path", "some-path", "path/subpath", "some/path/to/something",
-            "path°+*ç%&/()=?`èà£!é_:;", "path://somepath/subpath", "", null};
+  static final String[] protocols = new String[]{
+    "geiger", "some-protocol",
+    "protocol/subprotocol", "protocol°+*ç%&/()=?`èà£!é_:;"
+  };
+  static final String[] plugins = new String[]{
+    "plugin", "some-plugin",
+    "plugin-?!subplugin", "plugin°+*ç%&()=?`èà£!é_:;",
+    "plugin?some-plugin+some%path"
+  };
+  static final String[] paths = new String[]{
+    "path", "some-path",
+    "path/subpath", "some/path/to/something",
+    "path°+*ç%&/()=?`èà£!é_:;", "path://somepath/subpath",
+    ""
+  };
 
-    @Test
-    public void testSpecConstructor() {
-        for (String protocol : protocols) {
-            for (String plugin : plugins) {
-                for (String path : paths) {
-                    GeigerUrl url = new GeigerUrl(protocol + "://" + plugin + "/" + path);
-                    Assert.assertEquals("checking protocol", protocol, url.getProtocol());
-                    Assert.assertEquals("checking plugin", plugin, url.getPlugin());
-                    // handle special case where path = null
-                    if (path == null) {
-                        path = "";
-                    }
-                    Assert.assertEquals("checking path", path, url.getPath());
-                }
-            }
+  @Test
+  public void testParse() throws MalformedURLException {
+    for (String protocol : protocols) {
+      for (String plugin : plugins) {
+        for (String path : paths) {
+          GeigerUrl url = GeigerUrl.parse(protocol + "://" + plugin + "/" + path);
+          assertThat(url.getProtocol()).isEqualTo(protocol);
+          assertThat(url.getPlugin()).isEqualTo(plugin);
+          assertThat(url.getPath()).isEqualTo(path);
         }
-        // Negative tests
-        // missing colon
-        String protocol = "geiger";
-        String plugin = "plugin";
-        String path = "path";
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl(protocol + "//" + plugin + "/" + path));
-        // missing slash
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl(protocol + ":/" + plugin + "/" + path));
-        // missing protocol
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl("://" + plugin + "/" + path));
-        // missing plugin + path
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl(protocol + "://"));
+      }
     }
 
-    @Test
-    public void testPluginPathConstructor() {
-        String protocol = "geiger";
-        for (String plugin : plugins) {
-            for (String path : paths) {
-                GeigerUrl url = new GeigerUrl(plugin, path);
-                Assert.assertEquals("checking protocol", protocol, url.getProtocol());
-                Assert.assertEquals("checking plugin", plugin, url.getPlugin());
-                // handle special case where path = null
-                if (path == null) {
-                    path = "";
-                }
-                Assert.assertEquals("checking path", path, url.getPath());
-            }
-        }
+    // Missing colon
+    assertThatThrownBy(() -> GeigerUrl.parse(standardProtocol + "//" + standardPlugin + "/" + standardPath))
+      .isInstanceOf(MalformedURLException.class);
+    // Missing slash
+    assertThatThrownBy(() -> GeigerUrl.parse(standardProtocol + ":/" + standardPlugin + "/" + standardPath))
+      .isInstanceOf(MalformedURLException.class);
+    // Missing protocol
+    assertThatThrownBy(() -> GeigerUrl.parse("://" + standardPlugin + "/" + standardPath))
+      .isInstanceOf(MalformedURLException.class);
+    // Missing plugin + path
+    assertThatThrownBy(() -> GeigerUrl.parse(standardProtocol + "://"))
+      .isInstanceOf(MalformedURLException.class);
+  }
 
-        // negative tests
-        // empty plugin
-        String path = "path";
-        String longPath = "some/path/to/something";
-        Assert.assertThrows(MalformedURLException.class, () -> new GeigerUrl("", path));
-        Assert.assertThrows(MalformedURLException.class, () -> new GeigerUrl("", longPath));
-        Assert.assertThrows(MalformedURLException.class, () -> new GeigerUrl(null, path));
-        Assert.assertThrows(MalformedURLException.class, () -> new GeigerUrl(null, longPath));
+  @Test
+  public void testImplicitProtocolConstructor() {
+    for (String plugin : plugins) {
+      for (String path : paths) {
+        GeigerUrl url = new GeigerUrl(plugin, path);
+        assertThat(url.getProtocol()).isEqualTo(GeigerUrl.GEIGER_PROTOCOL);
+        assertThat(url.getPlugin()).isEqualTo(plugin);
+        assertThat(url.getPath()).isEqualTo(path);
+      }
     }
 
-    @Test
-    public void testProtocolPluginPathConstructor() {
-        for (String protocol : protocols) {
-            for (String plugin : plugins) {
-                for (String path : paths) {
-                    GeigerUrl url = new GeigerUrl(protocol, plugin, path);
-                    Assert.assertEquals("checking protocol", protocol, url.getProtocol());
-                    Assert.assertEquals("checking plugin", plugin, url.getPlugin());
-                    // handle special case where path = null
-                    if (path == null) {
-                        path = "";
-                    }
-                    Assert.assertEquals("checking path", path, url.getPath());
-                }
-            }
-        }
+    assertThatThrownBy(() -> new GeigerUrl("", standardPath))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new GeigerUrl(null, standardPath))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
 
-        // negative tests
-        String protocol = "geiger";
-        String plugin = "plugin";
-        String path = "path";
-        // protocol null or empty
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl(null, plugin, path));
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl("", plugin, path));
-        // plugin null or empty
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl(protocol, null, path));
-        Assert.assertThrows(MalformedURLException.class, () ->
-                new GeigerUrl(protocol, "", path));
+  @Test
+  public void testProtocolPluginPathConstructor() {
+    for (String protocol : protocols) {
+      for (String plugin : plugins) {
+        for (String path : paths) {
+          GeigerUrl url = new GeigerUrl(protocol, plugin, path);
+          assertThat(url.getProtocol()).isEqualTo(protocol);
+          assertThat(url.getPlugin()).isEqualTo(plugin);
+          assertThat(url.getPath()).isEqualTo(path);
+        }
+      }
     }
 
-    @Test
-    public void testToString() {
-        for (String protocol : protocols) {
-            for (String plugin : plugins) {
-                for (String path : paths) {
-                    GeigerUrl url = new GeigerUrl(protocol, plugin, path);
-                    // handle special case where path = null
-                    if (path == null) {
-                        path = "";
-                    }
-                    String expectedFormat = protocol + "://" + plugin + "/" + path;
-                    Assert.assertEquals("checking toString", expectedFormat, url.toString());
+    assertThatThrownBy(() -> new GeigerUrl(null, standardPlugin, standardPath))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new GeigerUrl("", standardPlugin, standardPath))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new GeigerUrl(standardProtocol, null, standardPath))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new GeigerUrl(standardProtocol, "", standardPath))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new GeigerUrl(standardProtocol, standardPlugin, null))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
 
-                    GeigerUrl url2 = new GeigerUrl(expectedFormat);
-                    Assert.assertEquals("checking toString", expectedFormat, url2.toString());
-                }
-            }
+  @Test
+  public void testToString() throws MalformedURLException {
+    for (String protocol : protocols) {
+      for (String plugin : plugins) {
+        for (String path : paths) {
+          String expected = protocol + "://" + plugin + "/" + path;
+          assertThat(new GeigerUrl(protocol, plugin, path).toString()).isEqualTo(expected);
+          assertThat(GeigerUrl.parse(expected).toString()).isEqualTo(expected);
         }
-        // checking toString of constructor without protocol
-        for (String plugin : plugins) {
-            for (String path : paths) {
+      }
+    }
+  }
 
-                GeigerUrl url = new GeigerUrl(plugin, path);
-                // handle special case where path = null
-                if (path == null) {
-                    path = "";
-                }
-                String expectedFormat = "geiger://" + plugin + "/" + path;
-                Assert.assertEquals("checking toString", expectedFormat, url.toString());
-            }
+
+  @Test
+  public void testEquals() throws MalformedURLException {
+    for (String protocol : protocols) {
+      for (String plugin : plugins) {
+        for (String path : paths) {
+          assertThat(new GeigerUrl(protocol, plugin, path))
+            .isEqualTo(GeigerUrl.parse(protocol + "://" + plugin + "/" + path));
         }
+      }
     }
 
+    GeigerUrl url = GeigerUrl.parse("geiger://plugin/path");
+    // Different protocol
+    assertThat(url).isNotEqualTo(GeigerUrl.parse("gei-ger://plugin/path"));
+    // Different plugin
+    assertThat(url).isNotEqualTo(GeigerUrl.parse("geiger://plug-in/path"));
+    // Different path
+    assertThat(url).isNotEqualTo(GeigerUrl.parse("geiger://plugin/path/something/else"));
+  }
 
-    @Test
-    public void testEquals() {
-        for (String protocol : protocols) {
-            for (String plugin : plugins) {
-                for (String path : paths) {
-                    GeigerUrl url = new GeigerUrl(protocol, plugin, path);
-                    // handle special case where path = null
-                    if (path == null) {
-                        path = "";
-                    }
-                    String expectedFormat = protocol + "://" + plugin + "/" + path;
-                    GeigerUrl url2 = new GeigerUrl(expectedFormat);
-                    Assert.assertEquals(url, url2);
-                }
-            }
+  @Test
+  public void testHashCode() throws MalformedURLException {
+    for (String protocol : protocols) {
+      for (String plugin : plugins) {
+        for (String path : paths) {
+          assertThat(new GeigerUrl(protocol, plugin, path).hashCode())
+            .isEqualTo(GeigerUrl.parse(protocol + "://" + plugin + "/" + path).hashCode());
         }
-        // checking equals with fixed protocol
-        for (String plugin : plugins) {
-            for (String path : paths) {
-
-                GeigerUrl url = new GeigerUrl(plugin, path);
-                // handle special case where path = null
-                if (path == null) {
-                    path = "";
-                }
-                String expectedFormat = "geiger://" + plugin + "/" + path;
-                GeigerUrl url2 = new GeigerUrl(expectedFormat);
-                Assert.assertEquals(url, url2);
-            }
-        }
-        // Negative tests
-        // varying protocol
-        GeigerUrl url = new GeigerUrl("geiger://plugin/path");
-        GeigerUrl url2 = new GeigerUrl("gei-ger://plugin/path");
-        Assert.assertNotEquals(url, url2);
-        // varying plugin
-        GeigerUrl url3 = new GeigerUrl("geiger://plugin/path");
-        GeigerUrl url4 = new GeigerUrl("geiger://plug-in/path");
-        Assert.assertNotEquals(url3, url4);
-        // varying path
-        GeigerUrl url5 = new GeigerUrl("geiger://plugin/path");
-        GeigerUrl url6 = new GeigerUrl("geiger://plugin/path/something/else");
-        Assert.assertNotEquals(url5, url6);
+      }
     }
 
-    @Test
-    public void testHashCode() {
-        for (String protocol : protocols) {
-            for (String plugin : plugins) {
-                for (String path : paths) {
-                    GeigerUrl url = new GeigerUrl(protocol, plugin, path);
-                    // handle special case where path = null
-                    if (path == null) {
-                        path = "";
-                    }
-                    String expectedFormat = protocol + "://" + plugin + "/" + path;
-                    GeigerUrl url2 = new GeigerUrl(expectedFormat);
-                    Assert.assertEquals(url.hashCode(), url2.hashCode());
-                }
-            }
-        }
-        // checking equals with fixed protocol
-        for (String plugin : plugins) {
-            for (String path : paths) {
-
-                GeigerUrl url = new GeigerUrl(plugin, path);
-                // handle special case where path = null
-                if (path == null) {
-                    path = "";
-                }
-                String expectedFormat = "geiger://" + plugin + "/" + path;
-                GeigerUrl url2 = new GeigerUrl(expectedFormat);
-                Assert.assertEquals(url.hashCode(), url2.hashCode());
-            }
-        }
-        // Negative tests
-        // varying protocol
-        GeigerUrl url = new GeigerUrl("geiger://plugin/path");
-        GeigerUrl url2 = new GeigerUrl("gei-ger://plugin/path");
-        Assert.assertNotEquals(url.hashCode(), url2.hashCode());
-        // varying plugin
-        GeigerUrl url3 = new GeigerUrl("geiger://plugin/path");
-        GeigerUrl url4 = new GeigerUrl("geiger://plug-in/path");
-        Assert.assertNotEquals(url.hashCode(), url4.hashCode());
-        // varying path
-        GeigerUrl url5 = new GeigerUrl("geiger://plugin/path");
-        GeigerUrl url6 = new GeigerUrl("geiger://plugin/path/something/else");
-        Assert.assertNotEquals(url.hashCode(), url6.hashCode());
-    }
+    GeigerUrl url = GeigerUrl.parse("geiger://plugin/path");
+    // Different protocol
+    assertThat(url.hashCode()).isNotEqualTo(GeigerUrl.parse("gei-ger://plugin/path").hashCode());
+    // Different plugin
+    assertThat(url.hashCode()).isNotEqualTo(GeigerUrl.parse("geiger://plug-in/path").hashCode());
+    // Different path
+    assertThat(url.hashCode()).isNotEqualTo(GeigerUrl.parse("geiger://plugin/path/something/else").hashCode());
+  }
 }

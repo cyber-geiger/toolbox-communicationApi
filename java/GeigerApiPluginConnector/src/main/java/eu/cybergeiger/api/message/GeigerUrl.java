@@ -1,8 +1,7 @@
 package eu.cybergeiger.api.message;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
-import eu.cybergeiger.api.GeigerApi;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,8 +14,9 @@ import java.util.regex.Pattern;
 /**
  * <p>GEIGER communication URL object.</p>
  */
-public class GeigerUrl implements Serializer {
+public class GeigerUrl implements Serializable {
   private static final long serialVersionUID = 32411423L;
+  public static final String GEIGER_PROTOCOL = "geiger";
 
   private final String protocol;
   private final String pluginId;
@@ -55,7 +55,7 @@ public class GeigerUrl implements Serializer {
    * @param path     the path to call the respective function
    */
   public GeigerUrl(String pluginId, String path) {
-    this("geiger", pluginId, path);
+    this(GEIGER_PROTOCOL, pluginId, path);
   }
 
   /**
@@ -66,6 +66,16 @@ public class GeigerUrl implements Serializer {
    * @param path     the path to call the respective function
    */
   public GeigerUrl(String protocol, String pluginId, String path) {
+    if (protocol == null)
+      throw new IllegalArgumentException("\"protocol\" cannot be null.");
+    if (pluginId == null)
+      throw new IllegalArgumentException("\"protocol\" cannot be null.");
+    if (path == null)
+      throw new IllegalArgumentException("\"protocol\" cannot be null.");
+    if (protocol.isEmpty())
+      throw new IllegalArgumentException("\"protocol\" cannot be empty.");
+    if (pluginId.isEmpty())
+      throw new IllegalArgumentException("\"protocol\" cannot be empty.");
     this.protocol = protocol;
     this.pluginId = pluginId;
     this.path = path;

@@ -1,6 +1,6 @@
 package eu.cybergeiger.storage;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
 import java.io.ByteArrayInputStream;
@@ -10,10 +10,10 @@ import java.io.IOException;
 /**
  * <p>Exception to be raised on any problems related to the local storage.</p>
  */
-public class StorageException extends IOException implements Serializer {
+public class StorageException extends IOException implements Serializable {
 
 
-  private static class SerializedException extends Throwable implements Serializer {
+  private static class SerializedException extends Throwable implements Serializable {
 
     private static final long serialversionUID = 721364991234L;
 

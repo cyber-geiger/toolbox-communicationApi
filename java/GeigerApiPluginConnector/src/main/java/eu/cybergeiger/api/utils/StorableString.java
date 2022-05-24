@@ -1,6 +1,6 @@
 package eu.cybergeiger.api.utils;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
 import java.io.ByteArrayInputStream;
@@ -10,7 +10,7 @@ import java.io.IOException;
 /**
  * <p>A serializable yet simple String object.</p>
  */
-public class StorableString implements Serializer {
+public class StorableString implements Serializable {
 
   private static final long serialVersionUID = 142314912322198374L;
 

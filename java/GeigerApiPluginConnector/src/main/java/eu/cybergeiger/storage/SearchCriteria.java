@@ -1,6 +1,6 @@
 package eu.cybergeiger.storage;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 import eu.cybergeiger.storage.node.Field;
 import eu.cybergeiger.storage.node.Node;
@@ -21,7 +21,7 @@ import java.util.TreeSet;
  * nonempty criteria.
  * </p>
  */
-public class SearchCriteria implements Serializer, Comparable<SearchCriteria> {
+public class SearchCriteria implements Serializable, Comparable<SearchCriteria> {
 
   private static final long serialversionUID = 87128319541L;
 
@@ -265,7 +265,7 @@ public class SearchCriteria implements Serializer, Comparable<SearchCriteria> {
     return (SearchCriteria) (fromByteArrayInt(buf));
   }
 
-  private static Serializer fromByteArrayInt(byte[] buf) {
+  private static Serializable fromByteArrayInt(byte[] buf) {
     try {
       ByteArrayInputStream in = new ByteArrayInputStream(buf);
       return fromByteArrayStream(in);

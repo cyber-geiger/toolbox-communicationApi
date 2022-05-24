@@ -1,6 +1,6 @@
 package eu.cybergeiger.api.exceptions;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
 import java.io.ByteArrayInputStream;
@@ -13,9 +13,9 @@ import java.io.IOException;
 /**
  * <p>Exception signalling wrong communication.</p>
  */
-public class CommunicationException extends IOException implements Serializer {
+public class CommunicationException extends IOException implements Serializable {
 
-  private static class SerializedException extends Throwable implements Serializer {
+  private static class SerializedException extends Throwable implements Serializable {
 
     private static final long serialversionUID = 2314567434567L;
 

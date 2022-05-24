@@ -1,6 +1,6 @@
 package eu.cybergeiger.api.message;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
 import java.io.ByteArrayInputStream;
@@ -13,7 +13,7 @@ import java.util.UUID;
 /**
  * <p>Representation of a message.</p>
  */
-public class Message implements Serializer {
+public class Message implements Serializable {
   private static final long serialVersionUID = 143287432L;
 
   private final String sourceId;

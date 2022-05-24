@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * <p>Serializer interface for the serialization of value related objects.</p>
  */
-public interface Serializer {
+public interface Serializable {
 
   /**
    * <p>Dummy static serializer.</p>
@@ -18,7 +18,7 @@ public interface Serializer {
    * @return the object parsed from the input stream by the respective class
    * @throws IOException if not overridden or reached unexpectedly the end of stream
    */
-  static Serializer fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  static Serializable fromByteArrayStream(ByteArrayInputStream in) throws IOException {
     throw new IOException("Not implemented... ");
   }
 
@@ -36,7 +36,7 @@ public interface Serializer {
    * @param obj the object to serialize
    * @return byteArray representing the object
    */
-  static byte[] toByteArray(Serializer obj) {
+  static byte[] toByteArray(Serializable obj) {
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       obj.toByteArrayStream(out);
@@ -52,7 +52,7 @@ public interface Serializer {
    * @param buf the byte array to deserialize
    * @return Serializer
    */
-  static Serializer fromByteArray(byte[] buf) {
+  static Serializable fromByteArray(byte[] buf) {
     try {
       ByteArrayInputStream in = new ByteArrayInputStream(buf);
       return fromByteArrayStream(in);

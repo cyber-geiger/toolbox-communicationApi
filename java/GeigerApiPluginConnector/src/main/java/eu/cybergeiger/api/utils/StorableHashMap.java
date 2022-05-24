@@ -1,6 +1,6 @@
 package eu.cybergeiger.api.utils;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
 import java.io.ByteArrayInputStream;
@@ -15,8 +15,8 @@ import java.util.Map;
  * @param <K> Keytype
  * @param <V> Valuetype
  */
-public class StorableHashMap<K extends Serializer, V extends Serializer>
-  extends HashMap<K, V> implements Serializer {
+public class StorableHashMap<K extends Serializable, V extends Serializable>
+  extends HashMap<K, V> implements Serializable {
 
   private static final long serialVersionUID = 14231491232L;
 

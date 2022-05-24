@@ -1,6 +1,6 @@
 package eu.cybergeiger.api.plugin;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 import eu.cybergeiger.api.message.GeigerUrl;
 
@@ -13,7 +13,7 @@ import java.util.Objects;
  * <p>Represents a menu item for a list of items.</p>
  * . * FIXME: Menu texts are not internationalizable
  */
-public class MenuItem implements Serializer {
+public class MenuItem implements Serializable {
 
   private static final long serialVersionUID = 481231212L;
 

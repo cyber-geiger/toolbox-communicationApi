@@ -1,6 +1,6 @@
 package eu.cybergeiger.storage.node;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.storage.StorageController;
 import eu.cybergeiger.storage.StorageException;
 import eu.cybergeiger.storage.Visibility;
@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * <p>Interface representing a single node in the storage.</p>
  */
-public interface Node extends Serializer {
+public interface Node extends Serializable {
 
   /**
    * <p>Gets the name of the current node.</p>

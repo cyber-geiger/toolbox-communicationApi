@@ -1,6 +1,6 @@
 package eu.cybergeiger.api.plugin;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
 import java.io.ByteArrayInputStream;
@@ -10,7 +10,7 @@ import java.io.IOException;
 /**
  * <p>Object for storing vital plugin information.</p>
  */
-public class PluginInformation implements Serializer {
+public class PluginInformation implements Serializable {
 
   private static final long serialVersionUID = 48032940912340L;
 

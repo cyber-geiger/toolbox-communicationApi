@@ -1,6 +1,6 @@
 package eu.cybergeiger.api.plugin;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
 import java.io.ByteArrayInputStream;
@@ -15,7 +15,7 @@ import java.util.Base64;
 /**
  * <p>Encapsulates secret parameters for communication and provides methods to employ them.</p>
  */
-public class CommunicationSecret implements Serializer {
+public class CommunicationSecret implements Serializable {
 
   private static final long serialVersionUID = 8901230L;
 

@@ -1,6 +1,6 @@
 package eu.cybergeiger.storage.node.value;
 
-import eu.cybergeiger.serialization.Serializer;
+import eu.cybergeiger.serialization.Serializable;
 
 import java.util.Locale;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.MissingResourceException;
  *
  * <p>All values supporting locales must have at least an english (@see Locale.ENGLISH) locale.</p>
  */
-public interface NodeValue extends Serializer {
+public interface NodeValue extends Serializable {
 
   /**
    * <p>Gets the key of the K/V tuple.</p>

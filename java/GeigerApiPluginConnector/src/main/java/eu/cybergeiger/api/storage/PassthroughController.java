@@ -77,7 +77,7 @@ public class PassthroughController implements StorageController, PluginListener,
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
         // it was a success
-        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()), this);
       }
     } catch (IOException e) {
       throw new StorageException("Could not get Node", e);
@@ -100,7 +100,7 @@ public class PassthroughController implements StorageController, PluginListener,
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
         // it was a success
-        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()), this);
       }
     } catch (IOException e) {
       throw new StorageException("Could not get Node", e);
@@ -196,7 +196,7 @@ public class PassthroughController implements StorageController, PluginListener,
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
       } else {
         // it was a success
-        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()), this);
       }
     } catch (IOException e) {
       throw new StorageException("Could not delete Node", e);
@@ -351,7 +351,7 @@ public class PassthroughController implements StorageController, PluginListener,
         for (int i = 0; i < numNodes; ++i) {
           // does this advance the stream? after every read the next one needs to start at
           // the ned of the last read + 1
-          nodes.add(DefaultNode.fromByteArrayStream(new ByteArrayInputStream(receivedNodes)));
+          nodes.add(DefaultNode.fromByteArrayStream(new ByteArrayInputStream(receivedNodes), this));
         }
         return nodes;
       }

@@ -4,6 +4,7 @@ import eu.cybergeiger.serialization.SerializerHelper;
 import eu.cybergeiger.storage.StorageController;
 import eu.cybergeiger.storage.StorageException;
 import eu.cybergeiger.storage.Visibility;
+import eu.cybergeiger.storage.node.value.DefaultNodeValue;
 import eu.cybergeiger.storage.node.value.NodeValue;
 import eu.cybergeiger.storage.utils.SwitchableBoolean;
 
@@ -695,7 +696,7 @@ public class DefaultNode implements Node {
    * @return the deserialized NodeValue
    * @throws IOException if an exception happens deserializing the stream
    */
-  public static DefaultNode fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public static DefaultNode fromByteArrayStream(ByteArrayInputStream in, StorageController controller) throws IOException {
     // read object identifier
     if (SerializerHelper.readLong(in) != serialversionUID) {
       throw new IOException("failed to parse NodeImpl (bad stream?)");
@@ -709,8 +710,7 @@ public class DefaultNode implements Node {
 
     // restore a sensible controller
     if (skel) {
-      // we always assume that a controller was already created
-      n.controller = GenericController.getDefault();
+      n.controller = controller;
     }
     // restore ordinals
     int counter = SerializerHelper.readInt(in);
@@ -723,13 +723,13 @@ public class DefaultNode implements Node {
       // read values
       counter = SerializerHelper.readInt(in);
       for (int i = 0; i < counter; i++) {
-        n.values.put(SerializerHelper.readString(in), NodeValueImpl.fromByteArrayStream(in));
+        n.values.put(SerializerHelper.readString(in), DefaultNodeValue.fromByteArrayStream(in));
       }
 
       // read childNodes
       counter = SerializerHelper.readInt(in);
       for (int i = 0; i < counter; i++) {
-        n.childNodes.put(SerializerHelper.readString(in), DefaultNode.fromByteArrayStream(in));
+        n.childNodes.put(SerializerHelper.readString(in), DefaultNode.fromByteArrayStream(in, controller));
       }
     }
 

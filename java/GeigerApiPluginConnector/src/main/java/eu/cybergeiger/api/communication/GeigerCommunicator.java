@@ -2,7 +2,6 @@ package eu.cybergeiger.api.communication;
 
 import eu.cybergeiger.api.PluginApi;
 import eu.cybergeiger.api.message.Message;
-import jdk.internal.jline.internal.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,9 +19,7 @@ public class GeigerCommunicator {
 
   private final PluginApi api;
 
-  @Nullable
   private ServerSocket serverSocket;
-  @Nullable
   private Thread client;
   private final Executor executor;
 

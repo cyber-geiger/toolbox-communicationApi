@@ -45,7 +45,7 @@ Future<void> ownerEnforcerTests(final StorageController controller) async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
         OwnerEnforcerWrapper(controller, owner1);
     await ownerEnforcerWrapper.addValue(
-        ":testNode1", NodeValueImpl("key1", "value1"));
+        ':testNode1', NodeValueImpl('key1', 'value1'));
     NodeValue? value =
         await ownerEnforcerWrapper.getValue(':testNode1', 'key1');
     expect(value!.value, 'value1');
@@ -55,10 +55,10 @@ Future<void> ownerEnforcerTests(final StorageController controller) async {
     OwnerEnforcerWrapper ownerEnforcerWrapper =
         OwnerEnforcerWrapper(controller, owner1);
     await ownerEnforcerWrapper.updateValue(
-        ':testNode1', NodeValueImpl("key1", "value2"));
+        ':testNode1', NodeValueImpl('key1', 'value2'));
     NodeValue? value =
         await ownerEnforcerWrapper.getValue(':testNode1', 'key1');
-    expect(value!.value, "value2");
+    expect(value!.value, 'value2');
   });
 }
 

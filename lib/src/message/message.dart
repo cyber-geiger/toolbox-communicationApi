@@ -150,7 +150,7 @@ class Message {
     return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})' +
         (hash != null
             ? '[${hash!.hashType.toString()}: ${hash.toString()}]'
-            : "") +
+            : '') +
         '}';
   }
 }

@@ -1,5 +1,9 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
+
 
 import 'message_logger.dart';
 
@@ -10,16 +14,26 @@ const clientPluginId = 'client-plugin';
 
 late GeigerApi api;
 final MessageLogger logger = MessageLogger();
+final LoadFromStorageState state = LoadFromStorageState();
 
+///Listener for Storage Updates
+final SimpleStorageListener storageListener = SimpleStorageListener(state);
+
+
+/// Send Message to Client Plugin
 void callClientPlugin(MessageType type) async {
-  Message message = Message(GeigerApi.masterId, clientPluginId, type, null);
+  ///Geiger URL gets passed to Plugin
+  final GeigerUrl url = GeigerUrl(null, clientPluginId, 'null');
+  Message message = Message(GeigerApi.masterId, clientPluginId, type, url);
   await api.sendMessage(message, clientPluginId);
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  /// init Master and Add Listeners
   api = (await getGeigerApi(pluginExecutor, GeigerApi.masterId))!;
   api.registerListener([MessageType.allEvents], logger);
+  api.registerListener([MessageType.storageEvent], storageListener);
   runApp(const App());
 }
 
@@ -46,10 +60,59 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
       ),
+      body: LoadFromStorage()
+    );
+  }
+}
+
+
+/// Listen for Storage Updates
+class SimpleStorageListener implements PluginListener {
+
+  final LoadFromStorageState _state;
+
+  SimpleStorageListener(this._state);
+
+  @override
+  Future<void> pluginEvent(GeigerUrl? url, Message msg) async {
+    // Update Text on Storage Event(Plugin saved geigerURl in the Storage)
+    if(msg.type == MessageType.storageEvent){
+      Node node  = await api.storage.get(":geiger_url_test");
+      NodeValue? nodeValue = (await node.getValue("geigerUrl"));
+      print(nodeValue);
+      if(nodeValue!=null){
+        _state.changeText(nodeValue.value);
+      }
+    }
+  }
+}
+
+// Flutter statefull Widget to update Text on Storage event
+class LoadFromStorage extends StatefulWidget{
+  @override
+  LoadFromStorageState createState() => state;
+}
+
+class LoadFromStorageState extends State {
+
+  String geigerURLHolder = "Geiger URL not loaded from Storage";
+
+  changeText(String text) {
+
+    setState(()  {
+      geigerURLHolder = text;
+    });
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(geigerURLHolder),
             TextButton(
                 onPressed: () => callClientPlugin(MessageType.ping),
                 child: const Text("Call client in background")),

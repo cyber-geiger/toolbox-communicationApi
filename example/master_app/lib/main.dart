@@ -14,10 +14,10 @@ const clientPluginId = 'client-plugin';
 
 late GeigerApi api;
 final MessageLogger logger = MessageLogger();
-final loadFromStorageState state = loadFromStorageState();
+final LoadFromStorageState state = LoadFromStorageState();
 
 ///Listener for Storage Updates
-final SimpleStorageListener storageListener = SimpleStorageListener("stoargeListener", state);
+final SimpleStorageListener storageListener = SimpleStorageListener(state);
 
 
 /// Send Message to Client Plugin
@@ -60,7 +60,7 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
       ),
-      body: loadFromStorage()
+      body: LoadFromStorage()
     );
   }
 }
@@ -69,10 +69,9 @@ class HomePage extends StatelessWidget {
 /// Listen for Storage Updates
 class SimpleStorageListener implements PluginListener {
 
-  final String _id;
-  final loadFromStorageState _state;
+  final LoadFromStorageState _state;
 
-  SimpleStorageListener(this._id, this._state);
+  SimpleStorageListener(this._state);
 
   @override
   Future<void> pluginEvent(GeigerUrl? url, Message msg) async {
@@ -89,11 +88,12 @@ class SimpleStorageListener implements PluginListener {
 }
 
 // Flutter statefull Widget to update Text on Storage event
-class loadFromStorage extends StatefulWidget{
-  loadFromStorageState createState() => state;
+class LoadFromStorage extends StatefulWidget{
+  @override
+  LoadFromStorageState createState() => state;
 }
 
-class loadFromStorageState extends State {
+class LoadFromStorageState extends State {
 
   String geigerURLHolder = "Geiger URL not loaded from Storage";
 

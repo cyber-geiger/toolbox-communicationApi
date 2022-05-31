@@ -13,11 +13,11 @@ class GeigerCommunicator {
 
   ServerSocket? _server;
 
-  get isActive {
+  bool get isActive {
     return _server != null;
   }
 
-  get port {
+  int get port {
     return _server?.port ?? 0;
   }
 
@@ -28,7 +28,7 @@ class GeigerCommunicator {
     final server = await ServerSocket.bind(
         InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
     server.listen((socket) async {
-      api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
+      await api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
     });
 
     _server = server;

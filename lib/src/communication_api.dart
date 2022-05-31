@@ -175,7 +175,7 @@ class CommunicationApi extends GeigerApi {
             GeigerUrl(null, GeigerApi.masterId, 'registerPlugin'),
             await pluginInformation.toByteArray()));
     if (result.type == MessageType.comapiError) {
-      throw CommunicationException("Plugin registration failed");
+      throw CommunicationException('Plugin registration failed');
     }
     final secret = await _keyExchangeAlgorithm.sharedSecretKey(
         keyPair: keyPair,
@@ -190,7 +190,7 @@ class CommunicationApi extends GeigerApi {
     // TODO: call listener to display fingerprint
     final didSucceed = await resultWaiter.wait();
     if (!didSucceed) {
-      throw CommunicationException("Plugin registration was denied.");
+      throw CommunicationException('Plugin registration was denied.');
     }
     plugins[const StorableString(GeigerApi.masterId)] = info;
   }
@@ -336,13 +336,13 @@ class CommunicationApi extends GeigerApi {
 
     final inBackground = message.type != MessageType.returningControl;
     if (plugin.port == 0) {
-      PluginStarter.startPlugin(plugin, inBackground);
+      await PluginStarter.startPlugin(plugin, inBackground);
       await _StartupWaiter(this, plugin.id).wait();
       plugin = plugins[StorableString(plugin.id)]!;
     } else if (!inBackground) {
       // TODO: bring master to foreground
       // Temporary solution for android
-      PluginStarter.startPlugin(plugin, inBackground);
+      await PluginStarter.startPlugin(plugin, inBackground);
     }
 
     for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
@@ -351,7 +351,7 @@ class CommunicationApi extends GeigerApi {
         break;
       } on SocketException catch (e) {
         if (e.osError?.message != 'Connection refused') rethrow;
-        PluginStarter.startPlugin(plugin!, inBackground);
+        await PluginStarter.startPlugin(plugin!, inBackground);
         if (plugin.id == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
         } else {

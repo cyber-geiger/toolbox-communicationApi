@@ -28,6 +28,11 @@ void main() async {
   api = (await getGeigerApi(pluginExecutor, GeigerApi.masterId))!;
   api.registerListener([MessageType.allEvents], logger);
   api.registerListener([MessageType.storageEvent], storageListener);
+
+  // IMPORTANT: register and activate plugin after registering event listeners
+  await api.registerPlugin();
+  await api.activatePlugin();
+  print("activated");
   runApp(const App());
 }
 

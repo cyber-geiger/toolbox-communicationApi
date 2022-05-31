@@ -3,6 +3,7 @@ library geiger_api;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:geiger_api/geiger_api.dart';
@@ -17,7 +18,9 @@ import 'package:logging/logging.dart';
 import 'plugin/plugin_starter.dart';
 
 class _StartupWaiter implements PluginListener {
-  static const _events = [MessageType.activatePlugin];
+  static const _events = [
+      MessageType.activatePlugin
+  ];
   final String pluginId;
 
   final CommunicationApi _api;
@@ -97,6 +100,8 @@ class CommunicationApi extends GeigerApi {
   final bool autoAcceptRegistration;
   final bool ignoreMessageSignature;
 
+  final platform = const MethodChannel('geiger.fhnw.ch/messages');
+  
   @override
   late final StorageController storage;
   String? statePath;
@@ -212,6 +217,7 @@ class CommunicationApi extends GeigerApi {
 
   @override
   Future<void> deactivatePlugin() async {
+
     await CommunicationHelper.sendAndWait(this,
         Message(id, GeigerApi.masterId, MessageType.deactivatePlugin, null));
   }
@@ -331,28 +337,84 @@ class CommunicationApi extends GeigerApi {
       return;
     }
 
+    print('## Sending message to plugin ${plugin.id} ($message)');
     GeigerApi.logger.log(
         Level.INFO, '## Sending message to plugin ${plugin.id} ($message)');
 
     final inBackground = message.type != MessageType.returningControl;
+    print(plugin.port);
+    print(message.type);
     if (plugin.port == 0) {
-      PluginStarter.startPlugin(plugin, inBackground);
+      print("port == 0");
+      if (Platform.isAndroid){
+        PluginStarter.startPlugin(plugin, inBackground);
+      } else if(Platform.isIOS){
+        if(inBackground){
+          if(pluginId == GeigerApi.masterId){
+              await platform.invokeMethod('url', 'geiger://launchandreturn?redirect=testclient://returningcontrol');
+            }else{  
+              await platform.invokeMethod('url', 'testclient://launchandreturn?redirect=geiger://returningcontrol');
+            }
+        }else{
+          if(pluginId == GeigerApi.masterId){
+            print("geiger://returningcontrol");
+            await platform.invokeMethod('url', 'geiger://returningcontrol');
+            print("after invoke");
+          }else{
+            print('testclient://returningcontrol');
+            await platform.invokeMethod('url', 'testclient://returningcontrol');
+            print("after invoke");
+          }
+        }
+        await Future.delayed(masterStartWaitTime);
+      }
+      print("wating for activation");
       await _StartupWaiter(this, plugin.id).wait();
       plugin = plugins[StorableString(plugin.id)]!;
+      print("app activated");
     } else if (!inBackground) {
+      print("Foreground");
       // TODO: bring master to foreground
-      // Temporary solution for android
-      PluginStarter.startPlugin(plugin, inBackground);
+      if (Platform.isAndroid) {
+      // Temporary solution for android 
+        PluginStarter.startPlugin(plugin, inBackground);
+      } else if (Platform.isIOS) {
+        if(pluginId == GeigerApi.masterId){
+          await platform.invokeMethod('url', 'geiger://returningcontrol');
+        }else{  
+          await platform.invokeMethod('url', 'testclient://returningcontrol');
+        }
+      }
     }
 
+    print('--------------------------------- DONE STARTING UP THE PLUGIN ---------------------------------');
+
     for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
+      print("retry");
       try {
         await _communicator.sendMessage(plugin!, message);
         break;
       } on SocketException catch (e) {
         if (e.osError?.message != 'Connection refused') rethrow;
-        PluginStarter.startPlugin(plugin!, inBackground);
-        if (plugin.id == GeigerApi.masterId) {
+          if (Platform.isAndroid) {
+        // Temporary solution for android
+          PluginStarter.startPlugin(plugin!, inBackground);
+        } else if (Platform.isIOS) {
+          if(inBackground){
+            if(pluginId == GeigerApi.masterId){
+              await platform.invokeMethod('url', 'geiger://launchandreturn?redirect=testclient://returningcontrol');
+            }else{  
+              await platform.invokeMethod('url', 'testclient://launchandreturn?redirect=geiger://returningcontrol');
+            }
+          }else{
+            if(pluginId == GeigerApi.masterId){
+              await platform.invokeMethod('url', 'geiger://returningcontrol');
+            }else{  
+              await platform.invokeMethod('url', 'testclient://returningcontrol');
+            }
+          }
+        }
+        if (plugin!.id == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
         } else {
           await _StartupWaiter(this, plugin.id).wait();
@@ -535,9 +597,9 @@ class CommunicationApi extends GeigerApi {
         break;
     }
     _notifyListeners(msg.type, msg);
-    // if (msg.type.id < MessageType.allEvents.id) {
-    _notifyListeners(MessageType.allEvents, msg);
-    // }
+    //if (msg.type.id < MessageType.allEvents.id) {
+      _notifyListeners(MessageType.allEvents, msg);
+    //}
   }
 
   void _notifyListeners(MessageType type, Message message) {

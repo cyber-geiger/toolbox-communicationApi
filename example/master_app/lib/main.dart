@@ -15,9 +15,14 @@ const clientPluginId = 'client-plugin';
 late GeigerApi api;
 final MessageLogger logger = MessageLogger();
 final loadFromStorageState state = loadFromStorageState();
+
+///Listener for Storage Updates
 final SimpleStorageListener storageListener = SimpleStorageListener("stoargeListener", state);
 
+
+/// Send Message to Client Plugin
 void callClientPlugin(MessageType type) async {
+  ///Geiger URL gets passed to Plugin
   final GeigerUrl url = GeigerUrl(null, clientPluginId, 'null');
   Message message = Message(GeigerApi.masterId, clientPluginId, type, url);
   await api.sendMessage(message, clientPluginId);
@@ -25,6 +30,7 @@ void callClientPlugin(MessageType type) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  /// init Master and Add Listeners
   api = (await getGeigerApi(pluginExecutor, GeigerApi.masterId))!;
   api.registerListener([MessageType.allEvents], logger);
   api.registerListener([MessageType.storageEvent], storageListener);
@@ -59,10 +65,8 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class loadFromStorage extends StatefulWidget{
-  loadFromStorageState createState() => state;
-}
 
+/// Listen for Storage Updates
 class SimpleStorageListener implements PluginListener {
 
   final String _id;
@@ -72,24 +76,31 @@ class SimpleStorageListener implements PluginListener {
 
   @override
   Future<void> pluginEvent(GeigerUrl? url, Message msg) async {
+    // Update Text on Storage Event(Plugin saved geigerURl in the Storage)
     if(msg.type == MessageType.storageEvent){
-      Node node = await api.storage.get(":geiger_url_test");
-      String? nodeValue = (await node.getValue("geigerURL"))?.value;
+      Node node  = await api.storage.get(":geiger_url_test");
+      NodeValue? nodeValue = (await node.getValue("geigerUrl"));
+      print(nodeValue);
       if(nodeValue!=null){
-        _state.changeText(nodeValue);
+        _state.changeText(nodeValue.value);
       }
     }
   }
 }
 
+// Flutter statefull Widget to update Text on Storage event
+class loadFromStorage extends StatefulWidget{
+  loadFromStorageState createState() => state;
+}
+
 class loadFromStorageState extends State {
 
-  String textHolder = "not Loaded From Storage";
+  String geigerURLHolder = "Geiger URL not loaded from Storage";
 
   changeText(String text) {
 
     setState(()  {
-      textHolder = text;
+      geigerURLHolder = text;
     });
 
   }
@@ -101,7 +112,7 @@ class loadFromStorageState extends State {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(textHolder),
+            Text(geigerURLHolder),
             TextButton(
                 onPressed: () => callClientPlugin(MessageType.ping),
                 child: const Text("Call client in background")),

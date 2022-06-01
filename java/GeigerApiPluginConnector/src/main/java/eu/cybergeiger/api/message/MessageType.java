@@ -27,9 +27,7 @@ public enum MessageType {
   /* Messages related to the visual stack control */
   RETURNING_CONTROL(410),
 
-  /* Messages related to listeners*/
-  REGISTER_LISTENER(500),
-  DEREGISTER_LISTENER(530),
+  CUSTOM_EVENT(999),
 
   /* internal messages to the API */
 
@@ -45,6 +43,7 @@ public enum MessageType {
   STORAGE_ERROR(20400),
 
   /* response messages*/
+
   COMAPI_SUCCESS(30000),
   COMAPI_ERROR(30200);
 
@@ -66,12 +65,9 @@ public enum MessageType {
    */
   public static MessageType getById(int id) {
     for (MessageType e : values()) {
-      if (e.id == id) {
+      if (e.id == id)
         return e;
-      }
     }
     return null;
   }
-
-
 }

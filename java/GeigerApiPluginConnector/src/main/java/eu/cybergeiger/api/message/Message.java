@@ -132,11 +132,10 @@ public class Message implements Serializable {
    * @return a byte array representing the payload
    */
   public byte[] getPayload() {
-    String pl = this.payloadString;
-    if (pl == null) {
+    if (payloadString == null) {
       return null;
     }
-    return Base64.getDecoder().decode(pl);
+    return Base64.getDecoder().decode(payloadString);
   }
 
   /**
@@ -162,57 +161,22 @@ public class Message implements Serializable {
    * <p>Sets the payload as a string.</p>
    *
    * @param value the string to be used as payload
-   * @return a string representing the payload
    */
-  public String setPayloadString(String value) {
-    String ret = this.payloadString;
+  public void setPayloadString(String value) {
     this.payloadString = value;
-    return ret;
-  }
-
-  /**
-   * <p>Convert ByteArrayInputStream to Message.</p>
-   *
-   * @param in the ByteArrayInputStream to use
-   * @return the converted Message
-   * @throws IOException if bytes cannot be read
-   */
-  public static Message fromByteArray(ByteArrayInputStream in) throws IOException {
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException();
-    }
-    Message m = new Message(SerializerHelper.readInt(in) == 1
-      ? SerializerHelper.readString(in) : null,
-      SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
-      SerializerHelper.readInt(in) == 1
-        ? MessageType.getById(SerializerHelper.readInt(in)) : null,
-      SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null
-    );
-    m.setPayloadString(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null);
-    return m;
   }
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeLong(out, serialVersionUID);
-    if (sourceId != null) {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, sourceId);
-    } else {
-      SerializerHelper.writeInt(out, 0);
-    }
+    SerializerHelper.writeMarker(out, serialVersionUID);
+    SerializerHelper.writeString(out, sourceId);
     if (targetId != null) {
       SerializerHelper.writeInt(out, 1);
       SerializerHelper.writeString(out, targetId);
     } else {
       SerializerHelper.writeInt(out, 0);
     }
-    if (type != null) {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeInt(out, type.getId());
-    } else {
-      SerializerHelper.writeInt(out, 0);
-    }
+    SerializerHelper.writeInt(out, type.getId());
     if (action == null) {
       SerializerHelper.writeInt(out, 0);
     } else {
@@ -225,6 +189,27 @@ public class Message implements Serializable {
       SerializerHelper.writeInt(out, 1);
       SerializerHelper.writeString(out, payloadString);
     }
+    SerializerHelper.writeMarker(out, serialVersionUID);
+  }
+
+  /**
+   * <p>Convert ByteArrayInputStream to Message.</p>
+   *
+   * @param in the ByteArrayInputStream to use
+   * @return the converted Message
+   * @throws IOException if bytes cannot be read
+   */
+  public static Message fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+    SerializerHelper.testMarker(in, serialVersionUID);
+    Message m = new Message(
+      SerializerHelper.readString(in),
+      SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
+      MessageType.getById(SerializerHelper.readInt(in)),
+      SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null
+    );
+    m.setPayloadString(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null);
+    SerializerHelper.testMarker(in, serialVersionUID);
+    return m;
   }
 
   @Override
@@ -238,7 +223,9 @@ public class Message implements Serializable {
     Message message = (Message) o;
     return Objects.equals(sourceId, message.sourceId)
       && Objects.equals(targetId, message.targetId)
-      && type == message.type && Objects.equals(action, message.action)
+      && type == message.type
+      && Objects.equals(action, message.action)
+      && Objects.equals(requestId, message.requestId)
       && Objects.equals(payloadString, message.payloadString);
   }
 
@@ -249,6 +236,6 @@ public class Message implements Serializable {
 
   @Override
   public String toString() {
-    return getSourceId() + "=>" + getTargetId() + "{[" + getType() + "] " + getAction() + "}";
+    return getSourceId() + "=" + requestId + ">" + getTargetId() + "{[" + getType() + "] " + getAction() + "}";
   }
 }

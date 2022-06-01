@@ -3,19 +3,19 @@ package eu.cybergeiger.serialization;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.nio.charset.StandardCharsets;
 
 /**
  * <p>Helper class for serialization serializes important java primitives.</p>
  */
 public class SerializerHelper {
-
   private static final long STRING_UID = 123798371293L;
   private static final long LONG_UID = 1221312393L;
   private static final long INT_UID = 122134568793L;
   private static final long STACKTRACES_UID = 9012350123956L;
 
-  private static void writeIntLong(ByteArrayOutputStream out, Long l) throws IOException {
+  private static void writeRawLong(ByteArrayOutputStream out, Long l) throws IOException {
     byte[] result = new byte[Long.BYTES];
     for (int i = Long.BYTES - 1; i >= 0; i--) {
       result[i] = (byte) (l & 0xFF);
@@ -24,7 +24,7 @@ public class SerializerHelper {
     out.write(result);
   }
 
-  private static Long readIntLong(ByteArrayInputStream in) throws IOException {
+  private static Long readRawLong(ByteArrayInputStream in) throws IOException {
     int size = Long.BYTES;
     byte[] arr = new byte[size];
     in.read(arr);
@@ -36,7 +36,7 @@ public class SerializerHelper {
     return result;
   }
 
-  private static void writeIntInt(ByteArrayOutputStream out, Integer l) throws IOException {
+  private static void writeRawInt(ByteArrayOutputStream out, Integer l) throws IOException {
     int size = Integer.BYTES;
     byte[] result = new byte[size];
     for (int i = size - 1; i >= 0; i--) {
@@ -46,7 +46,7 @@ public class SerializerHelper {
     out.write(result);
   }
 
-  private static Integer readIntInt(ByteArrayInputStream in) throws IOException {
+  private static Integer readRawInt(ByteArrayInputStream in) throws IOException {
     int size = Integer.BYTES;
     byte[] arr = new byte[size];
     in.read(arr);
@@ -94,8 +94,8 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static void writeLong(ByteArrayOutputStream out, Long l) throws IOException {
-    writeIntLong(out, LONG_UID);
-    writeIntLong(out, l);
+    writeRawLong(out, LONG_UID);
+    writeRawLong(out, l);
   }
 
   /**
@@ -106,10 +106,10 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static Long readLong(ByteArrayInputStream in) throws IOException {
-    if (readIntLong(in) != LONG_UID) {
+    if (readRawLong(in) != LONG_UID) {
       throw new ClassCastException();
     }
-    return readIntLong(in);
+    return readRawLong(in);
   }
 
   /**
@@ -120,8 +120,8 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static void writeInt(ByteArrayOutputStream out, Integer i) throws IOException {
-    writeIntLong(out, INT_UID);
-    writeIntInt(out, i);
+    writeRawLong(out, INT_UID);
+    writeRawInt(out, i);
   }
 
   /**
@@ -132,10 +132,10 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static Integer readInt(ByteArrayInputStream in) throws IOException {
-    if (readIntLong(in) != INT_UID) {
+    if (readRawLong(in) != INT_UID) {
       throw new ClassCastException();
     }
-    return readIntInt(in);
+    return readRawInt(in);
   }
 
   /**
@@ -146,11 +146,11 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static void writeString(ByteArrayOutputStream out, String s) throws IOException {
-    writeIntLong(out, STRING_UID);
+    writeRawLong(out, STRING_UID);
     if (s == null) {
-      writeIntInt(out, -1);
+      writeRawInt(out, -1);
     } else {
-      writeIntInt(out, s.length());
+      writeRawInt(out, s.length());
       out.write(s.getBytes(StandardCharsets.UTF_8));
     }
   }
@@ -163,10 +163,10 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static String readString(ByteArrayInputStream in) throws IOException {
-    if (readIntLong(in) != STRING_UID) {
+    if (readRawLong(in) != STRING_UID) {
       throw new ClassCastException();
     }
-    int length = readIntInt(in);
+    int length = readRawInt(in);
     if (length == -1) {
       return null;
     } else {
@@ -185,11 +185,11 @@ public class SerializerHelper {
    */
   public static void writeStackTraces(ByteArrayOutputStream out, StackTraceElement[] ste)
     throws IOException {
-    writeIntLong(out, STACKTRACES_UID);
+    writeRawLong(out, STACKTRACES_UID);
     if (ste == null) {
-      writeIntInt(out, -1);
+      writeRawInt(out, -1);
     } else {
-      writeIntInt(out, ste.length);
+      writeRawInt(out, ste.length);
       for (StackTraceElement st : ste) {
         writeString(out, st.getClassName());
         writeString(out, st.getMethodName());
@@ -207,10 +207,10 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static StackTraceElement[] readStackTraces(ByteArrayInputStream in) throws IOException {
-    if (readIntLong(in) != STACKTRACES_UID) {
+    if (readRawLong(in) != STACKTRACES_UID) {
       throw new ClassCastException();
     }
-    int length = readIntInt(in);
+    int length = readRawInt(in);
     if (length == -1) {
       return null;
     } else {
@@ -230,13 +230,13 @@ public class SerializerHelper {
    * @throws IOException if object cannot be read
    */
   public static Object readObject(ByteArrayInputStream in) throws IOException {
-    switch ("" + readIntLong(in)) {
+    switch ("" + readRawLong(in)) {
       case "" + STRING_UID:
-        byte[] arr = new byte[readIntInt(in)];
+        byte[] arr = new byte[readRawInt(in)];
         in.read(arr);
         return new String(arr, StandardCharsets.UTF_8);
       case "" + LONG_UID:
-        return readIntLong(in);
+        return readRawLong(in);
       default:
         throw new ClassCastException();
     }

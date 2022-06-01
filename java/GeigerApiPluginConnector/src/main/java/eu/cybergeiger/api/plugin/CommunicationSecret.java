@@ -10,122 +10,56 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Random;
 
 
 /**
  * <p>Encapsulates secret parameters for communication and provides methods to employ them.</p>
  */
 public class CommunicationSecret implements Serializable {
-
   private static final long serialVersionUID = 8901230L;
 
-  private static final int DEFAULT_SIZE = 32;
-  private byte[] secret = new byte[0];
+  private byte[] bytes;
 
   /**
-   * <p>Creates a new secret with random content and standard size.</p>
+   * Creates a zero length secret.
    */
   public CommunicationSecret() {
-    this(DEFAULT_SIZE);
+    this(new byte[0]);
   }
 
   /**
-   * <p>Creates a new secret with random content and specified size.</p>
-   *
-   * @param size the size of the secret in bytes
-   */
-  public CommunicationSecret(int size) {
-    setRandomSecret(size);
-  }
-
-  /**
-   * <p>Creates a secret which is already known.</p>
-   *
-   * @param secret the already known secret
+   * Creates a secret with the provided bytes.
    */
   public CommunicationSecret(byte[] secret) {
-    if (secret == null || secret.length == 0) {
-      setRandomSecret(DEFAULT_SIZE);
-    } else {
-      this.secret = secret;
-    }
+    setBytes(secret);
   }
 
-  /**
-   * <p>Gets the secret.</p>
-   *
-   * @return the current secret
-   */
-  public byte[] getSecret() {
-    return Arrays.copyOf(secret, secret.length);
+  public byte[] getBytes() {
+    return Arrays.copyOf(bytes, bytes.length);
   }
 
-  /**
-   * <p>Sets a new Secret with size.</p>
-   *
-   * @param size the size of the new secret
-   */
-  private void setRandomSecret(int size) {
-    if (size <= 0) {
-      throw new IllegalArgumentException("size must be greater than 0");
-    }
-    secret = new byte[size];
-    // TODO get proper randomization, secureRandom() does not exists in TotalCross
-    for (int i = 0; i < size; i++) {
-      int value = new SecureRandom().nextInt(Integer.MAX_VALUE);
-      secret[i] = (byte) (value);
-    }
-  }
-
-  /**
-   * <p>Sets the secret.</p>
-   * If new secret is null or its length is 0 a random secret is generated
-   *
-   * @param newSecret the new secret bytes
-   * @return the previously set secret
-   */
-  public byte[] setSecret(byte[] newSecret) {
-    byte[] ret = this.secret;
-    if (newSecret == null || newSecret.length == 0) {
-      setRandomSecret(DEFAULT_SIZE);
-    } else {
-      this.secret = Arrays.copyOf(newSecret, newSecret.length);
-    }
-    return ret;
+  public void setBytes(byte[] bytes) {
+    this.bytes = Arrays.copyOf(bytes, bytes.length);
   }
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeLong(out, serialVersionUID);
-    // TotalCross adaption
-    SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(secret));
-    //SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(secret));
-    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeMarker(out, serialVersionUID);
+    SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(bytes));
+    SerializerHelper.writeMarker(out, serialVersionUID);
   }
 
 
-  /**
-   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
-   *
-   * @param in ByteArrayInputStream to be used
-   * @return the deserialized Storable String
-   * @throws IOException if value cannot be read
-   */
-  public static CommunicationSecret fromByteArrayStream(ByteArrayInputStream in)
-    throws IOException {
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException("Reading start marker fails");
-    }
+  public static CommunicationSecret fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+    SerializerHelper.testMarker(in, serialVersionUID);
     byte[] secret = Base64.getDecoder().decode(SerializerHelper.readString(in));
-    CommunicationSecret ret = new CommunicationSecret(secret);
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException("Reading end marker fails");
-    }
-    return ret;
+    SerializerHelper.testMarker(in, serialVersionUID);
+    return new CommunicationSecret(secret);
   }
 
   @Override
   public String toString() {
-    return "" + (new String(secret, StandardCharsets.UTF_8)).hashCode();
+    return Integer.toString(Arrays.hashCode(bytes));
   }
 }

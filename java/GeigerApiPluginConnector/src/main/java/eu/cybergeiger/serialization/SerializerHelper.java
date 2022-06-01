@@ -265,4 +265,15 @@ public class SerializerHelper {
     }
   }
 
+  public static void writeMarker(ByteArrayOutputStream out, long marker) throws IOException {
+    writeLong(out, marker);
+  }
+
+  public static void testMarker(ByteArrayInputStream in, long marker) throws IOException {
+    long actual = readLong(in);
+    if (marker != actual)
+      throw new InvalidObjectException(
+        "Actual marker value(" + actual + ") does not match expected value(" + marker + ")."
+      );
+  }
 }

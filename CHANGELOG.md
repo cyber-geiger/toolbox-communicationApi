@@ -1,3 +1,7 @@
+## 0.7.10 Bugfixing Release and first iOS support
+Added:
+- iOS support added (nasty and experimental) 
+
 ## 0.7.9 Bugfixing Release
 Improvements:
 - Additional linter rules to improve code quality.

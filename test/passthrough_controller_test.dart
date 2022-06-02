@@ -462,7 +462,7 @@ void main() async {
     });
 
     group('event types', () {
-      testEventType(
+      void testEventType(
           EventType expectedType,
           Node? expectedOldNode,
           Future<void> Function(StorageController) setup,

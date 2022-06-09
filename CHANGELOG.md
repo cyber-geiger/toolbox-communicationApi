@@ -1,6 +1,14 @@
-## 0.7.9 Bugfixing Release (upcomming)
+## 0.7.10 Bugfixing Release and first iOS support
+Added:
+- iOS support added (nasty and experimental) 
+
+## 0.7.9 Bugfixing Release
+Improvements:
+- Additional linter rules to improve code quality.
+- Better example app.
+
 Fixes:
-- (none so far)
+- Improved stability when an app or plugin is unexpectedly closed.
 
 ## 0.7.8 Bugfixing Release
 Fixes:

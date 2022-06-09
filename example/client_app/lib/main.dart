@@ -43,12 +43,11 @@ void callMasterPlugin(MessageType type) async {
   // Send Message to master
   Message message = Message(pluginId,GeigerApi.masterId, type, null);
   await api.sendMessage(message, GeigerApi.masterId);
-
 }
 
 /// Save geigerURl in Storage
 void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
-  Node node = NodeImpl(":geiger_url_test", GeigerApi.masterId);
+  Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
   await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
   await api.storage.addOrUpdate(node);
 }

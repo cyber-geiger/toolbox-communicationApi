@@ -72,7 +72,8 @@ import AVFoundation
          (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
           if (call.method == "url") {
               let args = call.arguments as! Optional<String>
-              self.openUrl(toOpen: args)
+              self.openUrl(toOpen: args);
+              result(nil);
           }
       });
       

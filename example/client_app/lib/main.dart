@@ -17,6 +17,8 @@ const pluginId = 'client-plugin';
 
 late GeigerApi api;
 final MessageLogger logger = MessageLogger();
+
+///Geiger url recived from Master throug Message
 GeigerUrl? url;
 
 void main() async {
@@ -25,20 +27,26 @@ void main() async {
   api = (await getGeigerApi(pluginExecutor, pluginId))!;
   api.registerListener([MessageType.allEvents], logger);
 
+  print("---------- REGISTER & ACTIVATE --------------");
   await api.registerPlugin();
   await api.activatePlugin();
+  print("---------- END REGISTER & ACTIVATE--------------");
+
   runApp(const App());
 }
 
-void callClientPlugin(MessageType type) async {
+void callMasterPlugin(MessageType type) async {
+  /// Save geigerURl in Storage
   if(logger.messages.isNotEmpty) {
     getAndStoreGeigerURLInStorage(logger.messages.last.action);
   }
+  // Send Message to master
   Message message = Message(pluginId,GeigerApi.masterId, type, null);
   await api.sendMessage(message, GeigerApi.masterId);
 
 }
 
+/// Save geigerURl in Storage
 void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
   Node node = NodeImpl(":geiger_url_test", GeigerApi.masterId);
   await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
@@ -81,7 +89,7 @@ class _HomePageState extends State<HomePage> {
             const Text('Connected to master.'),
             Expanded(child: logger.view()),
             TextButton(
-                onPressed: () => callClientPlugin(MessageType.returningControl),
+                onPressed: () => callMasterPlugin(MessageType.returningControl),
                 child: const Text("Return Control")),
           ],
         ),

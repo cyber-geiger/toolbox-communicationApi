@@ -84,7 +84,7 @@ class MessageType {
   const MessageType._(final this._value, final this._num);
 
   @override
-  toString() => _value;
+  String toString() => _value;
 
   int get id {
     return _num;
@@ -102,7 +102,7 @@ class MessageType {
     return null;
   }
 
-  @Deprecated("Use [values]")
+  @Deprecated('Use [values]')
   static List<MessageType> getAllValues() {
     List<MessageType> ret = <MessageType>[];
     for (MessageType mt in values) {

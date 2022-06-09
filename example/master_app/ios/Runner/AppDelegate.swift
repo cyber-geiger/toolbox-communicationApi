@@ -23,18 +23,18 @@ import AVFoundation
 //             // Fallback on earlier versions
 //         };
          if #available(iOS 10.0, *) {
-             if (thread == nil){
-                 thread = Thread{
-                     var i = 0;
-                     while(UIApplication.shared.backgroundTimeRemaining >= 0.5){
-                         usleep(1000000)
-                         i += 1;
-                         //NSLog("%0.4f", UIApplication.shared.backgroundTimeRemaining)
-                         print(i)
-                     }
-                 }
-                 thread!.start();
-             }
+//             if (thread == nil){
+//                 thread = Thread{
+//                     var i = 0;
+//                     while(UIApplication.shared.backgroundTimeRemaining >= 0.5){
+//                         usleep(1000000)
+//                         i += 1;
+//                         //NSLog("%0.4f", UIApplication.shared.backgroundTimeRemaining)
+//                         print(i)
+//                     }
+//                 }
+//                 thread!.start();
+//             }
          } else {
              // Fallback on earlier versions
          }
@@ -183,7 +183,8 @@ import AVFoundation
            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             if (call.method == "url") {
                 let args = call.arguments as! Optional<String>
-                self.openUrl(toOpen: args)
+                self.openUrl(toOpen: args);
+                result(nil);
             }
         });
 

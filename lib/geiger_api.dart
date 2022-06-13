@@ -24,3 +24,5 @@ export 'src/utils/hash_type.dart';
 export 'src/communication_api.dart';
 export 'src/communication_api_factory.dart';
 export 'src/geiger_api.dart';
+
+export 'src/debug_tools/logger_view.dart';

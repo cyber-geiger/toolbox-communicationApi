@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 class LoggerView extends StatefulWidget {
+  const LoggerView({Key? key}) : super(key: key);
+
   @override
   LoggerViewState createState() => LoggerViewState();
 }
@@ -12,14 +14,16 @@ class LoggerViewState extends State {
 
   List<LogRecord> logs = [];
   int logCount = 0;
+  String activeLevel = Level.INFO.name;
 
-  getLoggs(Level warningLevel) {
+  void getLoggs(Level warningLevel) {
     Logger.root.level = warningLevel;
     Logger.root.onRecord.listen((event) {
       if (logs.length > 100) {
         logs.removeRange(99, logs.length - 1);
       }
       logs.insert(0, event);
+      activeLevel = warningLevel.name;
       setState(() {
         logCount = logs.length;
       });
@@ -33,21 +37,28 @@ class LoggerViewState extends State {
         builder: (BuildContext context, BoxConstraints constraints) {
       return Column(
         children: <Widget>[
-          Text("Log View"),
-          Container(
-            child: Row(
-              children: [
-                TextButton(
-                    onPressed: () => getLoggs(Level.FINEST),
-                    child: Text("All Levels")),
-                TextButton(
-                    onPressed: () => getLoggs(Level.INFO),
-                    child: Text("important")),
-                TextButton(
-                    onPressed: () => getLoggs(Level.WARNING),
-                    child: Text("Possibly Problamatic")),
-              ],
-            ),
+          Column(
+            children: [
+              const Center(
+                child: Text('Log View'),
+              ),
+              Center(
+                child: Text('Active Log Level: ' + activeLevel),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              TextButton(
+                  onPressed: () => getLoggs(Level.FINEST),
+                  child: const Text('All Levels')),
+              TextButton(
+                  onPressed: () => getLoggs(Level.INFO),
+                  child: const Text('Info')),
+              TextButton(
+                  onPressed: () => getLoggs(Level.WARNING),
+                  child: const Text('Warning')),
+            ],
           ),
           Expanded(
             child: SizedBox(
@@ -67,7 +78,9 @@ class LoggerViewState extends State {
                         return Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Text('level: ' +
-                              logs[index].level.name + '\nLogger: ' + logs[index].loggerName+
+                              logs[index].level.name +
+                              '\nLogger: ' +
+                              logs[index].loggerName +
                               '\nMessage: ' +
                               logs[index].message),
                         );

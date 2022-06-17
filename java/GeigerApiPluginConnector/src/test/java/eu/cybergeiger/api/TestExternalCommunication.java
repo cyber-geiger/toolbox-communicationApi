@@ -1,69 +1,22 @@
 package eu.cybergeiger.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import eu.cybergeiger.storage.StorageException;
+import eu.cybergeiger.api.exceptions.DeclarationMismatchException;
+import eu.cybergeiger.api.plugin.Declaration;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.List;
-
-import eu.cybergeiger.api.exceptions.DeclarationMismatchException;
-import eu.cybergeiger.api.message.GeigerUrl;
-import eu.cybergeiger.api.message.Message;
-import eu.cybergeiger.api.message.MessageType;
-import eu.cybergeiger.api.plugin.Declaration;
-import eu.cybergeiger.api.plugin.MenuItem;
-import mocks.SimpleEventListener;
-import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  * <p>Testing non local communication.</p>
  */
-public class TestExternalCommunication {
-
+public class TestExternalCommunication extends DartTest {
   @Test
-  public void testRegisterExternalPlugin() throws IOException {
-    try {
-      // create Master
-      PluginApi localMaster = CommunicationApiFactory.getLocalApi("", GeigerApi.MASTER_ID,
-          Declaration.DO_NOT_SHARE_DATA);
-      // create listener
-      SimpleEventListener masterListener = new SimpleEventListener();
-      localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
-      //Thread.sleep(1000);
-
-      // create plugin, this registers and activates the plugin automatically
-      PluginApi plugin = CommunicationApiFactory.getLocalApi("", "plugin1",
-          Declaration.DO_NOT_SHARE_DATA);
-      //SimpleEventListener pluginListener = new SimpleEventListener();
-      //plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
-      //Thread.sleep(1000);
-
-      // check master
-      List<Message> receivedEventsMaster = masterListener.getEvents();
-      assertEquals("checking if register and activate events have been received",
-          2, receivedEventsMaster.size());
-      Message rcvdMessage = receivedEventsMaster.get(0);
-      assertEquals(MessageType.REGISTER_PLUGIN, rcvdMessage.getType());
-      assertEquals("plugin1", rcvdMessage.getSourceId());
-      assertEquals("geiger", rcvdMessage.getAction().getProtocol());
-      assertEquals(GeigerApi.MASTER_ID, rcvdMessage.getAction().getPlugin());
-      assertEquals("registerPlugin", rcvdMessage.getAction().getPath());
-
-      // check Plugin
-      //ArrayList<Message> receivedEventsPlugin = pluginListener.getEvents();
-      //assertEquals(2, receivedEventsPlugin.size());
-      //rcvdMessage = receivedEventsPlugin.get(0);
-      //assertEquals(MessageType.COMAPI_SUCCESS, rcvdMessage.getType());
-      //assertEquals(LocalApi.MASTER, rcvdMessage.getSourceId());
-      //assertEquals("geiger", rcvdMessage.getAction().getProtocol());
-      //assertEquals("plugin1", rcvdMessage.getAction().getPlugin());
-      //assertEquals("registerPlugin", rcvdMessage.getAction().getPath());
-    } catch (DeclarationMismatchException e) {
-      fail(e.getMessage());
-    }
+  public void testRegisterExternalPlugin() throws IOException, DeclarationMismatchException {
+    CommunicationApiFactory.getLocalApi(
+      "",
+      "plugin",
+      Declaration.DO_NOT_SHARE_DATA
+    );
   }
 
   @Test
@@ -71,14 +24,14 @@ public class TestExternalCommunication {
     try {
       // create Master
       PluginApi localMaster = CommunicationApiFactory.getLocalApi("", GeigerApi.MASTER_ID,
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       // create listener
       SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       PluginApi plugin = CommunicationApiFactory.getLocalApi("", "plugin1",
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
@@ -111,14 +64,14 @@ public class TestExternalCommunication {
     try {
       // create Master
       PluginApi localMaster = CommunicationApiFactory.getLocalApi("", GeigerApi.MASTER_ID,
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       // create listener
       SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       PluginApi plugin = CommunicationApiFactory.getLocalApi("", "plugin1",
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
@@ -154,14 +107,14 @@ public class TestExternalCommunication {
     try {
       // create Master
       PluginApi localMaster = CommunicationApiFactory.getLocalApi("", GeigerApi.MASTER_ID,
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       // create listener
       SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       PluginApi plugin = CommunicationApiFactory.getLocalApi("", "plugin1",
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
@@ -178,7 +131,7 @@ public class TestExternalCommunication {
       assertEquals(GeigerApi.MASTER_ID, rcvdMessage.getAction().getPlugin());
       assertEquals("registerMenu", rcvdMessage.getAction().getPath());
       assertEquals(new MenuItem("testMenu", new GeigerUrl(GeigerApi.MASTER_ID, "testMenu")),
-          MenuItem.fromByteArray(rcvdMessage.getPayload()));
+        MenuItem.fromByteArray(rcvdMessage.getPayload()));
 
       // check Plugin (the first 2 messages should always be COMAPI_SUCCESS for
       // registerPlugin and activatePlugin)
@@ -200,14 +153,14 @@ public class TestExternalCommunication {
     try {
       // create Master
       PluginApi localMaster = CommunicationApiFactory.getLocalApi("", GeigerApi.MASTER_ID,
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       // create listener
       SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);
 
       // create plugin, this registers and activates the plugin automatically
       PluginApi plugin = CommunicationApiFactory.getLocalApi("", "plugin1",
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       SimpleEventListener pluginListener = new SimpleEventListener();
       plugin.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, pluginListener);
 
@@ -246,7 +199,7 @@ public class TestExternalCommunication {
     try {
       // create Master
       PluginApi localMaster = CommunicationApiFactory.getLocalApi("", GeigerApi.MASTER_ID,
-          Declaration.DO_NOT_SHARE_DATA);
+        Declaration.DO_NOT_SHARE_DATA);
       // create listener
       SimpleEventListener masterListener = new SimpleEventListener();
       localMaster.registerListener(new MessageType[]{MessageType.ALL_EVENTS}, masterListener);

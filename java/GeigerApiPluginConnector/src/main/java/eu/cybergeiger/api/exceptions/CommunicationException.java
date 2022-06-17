@@ -17,7 +17,7 @@ public class CommunicationException extends IOException implements Serializable 
 
   private static class SerializedException extends Throwable implements Serializable {
 
-    private static final long serialversionUID = 2314567434567L;
+    private static final long serialVersionUID = 2314567434567L;
 
     private final String exceptionName;
     private final String message;
@@ -39,7 +39,7 @@ public class CommunicationException extends IOException implements Serializable 
 
     @Override
     public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-      SerializerHelper.writeLong(out, serialversionUID);
+      SerializerHelper.writeLong(out, serialVersionUID);
       SerializerHelper.writeString(out, exceptionName);
       SerializerHelper.writeString(out, message);
       SerializerHelper.writeStackTraces(out, getStackTrace());
@@ -53,12 +53,12 @@ public class CommunicationException extends IOException implements Serializable 
       } else {
         SerializerHelper.writeInt(out, 0);
       }
-      SerializerHelper.writeLong(out, serialversionUID);
+      SerializerHelper.writeLong(out, serialVersionUID);
     }
 
     public static SerializedException fromByteArrayStream(ByteArrayInputStream in)
       throws IOException {
-      if (SerializerHelper.readLong(in) != serialversionUID) {
+      if (SerializerHelper.readLong(in) != serialVersionUID) {
         throw new IOException("failed to parse StorageException (bad stream?)");
       }
 
@@ -78,14 +78,14 @@ public class CommunicationException extends IOException implements Serializable 
       }
 
       // read object end tag (identifier)
-      if (SerializerHelper.readLong(in) != serialversionUID) {
+      if (SerializerHelper.readLong(in) != serialVersionUID) {
         throw new IOException("failed to parse NodeImpl (bad stream end?)");
       }
       return new CommunicationException.SerializedException(name, message, ste, cause);
     }
   }
 
-  private static final long serialversionUID = 2348142321L;
+  private static final long serialVersionUID = 2348142321L;
 
   private CommunicationException(String txt, Throwable e, StackTraceElement[] ste) {
     super(txt, e);
@@ -115,7 +115,7 @@ public class CommunicationException extends IOException implements Serializable 
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeLong(out, serialversionUID);
+    SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, getMessage());
 
     // serialize stack trace
@@ -137,7 +137,7 @@ public class CommunicationException extends IOException implements Serializable 
       SerializerHelper.writeInt(out, 0);
     }
 
-    SerializerHelper.writeLong(out, serialversionUID);
+    SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   /**
@@ -151,7 +151,7 @@ public class CommunicationException extends IOException implements Serializable 
    */
   public static CommunicationException fromByteArrayStream(ByteArrayInputStream in)
     throws IOException {
-    if (SerializerHelper.readLong(in) != serialversionUID) {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new IOException("failed to parse StorageException (bad stream?)");
     }
 
@@ -170,7 +170,7 @@ public class CommunicationException extends IOException implements Serializable 
     }
 
     // read object end tag (identifier)
-    if (SerializerHelper.readLong(in) != serialversionUID) {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new IOException("failed to parse NodeImpl (bad stream end?)");
     }
     return new CommunicationException(txt, t, ste);

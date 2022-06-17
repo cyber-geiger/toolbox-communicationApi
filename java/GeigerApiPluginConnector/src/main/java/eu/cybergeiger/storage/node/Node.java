@@ -12,7 +12,6 @@ import java.util.Map;
  * <p>Interface representing a single node in the storage.</p>
  */
 public interface Node extends Serializable {
-
   /**
    * <p>Gets the name of the current node.</p>
    *
@@ -47,7 +46,7 @@ public interface Node extends Serializable {
    * @param newOwner the string representation of the previously set owner
    * @return the previously set owner
    */
-  String setOwner(String newOwner);
+  String setOwner(String newOwner) throws StorageException;
 
   /**
    * <p>Gets the current visibility according to the TLP protocol.</p>
@@ -63,6 +62,10 @@ public interface Node extends Serializable {
    * @return the visibility set previously
    */
   Visibility setVisibility(Visibility newVisibility);
+
+  long getLastModified();
+  void setLastModified(long newLastModified);
+  String getExtendedLastModified();
 
   /**
    * <p>Add a key/value pair to the node.</p>
@@ -188,6 +191,11 @@ public interface Node extends Serializable {
    * @throws StorageException if the storage backend encounters a problem
    */
   void update(Node n2) throws StorageException;
+
+  /**
+   * <p>Sets last modified to now.</p>
+   */
+  void touch();
 
   /**
    * <p>Create a deep clone of the current node.</p>

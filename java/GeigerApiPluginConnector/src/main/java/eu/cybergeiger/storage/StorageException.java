@@ -11,160 +11,111 @@ import java.io.IOException;
  * <p>Exception to be raised on any problems related to the local storage.</p>
  */
 public class StorageException extends IOException implements Serializable {
-
-
   private static class SerializedException extends Throwable implements Serializable {
+    private static final long serialVersionUID = 721364991234L;
 
-    private static final long serialversionUID = 721364991234L;
+    private final String name;
 
-    private final String exceptionName;
-    private final String message;
-
-    public SerializedException(Throwable t) {
-      super(t.getCause());
-      this.message = t.getMessage();
-      this.exceptionName = t.getClass().getName();
-      setStackTrace(t.getStackTrace());
+    public SerializedException(Throwable throwable) {
+      this(
+        throwable.getClass().getName(),
+        throwable.getMessage(),
+        throwable.getStackTrace(),
+        throwable.getCause()
+      );
     }
 
-    public SerializedException(String exceptionName, String message, StackTraceElement[] stacktrace,
+    public SerializedException(String name, String message, StackTraceElement[] stacktrace,
                                Throwable cause) {
-      super(message, cause);
-      this.exceptionName = exceptionName;
-      this.message = message;
+      super(message, cause instanceof SerializedException ? cause : new SerializedException(cause));
+      this.name = name;
       setStackTrace(stacktrace);
     }
 
+    // TODO: deduplicate serialization code
+
     @Override
     public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-      SerializerHelper.writeLong(out, serialversionUID);
-      SerializerHelper.writeString(out, exceptionName);
-      SerializerHelper.writeString(out, message);
+      SerializerHelper.writeMarker(out, serialVersionUID);
+      SerializerHelper.writeString(out, name);
+      SerializerHelper.writeString(out, getMessage());
       SerializerHelper.writeStackTraces(out, getStackTrace());
       if (getCause() != null) {
         SerializerHelper.writeInt(out, 1);
-        if (getCause() instanceof SerializedException) {
-          ((SerializedException) (getCause())).toByteArrayStream(out);
-        } else {
-          new SerializedException(getCause()).toByteArrayStream(out);
-        }
+        ((SerializedException) (getCause())).toByteArrayStream(out);
       } else {
         SerializerHelper.writeInt(out, 0);
       }
-      SerializerHelper.writeLong(out, serialversionUID);
+      SerializerHelper.writeMarker(out, serialVersionUID);
     }
 
     public static SerializedException fromByteArrayStream(ByteArrayInputStream in)
       throws IOException {
-      if (SerializerHelper.readLong(in) != serialversionUID) {
-        throw new IOException("failed to parse StorageException (bad stream?)");
-      }
-
-      // read exception text
+      SerializerHelper.testMarker(in, serialVersionUID);
       String name = SerializerHelper.readString(in);
-
-      // read exception message
       String message = SerializerHelper.readString(in);
-
-      // read stack trace
-      StackTraceElement[] ste = SerializerHelper.readStackTraces(in);
-
-      // read cause (if any)
+      StackTraceElement[] stackTrace = SerializerHelper.readStackTraces(in);
       SerializedException cause = null;
       if (SerializerHelper.readInt(in) == 1) {
         cause = SerializedException.fromByteArrayStream(in);
       }
+      SerializerHelper.testMarker(in, serialVersionUID);
+      return new SerializedException(name, message, stackTrace, cause);
+    }
 
-      // read object end tag (identifier)
-      if (SerializerHelper.readLong(in) != serialversionUID) {
-        throw new IOException("failed to parse NodeImpl (bad stream end?)");
-      }
-      return new SerializedException(name, message, ste, cause);
+    @Override
+    public String toString() {
+      String message = getLocalizedMessage();
+      return (message != null) ? (name + ": " + message) : name;
     }
   }
 
-  private static final long serialversionUID = 178324938L;
+  private static final long serialVersionUID = 178324938L;
 
-  private StorageException(String txt, Throwable e, StackTraceElement[] ste) {
-    super(txt, e);
-    if (ste != null) {
-      setStackTrace(ste);
-    }
+  public StorageException() {
+    super();
   }
 
-  /**
-   * <p>Creates a StorageException with message and root cause.</p>
-   *
-   * @param txt the message
-   * @param e   the root cause
-   */
-  public StorageException(String txt, Throwable e) {
-    this(txt, e, null);
+  public StorageException(String message) {
+    super(message);
   }
 
-  public StorageException(String txt) {
-    this(txt, null, null);
+  public StorageException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public StorageException(Throwable cause) {
+    super(cause);
   }
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeLong(out, serialversionUID);
+    SerializerHelper.writeMarker(out, serialVersionUID);
+    SerializerHelper.writeString(out, getClass().getName());
     SerializerHelper.writeString(out, getMessage());
-
-    // serialize stack trace
     SerializerHelper.writeStackTraces(out, getStackTrace());
-
-    // serializing cause
-    SerializedException cause = null;
-    if (getCause() == null) {
-      if (getCause() instanceof SerializedException) {
-        cause = (SerializedException) getCause();
-      } else {
-        cause = new SerializedException(getCause());
-      }
-    }
-    if (cause != null) {
+    if (getCause() != null) {
       SerializerHelper.writeInt(out, 1);
-      cause.toByteArrayStream(out);
+      ((SerializedException) (getCause())).toByteArrayStream(out);
     } else {
       SerializerHelper.writeInt(out, 0);
     }
-
-    SerializerHelper.writeLong(out, serialversionUID);
+    SerializerHelper.writeMarker(out, serialVersionUID);
   }
 
-  /**
-   * <p>Static deserializer.</p>
-   *
-   * <p>Creates a storage exception from the stream.</p>
-   *
-   * @param in The input byte stream to be used
-   * @return the object parsed from the input stream by the respective class
-   * @throws IOException if not overridden or reached unexpectedly the end of stream
-   */
-  public static StorageException fromByteArrayStream(ByteArrayInputStream in) throws IOException {
-    if (SerializerHelper.readLong(in) != serialversionUID) {
-      throw new IOException("failed to parse StorageException (bad stream?)");
-    }
-
-    // read exception text
-    String txt = SerializerHelper.readString(in);
-
-    // deserialize stacktrace
-    StackTraceElement[] ste = SerializerHelper.readStackTraces(in);
-
-    // deserialize Throwable
-    //List<Throwable> tv = new Vector<>();
-    Throwable t = null;
-
+  public static StorageException fromByteArrayStream(ByteArrayInputStream in)
+    throws IOException {
+    SerializerHelper.testMarker(in, serialVersionUID);
+    String _name = SerializerHelper.readString(in);
+    String message = SerializerHelper.readString(in);
+    StackTraceElement[] stackTrace = SerializerHelper.readStackTraces(in);
+    SerializedException cause = null;
     if (SerializerHelper.readInt(in) == 1) {
-      t = SerializedException.fromByteArrayStream(in);
+      cause = SerializedException.fromByteArrayStream(in);
     }
-
-    // read object end tag (identifier)
-    if (SerializerHelper.readLong(in) != serialversionUID) {
-      throw new IOException("failed to parse NodeImpl (bad stream end?)");
-    }
-    return new StorageException(txt, t, ste);
+    SerializerHelper.testMarker(in, serialVersionUID);
+    StorageException exception = new StorageException(message, cause);
+    exception.setStackTrace(stackTrace);
+    return exception;
   }
 }

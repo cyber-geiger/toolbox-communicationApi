@@ -1,5 +1,6 @@
 package eu.cybergeiger.api.plugin;
 
+import eu.cybergeiger.api.exceptions.CommunicationException;
 import eu.cybergeiger.api.message.GeigerUrl;
 
 /**
@@ -16,21 +17,21 @@ public interface MenuRegistrar {
    * @param menu   menu string depicting menu hierarchy
    * @param action action URL to be triggered
    */
-  void registerMenu(String menu, GeigerUrl action);
+  void registerMenu(String menu, GeigerUrl action) throws CommunicationException;
 
   /**
    * <p>Enable a previously registered menu.</p>
    *
    * @param menu menu string depicting menu hierarchy
    */
-  void enableMenu(String menu);
+  void enableMenu(String menu) throws CommunicationException;
 
   /**
    * <p>Disable a previously registered menu.</p>
    *
    * @param menu menu string depicting menu hierarchy
    */
-  void disableMenu(String menu);
+  void disableMenu(String menu) throws CommunicationException;
 
   /**
    * <p>Removing a menu entry from th toolbox core.</p>
@@ -39,6 +40,6 @@ public interface MenuRegistrar {
    *
    * @param menu menu string depicting menu hierarchy
    */
-  void deregisterMenu(String menu);
+  void deregisterMenu(String menu) throws CommunicationException;
 
 }

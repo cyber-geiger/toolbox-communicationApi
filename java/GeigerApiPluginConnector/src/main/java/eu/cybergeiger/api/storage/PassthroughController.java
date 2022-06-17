@@ -63,15 +63,15 @@ public class PassthroughController implements StorageController, PluginListener,
 
   @Override
   public Node get(String path) throws StorageException {
-    String command = "getNode";
-    String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier + "/" + path)));
-
-    // get response
-    Message response = waitForResult(command, identifier);
     try {
+      String command = "getNode";
+      String identifier = String.valueOf(new Random().nextInt());
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier + "/" + path)));
+
+      // get response
+      Message response = waitForResult(command, identifier);
       if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -88,13 +88,11 @@ public class PassthroughController implements StorageController, PluginListener,
   public Node getNodeOrTombstone(String path) throws StorageException {
     String command = "getNodeOrTombstone";
     String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier + "/" + path)));
-
-    // get response
-    Message response = waitForResult(command, identifier);
     try {
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier + "/" + path)));
+      Message response = waitForResult(command, identifier);
       if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -183,14 +181,14 @@ public class PassthroughController implements StorageController, PluginListener,
 
   @Override
   public Node delete(String path) throws StorageException {
-    String command = "deleteNode";
-    String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier + "/" + path)));
-    // get response
-    Message response = waitForResult(command, identifier);
     try {
+      String command = "deleteNode";
+      String identifier = String.valueOf(new Random().nextInt());
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier + "/" + path)));
+      // get response
+      Message response = waitForResult(command, identifier);
       if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -205,15 +203,15 @@ public class PassthroughController implements StorageController, PluginListener,
 
   @Override
   public NodeValue getValue(String path, String key) throws StorageException {
-    String command = "getValue";
-    String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
-
-    // get response
-    Message response = waitForResult(command, identifier);
     try {
+      String command = "getValue";
+      String identifier = String.valueOf(new Random().nextInt());
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
+
+      // get response
+      Message response = waitForResult(command, identifier);
       if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -278,14 +276,14 @@ public class PassthroughController implements StorageController, PluginListener,
 
   @Override
   public NodeValue deleteValue(String path, String key) throws StorageException {
-    String command = "deleteValue";
-    String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
-    // get response
-    Message response = waitForResult(command, identifier);
     try {
+      String command = "deleteValue";
+      String identifier = String.valueOf(new Random().nextInt());
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
+      // get response
+      Message response = waitForResult(command, identifier);
       if (response.getType() == MessageType.STORAGE_ERROR) {
         throw StorageException
           .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
@@ -303,10 +301,14 @@ public class PassthroughController implements StorageController, PluginListener,
     String command = "deleteValue";
     String identifier = String.valueOf(new Random().nextInt());
     // this will not work if either the old or the new path contains any "/"
-    pluginApi.sendMessage(
-      new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/"
-          + oldPath + "/" + newPathOrName)));
+    try {
+      pluginApi.sendMessage(
+        new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
+          new GeigerUrl(id, command + "/" + identifier + "/"
+            + oldPath + "/" + newPathOrName)));
+    } catch (IOException e) {
+      throw new StorageException("Could not rename Node", e);
+    }
     // get response
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
@@ -364,9 +366,13 @@ public class PassthroughController implements StorageController, PluginListener,
   public void close() throws StorageException {
     String command = "close";
     String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier)));
+    try {
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier)));
+    } catch (IOException e) {
+      throw new StorageException("Could not close", e);
+    }
     // get response
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
@@ -384,9 +390,13 @@ public class PassthroughController implements StorageController, PluginListener,
   public void flush() throws StorageException {
     String command = "flush";
     String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier)));
+    try {
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier)));
+    } catch (IOException e) {
+      throw new StorageException("Could not flush", e);
+    }
     // get response
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
@@ -404,9 +414,13 @@ public class PassthroughController implements StorageController, PluginListener,
   public void zap() throws StorageException {
     String command = "zap";
     String identifier = String.valueOf(new Random().nextInt());
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(id, command + "/" + identifier)));
+    try {
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(id, command + "/" + identifier)));
+    } catch (IOException e) {
+      throw new StorageException("Could not flush", e);
+    }
     // get response
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {
@@ -483,10 +497,14 @@ public class PassthroughController implements StorageController, PluginListener,
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     // Storagelistener Serialization,
     //byteArrayOutputStream.write(listener)
-    pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-      MessageType.STORAGE_EVENT,
-      new GeigerUrl(GeigerApi.MASTER_ID, command + "/" + identifier),
-      byteArrayOutputStream.toByteArray()));
+    try {
+      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
+        MessageType.STORAGE_EVENT,
+        new GeigerUrl(GeigerApi.MASTER_ID, command + "/" + identifier),
+        byteArrayOutputStream.toByteArray()));
+    } catch (IOException e) {
+      throw new StorageException("Could not rename Node", e);
+    }
     // get response
     Message response = waitForResult(command, identifier);
     if (response.getType() == MessageType.STORAGE_ERROR) {

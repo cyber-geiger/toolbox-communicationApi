@@ -16,12 +16,12 @@ import java.util.*;
  */
 public class DefaultNodeValue implements NodeValue {
 
-  private static final long serialversionUID = 871283188L;
+  private static final long serialVersionUID = 871283188L;
 
   private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
   /**
-   * They key is used to identify the NodeValueObject inside a StorageNode,
+   * The key is used to identify the NodeValueObject inside a StorageNode,
    * therefore, the key is unique within one StorageNode.
    */
   private String key;
@@ -71,8 +71,8 @@ public class DefaultNodeValue implements NodeValue {
       throw new NullPointerException("Neither key nor value may be null (" + key + "=" + value + ")");
     }
     this.key = key;
-    setLocalizedString(this.value, value, DEFAULT_LOCALE);
     this.type = type;
+    setLocalizedString(this.value, value, DEFAULT_LOCALE);
     if (description != null) {
       setLocalizedString(this.description, description, DEFAULT_LOCALE);
     }
@@ -86,7 +86,7 @@ public class DefaultNodeValue implements NodeValue {
 
   private void setKey(String key) {
     this.key = key;
-    updateLastmodified();
+    touch();
   }
 
   @Override
@@ -111,7 +111,7 @@ public class DefaultNodeValue implements NodeValue {
   @Override
   public void setValue(String value, Locale locale) throws MissingResourceException {
     setLocalizedString(this.value, value, locale);
-    updateLastmodified();
+    touch();
   }
 
   @Override
@@ -128,7 +128,7 @@ public class DefaultNodeValue implements NodeValue {
   public String setType(String type) {
     String ret = this.type;
     this.type = type;
-    updateLastmodified();
+    touch();
     return ret;
   }
 
@@ -152,12 +152,9 @@ public class DefaultNodeValue implements NodeValue {
   }
 
   private static Locale lookupLocale(Map<String, String> map, String languageRange) {
-    String l = Locale.lookupTag(Locale.LanguageRange.parse(languageRange), map.keySet());
-    if (l != null) {
-      return Locale.forLanguageTag(l);
-    } else {
-      return DEFAULT_LOCALE;
-    }
+    String bestMatch = Locale.lookupTag(Locale.LanguageRange.parse(languageRange), map.keySet());
+    if (bestMatch == null) return DEFAULT_LOCALE;
+    return Locale.forLanguageTag(bestMatch);
   }
 
   private static String getLocalizedString(Map<String, String> map, String languageRange) {
@@ -168,8 +165,10 @@ public class DefaultNodeValue implements NodeValue {
     throws MissingResourceException {
     if (getLocalizedString(map, DEFAULT_LOCALE.toLanguageTag()) == null
       && !locale.toLanguageTag().equals(DEFAULT_LOCALE.toLanguageTag())) {
-      throw new MissingResourceException("undefined string for locale " + DEFAULT_LOCALE, "Locale",
-        locale.toLanguageTag());
+      throw new MissingResourceException(
+        "Undefined string for locale: \"" + DEFAULT_LOCALE + "\"",
+        "Locale", locale.toLanguageTag()
+      );
     }
     map.put(locale.toLanguageTag(), value);
   }
@@ -180,7 +179,7 @@ public class DefaultNodeValue implements NodeValue {
       throw new NullPointerException("Description may not be null.");
     String ret = getLocalizedString(this.description, locale.toLanguageTag());
     setLocalizedString(this.description, value, locale);
-    updateLastmodified();
+    touch();
     return ret;
   }
 
@@ -203,10 +202,10 @@ public class DefaultNodeValue implements NodeValue {
     this.type = n2.getType();
     this.description.clear();
     this.description.putAll(n2.description);
-    updateLastmodified();
+    touch();
   }
 
-  private void updateLastmodified() {
+  public void touch() {
     this.lastModified = System.currentTimeMillis();
   }
 
@@ -269,13 +268,8 @@ public class DefaultNodeValue implements NodeValue {
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    // write object identifier
-    SerializerHelper.writeLong(out, serialversionUID);
-
-    // write key
+    SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeString(out, key);
-
-    // value
     SerializerHelper.writeInt(out, value.size());
     synchronized (value) {
       for (Map.Entry<String, String> e : value.entrySet()) {
@@ -283,14 +277,8 @@ public class DefaultNodeValue implements NodeValue {
         SerializerHelper.writeString(out, e.getValue());
       }
     }
-
-    // type
     SerializerHelper.writeString(out, type);
-
-    // lastModified
     SerializerHelper.writeLong(out, lastModified);
-
-    // description
     SerializerHelper.writeInt(out, description.size());
     synchronized (description) {
       for (Map.Entry<String, String> e : description.entrySet()) {
@@ -298,10 +286,7 @@ public class DefaultNodeValue implements NodeValue {
         SerializerHelper.writeString(out, e.getValue());
       }
     }
-
-    // write object identifier as end tag
-    SerializerHelper.writeLong(out, serialversionUID);
-
+    SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   /**
@@ -312,38 +297,26 @@ public class DefaultNodeValue implements NodeValue {
    * @throws IOException if an exception happens deserializing the stream
    */
   public static DefaultNodeValue fromByteArrayStream(ByteArrayInputStream in) throws IOException {
-    if (SerializerHelper.readLong(in) != serialversionUID) {
-      throw new IOException("failed to parse NodeValueImpl (bad stream?)");
+    SerializerHelper.testMarker(in, serialVersionUID);
+    DefaultNodeValue value = new DefaultNodeValue(SerializerHelper.readString(in), "");
+    int valueCount = SerializerHelper.readInt(in);
+    value.value.clear();
+    for (int i = 0; i < valueCount; i++) {
+      value.value.put(
+        Locale.forLanguageTag(Objects.requireNonNull(SerializerHelper.readString(in))).toLanguageTag(),
+        SerializerHelper.readString(in)
+      );
     }
-
-    // read key
-    DefaultNodeValue nv = new DefaultNodeValue(SerializerHelper.readString(in), "");
-
-    // restore values
-    int counter = SerializerHelper.readInt(in);
-    nv.value.clear();
-    for (int i = 0; i < counter; i++) {
-      nv.value.put(Locale.forLanguageTag(Objects.requireNonNull(SerializerHelper.readString(in))).toLanguageTag(),
-        SerializerHelper.readString(in));
+    value.type = SerializerHelper.readString(in);
+    value.lastModified = SerializerHelper.readLong(in);
+    int descriptionCount = SerializerHelper.readInt(in);
+    for (int i = 0; i < descriptionCount; i++) {
+      value.description.put(
+        Locale.forLanguageTag(Objects.requireNonNull(SerializerHelper.readString(in))).toLanguageTag(),
+        SerializerHelper.readString(in)
+      );
     }
-
-    // restore type
-    nv.type = SerializerHelper.readString(in);
-
-    // restore lastModified
-    nv.lastModified = SerializerHelper.readLong(in);
-
-    // restore description
-    counter = SerializerHelper.readInt(in);
-    for (int i = 0; i < counter; i++) {
-      nv.description.put(Locale.forLanguageTag(Objects.requireNonNull(SerializerHelper.readString(in))).toLanguageTag(),
-        SerializerHelper.readString(in));
-    }
-
-    if (SerializerHelper.readLong(in) != serialversionUID) {
-      throw new IOException("failed to parse NodeValueImpl (bad stream end?)");
-    }
-
-    return nv;
+    SerializerHelper.testMarker(in, serialVersionUID);
+    return value;
   }
 }

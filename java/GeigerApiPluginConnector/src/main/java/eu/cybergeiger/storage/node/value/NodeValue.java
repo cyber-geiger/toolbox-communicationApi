@@ -136,6 +136,11 @@ public interface NodeValue extends Serializable {
   void update(NodeValue n2);
 
   /**
+   * <p>Sets last modified to now.</p>
+   */
+  void touch();
+
+  /**
    * <p>Creates a deep clone of the K/V tuple.</p>
    *
    * @return a copy of the current node value

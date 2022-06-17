@@ -14,9 +14,11 @@ import eu.cybergeiger.storage.StorageController;
 import eu.cybergeiger.storage.StorageException;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 
 import static eu.cybergeiger.api.communication.CommunicationHelper.sendAndWait;
@@ -90,54 +92,70 @@ public class PluginApi implements GeigerApi {
   public void registerPlugin() throws CommunicationException {
     // TODO share secret in a secure paired way....
     PluginInformation pluginInformation = new PluginInformation(id, this.executor, communicator.getPort());
-    sendAndWait(
-      this,
-      new Message(
-        id,
-        MASTER_ID,
-        MessageType.REGISTER_PLUGIN,
-        new GeigerUrl(MASTER_ID, "registerPlugin"),
-        pluginInformation.toByteArray()
-      )
-    );
+    try {
+      sendAndWait(
+        this,
+        new Message(
+          id,
+          MASTER_ID,
+          MessageType.REGISTER_PLUGIN,
+          new GeigerUrl(MASTER_ID, "registerPlugin"),
+          pluginInformation.toByteArray()
+        )
+      );
+    } catch (TimeoutException | InterruptedException | IOException e) {
+      throw new CommunicationException("Failed to register plugin.", e);
+    }
   }
 
   @Override
   public void activatePlugin() throws CommunicationException {
-    sendAndWait(
-      this,
-      new Message(
-        id,
-        MASTER_ID,
-        MessageType.ACTIVATE_PLUGIN,
-        null,
-        SerializerHelper.intToByteArray(communicator.getPort())
-      )
-    );
+    try {
+      sendAndWait(
+        this,
+        new Message(
+          id,
+          MASTER_ID,
+          MessageType.ACTIVATE_PLUGIN,
+          null,
+          SerializerHelper.intToByteArray(communicator.getPort())
+        )
+      );
+    } catch (TimeoutException | InterruptedException | IOException e) {
+      throw new CommunicationException("Failed to activate plugin.", e);
+    }
   }
 
   @Override
   public void deactivatePlugin() throws CommunicationException {
-    sendAndWait(this,
-      new Message(
-        id,
-        MASTER_ID,
-        MessageType.DEACTIVATE_PLUGIN,
-        null
-      )
-    );
+    try {
+      sendAndWait(this,
+        new Message(
+          id,
+          MASTER_ID,
+          MessageType.DEACTIVATE_PLUGIN,
+          null
+        )
+      );
+    } catch (TimeoutException | InterruptedException | IOException e) {
+      throw new CommunicationException("Failed to deactivate plugin.", e);
+    }
   }
 
   @Override
   public void deregisterPlugin() throws CommunicationException {
-    sendAndWait(this,
-      new Message(
-        id,
-        MASTER_ID,
-        MessageType.DEREGISTER_PLUGIN,
-        new GeigerUrl(MASTER_ID, "deregisterPlugin")
-      )
-    );
+    try {
+      sendAndWait(this,
+        new Message(
+          id,
+          MASTER_ID,
+          MessageType.DEREGISTER_PLUGIN,
+          new GeigerUrl(MASTER_ID, "deregisterPlugin")
+        )
+      );
+    } catch (TimeoutException | InterruptedException | IOException e) {
+      throw new CommunicationException("Failed to deregister plugin.", e);
+    }
   }
 
   private void storeState() {
@@ -211,27 +229,26 @@ public class PluginApi implements GeigerApi {
   }
 
   @Override
-  public void sendMessage(Message message) {
-    String pluginId = Objects.requireNonNull(message.getSourceId());
-    if (id.equals(pluginId)) {
+  public void sendMessage(Message message) throws IOException {
+    if (id.equals(message.getTargetId())) {
       receivedMessage(message);
       return;
     }
 
-    StorableString storablePluginId = new StorableString(pluginId);
+    StorableString storableTargetId = new StorableString(message.getTargetId());
     PluginInformation pluginInformation = plugins.computeIfAbsent(
-      storablePluginId,
+      storableTargetId,
       k -> new PluginInformation(
-        pluginId,
+        message.getTargetId(),
         GeigerApi.MASTER_EXECUTOR,
-        pluginId.equals(GeigerApi.MASTER_ID) ? GeigerCommunicator.MASTER_PORT : 0
+        message.getTargetId().equals(GeigerApi.MASTER_ID) ? GeigerCommunicator.MASTER_PORT : 0
       )
     );
-    boolean inBackground = message.getType() == MessageType.RETURNING_CONTROL;
+    boolean inBackground = message.getType() != MessageType.RETURNING_CONTROL;
     if (pluginInformation.getPort() == 0) {
       PluginStarter.startPlugin(pluginInformation, inBackground);
       // TODO: wait for startup
-      pluginInformation = plugins.get(storablePluginId);
+      pluginInformation = plugins.get(storableTargetId);
     } else if (!inBackground) {
       PluginStarter.startPlugin(pluginInformation, false);
     }
@@ -240,32 +257,38 @@ public class PluginApi implements GeigerApi {
       try {
         communicator.sendMessage(pluginInformation.getPort(), message);
         break;
-      } catch (Exception e) {
+      } catch (IOException e) {
+        if (!(e instanceof ConnectException && e.getMessage().startsWith("Connection refused")))
+          throw e;
         PluginStarter.startPlugin(pluginInformation, inBackground);
-        if (pluginId.equals(MASTER_ID)) {
+        if (message.getTargetId().equals(MASTER_ID)) {
           try {
             Thread.sleep(MASTER_START_WAIT_TIME_MILLIS);
           } catch (InterruptedException ignored) {
           }
         } else {
           // TODO: wait for startup
-          pluginInformation = plugins.get(storablePluginId);
+          pluginInformation = plugins.get(storableTargetId);
         }
       }
     }
   }
 
-  public void receivedMessage(Message message) {
+  public void receivedMessage(Message message) throws CommunicationException {
     // all other messages are not handled internally
     if (message.getType() == MessageType.PING) {
-      sendMessage(new Message(
-        message.getTargetId(),
-        message.getSourceId(),
-        MessageType.PONG,
-        new GeigerUrl(message.getSourceId(), ""),
-        message.getPayload(),
-        message.getRequestId()
-      ));
+      try {
+        sendMessage(new Message(
+          message.getTargetId(),
+          message.getSourceId(),
+          MessageType.PONG,
+          new GeigerUrl(message.getSourceId(), ""),
+          message.getPayload(),
+          message.getRequestId()
+        ));
+      } catch (IOException e) {
+        throw new CommunicationException("Failed to send pong message.", e);
+      }
     }
 
     notifyListener(MessageType.ALL_EVENTS, message);
@@ -285,43 +308,59 @@ public class PluginApi implements GeigerApi {
   }
 
   @Override
-  public void registerMenu(String menu, GeigerUrl action) {
-    sendMessage(new Message(
-      id, MASTER_ID,
-      MessageType.REGISTER_MENU,
-      new GeigerUrl(MASTER_ID, "registerMenu"),
-      new MenuItem(menu, action).toByteArray()
-    ));
+  public void registerMenu(String menu, GeigerUrl action) throws CommunicationException {
+    try {
+      sendMessage(new Message(
+        id, MASTER_ID,
+        MessageType.REGISTER_MENU,
+        new GeigerUrl(MASTER_ID, "registerMenu"),
+        new MenuItem(menu, action).toByteArray()
+      ));
+    } catch (IOException e) {
+      throw new CommunicationException("Failed to register menu.", e);
+    }
   }
 
   @Override
-  public void enableMenu(String menu) {
-    sendMessage(new Message(
-      id, MASTER_ID,
-      MessageType.ENABLE_MENU,
-      new GeigerUrl(MASTER_ID, "enableMenu"),
-      menu.getBytes(StandardCharsets.UTF_8)
-    ));
+  public void enableMenu(String menu) throws CommunicationException {
+    try {
+      sendMessage(new Message(
+        id, MASTER_ID,
+        MessageType.ENABLE_MENU,
+        new GeigerUrl(MASTER_ID, "enableMenu"),
+        menu.getBytes(StandardCharsets.UTF_8)
+      ));
+    } catch (IOException e) {
+      throw new CommunicationException("Failed to enable menu.", e);
+    }
   }
 
   @Override
-  public void disableMenu(String menu) {
-    sendMessage(new Message(
-      id, MASTER_ID,
-      MessageType.DISABLE_MENU,
-      new GeigerUrl(MASTER_ID, "disableMenu"),
-      menu.getBytes(StandardCharsets.UTF_8)
-    ));
+  public void disableMenu(String menu) throws CommunicationException {
+    try {
+      sendMessage(new Message(
+        id, MASTER_ID,
+        MessageType.DISABLE_MENU,
+        new GeigerUrl(MASTER_ID, "disableMenu"),
+        menu.getBytes(StandardCharsets.UTF_8)
+      ));
+    } catch (IOException e) {
+      throw new CommunicationException("Failed to disable menu.", e);
+    }
   }
 
   @Override
-  public void deregisterMenu(String menu) {
-    sendMessage(new Message(
-      id, MASTER_ID,
-      MessageType.DEREGISTER_MENU,
-      new GeigerUrl(MASTER_ID, "deregisterMenu"),
-      menu.getBytes(StandardCharsets.UTF_8)
-    ));
+  public void deregisterMenu(String menu) throws CommunicationException {
+    try {
+      sendMessage(new Message(
+        id, MASTER_ID,
+        MessageType.DEREGISTER_MENU,
+        new GeigerUrl(MASTER_ID, "deregisterMenu"),
+        menu.getBytes(StandardCharsets.UTF_8)
+      ));
+    } catch (IOException e) {
+      throw new CommunicationException("Failed to deregister menu.", e);
+    }
   }
 
   /**

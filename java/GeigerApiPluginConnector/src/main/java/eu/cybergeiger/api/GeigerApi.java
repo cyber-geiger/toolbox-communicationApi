@@ -7,6 +7,7 @@ import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.message.MessageType;
 import eu.cybergeiger.api.plugin.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -55,7 +56,7 @@ public interface GeigerApi extends PluginRegistrar, MenuRegistrar {
    *
    * @param msg the message to be sent
    */
-  void sendMessage(Message msg);
+  void sendMessage(Message msg) throws IOException;
 
   /**
    * <p>Reset the GeigerApi by removing all registered plugins and MenuItems.</p>

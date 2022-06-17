@@ -15,7 +15,7 @@ public class SerializerHelper {
   private static final long INT_UID = 122134568793L;
   private static final long STACKTRACES_UID = 9012350123956L;
 
-  private static void writeRawLong(ByteArrayOutputStream out, Long l) throws IOException {
+  public static void writeRawLong(ByteArrayOutputStream out, Long l) throws IOException {
     byte[] result = new byte[Long.BYTES];
     for (int i = Long.BYTES - 1; i >= 0; i--) {
       result[i] = (byte) (l & 0xFF);
@@ -24,7 +24,7 @@ public class SerializerHelper {
     out.write(result);
   }
 
-  private static Long readRawLong(ByteArrayInputStream in) throws IOException {
+  public static Long readRawLong(ByteArrayInputStream in) throws IOException {
     int size = Long.BYTES;
     byte[] arr = new byte[size];
     in.read(arr);
@@ -36,7 +36,7 @@ public class SerializerHelper {
     return result;
   }
 
-  private static void writeRawInt(ByteArrayOutputStream out, Integer l) throws IOException {
+  public static void writeRawInt(ByteArrayOutputStream out, Integer l) throws IOException {
     int size = Integer.BYTES;
     byte[] result = new byte[size];
     for (int i = size - 1; i >= 0; i--) {
@@ -46,7 +46,7 @@ public class SerializerHelper {
     out.write(result);
   }
 
-  private static Integer readRawInt(ByteArrayInputStream in) throws IOException {
+  public static Integer readRawInt(ByteArrayInputStream in) throws IOException {
     int size = Integer.BYTES;
     byte[] arr = new byte[size];
     in.read(arr);

@@ -24,8 +24,7 @@ import java.util.Map;
  * automatically if their data is accessed.</p>
  */
 public class DefaultNode implements Node {
-
-  private static final long serialversionUID = 11239348938L;
+  private static final long serialVersionUID = 11239348938L;
 
   /* an indicator whether the current object is a skeleton */
   private final SwitchableBoolean skeleton = new SwitchableBoolean(false);
@@ -50,8 +49,9 @@ public class DefaultNode implements Node {
    * @param path       the path of the node
    * @param controller the controller to fetch the full node
    */
-  public DefaultNode(String path, StorageController controller) {
+  public DefaultNode(String path, String owner, StorageController controller) throws StorageException {
     skeleton.set(true);
+    setOwner(owner);
     try {
       set(Field.PATH, path);
     } catch (StorageException e) {
@@ -61,6 +61,7 @@ public class DefaultNode implements Node {
   }
 
   private DefaultNode(Node node) throws StorageException {
+    this(node.getPath(), node.getOwner());
     update(node);
   }
 
@@ -69,8 +70,8 @@ public class DefaultNode implements Node {
    *
    * @param path the node path
    */
-  public DefaultNode(String path) {
-    this(getNameFromPath(path), getParentFromPath(path));
+  public DefaultNode(String path, String owner) throws StorageException {
+    this(getNameFromPath(path), owner, getParentFromPath(path));
   }
 
   /**
@@ -79,8 +80,8 @@ public class DefaultNode implements Node {
    * @param name   name of the node
    * @param parent fully qualified parent name (path without name)
    */
-  public DefaultNode(String name, String parent) {
-    this(name, parent, Visibility.RED);
+  public DefaultNode(String name, String owner, String parent) throws StorageException {
+    this(name, owner, parent, Visibility.RED);
   }
 
   /**
@@ -90,10 +91,9 @@ public class DefaultNode implements Node {
    * @param parent the parent of the node (may be null if root node is the parent)
    * @param vis    visibility of the node
    */
-  public DefaultNode(String name, String parent, Visibility vis) {
-    if (parent == null) {
-      parent = "";
-    }
+  public DefaultNode(String name, String owner, String parent, Visibility vis) throws StorageException {
+    if (parent == null) parent = "";
+    setOwner(owner);
     try {
       set(Field.PATH, parent + StorageController.PATH_DELIMITER + name);
       set(Field.VISIBILITY, vis.toString());
@@ -109,14 +109,9 @@ public class DefaultNode implements Node {
    * @param path        the path of  the node
    * @param isTombstone true if the node is a tombstone node
    */
-  public DefaultNode(String path, boolean isTombstone) {
-    this(path);
-    try {
-      set(Field.TOMBSTONE, isTombstone ? "true" : "false");
-      setVisibility(Visibility.RED);
-    } catch (StorageException e) {
-      throw new RuntimeException("Oops.... this should not happen... contact developer", e);
-    }
+  public DefaultNode(String path, String owner, boolean isTombstone) throws StorageException {
+    this(path, owner);
+    set(Field.TOMBSTONE, isTombstone ? "true" : "false");
   }
 
   /**
@@ -127,25 +122,20 @@ public class DefaultNode implements Node {
    * @param nodeValues the node values to be stored or null if none
    * @param childNodes the child nodes to be included or null if none
    */
-  public DefaultNode(String path, Visibility visibility, NodeValue[] nodeValues, Node[] childNodes) {
-    this(getNameFromPath(path), getParentFromPath(path));
+  public DefaultNode(String path, String owner, Visibility visibility, NodeValue[] nodeValues, Node[] childNodes) throws StorageException {
+    this(path, owner);
     if (visibility != null) {
       setVisibility(visibility);
     }
-    try {
-      if (nodeValues != null) {
-        for (NodeValue nv : nodeValues) {
-          addValue(nv);
-        }
+    if (nodeValues != null) {
+      for (NodeValue nv : nodeValues) {
+        addValue(nv);
       }
-      if (childNodes != null) {
-        for (Node n : childNodes) {
-          addChildNode(n);
-        }
+    }
+    if (childNodes != null) {
+      for (Node n : childNodes) {
+        this.childNodes.put(n.getName(), n);
       }
-    } catch (StorageException se) {
-      throw new RuntimeException("OOPS! that should not have happened... please contact developer",
-        se);
     }
   }
 
@@ -155,7 +145,6 @@ public class DefaultNode implements Node {
   private void init() throws StorageException {
     synchronized (skeleton) {
       if (skeleton.get()) {
-        // initialize with full object
         update(controller.get(getPath()));
         skeleton.set(false);
         controller = null;
@@ -187,7 +176,6 @@ public class DefaultNode implements Node {
       return null;
     }
     if (!path.contains(StorageController.PATH_DELIMITER)) {
-      // assume root as parent if no delimiter found
       return "";
     }
     return path.substring(0, path.lastIndexOf(StorageController.PATH_DELIMITER));
@@ -197,11 +185,9 @@ public class DefaultNode implements Node {
   public NodeValue getValue(String key) throws StorageException {
     init();
     synchronized (values) {
-      NodeValue ret = values.get(key);
-      if (ret != null) {
-        ret = ret.deepClone();
-      }
-      return ret;
+      NodeValue value = values.get(key);
+      if (value == null) return null;
+      return value.deepClone();
     }
   }
 
@@ -213,6 +199,8 @@ public class DefaultNode implements Node {
       throw new StorageException("Value " + value.getKey() + " not found in node " + getName());
     }
     synchronized (values) {
+      value.touch();
+      setLastModified(value.getLastModified());
       values.put(value.getKey(), value);
     }
     return ret;
@@ -225,6 +213,8 @@ public class DefaultNode implements Node {
       throw new StorageException("value does already exist");
     }
     synchronized (values) {
+      value.touch();
+      setLastModified(value.getLastModified());
       values.put(value.getKey(), value);
     }
   }
@@ -233,6 +223,7 @@ public class DefaultNode implements Node {
   public NodeValue removeValue(String key) throws StorageException {
     init();
     synchronized (values) {
+      touch();
       return values.remove(key);
     }
   }
@@ -257,9 +248,12 @@ public class DefaultNode implements Node {
   }
 
   @Override
-  public String setOwner(String newOwner) {
+  public String setOwner(String newOwner) throws StorageException {
     if (newOwner == null) {
       throw new NullPointerException();
+    }
+    if (newOwner.contains(":")) {
+      throw new StorageException("Owner may not contain \":\" character.");
     }
     try {
       return set(Field.OWNER, newOwner);
@@ -298,11 +292,7 @@ public class DefaultNode implements Node {
   @Override
   public Visibility getVisibility() {
     try {
-      Visibility ret = Visibility.valueOf(get(Field.VISIBILITY));
-      if (ret == null) {
-        ret = Visibility.RED;
-      }
-      return ret;
+      return Visibility.valueOf(get(Field.VISIBILITY));
     } catch (StorageException e) {
       throw new RuntimeException("Oops.... this should not happen... contact developer", e);
     }
@@ -403,10 +393,6 @@ public class DefaultNode implements Node {
     }
   }
 
-  public void addChildNode(Node n) {
-    childNodes.put(n.getName(), n);
-  }
-
   @Override
   public void removeChild(String name) {
     childNodes.remove(name);
@@ -415,15 +401,11 @@ public class DefaultNode implements Node {
   @Override
   public Map<String, Node> getChildren() throws StorageException {
     init();
-
-    // copy inner structure
     synchronized (childNodes) {
       Map<String, Node> ret = new HashMap<>();
       for (Map.Entry<String, Node> entry : childNodes.entrySet()) {
         ret.put(entry.getKey(), entry.getValue().deepClone());
       }
-
-      // return copy of structure
       return ret;
     }
   }
@@ -440,13 +422,13 @@ public class DefaultNode implements Node {
     if (childNodes.size() == 0) {
       return "";
     }
-    String csv = "";
+    StringBuilder csv = new StringBuilder();
     for (String s : childNodes.keySet()) {
-      csv = csv.concat(s);
-      csv = csv.concat(",");
+      csv.append(s);
+      csv.append(",");
     }
-    // return String.join(",", childNodes.keySet());
-    return csv.substring(0, csv.length() - 1);
+    csv.deleteCharAt(csv.length() - 1);
+    return csv.toString();
   }
 
   @Override
@@ -472,18 +454,12 @@ public class DefaultNode implements Node {
       return false;
     }
     DefaultNode n2 = (DefaultNode) o;
+    if (isSkeleton() != n2.isSkeleton()) {
+      return false;
+    }
 
     // check if one of the nodes is materialized
-    if (!isSkeleton() || (isSkeleton() && !n2.isSkeleton())) {
-      // materialize both nodes
-      try {
-        init();
-        n2.init();
-      } catch (StorageException se) {
-        // should not happen
-        // FIXME throw exception to logger
-      }
-
+    if (!isSkeleton()) {
       // compare ordinals
       if (ordinals.size() != n2.ordinals.size()) {
         return false;
@@ -522,48 +498,35 @@ public class DefaultNode implements Node {
           return false;
         }
       }
-
     } else {
-      // compare just paths
-      if (!getPath().equals(n2.getPath())) {
-        return false;
-      }
-
-      // just compare controller
-      if (controller != n2.getController()) {
-        return false;
-      }
+      return getPath().equals(n2.getPath()) && controller == n2.getController();
     }
     return true;
   }
 
   @Override
-  public void update(Node n2) throws StorageException {
-    update(n2, true);
+  public void update(Node node) throws StorageException {
+    update(node, true);
   }
 
-  private void update(Node n2, boolean deepClone) throws StorageException {
-    // copy basic values
-    this.controller = n2.getController();
-    this.skeleton.set(n2.isSkeleton());
+  private void update(Node node, boolean deepClone) throws StorageException {
+    DefaultNode n2 = (DefaultNode) node;
+    controller = n2.getController();
+    skeleton.set(n2.isSkeleton());
 
     // copy just the name
-    this.ordinals.put(Field.PATH, ((DefaultNode) (n2)).ordinals.get(Field.PATH));
-
+    this.ordinals.put(Field.PATH, n2.ordinals.get(Field.PATH));
     if (!n2.isSkeleton()) {
-
       // copy ordinals
       synchronized (ordinals) {
         ordinals.clear();
-        for (Map.Entry<Field, String> e : ((DefaultNode) n2).ordinals.entrySet()) {
-          ordinals.put(e.getKey(), e.getValue());
-        }
+        ordinals.putAll(n2.ordinals);
       }
 
       // copy values
       synchronized (values) {
         values.clear();
-        for (Map.Entry<String, NodeValue> e : ((DefaultNode) n2).values.entrySet()) {
+        for (Map.Entry<String, NodeValue> e : n2.values.entrySet()) {
           values.put(e.getKey(), e.getValue().deepClone());
         }
       }
@@ -576,15 +539,41 @@ public class DefaultNode implements Node {
             childNodes.put(e.getKey(), e.getValue().deepClone());
           } else {
             // FIXME no tombstone or expiry support
-            childNodes.put(e.getKey(), new DefaultNode(e.getValue().getPath(), this.controller));
+            childNodes.put(e.getKey(), new DefaultNode(e.getValue().getPath(), e.getValue().getOwner(), this.controller));
           }
         }
       }
     }
     // copy last modified date (just to make sure that they are not touched
-    if (((DefaultNode) (n2)).ordinals.get(Field.LAST_MODIFIED) != null) {
-      this.ordinals.put(Field.LAST_MODIFIED, ((DefaultNode) (n2)).ordinals.get(Field.LAST_MODIFIED));
+    this.ordinals.put(Field.LAST_MODIFIED, n2.ordinals.get(Field.LAST_MODIFIED));
+  }
+
+  public void touch() {
+    setLastModified(System.currentTimeMillis());
+  }
+
+  @Override
+  public long getLastModified() {
+    try {
+      return Long.parseLong(get(Field.LAST_MODIFIED));
+    } catch (StorageException e) {
+      throw new RuntimeException("Oops.... this should not happen... contact developer", e);
     }
+  }
+
+  @Override
+  public void setLastModified(long lastModified) {
+    try {
+      set(Field.LAST_MODIFIED, String.valueOf(lastModified));
+    } catch (StorageException e) {
+      throw new RuntimeException("Oops.... this should not happen... contact developer", e);
+    }
+  }
+
+  @Override
+  public String getExtendedLastModified() {
+    // TODO: implement ExtendedTimestamp
+    return String.format("%20s-cd429ffd-6823-4122-940d-18b0fbc4b4a3", getLastModified());
   }
 
   @Override
@@ -594,37 +583,50 @@ public class DefaultNode implements Node {
 
   @Override
   public Node shallowClone() throws StorageException {
-    DefaultNode ret = new DefaultNode(getPath());
-
-    // making a shallow update on empty node
+    DefaultNode ret = new DefaultNode(getPath(), getOwner());
     ret.update(this, false);
-
     return ret;
-  }
-
-  public void touch() {
-    //ordinals.put(Field.LAST_MODIFIED, "" + ch.fhnw.geiger.totalcross.System.currentTimeMillis());
   }
 
   @Override
   public String toString() {
+    return toString("", true, true, true);
+  }
+
+  public String toString(String prefix, boolean showTimestamp, boolean showOrdinals, boolean showChildren) {
     StringBuilder sb = new StringBuilder();
     sb.append(getPath());
-    sb.append("[");
+    sb.append(prefix);
+    if (showOrdinals || showTimestamp)
+      sb.append("[");
+    if (isSkeleton() && showOrdinals) {
+      sb.append("<tombstone>,");
+    }
     if (isSkeleton()) {
-      //make sure that no accide ntal materiaization is done
+      //make sure that no accidental materialization is done
       sb.append("{<skeletonized>}");
-      sb.append("]{").append(System.lineSeparator());
     } else {
       sb.append("owner=").append(getOwner());
-      sb.append(";vis=").append(getVisibility());
-      sb.append("]{").append(System.lineSeparator());
+      sb.append(",visibility=").append(getVisibility());
+      if (showOrdinals && showTimestamp) {
+        sb.append(",");
+      }
+      if (showTimestamp) {
+        sb.append("lastModified=");
+        sb.append(getLastModified());
+      }
     }
+    if (showOrdinals || showTimestamp)
+      sb.append("]");
+    sb.append("{");
     int i = 0;
     if (isSkeleton()) {
       //make sure that no accidental materiaization is done
       sb.append("{<skeletonized>}");
-    } else if (values != null) {
+    } else if (values.size() == 1) {
+      sb.append(values.values().stream().findFirst().get());
+    } else if (!values.isEmpty()) {
+      sb.append(System.lineSeparator());
       for (Map.Entry<String, NodeValue> e : values.entrySet()) {
         if (i > 0) {
           sb.append(", ").append(System.lineSeparator());
@@ -632,30 +634,31 @@ public class DefaultNode implements Node {
         sb.append(e.getValue().toString("  "));
         i++;
       }
-      sb.append(System.lineSeparator()).append("}");
-    } else {
-      sb.append("{}");
+      sb.append(System.lineSeparator());
+      sb.append(prefix);
+    }
+    sb.append("}");
+    if (!childNodes.isEmpty() && showChildren) {
+      sb.append(" children{");
+      int j = 0;
+      for (Node element : childNodes.values()) {
+        sb.append(element.getName());
+        if (++j != childNodes.size()) {
+          sb.append(", ");
+        }
+      }
+      sb.append("}");
     }
     return sb.toString();
   }
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    // write object identifier
-    SerializerHelper.writeLong(out, serialversionUID);
-
-    // write skeleton flag
+    SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeInt(out, skeleton.get() ? 1 : 0);
-
-    // write path
     SerializerHelper.writeString(out, getPath());
-
-    // controller
-    // Hint: We do not save the controller
-
-    // all ordinals except path
-    SerializerHelper.writeInt(out, ordinals.size() - 1);
     synchronized (ordinals) {
+      SerializerHelper.writeInt(out, ordinals.size() - 1);
       for (Map.Entry<Field, String> e : ordinals.entrySet()) {
         if (e.getKey() != Field.PATH) {
           SerializerHelper.writeString(out, e.getKey().toString());
@@ -665,8 +668,6 @@ public class DefaultNode implements Node {
     }
 
     if (!isSkeleton()) {
-
-      // values
       SerializerHelper.writeInt(out, values.size());
       synchronized (values) {
         for (Map.Entry<String, NodeValue> e : values.entrySet()) {
@@ -686,7 +687,7 @@ public class DefaultNode implements Node {
     }
 
     // write object identifier as end tag
-    SerializerHelper.writeLong(out, serialversionUID);
+    SerializerHelper.writeMarker(out, serialVersionUID);
   }
 
   /**
@@ -697,22 +698,13 @@ public class DefaultNode implements Node {
    * @throws IOException if an exception happens deserializing the stream
    */
   public static DefaultNode fromByteArrayStream(ByteArrayInputStream in, StorageController controller) throws IOException {
-    // read object identifier
-    if (SerializerHelper.readLong(in) != serialversionUID) {
-      throw new IOException("failed to parse NodeImpl (bad stream?)");
-    }
-
-    // read skeleton
+    SerializerHelper.testMarker(in, serialVersionUID);
     boolean skel = SerializerHelper.readInt(in) == 1;
-
-    //  get path
-    DefaultNode n = new DefaultNode(SerializerHelper.readString(in));
-
-    // restore a sensible controller
+    DefaultNode n = new DefaultNode(SerializerHelper.readString(in), "NONE");
+    n.skeleton.set(skel);
     if (skel) {
       n.controller = controller;
     }
-    // restore ordinals
     int counter = SerializerHelper.readInt(in);
     for (int i = 0; i < counter; i++) {
       n.ordinals.put(Field.valueOf(SerializerHelper.readString(in)),
@@ -732,12 +724,7 @@ public class DefaultNode implements Node {
         n.childNodes.put(SerializerHelper.readString(in), DefaultNode.fromByteArrayStream(in, controller));
       }
     }
-
-    // read object end tag (identifier)
-    if (SerializerHelper.readLong(in) != serialversionUID) {
-      throw new IOException("failed to parse NodeImpl (bad stream end?)");
-    }
+    SerializerHelper.testMarker(in, serialVersionUID);
     return n;
   }
-
 }

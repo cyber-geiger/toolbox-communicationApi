@@ -59,11 +59,12 @@ public class GeigerCommunicator {
   }
 
   public void sendMessage(int port, Message message) throws IOException {
-    Socket socket = new Socket("localhost", port);
-    OutputStream out = socket.getOutputStream();
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    message.toByteArrayStream(bos);
-    out.write(bos.toByteArray());
+    try (Socket socket = new Socket("localhost", port)) {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      message.toByteArrayStream(bos);
+      socket.getOutputStream().write(bos.toByteArray());
+      socket.getOutputStream().flush();
+    }
   }
 
   public void close() throws IOException {

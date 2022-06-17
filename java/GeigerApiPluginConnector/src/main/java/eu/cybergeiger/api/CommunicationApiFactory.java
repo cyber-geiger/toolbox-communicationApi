@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class CommunicationApiFactory {
   // TODO check for threadsafety as concurrenthashmap is not supported
-  private static final Map<String, PluginApi> instances = new HashMap<>();
+  private static final Map<String, GeigerApi> instances = new HashMap<>();
 
   /**
    * <p>Creates one instance only per id, but cannot guarantee it since LocalApi constructor cant be
@@ -27,18 +27,20 @@ public class CommunicationApiFactory {
    *                                      declaration does not match
    * @throws StorageException             if registration failed
    */
-  public static PluginApi getLocalApi(String executor, String id, Declaration declaration)
+  public static GeigerApi getLocalApi(String executor, String id, Declaration declaration)
     throws DeclarationMismatchException, IOException {
+    GeigerApi api;
     synchronized (instances) {
-      if (!instances.containsKey(id)) {
-        instances.put(id, new PluginApi(executor, id, declaration));
+      api = instances.get(id);
+      if (api == null) {
+        api = new PluginApi(executor, id, declaration);
+        instances.put(id, api);
       }
     }
-    PluginApi l = instances.get(id);
-    if (declaration != null && l.getDeclaration() != declaration) {
+    if (declaration != null && api.getDeclaration() != declaration) {
       throw new DeclarationMismatchException();
     }
-    return l;
+    return api;
   }
 
   /**
@@ -47,7 +49,7 @@ public class CommunicationApiFactory {
    * @param id the id to be retrieved
    * @return the instance or null if not found
    */
-  public static PluginApi getLocalApi(String id) {
+  public static GeigerApi getLocalApi(String id) {
     return instances.get(id);
   }
 }

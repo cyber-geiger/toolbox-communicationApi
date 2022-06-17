@@ -23,7 +23,7 @@ import java.util.TreeSet;
  */
 public class SearchCriteria implements Serializable, Comparable<SearchCriteria> {
 
-  private static final long serialversionUID = 87128319541L;
+  private static final long serialVersionUID = 87128319541L;
 
   /**
    * <p>Defines the type of comparator to be used when accessing an ordinal.</p>
@@ -184,7 +184,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
     // write object identifier
-    SerializerHelper.writeLong(out, serialversionUID);
+    SerializerHelper.writeLong(out, serialVersionUID);
 
     // serializing values
     SerializerHelper.writeInt(out, values.size());
@@ -194,7 +194,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
     }
 
     // write object identifier (end)
-    SerializerHelper.writeLong(out, serialversionUID);
+    SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   /**
@@ -207,7 +207,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
    * @throws IOException if not overridden or reached unexpectedly the end of stream
    */
   public static SearchCriteria fromByteArrayStream(ByteArrayInputStream in) throws IOException {
-    if (SerializerHelper.readLong(in) != serialversionUID) {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new IOException("failed to parse StorageException (bad stream?)");
     }
 
@@ -218,7 +218,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
       s.values.put(Field.valueOf(SerializerHelper.readString(in)), SerializerHelper.readString(in));
     }
 
-    if (SerializerHelper.readLong(in) != serialversionUID) {
+    if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new IOException("failed to parse StorageException (bad stream end?)");
     }
     return s;

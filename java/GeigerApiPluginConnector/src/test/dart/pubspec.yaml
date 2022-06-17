@@ -1,0 +1,17 @@
+name: geiger_api_plugin_connector_test
+description: Contains the dart side of the GeigerApiPluginConnector tests.
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: '>=2.15.0 <3.0.0'
+  flutter: '>=2.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  geiger_api:
+    path: ../../../../../dart/geiger_api/
+  flutter_test:
+    sdk: flutter
+  test: ^1.19.5

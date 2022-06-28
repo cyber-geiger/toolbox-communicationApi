@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'message_logger.dart';
-
 const masterExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
     'TODO';
@@ -39,6 +37,7 @@ void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
   Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
   await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
   await api.storage.addOrUpdate(node);
+  print(node.getValue("geigerUrl"));
 }
 
 Future<void> initGeiger() async{

@@ -152,14 +152,21 @@ class _MessageLogViewState extends State<MessageLogView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Text('Received messages:'),
-        Expanded(
-            child: ListView(
-          children: widget.logger.messageWidgets.toList(),
-        ))
-      ],
+    return Container(
+      margin: const EdgeInsets.all(5.0),
+      padding: const EdgeInsets.all(3.0),
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.black),
+          borderRadius: BorderRadius.circular(5)),
+      child: Column(
+        children: [
+          const Text('Received messages:'),
+          Expanded(
+              child: ListView(
+            children: widget.logger.messageWidgets.toList(),
+          ))
+        ],
+      ),
     );
   }
 }

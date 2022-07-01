@@ -1,21 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
-import 'db_tree_view.dart';
-import 'message_logger.dart';
 
 class DebugToolsView extends StatefulWidget {
   late final MessageLogger logger;
-  late final GeigerApi api;
-  DebugToolsView(this.logger,this.api);
+  late final GeigerApi geigerApi;
+  DebugToolsView(this.logger,this.geigerApi);
   @override
-  DebugToolsViewState createState() => DebugToolsViewState(logger,api);
+  DebugToolsViewState createState() => DebugToolsViewState(logger,geigerApi);
 }
 
 class DebugToolsViewState extends State {
-  late final GeigerApi api;
+  ///Communication api of the app this widget is displayed in
+  late final GeigerApi geigerApi;
   late MessageLogger logger;
-  DebugToolsViewState(this.logger, this.api);
+  DebugToolsViewState(this.logger, this.geigerApi);
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +35,7 @@ class DebugToolsViewState extends State {
               ],
             ),
           ),
-          Flexible(child: StorageView(':', api))
+          Flexible(child: DBTreeView(':', geigerApi))
         ],
       ),
     );

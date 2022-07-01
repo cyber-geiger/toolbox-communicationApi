@@ -17,7 +17,8 @@ class LoggerViewState extends State {
   String activeLevel = Level.INFO.name;
 
 
-  void getLoggs(Level warningLevel) {
+  void initOrUpdateLogListener(Level warningLevel) {
+    ///register Logger at specified level
     Logger.root.level = warningLevel;
     Logger.root.onRecord.listen((event) {
       if (logs.length > 100) {
@@ -31,9 +32,11 @@ class LoggerViewState extends State {
       });
     });
   }
+
   @override
   void initState() {
-    getLoggs(Level.INFO);
+    initOrUpdateLogListener(Level.INFO);
+
   }
 
   @override
@@ -63,13 +66,13 @@ class LoggerViewState extends State {
                 child: Row(
                   children: [
                     TextButton(
-                        onPressed: () => getLoggs(Level.FINEST),
+                        onPressed: () => initOrUpdateLogListener(Level.FINEST),
                         child: const Text('All Levels')),
                     TextButton(
-                        onPressed: () => getLoggs(Level.INFO),
+                        onPressed: () => initOrUpdateLogListener(Level.INFO),
                         child: const Text('Info')),
                     TextButton(
-                        onPressed: () => getLoggs(Level.WARNING),
+                        onPressed: () => initOrUpdateLogListener(Level.WARNING),
                         child: const Text('Warning')),
                   ],
                 ),

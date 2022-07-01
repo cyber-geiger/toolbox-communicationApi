@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_treeview/flutter_treeview.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart' as gls;
-import 'package:logging/logging.dart';
 
 
-class StorageView extends StatefulWidget {
+class DBTreeView extends StatefulWidget {
+  /// RootKey the StartPoint(Top Parent Node)
   late final String rootNodeKey;
+  ///Communication api of the app this widget is displayed in
   late final GeigerApi api;
-  StorageView(this.rootNodeKey, this.api);
+  DBTreeView(this.rootNodeKey, this.api);
   @override
-  StorageViewState createState() => StorageViewState(rootNodeKey,api);
+  DBTreeViewState createState() => DBTreeViewState(rootNodeKey,api);
 }
 
-class StorageViewState extends State {
+class DBTreeViewState extends State {
   late final GeigerApi api;
   late List<Node> nodes;
   late Node rootNode;
@@ -21,26 +22,32 @@ class StorageViewState extends State {
   final ScrollController _firstController =
       ScrollController(initialScrollOffset: 8);
 
-  StorageViewState(String rootNodeKey, this.api){
+  DBTreeViewState(String rootNodeKey,  this.api){
+    ///Init Rootnode
     rootNode = Node(key: rootNodeKey, label: rootNodeKey, data: rootNodeKey, children: []);
   }
 
   @override
   initState() {
+    ///create array with root node and init the TreeViewController
     nodes = [rootNode];
     _controller = TreeViewController(children: nodes);
+    ///Load Noadvalue and get children
     updateChildren(rootNode.key);
     super.initState();
   }
 
+  ///Update opend Node(Deskeletonize and load children skeleton nodes
   updateChildren(String key) async {
     Node parentNode = _controller.getNode(key)!;
     gls.Node storageNode =
         await api.storage.getNodeOrTombstone(parentNode.data);
-    print(await storageNode.getValues());
+    ///get Children from the StorageNode
     Map<String, gls.Node> children = await storageNode.getChildren();
+    ///Preload ChildrensChildren so the node is extandable
     Map<String, List<Node>> childrensChildren =
         await getChildrensChildren(children.keys, storageNode.path);
+    ///Map GeigerStorage Node to TreeView Node
     List<Node> childrenNodes = children.keys
         .map((k) => Node(
             key: k,
@@ -48,6 +55,7 @@ class StorageViewState extends State {
             data: children[k]!.path,
             children: childrensChildren[k]!))
         .toList();
+    ///Store Updated Node back in the List
     List<Node> updatedNodeList = _controller.updateNode(
         key, parentNode.copyWith(label: storageNode.toString(showChildren: false),children: childrenNodes));
     setState(() {
@@ -57,6 +65,7 @@ class StorageViewState extends State {
 
   Future<Map<String, List<Node>>> getChildrensChildren(keys, parentPath) async {
     try {
+      ///Map with Parant Key  as Key and Children List
       Map<String, List<Node>> childrensChildren = <String, List<Node>>{};
       for (var key in keys) {
         var path = parentPath + ':' + key;
@@ -65,10 +74,12 @@ class StorageViewState extends State {
         }
         gls.Node childParent = await api.storage.getNodeOrTombstone(path);
         Map<String, gls.Node> children = await childParent.getChildren();
+        ///Map Children GeigerStorageNodes to TreeView Nodes
         List<Node> childrenNodes = children.keys
             .map((k) =>
                 Node(key: k, label: children[k]!.path, data: children[k]!.path))
             .toList();
+        ///Store List in Map at with Parant Key as Key
         childrensChildren[key] = childrenNodes;
       }
       return childrensChildren;
@@ -77,10 +88,11 @@ class StorageViewState extends State {
     }
   }
 
+
+  ///TODO(MauriceMeier): Filter
   showSensorValues() {}
 
   showRecomendations() async {
-    print("heyoo");
     gls.Node recomandations =
         await api.storage.getNodeOrTombstone(':Global:Recommendations');
     Map<String, gls.Node> childrenNodes = await recomandations.getChildren();
@@ -98,11 +110,11 @@ class StorageViewState extends State {
     });
   }
 
+  ///Deskeletonize Node with no Children on beeing Taped
   handleNodeTap(String key) async{
     Node node = _controller.getNode(key)!;
     gls.Node storageNode =
         await api.storage.getNodeOrTombstone(node.data);
-    print(await storageNode.getValues());
     List<Node> updatedNodeList = _controller.updateNode(
         key, node.copyWith(label: storageNode.toString(showChildren: false)));
     setState(() {

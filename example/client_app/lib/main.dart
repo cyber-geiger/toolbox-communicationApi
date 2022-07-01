@@ -19,6 +19,8 @@ GeigerUrl? url;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  api = (await getGeigerApi(pluginExecutor, pluginId))!;
   runApp(const App());
 }
 
@@ -42,7 +44,6 @@ void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
 
 Future<void> initGeiger() async{
   GeigerApi.masterExecutor = masterExecutor;
-  api = (await getGeigerApi(pluginExecutor, pluginId))!;
   api.registerListener([MessageType.allEvents], logger);
 
   /// IMPORTANT: register and activate plugin after registering event listeners
@@ -85,7 +86,7 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('Connected to master.'),
-            Expanded(child: logger.view()),
+            Expanded(child: DebugToolsView(logger, api)),
             TextButton(
                 onPressed: () => callMasterPlugin(MessageType.returningControl),
                 child: const Text("Return Control")),

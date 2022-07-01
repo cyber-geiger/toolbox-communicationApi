@@ -5,13 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
+
 const pluginExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
     'TODO';
 const clientPluginId = 'client-plugin';
 
 late GeigerApi api;
-final MessageLogger logger = MessageLogger();
+final MessageLogger messageLogger = MessageLogger();
 final LoadFromStorageState state = LoadFromStorageState();
 
 ///Listener for Storage Updates
@@ -33,7 +34,7 @@ void main() async {
 
   /// init Master and Add Listeners
   api = (await getGeigerApi(pluginExecutor, GeigerApi.masterId))!;
-  api.registerListener([MessageType.allEvents], logger);
+  api.registerListener([MessageType.allEvents], messageLogger);
   api.registerListener([MessageType.storageEvent], storageListener);
   runApp(const App());
 }
@@ -115,10 +116,7 @@ class LoadFromStorageState extends State {
             TextButton(
                 onPressed: () => callClientPlugin(MessageType.returningControl),
                 child: const Text("Call client in foreground")),
-            // Expanded(child: logger.view()),
-            // Expanded(child: LoggerView()),
-            // Expanded(child: StorageView())
-            Expanded(child: DebugToolsView(logger,api))
+            Expanded(child: DebugToolsView(messageLogger,api))
           ],
         ),
       ),

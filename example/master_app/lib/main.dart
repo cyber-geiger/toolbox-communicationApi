@@ -23,9 +23,8 @@ void callClientPlugin(MessageType type) async {
   var rng = Random();
   ///Geiger URL gets passed to Plugin
   String messageContent = clientPluginId + rng.nextInt(100).toString();
-  print(messageContent);
   final GeigerUrl url = GeigerUrl(null, messageContent, 'null');
-  Message message = Message(GeigerApi.masterId, clientPluginId, type, url);
+  Message message = Message(GeigerApi.masterId, clientPluginId, type,  url);
   await api.sendMessage(message, clientPluginId);
 }
 
@@ -78,8 +77,6 @@ class SimpleStorageListener implements PluginListener {
     if (msg.type == MessageType.storageEvent) {
       Node node = await api.storage.get(":Keys:geiger_url_test");
       NodeValue? nodeValue = (await node.getValue("geigerUrl"));
-      print(await node.getValue("geigerUrl"));
-      print(nodeValue);
       if (nodeValue != null) {
         _state.changeText(nodeValue.value);
       }

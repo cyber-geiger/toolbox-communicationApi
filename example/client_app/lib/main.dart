@@ -39,7 +39,6 @@ void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
   Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
   await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
   await api.storage.addOrUpdate(node);
-  print(node.getValue("geigerUrl"));
 }
 
 Future<void> initGeiger() async{

@@ -51,7 +51,7 @@ class DBTreeViewState extends State {
     List<Node> childrenNodes = children.keys
         .map((k) => Node(
             key: k,
-            label: children[k]!.toString(showChildren: false),
+            label: children[k]!.toString(showChildren: true),
             data: children[k]!.path,
             children: childrensChildren[k]!))
         .toList();
@@ -132,30 +132,6 @@ class DBTreeViewState extends State {
           borderRadius: BorderRadius.circular(5)),
       child: Column(
         children: [
-          Container(
-            child: Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    showRecomendations();
-                  },
-                  child: const Text('Recomendations'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    showSensorValues();
-                  },
-                  child: const Text('Sensore Values'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    initState();
-                  },
-                  child: const Text('Whole DB'),
-                ),
-              ],
-            ),
-          ),
           Flexible(
             child: Scrollbar(
               thumbVisibility: true,

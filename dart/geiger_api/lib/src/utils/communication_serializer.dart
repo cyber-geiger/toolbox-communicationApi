@@ -10,10 +10,8 @@ import '../../geiger_api.dart';
 /// @throws IOException if object cannot be read
 Future<Serializer> readObject(final ByteStream inStream) async {
   final uidBytes = await inStream.peekBytes(SerializerHelper.longSize * 2);
-  final uid = SerializerHelper.byteArrayToInt(
-      // trim of long uid bytes
-      uidBytes.sublist(SerializerHelper.longSize),
-      SerializerHelper.longSize);
+  final uid = SerializerHelper.byteArrayToLong(
+      uidBytes.sublist(SerializerHelper.longSize));
   switch (uid) {
     case StorableString.serialVersionUID:
       return StorableString.fromByteArrayStream(inStream);

@@ -1,9 +1,6 @@
 package eu.cybergeiger.serialization;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InvalidObjectException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -137,18 +134,19 @@ public class SerializerHelper {
   /**
    * <p>Serialize a string variable.</p>
    *
-   * @param out the stream to be read
-   * @param s   the value to be deserialized
+   * @param out   the stream to be read
+   * @param value the value to be serialized
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static void writeString(ByteArrayOutputStream out, String s) throws IOException {
+  public static void writeString(ByteArrayOutputStream out, String value) throws IOException {
     writeRawLong(out, STRING_UID);
-    if (s == null) {
+    if (value == null) {
       writeRawInt(out, -1);
-    } else {
-      writeRawInt(out, s.length());
-      out.write(s.getBytes(StandardCharsets.UTF_8));
+      return;
     }
+    byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+    writeRawInt(out, bytes.length);
+    out.write(bytes);
   }
 
   /**
@@ -159,64 +157,69 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static String readString(ByteArrayInputStream in) throws IOException {
-    if (readRawLong(in) != STRING_UID) {
+    if (readRawLong(in) != STRING_UID)
       throw new ClassCastException();
-    }
     int length = readRawInt(in);
-    if (length == -1) {
-      return null;
-    } else {
-      byte[] arr = new byte[length];
-      in.read(arr);
-      return new String(arr, StandardCharsets.UTF_8);
-    }
+    if (length == -1) return null;
+    byte[] arr = new byte[length];
+    in.read(arr);
+    return new String(arr, StandardCharsets.UTF_8);
   }
 
   /**
-   * <p>Serialize an array of StackTraces.</p>
+   * <p>Serialize a stack trace of the provided throwable.</p>
    *
-   * @param out the stream to be read
-   * @param ste the value to be deserialized
+   * @param out       the stream to be read
+   * @param throwable the throwable to serialize the stack trace of
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static void writeStackTraces(ByteArrayOutputStream out, StackTraceElement[] ste)
+  public static void writeStackTraces(ByteArrayOutputStream out, Throwable throwable)
     throws IOException {
-    // TODO: make compatible with Dart
-    writeRawLong(out, STACKTRACES_UID);
-    if (ste == null) {
-      writeRawInt(out, -1);
-    } else {
-      writeRawInt(out, ste.length);
-      for (StackTraceElement st : ste) {
-        writeString(out, st.getClassName());
-        writeString(out, st.getMethodName());
-        writeString(out, st.getFileName());
-        writeInt(out, st.getLineNumber());
-      }
-    }
+    StringWriter writer = new StringWriter();
+    throwable.printStackTrace(new PrintWriter(writer));
+    SerializerHelper.writeStackTraces(out, writer.toString());
   }
 
   /**
-   * <p>Deserialize an array of StackTraceElement variable.</p>
+   * <p>Serialize a stack trace. The stack trace is a string to support multiple languages.</p>
+   *
+   * @param out        the stream to be read
+   * @param stackTrace the value to be deserialized
+   * @throws IOException if an exception occurs while writing to the stream
+   */
+  public static void writeStackTraces(ByteArrayOutputStream out, String stackTrace)
+    throws IOException {
+    writeRawLong(out, STACKTRACES_UID);
+    writeString(out, stackTrace);
+  }
+
+  /**
+   * <p>Deserialize a stack trace. The stack trace is a string to support multiple languages.</p>
    *
    * @param in the stream to be read
-   * @return the deserialized array
+   * @return The stack trace
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static StackTraceElement[] readStackTraces(ByteArrayInputStream in) throws IOException {
+  public static String readStackTraces(ByteArrayInputStream in) throws IOException {
     if (readRawLong(in) != STACKTRACES_UID) {
       throw new ClassCastException();
     }
-    int length = readRawInt(in);
-    if (length == -1) {
-      return null;
-    } else {
-      StackTraceElement[] arr = new StackTraceElement[length];
-      for (int i = 0; i < length; i++) {
-        arr[i] = new StackTraceElement(readString(in), readString(in), readString(in), readInt(in));
-      }
-      return arr;
-    }
+    return readString(in);
+  }
+
+  /**
+   * <p>Deserialize a stack trace and put it into a single StackTraceElement.</p>
+   *
+   * @param in the stream to be read
+   * @return The stack trace
+   * @throws IOException if an exception occurs while writing to the stream
+   */
+  public static StackTraceElement[] readStackTracesWrapped(ByteArrayInputStream in) throws IOException {
+    String trace = SerializerHelper.readStackTraces(in);
+    if (trace == null) return null;
+    return new StackTraceElement[]{
+      new StackTraceElement("", "", trace, 0)
+    };
   }
 
   /**

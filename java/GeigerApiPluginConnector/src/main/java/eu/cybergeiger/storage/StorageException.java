@@ -39,7 +39,7 @@ public class StorageException extends IOException implements Serializable {
       SerializerHelper.writeMarker(out, serialVersionUID);
       SerializerHelper.writeString(out, name);
       SerializerHelper.writeString(out, getMessage());
-      SerializerHelper.writeStackTraces(out, getStackTrace());
+      SerializerHelper.writeStackTraces(out, this);
       if (getCause() != null) {
         SerializerHelper.writeInt(out, 1);
         ((SerializedException) (getCause())).toByteArrayStream(out);
@@ -54,7 +54,7 @@ public class StorageException extends IOException implements Serializable {
       SerializerHelper.testMarker(in, serialVersionUID);
       String name = SerializerHelper.readString(in);
       String message = SerializerHelper.readString(in);
-      StackTraceElement[] stackTrace = SerializerHelper.readStackTraces(in);
+      StackTraceElement[] stackTrace = SerializerHelper.readStackTracesWrapped(in);
       SerializedException cause = null;
       if (SerializerHelper.readInt(in) == 1) {
         cause = SerializedException.fromByteArrayStream(in);
@@ -93,7 +93,7 @@ public class StorageException extends IOException implements Serializable {
     SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeString(out, getClass().getName());
     SerializerHelper.writeString(out, getMessage());
-    SerializerHelper.writeStackTraces(out, getStackTrace());
+    SerializerHelper.writeStackTraces(out, this);
     if (getCause() != null) {
       SerializerHelper.writeInt(out, 1);
       ((SerializedException) (getCause())).toByteArrayStream(out);
@@ -108,7 +108,7 @@ public class StorageException extends IOException implements Serializable {
     SerializerHelper.testMarker(in, serialVersionUID);
     String _name = SerializerHelper.readString(in);
     String message = SerializerHelper.readString(in);
-    StackTraceElement[] stackTrace = SerializerHelper.readStackTraces(in);
+    StackTraceElement[] stackTrace = SerializerHelper.readStackTracesWrapped(in);
     SerializedException cause = null;
     if (SerializerHelper.readInt(in) == 1) {
       cause = SerializedException.fromByteArrayStream(in);

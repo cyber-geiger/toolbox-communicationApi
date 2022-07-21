@@ -3,9 +3,7 @@ package eu.cybergeiger.api.exceptions;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 // FIXME This exception shares large portions of code with Storage Exception.
 //       Should have a common Ancestor Serializable Exception in storage
@@ -42,7 +40,7 @@ public class CommunicationException extends IOException implements Serializable 
       SerializerHelper.writeLong(out, serialVersionUID);
       SerializerHelper.writeString(out, exceptionName);
       SerializerHelper.writeString(out, message);
-      SerializerHelper.writeStackTraces(out, getStackTrace());
+      SerializerHelper.writeStackTraces(out, this);
       if (getCause() != null) {
         SerializerHelper.writeInt(out, 1);
         if (getCause() instanceof CommunicationException.SerializedException) {
@@ -68,8 +66,8 @@ public class CommunicationException extends IOException implements Serializable 
       // read exception message
       String message = SerializerHelper.readString(in);
 
-      // read stack trace
-      StackTraceElement[] ste = SerializerHelper.readStackTraces(in);
+      // read stack trace into a single element
+      StackTraceElement[] ste = SerializerHelper.readStackTracesWrapped(in);
 
       // read cause (if any)
       CommunicationException.SerializedException cause = null;
@@ -119,7 +117,7 @@ public class CommunicationException extends IOException implements Serializable 
     SerializerHelper.writeString(out, getMessage());
 
     // serialize stack trace
-    SerializerHelper.writeStackTraces(out, getStackTrace());
+    SerializerHelper.writeStackTraces(out, this);
 
     // serializing cause
     CommunicationException.SerializedException cause = null;
@@ -158,8 +156,8 @@ public class CommunicationException extends IOException implements Serializable 
     // read exception text
     String txt = SerializerHelper.readString(in);
 
-    // deserialize stacktrace
-    StackTraceElement[] ste = SerializerHelper.readStackTraces(in);
+    // deserialize stack trace into a single element
+    StackTraceElement[] ste = SerializerHelper.readStackTracesWrapped(in);
 
     // deserialize Throwable
     //List<Throwable> tv = new Vector<>();

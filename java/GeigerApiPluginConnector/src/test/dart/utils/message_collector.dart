@@ -47,7 +47,7 @@ class MessageCollector implements PluginListener {
     }).timeout(timeLimit, onTimeout: () {
       _completers.remove(completer);
       throw TimeoutException(
-          'Did not receive enough change events before timeout.', timeLimit);
+          'Did not receive enough messages before timeout.', timeLimit);
     });
   }
 }

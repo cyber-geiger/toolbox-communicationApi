@@ -8,7 +8,10 @@ void main() {
     final master = (await getGeigerApi(
         '', GeigerApi.masterId, Declaration.doNotShareData))!;
     final collector = MessageCollector();
-    master.registerListener([MessageType.registerPlugin], collector);
+    master.registerListener([
+      MessageType.registerPlugin,
+      MessageType.activatePlugin
+    ], collector);
     await collector.awaitCount(1);
     final message = collector.messages[0];
     expect(message.type, MessageType.registerPlugin);
@@ -16,5 +19,6 @@ void main() {
     expect(message.action?.protocol, 'geiger');
     expect(message.action?.plugin, GeigerApi.masterId);
     expect(message.action?.path, 'registerPlugin');
+    await collector.awaitCount(2);
   });
 }

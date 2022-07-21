@@ -34,7 +34,7 @@ public enum MessageType {
   ALL_EVENTS(1000),
 
   /* internal keep alive messages */
-  PING(10000),
+  PING(10001),
   PONG(10001),
 
   /* Messages related to the storage */
@@ -44,8 +44,8 @@ public enum MessageType {
 
   /* response messages*/
 
-  COMAPI_SUCCESS(30000),
-  COMAPI_ERROR(30200);
+  COMAPI_SUCCESS(30100),
+  COMAPI_ERROR(30400);
 
   private final int id;
 

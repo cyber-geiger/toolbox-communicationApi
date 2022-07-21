@@ -41,17 +41,16 @@ public class GeigerCommunicator {
     return serverSocket.getLocalPort();
   }
 
-  public void start() {
+  public void start() throws IOException {
     if (isActive()) return;
+    serverSocket = new ServerSocket(0);
     client = new Thread(() -> {
-      try {
-        serverSocket = new ServerSocket(0);
-        while (true) {
-          Socket socket = serverSocket.accept();
-          executor.execute(new MessageHandler(socket, api));
+      while (true) {
+        try {
+          executor.execute(new MessageHandler(serverSocket.accept(), api));
+        } catch (IOException e) {
+          e.printStackTrace();
         }
-      } catch (IOException e) {
-        e.printStackTrace();
       }
     });
     client.setDaemon(true);

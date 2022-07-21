@@ -34,7 +34,7 @@ public class TestSerializer {
 
   @Test
   public void testWriteReadLong() throws IOException {
-    for (long value : new long[]{0, 1, -1, (1 << 63) - 1}) {
+    for (long value : new long[]{0, 1, -1, (1L << 63) - 1}) {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       SerializerHelper.writeLong(out, value);
       byte[] bytes = out.toByteArray();
@@ -44,4 +44,18 @@ public class TestSerializer {
       assertThat(in).isEmpty();
     }
   }
+
+  @Test
+  public void testWriteReadString() throws IOException {
+    for (String value : new String[]{"", "string", "testMessage öäü^"}) {
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      SerializerHelper.writeString(out, value);
+      byte[] bytes = out.toByteArray();
+      ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+      assertThat(SerializerHelper.readString(in)).isEqualTo(value);
+      assertThat(in).isEmpty();
+    }
+  }
+
+  // TODO: test exception serialization
 }

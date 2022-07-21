@@ -8,7 +8,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.util.Arrays;
 
 /**
  * Class to handle incoming messages.
@@ -24,22 +23,18 @@ public class MessageHandler implements Runnable {
 
   @Override
   public void run() {
-    try (InputStream in = socket.getInputStream()) {
-      byte[] inputData = new byte[4096];
-      int numRead;
-      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-      while ((numRead = in.read(inputData, 0, inputData.length)) != -1) {
-        byte[] convert = Arrays.copyOfRange(inputData, 0, numRead);
-        buffer.write(convert);
-      }
+    try (InputStream input = socket.getInputStream()) {
+      byte[] buffer = new byte[4096];
+      int bytesRead;
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      while ((bytesRead = input.read(buffer)) != -1)
+        out.write(buffer, 0, bytesRead);
 
-      ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer.toByteArray());
+      ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(out.toByteArray());
       Message message = Message.fromByteArrayStream(byteArrayInputStream);
       pluginApi.receivedMessage(message);
-    } catch (IOException ioe) {
-      // TODO handle communications error
-      //throw new CommunicationException("Communication Error", ioe);
-      ioe.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 }

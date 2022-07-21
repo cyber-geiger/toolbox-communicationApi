@@ -183,6 +183,7 @@ public class Message implements Serializable {
       SerializerHelper.writeInt(out, 1);
       action.toByteArrayStream(out);
     }
+    SerializerHelper.writeString(out, requestId);
     if (payloadString == null) {
       SerializerHelper.writeInt(out, 0);
     } else {
@@ -204,8 +205,9 @@ public class Message implements Serializable {
     Message m = new Message(
       SerializerHelper.readString(in),
       SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
-      MessageType.getById(SerializerHelper.readInt(in)),
-      SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null
+      Objects.requireNonNull(MessageType.getById(SerializerHelper.readInt(in))),
+      SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null,
+      SerializerHelper.readString(in)
     );
     m.setPayloadString(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null);
     SerializerHelper.testMarker(in, serialVersionUID);

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InvalidObjectException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -16,46 +17,45 @@ public class SerializerHelper {
   private static final long STACKTRACES_UID = 9012350123956L;
 
   public static void writeRawLong(ByteArrayOutputStream out, Long l) throws IOException {
-    byte[] result = new byte[Long.BYTES];
-    for (int i = Long.BYTES - 1; i >= 0; i--) {
-      result[i] = (byte) (l & 0xFF);
-      l >>= Byte.SIZE;
-    }
-    out.write(result);
+    out.write(longToByteArray(l));
   }
 
   public static Long readRawLong(ByteArrayInputStream in) throws IOException {
-    int size = Long.BYTES;
-    byte[] arr = new byte[size];
-    in.read(arr);
-    long result = 0;
-    for (int i = 0; i < size; i++) {
-      result <<= Byte.SIZE;
-      result |= (arr[i] & 0xFF);
-    }
-    return result;
+    byte[] bytes = new byte[Long.BYTES];
+    in.read(bytes);
+    return byteArrayToLong(bytes);
   }
 
   public static void writeRawInt(ByteArrayOutputStream out, Integer l) throws IOException {
-    int size = Integer.BYTES;
-    byte[] result = new byte[size];
-    for (int i = size - 1; i >= 0; i--) {
-      result[i] = (byte) (l & 0xFF);
-      l >>= Byte.SIZE;
-    }
-    out.write(result);
+    out.write(intToByteArray(l));
   }
 
   public static Integer readRawInt(ByteArrayInputStream in) throws IOException {
-    int size = Integer.BYTES;
-    byte[] arr = new byte[size];
-    in.read(arr);
-    int result = 0;
-    for (int i = 0; i < size; i++) {
-      result <<= Byte.SIZE;
-      result |= (arr[i] & 0xFF);
-    }
-    return result;
+    byte[] bytes = new byte[Integer.BYTES];
+    in.read(bytes);
+    return byteArrayToInt(bytes);
+  }
+
+  /**
+   * Convert bytearray to long.
+   *
+   * @param bytes bytearray containing 8 bytes
+   * @return long denoting the given bytes
+   */
+  public static long byteArrayToLong(byte[] bytes) {
+    return ByteBuffer.wrap(bytes).getLong();
+  }
+
+  /**
+   * <p>Convert long to bytearray.</p>
+   *
+   * @param value the long to convert
+   * @return bytearray representing the int
+   */
+  public static byte[] longToByteArray(long value) {
+    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+    buffer.putLong(value);
+    return buffer.array();
   }
 
 
@@ -66,10 +66,7 @@ public class SerializerHelper {
    * @return int denoting the given bytes
    */
   public static int byteArrayToInt(byte[] bytes) {
-    return ((bytes[0] & 0xFF) << 24)
-      | ((bytes[1] & 0xFF) << 16)
-      | ((bytes[2] & 0xFF) << 8)
-      | ((bytes[3] & 0xFF));
+    return ByteBuffer.wrap(bytes).getInt();
   }
 
   /**
@@ -79,11 +76,9 @@ public class SerializerHelper {
    * @return bytearray representing the int
    */
   public static byte[] intToByteArray(int value) {
-    return new byte[]{
-      (byte) (value >>> 24),
-      (byte) (value >>> 16),
-      (byte) (value >>> 8),
-      (byte) value};
+    ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
+    buffer.putInt(value);
+    return buffer.array();
   }
 
   /**
@@ -132,7 +127,8 @@ public class SerializerHelper {
    * @throws IOException if an exception occurs while writing to the stream
    */
   public static Integer readInt(ByteArrayInputStream in) throws IOException {
-    if (readRawLong(in) != INT_UID) {
+    long marker = readRawLong(in);
+    if (marker != INT_UID) {
       throw new ClassCastException();
     }
     return readRawInt(in);
@@ -185,6 +181,7 @@ public class SerializerHelper {
    */
   public static void writeStackTraces(ByteArrayOutputStream out, StackTraceElement[] ste)
     throws IOException {
+    // TODO: make compatible with Dart
     writeRawLong(out, STACKTRACES_UID);
     if (ste == null) {
       writeRawInt(out, -1);

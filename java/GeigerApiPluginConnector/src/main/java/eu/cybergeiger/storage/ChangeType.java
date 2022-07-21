@@ -7,5 +7,13 @@ public enum ChangeType {
   CREATE,
   UPDATE,
   DELETE,
-  RENAME
+  RENAME;
+
+  public static Visibility valueOfStandard(String name) {
+    return Visibility.valueOf(name.toUpperCase());
+  }
+
+  public String toStringStandard() {
+    return super.toString().toLowerCase();
+  }
 }

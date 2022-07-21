@@ -13,7 +13,8 @@ public enum Field {
   VALUE(5, SearchCriteria.ComparatorType.STRING),
   TYPE(6, SearchCriteria.ComparatorType.STRING),
   VISIBILITY(7, SearchCriteria.ComparatorType.STRING),
-  LAST_MODIFIED(8, SearchCriteria.ComparatorType.DATETIME),
+  // Missing underscore to be consistent with Dart version
+  LASTMODIFIED(8, SearchCriteria.ComparatorType.DATETIME),
   EXPIRY(9, SearchCriteria.ComparatorType.DATETIME),
   TOMBSTONE(10, SearchCriteria.ComparatorType.BOOLEAN);
 

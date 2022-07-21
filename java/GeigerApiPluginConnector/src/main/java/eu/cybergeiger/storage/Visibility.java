@@ -22,5 +22,13 @@ public enum Visibility {
   /**
    * <p>for all values to be shared with all entities of the cloud.</p>
    */
-  WHITE
+  WHITE;
+
+  public static Visibility valueOfStandard(String name) {
+    return Visibility.valueOf(name.toUpperCase());
+  }
+
+  public String toStringStandard() {
+    return super.toString().toLowerCase();
+  }
 }

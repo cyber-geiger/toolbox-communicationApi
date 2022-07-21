@@ -112,11 +112,11 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
   }
 
   public String getNodeValueLastModified() {
-    return values.get(Field.LAST_MODIFIED);
+    return values.get(Field.LASTMODIFIED);
   }
 
   public String setNodeValueLastModified(String nodeValueLastModified) {
-    return values.put(Field.LAST_MODIFIED, nodeValueLastModified);
+    return values.put(Field.LASTMODIFIED, nodeValueLastModified);
   }
 
   /**
@@ -138,7 +138,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
       return false;
     }
     if (values.get(Field.VISIBILITY) != null
-      && !regexEvalString(values.get(Field.VISIBILITY), node.getVisibility().toString())) {
+      && !regexEvalString(values.get(Field.VISIBILITY), node.getVisibility().toStringStandard())) {
       return false;
     }
     // getting values to check

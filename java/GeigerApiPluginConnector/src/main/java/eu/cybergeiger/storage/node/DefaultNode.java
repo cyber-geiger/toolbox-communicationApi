@@ -96,7 +96,7 @@ public class DefaultNode implements Node {
     setOwner(owner);
     try {
       set(Field.PATH, parent + StorageController.PATH_DELIMITER + name);
-      set(Field.VISIBILITY, vis.toString());
+      set(Field.VISIBILITY, vis.toStringStandard());
     } catch (StorageException e) {
       throw new RuntimeException("Oops.... this should not happen... contact developer", e);
     }
@@ -292,7 +292,7 @@ public class DefaultNode implements Node {
   @Override
   public Visibility getVisibility() {
     try {
-      return Visibility.valueOf(get(Field.VISIBILITY));
+      return Visibility.valueOfStandard(get(Field.VISIBILITY));
     } catch (StorageException e) {
       throw new RuntimeException("Oops.... this should not happen... contact developer", e);
     }
@@ -301,7 +301,7 @@ public class DefaultNode implements Node {
   @Override
   public Visibility setVisibility(Visibility newVisibility) {
     try {
-      return Visibility.valueOf(set(Field.VISIBILITY, newVisibility.toString()));
+      return Visibility.valueOfStandard(set(Field.VISIBILITY, newVisibility.toStringStandard()));
     } catch (StorageException e) {
       throw new RuntimeException("Oops.... this should not happen... contact developer", e);
     }
@@ -329,7 +329,7 @@ public class DefaultNode implements Node {
       case OWNER:
       case PATH:
       case VISIBILITY:
-      case LAST_MODIFIED:
+      case LASTMODIFIED:
       case EXPIRY:
       case TOMBSTONE:
         return ordinals.get(field);
@@ -358,7 +358,7 @@ public class DefaultNode implements Node {
 
     // Update last modified if needed
     String current = ordinals.get(field);
-    if (field != Field.LAST_MODIFIED
+    if (field != Field.LASTMODIFIED
       && ((current != null && !current.equals(value))
       || (current == null && value != null))) {
       touch();
@@ -369,7 +369,7 @@ public class DefaultNode implements Node {
       case OWNER:
       case PATH:
       case VISIBILITY:
-      case LAST_MODIFIED:
+      case LASTMODIFIED:
       case EXPIRY:
         return ordinals.put(field, value);
       case TOMBSTONE:
@@ -545,7 +545,7 @@ public class DefaultNode implements Node {
       }
     }
     // copy last modified date (just to make sure that they are not touched
-    this.ordinals.put(Field.LAST_MODIFIED, n2.ordinals.get(Field.LAST_MODIFIED));
+    this.ordinals.put(Field.LASTMODIFIED, n2.ordinals.get(Field.LASTMODIFIED));
   }
 
   public void touch() {
@@ -555,7 +555,7 @@ public class DefaultNode implements Node {
   @Override
   public long getLastModified() {
     try {
-      return Long.parseLong(get(Field.LAST_MODIFIED));
+      return Long.parseLong(get(Field.LASTMODIFIED));
     } catch (StorageException e) {
       throw new RuntimeException("Oops.... this should not happen... contact developer", e);
     }
@@ -564,7 +564,7 @@ public class DefaultNode implements Node {
   @Override
   public void setLastModified(long lastModified) {
     try {
-      set(Field.LAST_MODIFIED, String.valueOf(lastModified));
+      set(Field.LASTMODIFIED, String.valueOf(lastModified));
     } catch (StorageException e) {
       throw new RuntimeException("Oops.... this should not happen... contact developer", e);
     }

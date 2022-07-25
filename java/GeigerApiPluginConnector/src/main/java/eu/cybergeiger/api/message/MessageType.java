@@ -70,4 +70,32 @@ public enum MessageType {
     }
     return null;
   }
+
+  /**
+   * Does not include ALL_EVENTS
+   */
+  public static MessageType[] getAllTypes() {
+    return new MessageType[]{
+      REGISTER_PLUGIN,
+      DEREGISTER_PLUGIN,
+      ACTIVATE_PLUGIN,
+      DEACTIVATE_PLUGIN,
+      REGISTER_MENU,
+      MENU_PRESSED,
+      ENABLE_MENU,
+      DISABLE_MENU,
+      DEREGISTER_MENU,
+      SCAN_PRESSED,
+      SCAN_COMPLETED,
+      RETURNING_CONTROL,
+      CUSTOM_EVENT,
+      PING,
+      PONG,
+      STORAGE_EVENT,
+      STORAGE_SUCCESS,
+      STORAGE_ERROR,
+      COMAPI_SUCCESS,
+      COMAPI_ERROR,
+    };
+  }
 }

@@ -3,8 +3,10 @@ package mocks;
 import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.plugin.PluginListener;
 
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -13,18 +15,18 @@ import java.util.concurrent.TimeoutException;
  * A Pluginlistener for test purposes that allows to get all messages received.
  */
 public class MessageCollector implements PluginListener {
-  final CopyOnWriteArrayList<Message> events = new CopyOnWriteArrayList<>();
+  final ArrayList<Message> messages = new ArrayList<>();
   private final Set<CountDownLatch> listeners = new HashSet<>();
 
-  public List<Message> getEvents() {
-    return events;
+  public List<Message> getMessages() {
+    return messages;
   }
 
   @Override
   public void pluginEvent(Message msg) {
-    synchronized (events) {
+    synchronized (messages) {
       synchronized (listeners) {
-        events.add(msg);
+        messages.add(msg);
         for (CountDownLatch listener : listeners)
           listener.countDown();
       }
@@ -36,8 +38,9 @@ public class MessageCollector implements PluginListener {
   }
 
   public void awaitCount(int count, long msTimeout) throws TimeoutException, InterruptedException {
-    if (events.size() >= count) return;
-    CountDownLatch listener = new CountDownLatch(count);
+    int remaining = count - messages.size();
+    if (remaining <= 0) return;
+    CountDownLatch listener = new CountDownLatch(remaining);
     synchronized (listeners) {
       listeners.add(listener);
     }

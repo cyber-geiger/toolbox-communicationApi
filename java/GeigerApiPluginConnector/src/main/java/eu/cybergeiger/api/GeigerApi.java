@@ -2,13 +2,11 @@ package eu.cybergeiger.api;
 
 import eu.cybergeiger.storage.StorageController;
 import eu.cybergeiger.storage.StorageException;
-import eu.cybergeiger.api.message.GeigerUrl;
 import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.message.MessageType;
 import eu.cybergeiger.api.plugin.*;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -35,11 +33,11 @@ public interface GeigerApi extends PluginRegistrar, MenuRegistrar {
   /**
    * <p>Register an event listener for specific events on the Master.</p>
    *
-   * @param events   list of events for which messages should be received. Use MessageType.
+   * @param types    list of events for which messages should be received. Use MessageType.
    *                 ALL_EVENTS to register for all messages.
    * @param listener the listener to be registered
    */
-  void registerListener(MessageType[] events, PluginListener listener);
+  void registerListener(MessageType[] types, PluginListener listener);
 
   /**
    * <p>Remove a listener waiting for Events.</p>
@@ -66,5 +64,5 @@ public interface GeigerApi extends PluginRegistrar, MenuRegistrar {
   /**
    * Release all resources.
    */
-  void close();
+  void close() throws IOException;
 }

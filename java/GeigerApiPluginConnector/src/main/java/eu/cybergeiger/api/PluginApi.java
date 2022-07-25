@@ -32,7 +32,6 @@ public class PluginApi implements GeigerApi {
   static final int MASTER_START_WAIT_TIME_MILLIS = 1000;
 
   private final StorableHashMap<StorableString, PluginInformation> plugins = new StorableHashMap<>();
-  private final StorableHashMap<StorableString, MenuItem> menuItems = new StorableHashMap<>();
 
   private final String executor;
   private final String id;
@@ -90,7 +89,6 @@ public class PluginApi implements GeigerApi {
 
   @Override
   public void registerPlugin() throws CommunicationException {
-    // TODO share secret in a secure paired way....
     PluginInformation pluginInformation = new PluginInformation(id, this.executor, communicator.getPort());
     try {
       sendAndWait(
@@ -158,17 +156,19 @@ public class PluginApi implements GeigerApi {
     }
   }
 
+  private String getStateSaveLocation() {
+    return "GeigerApi." + id + ".state";
+  }
+
   private void storeState() {
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       synchronized (plugins) {
         plugins.toByteArrayStream(out);
       }
-      synchronized (menuItems) {
-        menuItems.toByteArrayStream(out);
-      }
-      try (FileOutputStream f = new FileOutputStream("LocalAPI." + id + ".state")) {
-        f.write(out.toByteArray());
+      // TODO: match file location of Dart version
+      try (FileOutputStream file = new FileOutputStream(getStateSaveLocation())) {
+        file.write(out.toByteArray());
       }
     } catch (Throwable e) {
       logger.log(Level.SEVERE, "Unable to store state.", e);
@@ -177,16 +177,13 @@ public class PluginApi implements GeigerApi {
 
   private void restoreState() {
     try {
-      byte[] buffer = Files.readAllBytes(new File("LocalAPI." + id + ".state").toPath());
+      byte[] buffer = Files.readAllBytes(new File(getStateSaveLocation()).toPath());
       ByteArrayInputStream in = new ByteArrayInputStream(buffer);
       synchronized (plugins) {
         StorableHashMap.fromByteArrayStream(in, plugins);
       }
-      synchronized (menuItems) {
-        StorableHashMap.fromByteArrayStream(in, menuItems);
-      }
     } catch (Throwable e) {
-      GeigerApi.logger.log(Level.WARNING, "Unable to restore state. Rewriting...", e);
+      logger.log(Level.WARNING, "Unable to restore state. Rewriting...", e);
       storeState();
     }
   }
@@ -194,12 +191,12 @@ public class PluginApi implements GeigerApi {
   /**
    * To register a Pluginlistener inside this LocalApi.
    *
-   * @param events   The events to register for
+   * @param types    The events to register for
    * @param listener The listener to register
    */
   @Override
-  public void registerListener(MessageType[] events, PluginListener listener) {
-    for (MessageType type : events) {
+  public void registerListener(MessageType[] types, PluginListener listener) {
+    for (MessageType type : types) {
       synchronized (listeners) {
         listeners
           .computeIfAbsent(type, k -> new Vector<>())
@@ -221,9 +218,8 @@ public class PluginApi implements GeigerApi {
     for (MessageType e : events) {
       synchronized (listeners) {
         List<PluginListener> l = listeners.get(e);
-        if (l != null) {
-          l.remove(listener);
-        }
+        if (l == null) continue;
+        l.remove(listener);
       }
     }
   }
@@ -291,32 +287,33 @@ public class PluginApi implements GeigerApi {
       }
     }
 
-    notifyListener(MessageType.ALL_EVENTS, message);
     notifyListener(message.getType(), message);
+    if (message.getType().getId() < MessageType.ALL_EVENTS.getId())
+      notifyListener(MessageType.ALL_EVENTS, message);
   }
 
   private void notifyListener(MessageType type, Message message) {
     List<PluginListener> listeners = this.listeners.get(type);
     if (listeners == null) return;
     for (PluginListener listener : listeners) {
-      GeigerApi.logger.info(
+      logger.info(
         "## notifying PluginListener " + listener.toString() +
           "for msg " + message.getType().toString() + " " + message.getAction().toString());
       listener.pluginEvent(message);
-      GeigerApi.logger.info("## PluginEvent fired");
+      logger.info("## PluginEvent fired");
     }
   }
 
   @Override
   public void registerMenu(MenuItem menu) throws CommunicationException {
     try {
-      sendMessage(new Message(
+      sendAndWait(this, new Message(
         id, MASTER_ID,
         MessageType.REGISTER_MENU,
         new GeigerUrl(MASTER_ID, "registerMenu"),
         menu.toByteArray()
       ));
-    } catch (IOException e) {
+    } catch (IOException | InterruptedException | TimeoutException e) {
       throw new CommunicationException("Failed to register menu.", e);
     }
   }
@@ -324,13 +321,13 @@ public class PluginApi implements GeigerApi {
   @Override
   public void enableMenu(String menu) throws CommunicationException {
     try {
-      sendMessage(new Message(
+      sendAndWait(this, new Message(
         id, MASTER_ID,
         MessageType.ENABLE_MENU,
         new GeigerUrl(MASTER_ID, "enableMenu"),
         menu.getBytes(StandardCharsets.UTF_8)
       ));
-    } catch (IOException e) {
+    } catch (IOException | InterruptedException | TimeoutException e) {
       throw new CommunicationException("Failed to enable menu.", e);
     }
   }
@@ -344,8 +341,8 @@ public class PluginApi implements GeigerApi {
         new GeigerUrl(MASTER_ID, "disableMenu")
       );
       message.setPayloadString(menu);
-      sendMessage(message);
-    } catch (IOException e) {
+      sendAndWait(this, message);
+    } catch (IOException | InterruptedException | TimeoutException e) {
       throw new CommunicationException("Failed to disable menu.", e);
     }
   }
@@ -353,13 +350,13 @@ public class PluginApi implements GeigerApi {
   @Override
   public void deregisterMenu(String menu) throws CommunicationException {
     try {
-      sendMessage(new Message(
+      sendAndWait(this, new Message(
         id, MASTER_ID,
         MessageType.DEREGISTER_MENU,
         new GeigerUrl(MASTER_ID, "deregisterMenu"),
         menu.getBytes(StandardCharsets.UTF_8)
       ));
-    } catch (IOException e) {
+    } catch (IOException | InterruptedException | TimeoutException e) {
       throw new CommunicationException("Failed to deregister menu.", e);
     }
   }
@@ -368,9 +365,6 @@ public class PluginApi implements GeigerApi {
    * <p>Deletes all current registered items.</p>
    */
   public void zapState() {
-    synchronized (menuItems) {
-      menuItems.clear();
-    }
     synchronized (plugins) {
       plugins.clear();
     }
@@ -378,11 +372,7 @@ public class PluginApi implements GeigerApi {
   }
 
   @Override
-  public void close() {
-    try {
-      communicator.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+  public void close() throws IOException {
+    communicator.close();
   }
 }

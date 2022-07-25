@@ -9,7 +9,8 @@ import '../exceptions/malformed_url_exception.dart';
 /// GEIGER communication URL object.
 class GeigerUrl implements Serializer {
   static const int serialVersionUID = 32411423;
-  String _protocol = 'geiger';
+  static const String geigerProtocol = 'geiger';
+  String _protocol = geigerProtocol;
   String _pluginId = GeigerApi.masterId;
   String _path = '';
   static final RegExp _urlPattern = RegExp('(.+?)://([^/]+)/(.*)');
@@ -33,7 +34,7 @@ class GeigerUrl implements Serializer {
   ///
   /// Throws MalformedUrlException if the resulting URL is not fulfilling the minimum requirements
   GeigerUrl(String? protocol, String pluginId, String path) {
-    protocol ??= 'geiger';
+    protocol ??= geigerProtocol;
     if (protocol == '') {
       throw MalformedUrlException('protocol cannot be empty');
     }

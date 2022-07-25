@@ -25,7 +25,7 @@ void main() {
     Message rcvdMessage = receivedEventsMaster[0];
     expect(rcvdMessage.type, MessageType.registerPlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
-    expect(rcvdMessage.action?.protocol, 'geiger');
+    expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
     expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
     expect(rcvdMessage.action?.path, 'registerPlugin');
     await localMaster.close();
@@ -75,7 +75,7 @@ void main() {
     Message rcvdMessage = receivedEventsMaster[2];
     expect(rcvdMessage.type, MessageType.deregisterPlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
-    expect(rcvdMessage.action?.protocol, 'geiger');
+    expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
     expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
     expect(rcvdMessage.action?.path, 'deregisterPlugin');
 
@@ -85,7 +85,7 @@ void main() {
     rcvdMessage = receivedEventsPlugin[0];
     expect(rcvdMessage.type, MessageType.comapiSuccess);
     expect(rcvdMessage.sourceId, GeigerApi.masterId);
-    expect(rcvdMessage.action?.protocol, 'geiger');
+    expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
     expect(rcvdMessage.action?.plugin, 'plugin1');
     expect(rcvdMessage.action?.path, 'deregisterPlugin');
     await localMaster.close();
@@ -119,7 +119,7 @@ void main() {
       Message rcvdMessage = receivedEventsMaster[2];
       expect(rcvdMessage.type, MessageType.registerMenu);
       expect(rcvdMessage.sourceId, 'plugin1');
-      expect(rcvdMessage.action?.protocol, 'geiger');
+      expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
       expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'registerMenu');
       expect(
@@ -133,7 +133,7 @@ void main() {
       rcvdMessage = receivedEventsPlugin[0];
       expect(rcvdMessage.type, MessageType.comapiSuccess);
       expect(rcvdMessage.sourceId, GeigerApi.masterId);
-      expect(rcvdMessage.action?.protocol, 'geiger');
+      expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
       expect(rcvdMessage.action?.plugin, 'plugin1');
       expect(rcvdMessage.action?.path, 'registerMenu');
       await localMaster.close();
@@ -169,7 +169,7 @@ void main() {
       Message rcvdMessage = receivedEventsMaster[3];
       expect(rcvdMessage.type, MessageType.disableMenu);
       expect(rcvdMessage.sourceId, 'plugin1');
-      expect(rcvdMessage.action?.protocol, 'geiger');
+      expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
       expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'disableMenu');
       expect(rcvdMessage.payloadString, 'testMenu');
@@ -179,7 +179,7 @@ void main() {
       rcvdMessage = receivedEventsPlugin[1];
       expect(rcvdMessage.type, MessageType.comapiSuccess);
       expect(rcvdMessage.sourceId, GeigerApi.masterId);
-      expect(rcvdMessage.action?.protocol, 'geiger');
+      expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
       expect(rcvdMessage.action?.plugin, 'plugin1');
       expect(rcvdMessage.action?.path, 'disableMenu');
       await localMaster.close();
@@ -216,7 +216,7 @@ void main() {
       Message rcvdMessage = receivedEventsMaster[2];
       expect(rcvdMessage.type, MessageType.registerMenu);
       expect(rcvdMessage.sourceId, 'plugin1');
-      expect(rcvdMessage.action?.protocol, 'geiger');
+      expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
       expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
       expect(rcvdMessage.action?.path, 'registerMenu');
       //expect(GeigerUrl.fromByteArrayStream(ByteStream(null,rcvdMessage.payload)), GeigerUrl(null,'plugin1','testMenu'));
@@ -226,7 +226,7 @@ void main() {
       rcvdMessage = receivedEventsPlugin[1];
       expect(rcvdMessage.type, MessageType.menuPressed);
       expect(rcvdMessage.sourceId, GeigerApi.masterId);
-      expect(rcvdMessage.action?.protocol, 'geiger');
+      expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
       expect(rcvdMessage.action?.plugin, 'plugin1');
       expect(rcvdMessage.action?.path, 'testMenu');
       await localMaster.close();

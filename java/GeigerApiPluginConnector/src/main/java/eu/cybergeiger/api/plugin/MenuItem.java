@@ -1,8 +1,13 @@
 package eu.cybergeiger.api.plugin;
 
+import eu.cybergeiger.api.message.GeigerUrl;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
-import eu.cybergeiger.api.message.GeigerUrl;
+import eu.cybergeiger.storage.StorageException;
+import eu.cybergeiger.storage.node.DefaultNode;
+import eu.cybergeiger.storage.node.Node;
+import eu.cybergeiger.storage.node.value.DefaultNodeValue;
+import eu.cybergeiger.storage.node.value.NodeValue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,23 +16,24 @@ import java.util.Objects;
 
 /**
  * <p>Represents a menu item for a list of items.</p>
- * . * FIXME: Menu texts are not internationalizable
  */
 public class MenuItem implements Serializable {
-
   private static final long serialVersionUID = 481231212L;
 
-  private final String menu;
+  public static final String NAME_KEY = "name";
+  public static final String TOOLTIP_KEY = "tooltip";
+
+  private final Node menu;
   private final GeigerUrl action;
   private boolean enabled;
 
   /**
    * <p>Creates a new,enabled menu item and assigns an action URL.</p>
    *
-   * @param menu   the menu name
+   * @param menu   Node with NAME_KEY and TOOLTIP_KEY value.
    * @param action the action url
    */
-  public MenuItem(String menu, GeigerUrl action) {
+  public MenuItem(Node menu, GeigerUrl action) {
     this(menu, action, true);
   }
 
@@ -35,17 +41,11 @@ public class MenuItem implements Serializable {
   /**
    * <p>Creates a new menu item and assigns an action URL.</p>
    *
-   * @param menu    the menu name
+   * @param menu    Node with NAME_KEY and TOOLTIP_KEY value.
    * @param action  the action url
    * @param enabled is the menu entry currently enabled
    */
-  public MenuItem(String menu, GeigerUrl action, boolean enabled) {
-    if (menu == null || "".equals(menu)) {
-      throw new IllegalArgumentException("menu may not be null nor empty");
-    }
-    if (action == null) {
-      throw new IllegalArgumentException("action may not be null");
-    }
+  public MenuItem(Node menu, GeigerUrl action, boolean enabled) {
     this.menu = menu;
     this.action = action;
     this.enabled = enabled;
@@ -56,8 +56,31 @@ public class MenuItem implements Serializable {
    *
    * @return the menu string
    */
-  public String getMenu() {
+  public Node getMenu() {
     return this.menu;
+  }
+
+  private String getMenuValue(String key, String languageRange) throws StorageException {
+    NodeValue value = menu.getValue(key);
+    if (value == null)
+      throw new StorageException("Menu node \"" + menu.getPath() + "\" has no \"" + key + "\" value.");
+    return value.getValue(languageRange);
+  }
+
+  public String getName() throws StorageException {
+    return getName(DefaultNodeValue.DEFAULT_LOCALE.toLanguageTag());
+  }
+
+  public String getName(String languageRange) throws StorageException {
+    return getMenuValue(NAME_KEY, languageRange);
+  }
+
+  public String getTooltip() throws StorageException {
+    return getTooltip(DefaultNodeValue.DEFAULT_LOCALE.toLanguageTag());
+  }
+
+  public String getTooltip(String languageRange) throws StorageException {
+    return getMenuValue(TOOLTIP_KEY, languageRange);
   }
 
   /**
@@ -92,11 +115,11 @@ public class MenuItem implements Serializable {
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeLong(out, serialVersionUID);
-    SerializerHelper.writeString(out, menu);
+    SerializerHelper.writeMarker(out, serialVersionUID);
+    menu.toByteArrayStream(out);
     action.toByteArrayStream(out);
     SerializerHelper.writeInt(out, enabled ? 1 : 0);
-    SerializerHelper.writeLong(out, serialVersionUID);
+    SerializerHelper.writeMarker(out, serialVersionUID);
   }
 
   /**
@@ -107,24 +130,17 @@ public class MenuItem implements Serializable {
    * @throws IOException if value cannot be read
    */
   public static MenuItem fromByteArrayStream(ByteArrayInputStream in) throws IOException {
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException();
-    }
-
-    String menu = SerializerHelper.readString(in);
+    SerializerHelper.testMarker(in, serialVersionUID);
+    Node menu = DefaultNode.fromByteArrayStream(in, null);
     GeigerUrl url = GeigerUrl.fromByteArrayStream(in);
     boolean enabled = SerializerHelper.readInt(in) == 1;
-
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException();
-    }
-
+    SerializerHelper.testMarker(in, serialVersionUID);
     return new MenuItem(menu, url, enabled);
   }
 
   @Override
   public String toString() {
-    return '"' + menu + "\"->" + action + "(" + (enabled ? "enabled" : "disabled") + ")";
+    return '"' + menu.getPath() + "\"->" + action + "(" + (enabled ? "enabled" : "disabled") + ")";
   }
 
   @Override
@@ -150,14 +166,10 @@ public class MenuItem implements Serializable {
    *
    * @return the serializer object as byte array
    */
-  public byte[] toByteArray() {
-    try {
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      toByteArrayStream(out);
-      return out.toByteArray();
-    } catch (IOException e) {
-      return null;
-    }
+  public byte[] toByteArray() throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    toByteArrayStream(out);
+    return out.toByteArray();
   }
 
   /**
@@ -167,9 +179,14 @@ public class MenuItem implements Serializable {
    * @return the deserialized object
    */
   public static MenuItem fromByteArray(byte[] buf) throws IOException {
-    ByteArrayInputStream in = new ByteArrayInputStream(buf);
-    return fromByteArrayStream(in);
+    return fromByteArrayStream(new ByteArrayInputStream(buf));
   }
 
-
+  public MenuItem clone() {
+    try {
+      return fromByteArray(toByteArray());
+    } catch (IOException e) {
+      throw new RuntimeException("Cloning MenuItem failed.", e);
+    }
+  }
 }

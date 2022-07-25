@@ -14,10 +14,9 @@ public interface MenuRegistrar {
    * <p>The method only allows URL with protocol GEIGER (geiger://).
    * The host reflects the plugin ID.</p>
    *
-   * @param menu   menu string depicting menu hierarchy
-   * @param action action URL to be triggered
+   * @param menu   menu item
    */
-  void registerMenu(String menu, GeigerUrl action) throws CommunicationException;
+  void registerMenu(MenuItem menu) throws CommunicationException;
 
   /**
    * <p>Enable a previously registered menu.</p>

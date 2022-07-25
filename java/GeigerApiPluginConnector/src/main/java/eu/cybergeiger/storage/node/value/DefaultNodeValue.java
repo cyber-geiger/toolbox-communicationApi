@@ -18,7 +18,7 @@ public class DefaultNodeValue implements NodeValue {
 
   private static final long serialVersionUID = 871283188L;
 
-  private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
+  public static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
   /**
    * The key is used to identify the NodeValueObject inside a StorageNode,

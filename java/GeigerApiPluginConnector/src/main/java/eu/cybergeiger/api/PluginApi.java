@@ -84,7 +84,7 @@ public class PluginApi implements GeigerApi {
    *
    * @return a generic controller providing access to the local storage
    */
-  public StorageController getStorage() throws StorageException {
+  public StorageController getStorage() {
     return storage;
   }
 
@@ -167,7 +167,7 @@ public class PluginApi implements GeigerApi {
       synchronized (menuItems) {
         menuItems.toByteArrayStream(out);
       }
-      try (FileOutputStream f = new FileOutputStream("LocalAPI." + id + ".state");) {
+      try (FileOutputStream f = new FileOutputStream("LocalAPI." + id + ".state")) {
         f.write(out.toByteArray());
       }
     } catch (Throwable e) {
@@ -308,13 +308,13 @@ public class PluginApi implements GeigerApi {
   }
 
   @Override
-  public void registerMenu(String menu, GeigerUrl action) throws CommunicationException {
+  public void registerMenu(MenuItem menu) throws CommunicationException {
     try {
       sendMessage(new Message(
         id, MASTER_ID,
         MessageType.REGISTER_MENU,
         new GeigerUrl(MASTER_ID, "registerMenu"),
-        new MenuItem(menu, action).toByteArray()
+        menu.toByteArray()
       ));
     } catch (IOException e) {
       throw new CommunicationException("Failed to register menu.", e);
@@ -338,12 +338,13 @@ public class PluginApi implements GeigerApi {
   @Override
   public void disableMenu(String menu) throws CommunicationException {
     try {
-      sendMessage(new Message(
+      Message message = new Message(
         id, MASTER_ID,
         MessageType.DISABLE_MENU,
-        new GeigerUrl(MASTER_ID, "disableMenu"),
-        menu.getBytes(StandardCharsets.UTF_8)
-      ));
+        new GeigerUrl(MASTER_ID, "disableMenu")
+      );
+      message.setPayloadString(menu);
+      sendMessage(message);
     } catch (IOException e) {
       throw new CommunicationException("Failed to disable menu.", e);
     }

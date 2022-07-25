@@ -5,9 +5,9 @@ import eu.cybergeiger.api.message.Message;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -20,7 +20,6 @@ public class GeigerCommunicator {
   private final PluginApi api;
 
   private ServerSocket serverSocket;
-  private Thread client;
   private final Executor executor;
 
 
@@ -44,11 +43,14 @@ public class GeigerCommunicator {
   public void start() throws IOException {
     if (isActive()) return;
     serverSocket = new ServerSocket(0);
-    client = new Thread(() -> {
+    Thread client = new Thread(() -> {
       while (true) {
         try {
           executor.execute(new MessageHandler(serverSocket.accept(), api));
         } catch (IOException e) {
+          if (e instanceof SocketException &&
+            e.getMessage().equals("socket closed"))
+            return;
           e.printStackTrace();
         }
       }
@@ -68,6 +70,5 @@ public class GeigerCommunicator {
 
   public void close() throws IOException {
     serverSocket.close();
-    client.interrupt();
   }
 }

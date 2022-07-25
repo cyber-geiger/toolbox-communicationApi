@@ -42,8 +42,8 @@ public class MessageCollector implements PluginListener {
       listeners.add(listener);
     }
     try {
-      if (listener.await(msTimeout, TimeUnit.MILLISECONDS))
-        throw new TimeoutException("Did not receive change events before timeout.");
+      if (!listener.await(msTimeout, TimeUnit.MILLISECONDS))
+        throw new TimeoutException("Did not receive enough messages before timeout.");
     } finally {
       synchronized (listeners) {
         listeners.remove(listener);

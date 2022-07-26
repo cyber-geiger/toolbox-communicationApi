@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 /**
  * <p>The API provided by all communicator interfaces.</p>
  */
-public interface GeigerApi extends PluginRegistrar, MenuRegistrar {
+public interface GeigerApi extends PluginRegistrar, MenuRegistrar, AutoCloseable {
   String MASTER_ID = "__MASTERPLUGIN__";
   String MASTER_EXECUTOR = "";
 

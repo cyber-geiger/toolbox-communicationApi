@@ -26,48 +26,59 @@ public class TestExternalCommunication extends DartTest {
   static final String PLUGIN_ID = "plugin";
   static final String MENU_ID = "menu";
 
-  @Test
-  public void testRegisterExternalPlugin() throws IOException {
-    new PluginApi(
+  /**
+   * Checks message equality without requestId.
+   */
+  private static void assertMessage(Message actual, Message expected) {
+    assertThat(actual.getSourceId()).isEqualTo(expected.getSourceId());
+    assertThat(actual.getTargetId()).isEqualTo(expected.getTargetId());
+    assertThat(actual.getType()).isEqualTo(expected.getType());
+    assertThat(actual.getAction()).isEqualTo(expected.getAction());
+    assertThat(actual.getPayloadString()).isEqualTo(expected.getPayloadString());
+  }
+
+  private static void assertSuccessMessage(Message actual, String function) {
+    assertMessage(
+      actual,
+      new Message(
+        GeigerApi.MASTER_ID, PLUGIN_ID,
+        MessageType.COMAPI_SUCCESS,
+        new GeigerUrl(PLUGIN_ID, function)
+      )
+    );
+  }
+
+  private PluginApi createPlugin() throws IOException {
+    return new PluginApi(
       "",
       PLUGIN_ID,
       Declaration.DO_NOT_SHARE_DATA
-    ).close();
+    );
+  }
+
+  @Test
+  public void testRegisterExternalPlugin() throws IOException {
+    createPlugin().close();
   }
 
   @Test
   public void testActivatePlugin() throws IOException {
-    new PluginApi(
-      "",
-      PLUGIN_ID,
-      Declaration.DO_NOT_SHARE_DATA
-    ).close();
+    createPlugin().close();
   }
 
   @Test
   public void testDeactivatePlugin() throws IOException, InterruptedException,
     TimeoutException {
-    GeigerApi plugin = new PluginApi(
-      "",
-      PLUGIN_ID,
-      Declaration.DO_NOT_SHARE_DATA
-    );
-    MessageCollector collector = new MessageCollector();
-    plugin.registerListener(MessageType.getAllTypes(), collector);
+    try (GeigerApi plugin = createPlugin()) {
+      MessageCollector collector = new MessageCollector(plugin);
 
-    plugin.deregisterPlugin();
+      plugin.deregisterPlugin();
 
-    collector.awaitCount(1);
-    Message message = collector.getMessages().get(0);
-    assertThat(message.getType()).isEqualTo(MessageType.COMAPI_SUCCESS);
-    assertThat(message.getSourceId()).isEqualTo(GeigerApi.MASTER_ID);
-    GeigerUrl action = message.getAction();
-    assertThat(action).isNotNull();
-    assertThat(action.getProtocol()).isEqualTo(GeigerUrl.GEIGER_PROTOCOL);
-    assertThat(action.getPlugin()).isEqualTo(PLUGIN_ID);
-    assertThat(action.getPath()).isEqualTo("deregisterPlugin");
-
-    plugin.close();
+      assertSuccessMessage(
+        collector.awaitMessage(0),
+        "deregisterPlugin"
+      );
+    }
   }
 
   private MenuItem generateTestMenu() throws StorageException {
@@ -88,75 +99,49 @@ public class TestExternalCommunication extends DartTest {
 
   @Test
   public void testRegisterMenu() throws IOException, InterruptedException, TimeoutException {
-    GeigerApi plugin = new PluginApi(
-      "",
-      PLUGIN_ID,
-      Declaration.DO_NOT_SHARE_DATA
-    );
-    MessageCollector collector = new MessageCollector();
-    plugin.registerListener(MessageType.getAllTypes(), collector);
+    try (GeigerApi plugin = createPlugin()) {
+      MessageCollector collector = new MessageCollector(plugin);
 
-    plugin.registerMenu(generateTestMenu());
+      plugin.registerMenu(generateTestMenu());
 
-    collector.awaitCount(1);
-    Message message = collector.getMessages().get(0);
-    assertThat(message.getType()).isEqualTo(MessageType.COMAPI_SUCCESS);
-    assertThat(message.getSourceId()).isEqualTo(GeigerApi.MASTER_ID);
-    GeigerUrl action = message.getAction();
-    assertThat(action).isNotNull();
-    assertThat(action.getProtocol()).isEqualTo(GeigerUrl.GEIGER_PROTOCOL);
-    assertThat(action.getPlugin()).isEqualTo(PLUGIN_ID);
-    assertThat(action.getPath()).isEqualTo("registerMenu");
-
-    plugin.close();
+      assertSuccessMessage(
+        collector.awaitMessage(0),
+        "registerMenu"
+      );
+    }
   }
 
   @Test
-  public void testDisableMenu()  throws IOException, InterruptedException, TimeoutException {
-    GeigerApi plugin = new PluginApi(
-      "",
-      PLUGIN_ID,
-      Declaration.DO_NOT_SHARE_DATA
-    );
-    MessageCollector collector = new MessageCollector();
-    plugin.registerListener(MessageType.getAllTypes(), collector);
+  public void testDisableMenu() throws IOException, InterruptedException, TimeoutException {
+    try (GeigerApi plugin = createPlugin()) {
+      MessageCollector collector = new MessageCollector(plugin);
 
-    plugin.registerMenu(generateTestMenu());
-    plugin.disableMenu(MENU_ID);
+      plugin.registerMenu(generateTestMenu());
+      plugin.disableMenu(MENU_ID);
 
-    collector.awaitCount(2);
-    Message message = collector.getMessages().get(1);
-    assertThat(message.getType()).isEqualTo(MessageType.COMAPI_SUCCESS);
-    assertThat(message.getSourceId()).isEqualTo(GeigerApi.MASTER_ID);
-    GeigerUrl action = message.getAction();
-    assertThat(action).isNotNull();
-    assertThat(action.getProtocol()).isEqualTo(GeigerUrl.GEIGER_PROTOCOL);
-    assertThat(action.getPlugin()).isEqualTo(PLUGIN_ID);
-    assertThat(action.getPath()).isEqualTo("disableMenu");
-
-    plugin.close();
+      assertSuccessMessage(
+        collector.awaitMessage(1),
+        "disableMenu"
+      );
+    }
   }
 
   @Test
-  public void testMenuPressed()  throws IOException, InterruptedException, TimeoutException  {
-    GeigerApi plugin = new PluginApi(
-      "",
-      PLUGIN_ID,
-      Declaration.DO_NOT_SHARE_DATA
-    );
-    MessageCollector collector = new MessageCollector();
-    plugin.registerListener(MessageType.getAllTypes(), collector);
+  public void testMenuPressed() throws IOException, InterruptedException, TimeoutException {
+    try (GeigerApi plugin = createPlugin()) {
+      MessageCollector collector = new MessageCollector(plugin);
 
-    MenuItem menu = generateTestMenu();
-    plugin.registerMenu(menu);
+      MenuItem menu = generateTestMenu();
+      plugin.registerMenu(menu);
 
-    collector.awaitCount(2);
-    Message message = collector.getMessages().get(1);
-    assertThat(message.getType()).isEqualTo(MessageType.MENU_PRESSED);
-    assertThat(message.getSourceId()).isEqualTo(GeigerApi.MASTER_ID);
-    GeigerUrl action = message.getAction();
-    assertThat(action).isEqualTo(menu.getAction());
-
-    plugin.close();
+      assertMessage(
+        collector.awaitMessage(1),
+        new Message(
+          GeigerApi.MASTER_ID, PLUGIN_ID,
+          MessageType.MENU_PRESSED,
+          menu.getAction()
+        )
+      );
+    }
   }
 }

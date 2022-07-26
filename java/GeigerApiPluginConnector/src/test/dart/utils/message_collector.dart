@@ -23,11 +23,16 @@ class MessageCollector implements PluginListener {
   List<Message> messages = [];
   List<_ConditionalCompleter> _completers = [];
 
+  MessageCollector(GeigerApi api) {
+    api.registerListener(MessageType.values, this);
+  }
+
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {
     messages.add(msg);
-    _completers =
-        _completers.where((completer) => !completer.complete(messages)).toList();
+    _completers = _completers
+        .where((completer) => !completer.complete(messages))
+        .toList();
   }
 
   Future awaitCount(int count,
@@ -49,5 +54,11 @@ class MessageCollector implements PluginListener {
       throw TimeoutException(
           'Did not receive enough messages before timeout.', timeLimit);
     });
+  }
+
+  Future<Message> awaitMessage(int index,
+      [Duration timeLimit = const Duration(seconds: 5)]) async {
+    await awaitCount(index + 1, timeLimit);
+    return messages[index];
   }
 }

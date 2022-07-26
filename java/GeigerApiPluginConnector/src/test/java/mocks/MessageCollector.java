@@ -1,6 +1,8 @@
 package mocks;
 
+import eu.cybergeiger.api.GeigerApi;
 import eu.cybergeiger.api.message.Message;
+import eu.cybergeiger.api.message.MessageType;
 import eu.cybergeiger.api.plugin.PluginListener;
 
 import java.util.ArrayList;
@@ -12,11 +14,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * A Pluginlistener for test purposes that allows to get all messages received.
+ * A PluginListener that collects all messages it receives.
  */
 public class MessageCollector implements PluginListener {
+  public static long DEFAULT_TIMEOUT = 30000;
+
   final ArrayList<Message> messages = new ArrayList<>();
   private final Set<CountDownLatch> listeners = new HashSet<>();
+
+  public MessageCollector(GeigerApi api){
+    api.registerListener(MessageType.getAllTypes(), this);
+  }
 
   public List<Message> getMessages() {
     return messages;
@@ -34,7 +42,7 @@ public class MessageCollector implements PluginListener {
   }
 
   public void awaitCount(int count) throws TimeoutException, InterruptedException {
-    awaitCount(count, 30000);
+    awaitCount(count, DEFAULT_TIMEOUT);
   }
 
   public void awaitCount(int count, long msTimeout) throws TimeoutException, InterruptedException {
@@ -52,5 +60,14 @@ public class MessageCollector implements PluginListener {
         listeners.remove(listener);
       }
     }
+  }
+
+  public Message awaitMessage(int index) throws TimeoutException, InterruptedException {
+    return awaitMessage(index, DEFAULT_TIMEOUT);
+  }
+
+  public Message awaitMessage(int index, long msTimeout) throws TimeoutException, InterruptedException {
+    awaitCount(index+1, msTimeout);
+    return getMessages().get(index);
   }
 }

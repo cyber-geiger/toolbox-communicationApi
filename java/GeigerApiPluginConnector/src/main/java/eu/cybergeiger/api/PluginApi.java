@@ -61,7 +61,7 @@ public class PluginApi implements GeigerApi {
     registerPlugin();
     activatePlugin();
 
-    storage = new PassthroughController(this, id);
+    storage = new PassthroughController(this);
     registerListener(new MessageType[]{MessageType.STORAGE_EVENT}, storage);
   }
 
@@ -115,7 +115,7 @@ public class PluginApi implements GeigerApi {
           id,
           MASTER_ID,
           MessageType.ACTIVATE_PLUGIN,
-          null,
+          new GeigerUrl(MASTER_ID, "activatePlugin"),
           SerializerHelper.intToByteArray(communicator.getPort())
         )
       );

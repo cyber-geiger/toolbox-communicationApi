@@ -21,7 +21,7 @@ public class Message implements Serializable {
   private final MessageType type;
   private final String requestId;
   private final GeigerUrl action;
-  private String payloadString = null;
+  private String payloadString = "";
 
   /**
    * <p>A message object transported through the local communication api.</p>

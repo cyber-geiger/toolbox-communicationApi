@@ -49,7 +49,9 @@ void main() {
     Message rcvdMessage = receivedEventsMaster[1];
     expect(rcvdMessage.type, MessageType.activatePlugin);
     expect(rcvdMessage.sourceId, 'plugin1');
-    expect(rcvdMessage.action, null);
+    expect(rcvdMessage.action?.protocol, GeigerUrl.geigerProtocol);
+    expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
+    expect(rcvdMessage.action?.path, 'activatePlugin');
     await localMaster.close();
     await plugin.close();
   });

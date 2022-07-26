@@ -152,7 +152,11 @@ class CommunicationApi extends GeigerApi {
   Future<void> activatePlugin() async {
     await CommunicationHelper.sendAndWait(
       this,
-      Message(id, GeigerApi.masterId, MessageType.activatePlugin, null,
+      Message(
+          id,
+          GeigerApi.masterId,
+          MessageType.activatePlugin,
+          GeigerUrl(null, GeigerApi.masterId, 'activatePlugin'),
           SerializerHelper.intToByteArray(_communicator.port)),
     );
   }

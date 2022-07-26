@@ -101,6 +101,16 @@ public interface StorageController extends ChangeRegistrar {
   void addValue(String path, NodeValue value) throws StorageException;
 
   /**
+   * <p>Add or update NodeValueObject to StorageNode.</p>
+   *
+   * @param path  the path of the node to add the value
+   * @param value the NodeValueObject to add or update
+   * @return true if the value did not exist yet
+   * @throws StorageException if the storage backend encounters a problem
+   */
+  boolean addOrUpdateValue(String path, NodeValue value) throws StorageException;
+
+  /**
    * <p>Updates one NodeValueObject with a new NodeValueObject.</p>
    *
    * <p>It couples all fields except key. The key is used to search the NodeValueObject
@@ -108,11 +118,11 @@ public interface StorageController extends ChangeRegistrar {
    *
    * <p>TODO maybe whole object can be removed and the new one added? (might change object uuid)</p>
    *
-   * @param nodeName the node to update
-   * @param value    the new NodeValueObject used for updating
+   * @param path  the node to update
+   * @param value the new NodeValueObject used for updating
    * @throws StorageException if the storage backend encounters a problem
    */
-  void updateValue(String nodeName, NodeValue value) throws StorageException;
+  void updateValue(String path, NodeValue value) throws StorageException;
 
   /**
    * <p>Updates one NodeValueObject with a new NodeValueObject by copying all fields except key.</p>
@@ -159,4 +169,14 @@ public interface StorageController extends ChangeRegistrar {
    * @throws StorageException if the storage backend encounters a problem
    */
   void zap() throws StorageException;
+
+  /**
+   * @return A dump of the whole storage as string representation.
+   */
+  String dump() throws StorageException;
+
+  /**
+   * @return A dump of the whole storage as string representation.
+   */
+  String dump(String rootNode, String prefix) throws StorageException;
 }

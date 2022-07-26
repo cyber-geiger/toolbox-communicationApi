@@ -2,6 +2,7 @@ package eu.cybergeiger.api.storage;
 
 import eu.cybergeiger.api.GeigerApi;
 import eu.cybergeiger.api.PluginApi;
+import eu.cybergeiger.api.communication.CommunicationHelper;
 import eu.cybergeiger.api.message.GeigerUrl;
 import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.message.MessageType;
@@ -17,430 +18,260 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * <p>Class for handling storage events in Plugins.</p>
  */
 public class PassthroughController implements StorageController, PluginListener, ChangeRegistrar {
+  private interface PayloadSerializer {
+    void serialize(ByteArrayOutputStream out) throws IOException;
+  }
 
-  private final PluginApi pluginApi;
-  private final String id;
-  private final Object comm = new Object();
 
-  private final Map<String, Message> receivedMessages = new HashMap<>();
+  private final PluginApi api;
+
+  private final Map<String, StorageListener> idToListener = new HashMap<>();
+  private final Map<SearchCriteria, String> listenerCriteriaToId = new HashMap<>();
+  private final Map<String, SearchCriteria> idToListenerCriteria = new HashMap<>();
 
   /**
    * <p>Constructor for PasstroughController.</p>
    *
    * @param api the LocalApi it belongs to
-   * @param id  the PluginId it belongs to
    */
-  public PassthroughController(PluginApi api, String id) {
-    this.pluginApi = api;
-    this.id = id;
-    pluginApi.registerListener(new MessageType[]{MessageType.STORAGE_EVENT,
-      MessageType.STORAGE_SUCCESS, MessageType.STORAGE_ERROR}, this);
+  public PassthroughController(PluginApi api) {
+    this.api = api;
   }
 
-  private Message waitForResult(String command, String identifier) {
-    String token = command + "/" + identifier;
-    long start = System.currentTimeMillis();
-    while (receivedMessages.get(token) == null) {
-      // wait for the appropriate message
+  @Override
+  public void pluginEvent(Message msg) {
+    if (msg.getAction() == null || !msg.getAction().getPath().endsWith("changeEvent"))
+      return;
+    try {
+      processChangeEvent(msg);
+    } catch (IOException e) {
+      GeigerApi.logger.log(Level.SEVERE, "Got error while processing change event.", e);
+    }
+  }
+
+  private void processChangeEvent(Message message) throws IOException {
+    ByteArrayInputStream in = new ByteArrayInputStream(message.getPayload());
+    String id = Objects.requireNonNull(SerializerHelper.readString(in));
+    StorageListener listener = idToListener.get(id);
+    if (listener == null)
+      throw new StorageException("Listener \"" + id + "\" for change event not found.");
+
+    String typeString = Objects.requireNonNull(SerializerHelper.readString(in));
+    ChangeType type = ChangeType.valueOfStandard(typeString);
+
+    int nodeAvailability = SerializerHelper.readInt(in);
+    Node oldNode = (nodeAvailability & 1) == 0 ? null : DefaultNode.fromByteArrayStream(in, this);
+    Node newNode = (nodeAvailability & 2) == 0 ? null : DefaultNode.fromByteArrayStream(in, this);
+
+    try {
+      listener.gotStorageChange(type, oldNode, newNode);
+    } catch (StorageException e) {
+      GeigerApi.logger.log(Level.SEVERE, "Change listener threw exception.", e);
+    }
+  }
+
+  private ByteArrayInputStream callRemote(String name) throws StorageException {
+    return callRemote(name, null);
+  }
+
+  private ByteArrayInputStream callRemote(String name, PayloadSerializer serializer) throws StorageException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    if (serializer != null) {
       try {
-        synchronized (comm) {
-          comm.wait(1000);
-        }
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      if (System.currentTimeMillis() - start > 5000) {
-        throw new RuntimeException("Lost communication while waiting for " + token);
+        serializer.serialize(out);
+      } catch (IOException e) {
+        throw new StorageException("Serialization failed.", e);
       }
     }
-    return receivedMessages.get(token);
+    Message response;
+    try {
+      response = CommunicationHelper.sendAndWait(
+        api,
+        new Message(
+          api.getId(), GeigerApi.MASTER_ID,
+          MessageType.STORAGE_EVENT,
+          new GeigerUrl(GeigerApi.MASTER_ID, name),
+          out.toByteArray()
+        ),
+        new MessageType[]{
+          MessageType.STORAGE_SUCCESS,
+          MessageType.STORAGE_SUCCESS
+        }
+      );
+    } catch (InterruptedException | TimeoutException | IOException e) {
+      throw new StorageException("Remote call failed.", e);
+    }
+    ByteArrayInputStream in = new ByteArrayInputStream(response.getPayload());
+    if (response.getType() == MessageType.STORAGE_ERROR) {
+      try {
+        throw StorageException.fromByteArrayStream(in);
+      } catch (IOException e) {
+        throw new StorageException("Failed to deserialize error.", e);
+      }
+    }
+    return in;
+  }
+
+  private Node callRemoteReturnNode(String name, String path) throws StorageException {
+    ByteArrayInputStream in = callRemote(name, out -> SerializerHelper.writeString(out, path));
+    try {
+      return DefaultNode.fromByteArrayStream(in, this);
+    } catch (IOException e) {
+      throw new StorageException("Failed to deserialize Node.", e);
+    }
   }
 
   @Override
   public Node get(String path) throws StorageException {
-    try {
-      String command = "getNode";
-      String identifier = String.valueOf(new Random().nextInt());
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/" + path)));
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } else {
-        // it was a success
-        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()), this);
-      }
-    } catch (IOException e) {
-      throw new StorageException("Could not get Node", e);
-    }
+    return callRemoteReturnNode("getNode", path);
   }
 
   @Override
   public Node getNodeOrTombstone(String path) throws StorageException {
-    String command = "getNodeOrTombstone";
-    String identifier = String.valueOf(new Random().nextInt());
-    try {
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/" + path)));
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } else {
-        // it was a success
-        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()), this);
-      }
-    } catch (IOException e) {
-      throw new StorageException("Could not get Node", e);
-    }
+    return callRemoteReturnNode("getNodeOrTombstone", path);
   }
 
   @Override
   public void add(Node node) throws StorageException {
-    String command = "addNode";
-    String identifier = String.valueOf(new Random().nextInt());
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      node.toByteArrayStream(bos);
-      byte[] payload = bos.toByteArray();
-      Message m = new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier), payload);
-      pluginApi.sendMessage(m);
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      }
-      // if no error received, nothing more to do
-    } catch (IOException e) {
-      throw new StorageException("Could not add Node", e);
-    }
+    callRemote("addNode", node::toByteArrayStream);
   }
 
   @Override
   public void update(Node node) throws StorageException {
-    String command = "updateNode";
-    String identifier = String.valueOf(new Random().nextInt());
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      node.toByteArrayStream(bos);
-      byte[] payload = bos.toByteArray();
-      Message m = new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier), payload);
-      pluginApi.sendMessage(m);
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      }
-      // if no error received, nothing more to do
-    } catch (IOException e) {
-      throw new StorageException("Could not update Node", e);
-    }
+    callRemote("updateNode", node::toByteArrayStream);
   }
 
   @Override
   public boolean addOrUpdate(Node node) throws StorageException {
-    String command = "addOrUpdateNode";
-    String identifier = String.valueOf(new Random().nextInt());
+    ByteArrayInputStream in = callRemote("addOrUpdateNode", node::toByteArrayStream);
     try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      node.toByteArrayStream(bos);
-      byte[] payload = bos.toByteArray();
-      Message m = new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier), payload);
-      pluginApi.sendMessage(m);
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      }
-      // if no error received, nothing more to do
-      return true;
+      return SerializerHelper.readInt(in) == 1;
     } catch (IOException e) {
-      throw new StorageException("Could not add or update Node", e);
+      throw new StorageException("Failed to deserialize result.", e);
     }
-
   }
 
   @Override
   public Node delete(String path) throws StorageException {
-    try {
-      String command = "deleteNode";
-      String identifier = String.valueOf(new Random().nextInt());
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/" + path)));
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } else {
-        // it was a success
-        return DefaultNode.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()), this);
-      }
-    } catch (IOException e) {
-      throw new StorageException("Could not delete Node", e);
-    }
+    return callRemoteReturnNode("deleteNode", path);
   }
 
   @Override
   public NodeValue getValue(String path, String key) throws StorageException {
+    ByteArrayInputStream in = callRemote("getValue", out -> {
+      SerializerHelper.writeString(out, path);
+      SerializerHelper.writeString(out, key);
+    });
+    if (in.available() == 0) return null;
     try {
-      String command = "getValue";
-      String identifier = String.valueOf(new Random().nextInt());
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } else {
-        // it was a success
-        return DefaultNodeValue.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      }
+      return DefaultNodeValue.fromByteArrayStream(in);
     } catch (IOException e) {
-      throw new StorageException("Could not get Value", e);
+      throw new StorageException("Failed to deserialize NodeValue.", e);
     }
   }
 
   @Override
   public void addValue(String path, NodeValue value) throws StorageException {
-    String command = "addValue";
-    String identifier = String.valueOf(new Random().nextInt());
-    try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      value.toByteArrayStream(bos);
-      byte[] payload = bos.toByteArray();
-
-      Message m = new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/" + path), payload);
-      pluginApi.sendMessage(m);
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      }
-      // if no error received, nothing more to do
-    } catch (IOException e) {
-      throw new StorageException("Could not add NodeValue", e);
-    }
+    callRemote("addValue", out -> {
+      SerializerHelper.writeString(out, path);
+      value.toByteArrayStream(out);
+    });
   }
 
   @Override
-  public void updateValue(String nodeName, NodeValue value) throws StorageException {
-    String command = "updateValue";
-    String identifier = String.valueOf(new Random().nextInt());
+  public void updateValue(String path, NodeValue value) throws StorageException {
+    callRemote("updateValue", out -> {
+      SerializerHelper.writeString(out, path);
+      value.toByteArrayStream(out);
+    });
+  }
+
+  @Override
+  public boolean addOrUpdateValue(String path, NodeValue value) throws StorageException {
+    ByteArrayInputStream in = callRemote("addOrUpdateValue", out -> {
+      SerializerHelper.writeString(out, path);
+      value.toByteArrayStream(out);
+    });
     try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      value.toByteArrayStream(bos);
-      byte[] payload = bos.toByteArray();
-
-      Message m = new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/" + nodeName), payload);
-      pluginApi.sendMessage(m);
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      }
-      // if no error received, nothing more to do
+      return SerializerHelper.readInt(in) == 1;
     } catch (IOException e) {
-      throw new StorageException("Could not update NodeValue", e);
+      throw new StorageException("Failed to deserialize result.", e);
     }
   }
 
   @Override
   public NodeValue deleteValue(String path, String key) throws StorageException {
+    ByteArrayInputStream in = callRemote("deleteValue", out -> {
+      SerializerHelper.writeString(out, path);
+      SerializerHelper.writeString(out, key);
+    });
     try {
-      String command = "deleteValue";
-      String identifier = String.valueOf(new Random().nextInt());
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier + "/" + path + "/" + key)));
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } else {
-        // it was a success
-        return DefaultNodeValue.fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      }
+      return DefaultNodeValue.fromByteArrayStream(in);
     } catch (IOException e) {
-      throw new StorageException("Could not delete Value", e);
+      throw new StorageException("Failed to deserialize NodeValue.", e);
     }
   }
 
   @Override
   public void rename(String oldPath, String newPathOrName) throws StorageException {
-    String command = "deleteValue";
-    String identifier = String.valueOf(new Random().nextInt());
-    // this will not work if either the old or the new path contains any "/"
-    try {
-      pluginApi.sendMessage(
-        new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-          new GeigerUrl(id, command + "/" + identifier + "/"
-            + oldPath + "/" + newPathOrName)));
-    } catch (IOException e) {
-      throw new StorageException("Could not rename Node", e);
-    }
-    // get response
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
-      try {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } catch (IOException e) {
-        throw new StorageException("Could not rename Node", e);
-      }
-    }
-    // if no error received, nothing more to do
+    callRemote("renameNode", out -> {
+      SerializerHelper.writeString(out, oldPath);
+      SerializerHelper.writeString(out, oldPath);
+    });
   }
 
   @Override
   public List<Node> search(SearchCriteria criteria) throws StorageException {
-    String command = "search";
-    String identifier = String.valueOf(new Random().nextInt());
+    ByteArrayInputStream in = callRemote("searchNodes", criteria::toByteArrayStream);
     try {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      criteria.toByteArrayStream(bos);
-      byte[] payload = bos.toByteArray();
-
-      Message m = new Message(id, GeigerApi.MASTER_ID, MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier), payload);
-      pluginApi.sendMessage(m);
-
-      // get response
-      Message response = waitForResult(command, identifier);
-      if (response.getType() == MessageType.STORAGE_ERROR) {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } else {
-        // it was a success
-        byte[] receivedPayload = response.getPayload();
-        // get number of nodes
-        int numNodes = SerializerHelper
-          .byteArrayToInt(Arrays.copyOfRange(receivedPayload, 0, 4));
-        // create bytearray containing only the sent nodes
-        byte[] receivedNodes = Arrays.copyOfRange(receivedPayload, 5, receivedPayload.length);
-        // retrieve nodes and add to list
-        List<Node> nodes = new ArrayList<>();
-        for (int i = 0; i < numNodes; ++i) {
-          // does this advance the stream? after every read the next one needs to start at
-          // the ned of the last read + 1
-          nodes.add(DefaultNode.fromByteArrayStream(new ByteArrayInputStream(receivedNodes), this));
-        }
-        return nodes;
+      Node[] nodes = new Node[SerializerHelper.readInt(in)];
+      for (int i = 0; i < nodes.length; i++) {
+        nodes[i] = DefaultNode.fromByteArrayStream(in, this);
       }
+      return new ArrayList<>(Arrays.asList(nodes));
     } catch (IOException e) {
-      throw new StorageException("Could not start Search", e);
+      throw new StorageException("Failed to deserialize search result.", e);
     }
   }
 
   @Override
   public void close() throws StorageException {
-    String command = "close";
-    String identifier = String.valueOf(new Random().nextInt());
-    try {
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier)));
-    } catch (IOException e) {
-      throw new StorageException("Could not close", e);
-    }
-    // get response
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
-      try {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } catch (IOException e) {
-        throw new StorageException("Could not close", e);
-      }
-    }
-    // if no error received, nothing more to do
+    callRemote("close");
   }
 
   @Override
   public void flush() throws StorageException {
-    String command = "flush";
-    String identifier = String.valueOf(new Random().nextInt());
-    try {
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier)));
-    } catch (IOException e) {
-      throw new StorageException("Could not flush", e);
-    }
-    // get response
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
-      try {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } catch (IOException e) {
-        throw new StorageException("Could not flush", e);
-      }
-    }
-    // if no error received, nothing more to do
+    callRemote("flush");
   }
 
   @Override
   public void zap() throws StorageException {
-    String command = "zap";
-    String identifier = String.valueOf(new Random().nextInt());
-    try {
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(id, command + "/" + identifier)));
-    } catch (IOException e) {
-      throw new StorageException("Could not flush", e);
-    }
-    // get response
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
-      try {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } catch (IOException e) {
-        throw new StorageException("Could not zap", e);
-      }
-    }
-    // if no error received, nothing more to do
+    callRemote("zap");
   }
 
   @Override
-  public void pluginEvent(Message msg) {
-    synchronized (receivedMessages) {
-      receivedMessages.put(msg.getAction().getPath(), msg);
-    }
-    synchronized (comm) {
-      comm.notifyAll();
+  public String dump() throws StorageException {
+    return dump(":", "");
+  }
+
+  @Override
+  public String dump(String rootNode, String prefix) throws StorageException {
+    ByteArrayInputStream in = callRemote("dump", out -> {
+      SerializerHelper.writeString(out, rootNode);
+      SerializerHelper.writeString(out, prefix);
+    });
+    try {
+      return SerializerHelper.readString(in);
+    } catch (IOException e) {
+      throw new StorageException("Failed to deserialize dump.", e);
     }
   }
 
@@ -453,33 +284,21 @@ public class PassthroughController implements StorageController, PluginListener,
    */
   public void registerChangeListener(StorageListener listener, SearchCriteria criteria)
     throws StorageException {
-    String command = "registerChangeListener";
-    String identifier = String.valueOf(new Random().nextInt());
-
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    // Storagelistener Serialization,
-    //byteArrayOutputStream.write(listener)
-    try {
-      byteArrayOutputStream.write(criteria.toByteArray());
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(GeigerApi.MASTER_ID, command + "/" + identifier),
-        byteArrayOutputStream.toByteArray()));
-    } catch (IOException e) {
-      // TODO proper Error handling
-      // this should never occur
-    }
-
-    // get response
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
+    String id = listenerCriteriaToId.get(criteria);
+    if (id == null) {
+      ByteArrayInputStream in = callRemote(
+        "registerChangeListener",
+        criteria::toByteArrayStream
+      );
       try {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
+        id = SerializerHelper.readString(in);
       } catch (IOException e) {
-        throw new StorageException("Could not rename Node", e);
+        throw new StorageException("Failed to deserialize criteria id.", e);
       }
+      listenerCriteriaToId.put(criteria, id);
+      idToListenerCriteria.put(id, criteria);
     }
+    idToListener.put(id, listener);
   }
 
   /**
@@ -491,33 +310,23 @@ public class PassthroughController implements StorageController, PluginListener,
    */
   public SearchCriteria[] deregisterChangeListener(StorageListener listener)
     throws StorageException {
-    String command = "deregisterChangeListener";
-    String identifier = String.valueOf(new Random().nextInt());
+    List<String> ids = idToListener.entrySet()
+      .stream()
+      .filter(entry -> entry.getValue() == listener)
+      .map(Map.Entry::getKey)
+      .collect(Collectors.toList());
+    if (ids.size() == 0)
+      throw new StorageException("Cannot unregistered not registered StorageListener.");
 
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    // Storagelistener Serialization,
-    //byteArrayOutputStream.write(listener)
-    try {
-      pluginApi.sendMessage(new Message(id, GeigerApi.MASTER_ID,
-        MessageType.STORAGE_EVENT,
-        new GeigerUrl(GeigerApi.MASTER_ID, command + "/" + identifier),
-        byteArrayOutputStream.toByteArray()));
-    } catch (IOException e) {
-      throw new StorageException("Could not rename Node", e);
-    }
-    // get response
-    Message response = waitForResult(command, identifier);
-    if (response.getType() == MessageType.STORAGE_ERROR) {
-      try {
-        throw StorageException
-          .fromByteArrayStream(new ByteArrayInputStream(response.getPayload()));
-      } catch (IOException e) {
-        throw new StorageException("Could not rename Node", e);
-      }
-    } else {
-      SearchCriteria.fromByteArray(response.getPayload());
-      // TODO return directly if no array is needed
-      return new SearchCriteria[0];
-    }
+    callRemote("deregisterChangeListeners", in -> {
+      SerializerHelper.writeInt(in, ids.size());
+      for (String id : ids) SerializerHelper.writeString(in, id);
+    });
+
+    ids.forEach(idToListener::remove);
+    return ids.stream()
+      .map(idToListenerCriteria::remove)
+      .peek(listenerCriteriaToId::remove)
+      .toArray(SearchCriteria[]::new);
   }
 }

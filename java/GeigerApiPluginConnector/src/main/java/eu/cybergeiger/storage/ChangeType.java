@@ -9,8 +9,8 @@ public enum ChangeType {
   DELETE,
   RENAME;
 
-  public static Visibility valueOfStandard(String name) {
-    return Visibility.valueOf(name.toUpperCase());
+  public static ChangeType valueOfStandard(String name) {
+    return ChangeType.valueOf(name.toUpperCase());
   }
 
   public String toStringStandard() {

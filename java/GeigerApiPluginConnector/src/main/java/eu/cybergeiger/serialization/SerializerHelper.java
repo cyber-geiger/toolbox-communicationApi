@@ -273,7 +273,7 @@ public class SerializerHelper {
     long actual = readLong(in);
     if (marker != actual)
       throw new InvalidObjectException(
-        "Actual marker value(" + actual + ") does not match expected value(" + marker + ")."
+        "Actual marker value " + actual + " does not match expected value " + marker + "."
       );
   }
 }

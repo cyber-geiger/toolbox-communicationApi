@@ -661,7 +661,7 @@ public class DefaultNode implements Node {
       SerializerHelper.writeInt(out, ordinals.size() - 1);
       for (Map.Entry<Field, String> e : ordinals.entrySet()) {
         if (e.getKey() != Field.PATH) {
-          SerializerHelper.writeString(out, e.getKey().toString());
+          SerializerHelper.writeString(out, e.getKey().toStringStandard());
           SerializerHelper.writeString(out, e.getValue());
         }
       }
@@ -707,7 +707,7 @@ public class DefaultNode implements Node {
     }
     int counter = SerializerHelper.readInt(in);
     for (int i = 0; i < counter; i++) {
-      n.ordinals.put(Field.valueOf(SerializerHelper.readString(in)),
+      n.ordinals.put(Field.valueOfStandard(SerializerHelper.readString(in)),
         SerializerHelper.readString(in));
     }
 

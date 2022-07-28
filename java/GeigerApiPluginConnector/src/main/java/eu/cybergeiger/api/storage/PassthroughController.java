@@ -103,7 +103,7 @@ public class PassthroughController implements StorageController, PluginListener,
         ),
         new MessageType[]{
           MessageType.STORAGE_SUCCESS,
-          MessageType.STORAGE_SUCCESS
+          MessageType.STORAGE_ERROR
         }
       );
     } catch (InterruptedException | TimeoutException | IOException e) {
@@ -111,11 +111,13 @@ public class PassthroughController implements StorageController, PluginListener,
     }
     ByteArrayInputStream in = new ByteArrayInputStream(response.getPayload());
     if (response.getType() == MessageType.STORAGE_ERROR) {
+      StorageException exception;
       try {
-        throw StorageException.fromByteArrayStream(in);
+        exception = StorageException.fromByteArrayStream(in);
       } catch (IOException e) {
         throw new StorageException("Failed to deserialize error.", e);
       }
+      throw exception;
     }
     return in;
   }
@@ -224,7 +226,7 @@ public class PassthroughController implements StorageController, PluginListener,
   public void rename(String oldPath, String newPathOrName) throws StorageException {
     callRemote("renameNode", out -> {
       SerializerHelper.writeString(out, oldPath);
-      SerializerHelper.writeString(out, oldPath);
+      SerializerHelper.writeString(out, newPathOrName);
     });
   }
 

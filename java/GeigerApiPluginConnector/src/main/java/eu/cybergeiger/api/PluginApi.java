@@ -293,14 +293,17 @@ public class PluginApi implements GeigerApi {
   }
 
   private void notifyListener(MessageType type, Message message) {
-    List<PluginListener> listeners = this.listeners.get(type);
-    if (listeners == null) return;
-    for (PluginListener listener : listeners) {
-      logger.info(
-        "## notifying PluginListener " + listener.toString() +
-          "for msg " + message.getType().toString() + " " + message.getAction().toString());
-      listener.pluginEvent(message);
-      logger.info("## PluginEvent fired");
+    synchronized (listeners) {
+      List<PluginListener> listeners = this.listeners.get(type);
+      if (listeners == null) return;
+      for (PluginListener listener : listeners) {
+        logger.info(
+          "## notifying PluginListener " + listener +
+            "for msg " + message.getType() + " " + message.getAction()
+        );
+        listener.pluginEvent(message);
+        logger.info("## PluginEvent fired");
+      }
     }
   }
 

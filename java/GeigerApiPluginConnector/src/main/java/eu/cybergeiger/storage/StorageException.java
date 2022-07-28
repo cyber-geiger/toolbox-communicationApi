@@ -11,7 +11,7 @@ import java.io.IOException;
  * <p>Exception to be raised on any problems related to the local storage.</p>
  */
 public class StorageException extends IOException implements Serializable {
-  private static class SerializedException extends Throwable implements Serializable {
+  public static class SerializedException extends Throwable implements Serializable {
     private static final long serialVersionUID = 721364991234L;
 
     private final String name;
@@ -27,7 +27,7 @@ public class StorageException extends IOException implements Serializable {
 
     public SerializedException(String name, String message, StackTraceElement[] stacktrace,
                                Throwable cause) {
-      super(message, cause instanceof SerializedException ? cause : new SerializedException(cause));
+      super(message, cause == null || cause instanceof SerializedException ? cause : new SerializedException(cause));
       this.name = name;
       setStackTrace(stacktrace);
     }
@@ -42,7 +42,7 @@ public class StorageException extends IOException implements Serializable {
       SerializerHelper.writeStackTraces(out, this);
       if (getCause() != null) {
         SerializerHelper.writeInt(out, 1);
-        ((SerializedException) (getCause())).toByteArrayStream(out);
+        ((SerializedException) getCause()).toByteArrayStream(out);
       } else {
         SerializerHelper.writeInt(out, 0);
       }
@@ -70,8 +70,6 @@ public class StorageException extends IOException implements Serializable {
     }
   }
 
-  private static final long serialVersionUID = 178324938L;
-
   public StorageException() {
     super();
   }
@@ -90,32 +88,17 @@ public class StorageException extends IOException implements Serializable {
 
   @Override
   public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
-    SerializerHelper.writeMarker(out, serialVersionUID);
-    SerializerHelper.writeString(out, getClass().getName());
-    SerializerHelper.writeString(out, getMessage());
-    SerializerHelper.writeStackTraces(out, this);
-    if (getCause() != null) {
-      SerializerHelper.writeInt(out, 1);
-      ((SerializedException) (getCause())).toByteArrayStream(out);
-    } else {
-      SerializerHelper.writeInt(out, 0);
-    }
-    SerializerHelper.writeMarker(out, serialVersionUID);
+    new SerializedException(this).toByteArrayStream(out);
   }
 
   public static StorageException fromByteArrayStream(ByteArrayInputStream in)
     throws IOException {
-    SerializerHelper.testMarker(in, serialVersionUID);
-    String _name = SerializerHelper.readString(in);
-    String message = SerializerHelper.readString(in);
-    StackTraceElement[] stackTrace = SerializerHelper.readStackTracesWrapped(in);
-    SerializedException cause = null;
-    if (SerializerHelper.readInt(in) == 1) {
-      cause = SerializedException.fromByteArrayStream(in);
-    }
-    SerializerHelper.testMarker(in, serialVersionUID);
-    StorageException exception = new StorageException(message, cause);
-    exception.setStackTrace(stackTrace);
-    return exception;
+    SerializedException originalException = SerializedException.fromByteArrayStream(in);
+    StorageException storageException = new StorageException(
+      originalException.getMessage(),
+      originalException.getCause()
+    );
+    storageException.setStackTrace(originalException.getStackTrace());
+    return storageException;
   }
 }

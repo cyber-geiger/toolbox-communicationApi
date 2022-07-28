@@ -36,7 +36,7 @@ class MessageCollector implements PluginListener {
   }
 
   Future awaitCount(int count,
-      [Duration timeLimit = const Duration(seconds: 5)]) {
+      [Duration timeLimit = const Duration(seconds: 10)]) {
     canComplete(List messages) => messages.length >= count;
     if (canComplete(messages)) {
       return Future.value();
@@ -57,7 +57,7 @@ class MessageCollector implements PluginListener {
   }
 
   Future<Message> awaitMessage(int index,
-      [Duration timeLimit = const Duration(seconds: 5)]) async {
+      [Duration timeLimit = const Duration(seconds: 10)]) async {
     await awaitCount(index + 1, timeLimit);
     return messages[index];
   }

@@ -215,7 +215,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
 
     int size = SerializerHelper.readInt(in);
     for (int i = 0; i < size; i++) {
-      s.values.put(Field.valueOf(SerializerHelper.readString(in)), SerializerHelper.readString(in));
+      s.values.put(Field.valueOfStandard(SerializerHelper.readString(in)), SerializerHelper.readString(in));
     }
 
     if (SerializerHelper.readLong(in) != serialVersionUID) {
@@ -230,10 +230,10 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
     sb.append("{").append(System.lineSeparator());
     Set<String> tmp = new TreeSet<>();
     for (Field f : values.keySet()) {
-      tmp.add(f.toString());
+      tmp.add(f.toStringStandard());
     }
     for (String f : new TreeSet<>(tmp)) {
-      sb.append("  ").append(f).append('=').append(values.get(Field.valueOf(f)))
+      sb.append("  ").append(f).append('=').append(values.get(Field.valueOfStandard(f)))
         .append(System.lineSeparator());
     }
     sb.append("}").append(System.lineSeparator());

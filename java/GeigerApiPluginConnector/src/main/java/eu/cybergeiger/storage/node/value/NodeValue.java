@@ -131,7 +131,7 @@ public interface NodeValue extends Serializable {
   /**
    * <p>Copies the all values of the given node to the current node.</p>
    *
-   * @param n2 the K/V tuple to be copie  d
+   * @param n2 the K/V tuple to be copied
    */
   void update(NodeValue n2);
 
@@ -154,5 +154,4 @@ public interface NodeValue extends Serializable {
    * @return the string representation
    */
   String toString(String prefix);
-
 }

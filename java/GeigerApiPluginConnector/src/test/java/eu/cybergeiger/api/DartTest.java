@@ -52,12 +52,14 @@ public class DartTest {
     Process runner = runners.get(method);
     if (runner == null) return;
     try {
-      if (!runner.waitFor(testMsTimeout, TimeUnit.MILLISECONDS))
-        throw new TimeoutException("Dart part did not end in time.");
+      if (!runner.waitFor(testMsTimeout, TimeUnit.MILLISECONDS)){
+        runner.destroy();
+        throw new TimeoutException("Dart side did not exit in time.");
+      }
       if (runner.exitValue() != 0)
-        throw new AssertionError("Dart part did not exit successfully.");
+        throw new AssertionError("Dart side did not exit successfully.");
     } catch (InterruptedException e) {
-      throw new RuntimeException("Dart part result check was interrupted.", e);
+      throw new RuntimeException("Dart side result check was interrupted.", e);
     } finally {
       runner.destroy();
       runners.remove(method);

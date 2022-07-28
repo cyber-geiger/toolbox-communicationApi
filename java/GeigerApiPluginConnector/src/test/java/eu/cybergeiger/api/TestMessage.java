@@ -29,8 +29,8 @@ public class TestMessage {
     assertThat(targetId).isEqualTo(msg.getTargetId());
     assertThat(messageType).isEqualTo(msg.getType());
     assertThat(url).isEqualTo(msg.getAction());
-    assertThat(msg.getPayloadString()).isNull();
-    assertThat(msg.getPayload()).isNull();
+    assertThat(msg.getPayloadString()).isEmpty();
+    assertThat(msg.getPayload()).isEmpty();
 
     byte[] payload = "payload".getBytes(StandardCharsets.UTF_8);
     Message msg2 = new Message(sourceId, targetId, messageType, url, payload);

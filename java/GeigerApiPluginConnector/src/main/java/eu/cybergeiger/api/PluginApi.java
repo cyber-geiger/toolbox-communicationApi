@@ -28,7 +28,7 @@ import static eu.cybergeiger.api.communication.CommunicationHelper.sendAndWait;
  * <p>Offers an API for all plugins to access the local toolbox.</p>
  */
 public class PluginApi implements GeigerApi {
-  static final int MAX_SEND_RETRIES = 100;
+  static final int MAX_SEND_TRIES = 10;
   static final int MASTER_START_WAIT_TIME_MILLIS = 1000;
 
   private final StorableHashMap<StorableString, PluginInformation> plugins = new StorableHashMap<>();
@@ -249,13 +249,18 @@ public class PluginApi implements GeigerApi {
       PluginStarter.startPlugin(pluginInformation, false);
     }
 
-    for (int retryCount = 0; retryCount < MAX_SEND_RETRIES; retryCount++) {
+    int tries = 1;
+    while (true) {
       try {
         communicator.sendMessage(pluginInformation.getPort(), message);
         break;
       } catch (IOException e) {
-        if (!(e instanceof ConnectException && e.getMessage().startsWith("Connection refused")))
+        if (tries == MAX_SEND_TRIES ||
+          !(e instanceof ConnectException &&
+            e.getMessage().startsWith("Connection refused")))
           throw e;
+        tries++;
+
         PluginStarter.startPlugin(pluginInformation, inBackground);
         if (message.getTargetId().equals(MASTER_ID)) {
           try {

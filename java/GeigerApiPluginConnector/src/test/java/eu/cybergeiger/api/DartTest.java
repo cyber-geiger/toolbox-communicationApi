@@ -7,8 +7,7 @@ import org.junit.jupiter.api.TestInfo;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -25,17 +24,27 @@ public class DartTest {
   @BeforeEach
   public void MaybeExecuteDartPart(TestInfo info) {
     Method method = getTestMethod(info);
-    String[] className = method.getDeclaringClass().getName().split("\\.");
-    String filePath = "./" + String.join("/", className) + ".dart";
+    String[] classNames = method.getDeclaringClass().getName().split("\\$");
+    String[] baseClassSegments = classNames[0].split("\\.");
+    String filePath = "./" + String.join("/", baseClassSegments) + ".dart";
     boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+    ArrayList<String> command = new ArrayList<>(Arrays.asList(
+      isWindows ? "cmd.exe" : "sh",
+      isWindows ? "/c" : "-c",
+      "flutter",
+      "test",
+      filePath,
+      "--name",
+      method.getName()
+    ));
+    for (int i = 1; i < classNames.length; i++) {
+      command.add("--name");
+      command.add(classNames[i]);
+    }
 
     Process runner;
     try {
-      runner = new ProcessBuilder()
-        .command(
-          isWindows ? "cmd.exe" : "sh", isWindows ? "/c" : "-c",
-          "flutter", "test", filePath, "--name", method.getName()
-        )
+      runner = new ProcessBuilder(command)
         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
         .redirectError(ProcessBuilder.Redirect.INHERIT)
         .directory(new File("./src/test/dart/"))
@@ -52,7 +61,7 @@ public class DartTest {
     Process runner = runners.get(method);
     if (runner == null) return;
     try {
-      if (!runner.waitFor(testMsTimeout, TimeUnit.MILLISECONDS)){
+      if (!runner.waitFor(testMsTimeout, TimeUnit.MILLISECONDS)) {
         runner.destroy();
         throw new TimeoutException("Dart side did not exit in time.");
       }

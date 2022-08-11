@@ -129,12 +129,8 @@ class StorageEventHandler with PluginListener {
           }
         };
       }),
-      _CallProcessor('close', 'Could not close', (controller, stream, _) async {
-        await controller.close();
-        return null;
-      }),
-      _CallProcessor('flush', 'Could not flush', (controller, stream, _) async {
-        await controller.flush();
+      _CallProcessor('close', 'Could not close', (_, __, message) async {
+        _controllers.remove(message.sourceId);
         return null;
       }),
       _CallProcessor('zap', 'Could not zap', (controller, stream, _) async {

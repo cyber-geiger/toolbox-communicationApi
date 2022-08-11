@@ -31,12 +31,12 @@ public class CommunicationHelper {
 
     @Override
     public void pluginEvent(Message message) {
-      if (responseMessage != null ||
-        !Objects.equals(requestMessage.getRequestId(), message.getRequestId()) ||
-        !Objects.equals(requestMessage.getTargetId(), message.getSourceId()) ||
-        !Objects.equals(requestMessage.getSourceId(), message.getTargetId()))
-        return;
       synchronized (receivedResponse) {
+        if (responseMessage != null ||
+          !Objects.equals(requestMessage.getRequestId(), message.getRequestId()) ||
+          !Objects.equals(requestMessage.getTargetId(), message.getSourceId()) ||
+          !Objects.equals(requestMessage.getSourceId(), message.getTargetId()))
+          return;
         responseMessage = message;
         receivedResponse.notifyAll();
       }

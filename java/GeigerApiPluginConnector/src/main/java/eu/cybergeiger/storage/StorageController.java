@@ -173,7 +173,16 @@ public interface StorageController extends ChangeRegistrar {
   /**
    * @return A dump of the whole storage as string representation.
    */
-  String dump() throws StorageException;
+  default String dump() throws StorageException {
+    return dump(":");
+  }
+
+  /**
+   * @return A dump of the whole storage as string representation.
+   */
+  default String dump(String rootNode) throws StorageException {
+    return dump(rootNode, "");
+  }
 
   /**
    * @return A dump of the whole storage as string representation.

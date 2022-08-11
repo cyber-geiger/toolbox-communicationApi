@@ -32,6 +32,7 @@ public class PassthroughController implements StorageController, PluginListener,
 
 
   private final PluginApi api;
+  private boolean isClosed = false;
 
   private final Map<String, StorageListener> idToListener = new HashMap<>();
   private final Map<SearchCriteria, String> listenerCriteriaToId = new HashMap<>();
@@ -78,11 +79,16 @@ public class PassthroughController implements StorageController, PluginListener,
     }
   }
 
+  private void checkIsClosed() throws StorageException  {
+    if (isClosed) throw new StorageException("Controller is closed.");
+  }
+
   private ByteArrayInputStream callRemote(String name) throws StorageException {
     return callRemote(name, null);
   }
 
   private ByteArrayInputStream callRemote(String name, PayloadSerializer serializer) throws StorageException {
+    checkIsClosed();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     if (serializer != null) {
       try {
@@ -117,7 +123,7 @@ public class PassthroughController implements StorageController, PluginListener,
       } catch (IOException e) {
         throw new StorageException("Failed to deserialize error.", e);
       }
-      throw exception;
+      throw new StorageException("Received exception from master.", exception);
     }
     return in;
   }
@@ -247,21 +253,19 @@ public class PassthroughController implements StorageController, PluginListener,
   @Override
   public void close() throws StorageException {
     callRemote("close");
+    isClosed = true;
   }
 
   @Override
   public void flush() throws StorageException {
-    callRemote("flush");
+    // Do nothing except check if controller is closed.
+    // Client cannot control the master's flushing behavior.
+    checkIsClosed();
   }
 
   @Override
   public void zap() throws StorageException {
     callRemote("zap");
-  }
-
-  @Override
-  public String dump() throws StorageException {
-    return dump(":", "");
   }
 
   @Override

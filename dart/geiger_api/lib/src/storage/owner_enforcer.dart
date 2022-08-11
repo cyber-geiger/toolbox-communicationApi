@@ -74,9 +74,12 @@ class OwnerEnforcerWrapper extends StorageController {
     if (_enforceTimestampUpdate) {
       value.touch();
     }
-    if ((await _controller.getNodeOrTombstone(path)).owner == _owner) {
-      return await _controller.addValue(path, value);
+    final actualOwner = (await _controller.getNodeOrTombstone(path)).owner;
+    if (actualOwner != _owner) {
+      throw StorageException(
+          "Cannot add node value to foreign node (owned by $actualOwner).");
     }
+    return await _controller.addValue(path, value);
   }
 
   @override
@@ -219,10 +222,7 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<void> zap() async {
-    // external plugins may not zap the database
-    // FIXME(mgwerder): Plugins should not be able to zap the database
-    // throw StorageException('access denied');
-    return await _controller.zap();
+    throw StorageException('access denied');
   }
 
   @override

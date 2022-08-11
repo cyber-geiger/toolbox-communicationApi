@@ -32,8 +32,6 @@ public class StorageException extends IOException implements Serializable {
       setStackTrace(stacktrace);
     }
 
-    // TODO: deduplicate serialization code
-
     @Override
     public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
       SerializerHelper.writeMarker(out, serialVersionUID);
@@ -61,12 +59,6 @@ public class StorageException extends IOException implements Serializable {
       }
       SerializerHelper.testMarker(in, serialVersionUID);
       return new SerializedException(name, message, stackTrace, cause);
-    }
-
-    @Override
-    public String toString() {
-      String message = getLocalizedMessage();
-      return (message != null) ? (name + ": " + message) : name;
     }
   }
 

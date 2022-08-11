@@ -50,11 +50,11 @@ class _StartupWaiter implements PluginListener {
 class CommunicationApi extends GeigerApi {
   /// Maximum number of times a message gets resend
   /// when a newly started plugin won't respond.
-  static const maxSendRetries = 10;
+  static const maxSendTries = 10;
 
   /// Duration non-master plugins will wait for the master to start.
   ///
-  /// Maximum total duration is [masterStartWaitTime] * [maxSendRetries].
+  /// Maximum total duration is [masterStartWaitTime] * [maxSendTries].
   static const masterStartWaitTime = Duration(seconds: 1);
 
   /// Default [StorageMapper] generator used by the master.
@@ -293,12 +293,17 @@ class CommunicationApi extends GeigerApi {
       PluginStarter.startPlugin(pluginInfo, inBackground);
     }
 
-    for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
+    var tries = 1;
+    while (true) {
       try {
         await _communicator.sendMessage(pluginInfo.port, message);
         break;
       } on SocketException catch (e) {
-        if (e.osError?.message != 'Connection refused') rethrow;
+        if (tries == maxSendTries ||
+            e.osError?.message != 'Connection refused') {
+          rethrow;
+        }
+        tries++;
         PluginStarter.startPlugin(pluginInfo, inBackground);
         if (pluginId == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);

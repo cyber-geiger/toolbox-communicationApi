@@ -86,7 +86,10 @@ public class TestExternalCommunication extends DartTest {
       ":" + MENU_ID,
       PLUGIN_ID,
       Visibility.RED,
-      new NodeValue[]{new DefaultNodeValue(MenuItem.NAME_KEY, "test")},
+      new NodeValue[]{
+        new DefaultNodeValue(MenuItem.NAME_KEY, "test"),
+        new DefaultNodeValue(MenuItem.TOOLTIP_KEY, "test")
+      },
       new Node[0]
     );
     menu.setLastModified(0);

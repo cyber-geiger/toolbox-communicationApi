@@ -69,13 +69,13 @@ public class GeigerUrl implements Serializable {
     if (protocol == null)
       throw new IllegalArgumentException("\"protocol\" cannot be null.");
     if (pluginId == null)
-      throw new IllegalArgumentException("\"protocol\" cannot be null.");
+      throw new IllegalArgumentException("\"pluginId\" cannot be null.");
     if (path == null)
-      throw new IllegalArgumentException("\"protocol\" cannot be null.");
+      throw new IllegalArgumentException("\"path\" cannot be null.");
     if (protocol.isEmpty())
       throw new IllegalArgumentException("\"protocol\" cannot be empty.");
     if (pluginId.isEmpty())
-      throw new IllegalArgumentException("\"protocol\" cannot be empty.");
+      throw new IllegalArgumentException("\"pluginId\" cannot be empty.");
     this.protocol = protocol;
     this.pluginId = pluginId;
     this.path = path;

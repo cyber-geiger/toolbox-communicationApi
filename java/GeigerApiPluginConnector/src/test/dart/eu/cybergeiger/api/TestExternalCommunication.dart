@@ -16,8 +16,10 @@ void assertRequestMessage(Message actual, MessageType type, String function) {
 }
 
 Future<MenuItem> generateTestMenu() async {
-  Node menu = await NodeImpl.fromPath(':$menuId', pluginId,
-      nodeValues: [NodeValueImpl('name', 'test')]);
+  Node menu = await NodeImpl.fromPath(':$menuId', pluginId, nodeValues: [
+    NodeValueImpl('name', 'test'),
+    NodeValueImpl('tooltip', 'test')
+  ]);
   menu.lastModified = 0;
   return MenuItem(menu, GeigerUrl(null, pluginId, menuId), true);
 }

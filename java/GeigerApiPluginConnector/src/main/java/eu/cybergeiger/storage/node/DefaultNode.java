@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * <p>The implementation of the node interface.</p>
@@ -453,55 +454,7 @@ public class DefaultNode implements Node {
     if (!(o instanceof DefaultNode)) {
       return false;
     }
-    DefaultNode n2 = (DefaultNode) o;
-    if (isSkeleton() != n2.isSkeleton()) {
-      return false;
-    }
-
-    // check if one of the nodes is materialized
-    if (!isSkeleton()) {
-      // compare ordinals
-      if (ordinals.size() != n2.ordinals.size()) {
-        return false;
-      }
-      for (Map.Entry<Field, String> e : n2.ordinals.entrySet()) {
-        try {
-          if (!e.getValue().equals(get(e.getKey()))) {
-            return false;
-          }
-        } catch (Exception ex) {
-          throw new RuntimeException("Oops.... this should not happen... contact developer", ex);
-        }
-      }
-
-      // compare values
-      if (values.size() != n2.values.size()) {
-        return false;
-      }
-      for (Map.Entry<String, NodeValue> e : values.entrySet()) {
-        try {
-          if (!e.getValue().equals(n2.getValue(e.getKey()))) {
-            return false;
-          }
-        } catch (StorageException se) {
-          //FIXME do logging here (should not happen)
-          return false;
-        }
-      }
-
-      //compare child nodes
-      if (childNodes.size() != n2.childNodes.size()) {
-        return false;
-      }
-      for (String n : childNodes.keySet()) {
-        if (n2.childNodes.get(n) == null) {
-          return false;
-        }
-      }
-    } else {
-      return getPath().equals(n2.getPath()) && controller == n2.getController();
-    }
-    return true;
+    return Objects.equals(toString(), o.toString());
   }
 
   @Override

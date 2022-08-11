@@ -1,130 +1,135 @@
 package eu.cybergeiger.api;
 
-import static junit.framework.TestCase.fail;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-
 import eu.cybergeiger.api.message.GeigerUrl;
 import eu.cybergeiger.api.plugin.MenuItem;
-import org.junit.Assert;
-import org.junit.Test;
+import eu.cybergeiger.storage.StorageController;
+import eu.cybergeiger.storage.StorageException;
+import eu.cybergeiger.storage.Visibility;
+import eu.cybergeiger.storage.node.DefaultNode;
+import eu.cybergeiger.storage.node.Node;
+import eu.cybergeiger.storage.node.value.DefaultNodeValue;
+import eu.cybergeiger.storage.node.value.NodeValue;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Class to test the MenuItem implementation.
  */
 public class TestMenuItem {
+  static final String PLUGIN_ID = "plugin";
+  static final String MENU_ID = "menu";
+  static final String MENU_PATH = StorageController.PATH_DELIMITER + MENU_ID;
+  static final String MENU_NAME = "test";
+  static final String MENU_TOOLTIP = "test";
+  static final GeigerUrl MENU_ACTION = new GeigerUrl(PLUGIN_ID, MENU_ID);
+  static final GeigerUrl OTHER_MENU_ACTION = new GeigerUrl(PLUGIN_ID, "other_" + MENU_ID);
 
-    @Test
-    public void testConstructorGetterSetter() {
-        try {
-            String menuName = "testMenu";
-            GeigerUrl url = GeigerUrl.parse("geiger://plugin/path");
-            MenuItem menu = new MenuItem(menuName, url);
-            Assert.assertEquals("Checking menu name", menuName, menu.getMenu());
-            Assert.assertEquals("Checking stored GeigerUrl", url, menu.getAction());
-            Assert.assertTrue(menu.isEnabled());
+  private Node createMenuNode() throws StorageException {
+    return new DefaultNode(
+      MENU_PATH,
+      PLUGIN_ID,
+      Visibility.RED,
+      new NodeValue[]{
+        new DefaultNodeValue(MenuItem.NAME_KEY, MENU_NAME),
+        new DefaultNodeValue(MenuItem.TOOLTIP_KEY, MENU_TOOLTIP)
+      },
+      new Node[0]
+    );
+  }
 
-            MenuItem menu2 = new MenuItem(menuName, url, true);
-            Assert.assertEquals("Checking menu name", menuName, menu2.getMenu());
-            Assert.assertEquals("Checking stored GeigerUrl", url, menu2.getAction());
-            Assert.assertTrue(menu2.isEnabled());
 
-            MenuItem menu3 = new MenuItem(menuName, url, false);
-            Assert.assertEquals("Checking menu name", menuName, menu3.getMenu());
-            Assert.assertEquals("Checking stored GeigerUrl", url, menu3.getAction());
-            Assert.assertFalse(menu3.isEnabled());
-            menu3.setEnabled(true);
-            Assert.assertTrue(menu3.isEnabled());
-            menu3.setEnabled(false);
-            Assert.assertFalse(menu3.isEnabled());
+  @Test
+  public void testConstructor() throws StorageException {
+    Node node = createMenuNode();
+    MenuItem item = new MenuItem(node, MENU_ACTION, false);
+    assertThat(item.getMenu()).isEqualTo(node);
+    assertThat(item.getName()).isEqualTo(MENU_NAME);
+    assertThat(item.getTooltip()).isEqualTo(MENU_NAME);
+    assertThat(item.getAction()).isEqualTo(MENU_ACTION);
+    assertThat(item.isEnabled()).isFalse();
+  }
 
-            // negative Tests
-            // menuName is null or empty
-            Assert.assertThrows(IllegalArgumentException.class, () -> new MenuItem(null, url));
-            Assert.assertThrows(IllegalArgumentException.class,
-                    () -> new MenuItem(null, url, false));
-            Assert.assertThrows(IllegalArgumentException.class,
-                    () -> new MenuItem(null, url, true));
-            Assert.assertThrows(IllegalArgumentException.class, () -> new MenuItem("", url));
-            Assert.assertThrows(IllegalArgumentException.class,
-                    () -> new MenuItem("", url, false));
-            Assert.assertThrows(IllegalArgumentException.class,
-                    () -> new MenuItem("", url, true));
+  @Test
+  public void testSetEnabled() throws StorageException {
+    MenuItem item = new MenuItem(createMenuNode(), MENU_ACTION);
+    assertThat(item.isEnabled()).isTrue();
+    item.setEnabled(false);
+    assertThat(item.isEnabled()).isFalse();
+  }
 
-            // action is null
-            Assert.assertThrows(IllegalArgumentException.class, () -> new MenuItem(menuName, null));
-            Assert.assertThrows(IllegalArgumentException.class,
-                    () -> new MenuItem(menuName, null, false));
-            Assert.assertThrows(IllegalArgumentException.class,
-                    () -> new MenuItem(menuName, null, true));
-        } catch (MalformedURLException e) {
-            fail("IOException thrown");
-            e.printStackTrace();
-        }
-    }
+  @Test
+  public void testToStringEnabled() throws StorageException {
+    assertThat(new MenuItem(createMenuNode(), MENU_ACTION, true).toString())
+      .isEqualTo("\"" + MENU_PATH + "\"->" + MENU_ACTION + "(enabled)");
+  }
 
-    @Test
-    public void testToString() {
-        try {
-            String menuName = "testMenu";
-            GeigerUrl url = GeigerUrl.parse("geiger://plugin/path");
-            MenuItem menu = new MenuItem(menuName, url);
-            String expectedValue = "\"testMenu\"->" + url + "(enabled)";
-            Assert.assertEquals("checking toString", expectedValue, menu.toString());
+  @Test
+  public void testToStringDisabled() throws StorageException {
+    assertThat(new MenuItem(createMenuNode(), MENU_ACTION, false).toString())
+      .isEqualTo("\"" + MENU_PATH + "\"->" + MENU_ACTION + "(disabled)");
+  }
 
-            MenuItem menu2 = new MenuItem(menuName, url, true);
-            Assert.assertEquals("checking toString", expectedValue, menu2.toString());
+  @Test
+  public void testEqualsSame() throws StorageException {
+    Node node = createMenuNode();
+    assertThat(new MenuItem(node, MENU_ACTION))
+      .isEqualTo(new MenuItem(node, MENU_ACTION, true));
+  }
 
-            expectedValue = "\"testMenu\"->" + url + "(disabled)";
-            MenuItem menu3 = new MenuItem(menuName, url, false);
-            Assert.assertEquals("checking toString", expectedValue, menu3.toString());
+  @Test
+  public void testEqualsDifferentNode() throws StorageException, InterruptedException {
+    Node node1 = createMenuNode();
+    // Wait to change lastModified timestamp.
+    Thread.sleep(10);
+    Node node2 = createMenuNode();
+    assertThat(new MenuItem(node1, MENU_ACTION))
+      .isNotEqualTo(new MenuItem(node2, MENU_ACTION));
+  }
 
-        } catch (MalformedURLException e) {
-            fail("MalformedURLException thrown");
-            e.printStackTrace();
-        }
-    }
+  @Test
+  public void testEqualsDifferentAction() throws StorageException {
+    Node node = createMenuNode();
+    assertThat(new MenuItem(node, MENU_ACTION))
+      .isNotEqualTo(new MenuItem(node, OTHER_MENU_ACTION));
+  }
 
-    @Test
-    public void testEquals() {
-        try {
-            String menuName = "testMenu";
-            GeigerUrl url = GeigerUrl.parse("geiger://plugin/path");
-            MenuItem menu = new MenuItem(menuName, url);
-            MenuItem menu2 = new MenuItem(menuName, url);
-            MenuItem menu3 = new MenuItem(menuName, url, true);
-            Assert.assertEquals(menu, menu2);
-            Assert.assertEquals(menu, menu3);
+  @Test
+  public void testEqualsDifferentIsEnabled() throws StorageException {
+    Node node = createMenuNode();
+    assertThat(new MenuItem(node, MENU_ACTION, true))
+      .isNotEqualTo(new MenuItem(node, MENU_ACTION, false));
+  }
 
-            MenuItem menu4 = new MenuItem(menuName, url, false);
-            Assert.assertNotEquals(menu, menu4);
-            menu2.setEnabled(false);
-            Assert.assertEquals(menu2, menu4);
-        } catch (MalformedURLException e) {
-            fail("MalformedURLException thrown");
-            e.printStackTrace();
-        }
-    }
+  @Test
+  public void testEqualsDifferentObject() throws StorageException {
+    assertThat(new MenuItem(createMenuNode(), MENU_ACTION)).isNotEqualTo(new Object());
+  }
 
-    @Test
-    public void testHashCode() {
-        try {
-            String menuName = "testMenu";
-            GeigerUrl url = GeigerUrl.parse("geiger://plugin/path");
-            MenuItem menu = new MenuItem(menuName, url);
-            MenuItem menu2 = new MenuItem(menuName, url);
-            Assert.assertEquals(menu.hashCode(), menu2.hashCode());
+  @Test
+  public void testHashCodeSame() throws StorageException {
+    Node node = createMenuNode();
+    assertThat(new MenuItem(node, MENU_ACTION).hashCode())
+      .isEqualTo(new MenuItem(node, MENU_ACTION, true).hashCode());
+  }
 
-            MenuItem menu3 = new MenuItem(menuName, url, true);
-            MenuItem menu4 = new MenuItem(menuName, url, false);
-            Assert.assertNotEquals(menu3.hashCode(), menu4.hashCode());
-            menu3.setEnabled(false);
-            Assert.assertEquals(menu3.hashCode(), menu4.hashCode());
-        } catch (MalformedURLException e) {
-            fail("MalformedURLException thrown");
-            e.printStackTrace();
-        }
-    }
+  @Test
+  public void testHashCodeDifferentNode() throws StorageException {
+    assertThat(new MenuItem(createMenuNode(), MENU_ACTION).hashCode())
+      .isNotEqualTo(new MenuItem(createMenuNode(), MENU_ACTION).hashCode());
+  }
 
+  @Test
+  public void testHashCodeDifferentAction() throws StorageException {
+    Node node = createMenuNode();
+    assertThat(new MenuItem(node, MENU_ACTION).hashCode())
+      .isNotEqualTo(new MenuItem(node, OTHER_MENU_ACTION).hashCode());
+  }
+
+  @Test
+  public void testHashCodeDifferentIsEnabled() throws StorageException {
+    Node node = createMenuNode();
+    assertThat(new MenuItem(node, MENU_ACTION, true).hashCode())
+      .isNotEqualTo(new MenuItem(node, MENU_ACTION, false).hashCode());
+  }
 }

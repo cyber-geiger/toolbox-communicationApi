@@ -152,7 +152,8 @@ public class MenuItem implements Serializable {
       return false;
     }
     MenuItem menuItem = (MenuItem) o;
-    return enabled == menuItem.enabled && Objects.equals(menu, menuItem.menu)
+    return enabled == menuItem.enabled
+      && Objects.equals(menu, menuItem.menu)
       && Objects.equals(action, menuItem.action);
   }
 

@@ -20,10 +20,6 @@ class NodeListener implements StorageListener {
   @override
   Future<void> gotStorageChange(
       EventType event, Node? oldNode, Node? newNode) async {
-    print('**********************************************************');
-    print(oldNode);
-    print(newNode);
-    print(event);
     events.add(EventChange(event, oldNode, newNode));
   }
 }

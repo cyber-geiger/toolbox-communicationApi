@@ -13,6 +13,7 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
 
   // Is writable to allow examples to specify another master.
   static String masterExecutor = 'FIXME';
+  static String masterUniversalLink = 'https://master.hostwizard.ch';
   static final Logger logger = Logger('GeigerApi');
 
   /// Identifier of plugin.

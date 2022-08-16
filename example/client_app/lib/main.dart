@@ -9,10 +9,13 @@ import 'message_logger.dart';
 
 const masterExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
-    'TODO';
+    'TODO;'
+    'https://master.hostwizard.ch';
 const pluginExecutor = 'com.example.client_app;'
     'com.example.client_app.MainActivity;'
-    'TODO';
+    'TODO;'
+    'https://client.hostwizard.ch';
+
 const pluginId = 'client-plugin';
 
 late GeigerApi api;
@@ -27,10 +30,8 @@ void main() async {
   api = (await getGeigerApi(pluginExecutor, pluginId))!;
   api.registerListener([MessageType.allEvents], logger);
 
-  print("---------- REGISTER & ACTIVATE --------------");
   await api.registerPlugin();
   await api.activatePlugin();
-  print("---------- END REGISTER & ACTIVATE--------------");
 
   runApp(const App());
 }
@@ -47,9 +48,9 @@ void callMasterPlugin(MessageType type) async {
 
 /// Save geigerURl in Storage
 void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
-  Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
-  await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
-  await api.storage.addOrUpdate(node);
+  // Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
+  // await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
+  //await api.storage.addOrUpdate(node);
 }
 
 class App extends StatelessWidget {

@@ -6,79 +6,65 @@ import AVFoundation
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
     
+    var controller: FlutterViewController?;
+    var messageChannel: FlutterMethodChannel?;
+    var dispatchQueue: DispatchQueue = DispatchQueue.global();
+    
     func openUrl(toOpen: String?){
         if let url = URL(string: toOpen!) {
             if #available(iOS 10.0, *) {
-                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
             } else {
-                    UIApplication.shared.openURL(url);
+                UIApplication.shared.openURL(url);
             }
         }
     }
+
     
+    // when the app gets restored from background
     override func application(_ application: UIApplication,
-                     open url: URL,
-                              options: [UIApplication.OpenURLOptionsKey : Any] = [:] ) -> Bool {
-
-        // Determine who sent the URL.
-        let sendingAppID = options[.sourceApplication]
-        print("source application = \(sendingAppID ?? "Unknown")")
-
-        // Process the URL.
-        guard let components = NSURLComponents(url: url, resolvingAgainstBaseURL: true),
-              let path = components.path else {
-            print("something went wrong...")
+                         continue userActivity: NSUserActivity,
+                         restorationHandler: @escaping ([UIUserActivityRestoring]) -> Void) -> Bool
+    {
+        // Get URL components from the incoming user activity.
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+            let incomingURL = userActivity.webpageURL,
+            let components = NSURLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
             return false
         }
-        
-        if let params = components.queryItems {
-            if let data = params.first(where: { $0.name == "redirect" })?.value {
-                print("path = \(path)");
-                print("data = \(data)");
-                usleep(500000)
-                openUrl(toOpen: String(data));
-                return true
-            } else {
-                print("No Data")
-                return false
+
+        // Check for specific URL components.
+        if components.path != nil {
+            if let params = components.queryItems {
+                if let data = params.first(where: { $0.name == "redirect" })?.value {
+                    openUrl(toOpen: String(data));
+                    return true
+                }
             }
         }
-        
         return true;
     }
     
-  override func application(
+    
+    //when the app was fully closed
+    override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-  ) -> Bool {
-      
-      let dispatchQueue = DispatchQueue.global()
-      dispatchQueue.async(execute: {
-              do{
-                  let session = AVAudioSession.sharedInstance()
+    ) -> Bool {
+        controller = window?.rootViewController as? FlutterViewController
+        messageChannel = FlutterMethodChannel(name: "geiger.fhnw.ch/messages", binaryMessenger: controller!.binaryMessenger)
 
-                  try session.setCategory(AVAudioSession.Category.playback)
-                  try session.setActive(true)
-              }
-              catch{
-                  print("\(error)")
-              }
-      });
+        messageChannel!.setMethodCallHandler({
+            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+            if (call.method == "url") {
+                let args = call.arguments as! Optional<String>
+                self.openUrl(toOpen: args);
+                result(nil);
+            }
+        });
       
-      let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-      let messageChannel = FlutterMethodChannel(name: "geiger.fhnw.ch/messages", binaryMessenger: controller.binaryMessenger)
-
-      messageChannel.setMethodCallHandler({
-         (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-          if (call.method == "url") {
-              let args = call.arguments as! Optional<String>
-              self.openUrl(toOpen: args);
-              result(nil);
-          }
-      });
-      
-    GeneratedPluginRegistrant.register(with: self)
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
+        GeneratedPluginRegistrant.register(with: self)
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
 }
 

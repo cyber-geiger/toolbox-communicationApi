@@ -8,7 +8,8 @@ import 'message_logger.dart';
 
 const pluginExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
-    'TODO';
+    'TODO;'
+    'https://client.hostwizard.ch';
 const clientPluginId = 'client-plugin';
 
 late GeigerApi api;
@@ -37,7 +38,6 @@ void main() async {
   // IMPORTANT: register and activate plugin after registering event listeners
   await api.registerPlugin();
   await api.activatePlugin();
-  print("activated");
   runApp(const App());
 }
 
@@ -80,7 +80,6 @@ class SimpleStorageListener implements PluginListener {
     if (msg.type == MessageType.storageEvent) {
       Node node = await api.storage.get(":geiger_url_test");
       NodeValue? nodeValue = (await node.getValue("geigerUrl"));
-      print(nodeValue);
       if (nodeValue != null) {
         _state.changeText(nodeValue.value);
       }

@@ -40,9 +40,7 @@
 	<key>FlutterDeepLinkingEnabled</key>
 	<true/>
 	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>testclient</string>
-	</array>
+	<array/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIBackgroundModes</key>

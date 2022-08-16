@@ -17,12 +17,16 @@ class PluginStarter {
     final packageName = executables?.elementAt(0);
     final componentName = executables?.elementAt(1);
     final windowsExecutable = executables?.elementAt(2);
+    final iosUniversalLink = executables?.elementAt(3);
+
     if (Platform.isAndroid) {
       await _channel.invokeMethod('', {
         'package': packageName!,
         'component': componentName!,
         'inBackground': inBackground
       });
+    } else if (Platform.isIOS) { 
+      //_channel.invokeMethod('url', '')
     } else if (Platform.isWindows) {
       await Process.run(windowsExecutable!, []);
     } else {

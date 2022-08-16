@@ -1,0 +1,65 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "toolbox-communicationApi",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "toolbox-communicationApi (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "toolbox-communicationApi (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "client_app",
+            "cwd": "example/client_app",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "client_app (profile mode)",
+            "cwd": "example/client_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "client_app (release mode)",
+            "cwd": "example/client_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "master_app",
+            "cwd": "example/master_app",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "master_app (profile mode)",
+            "cwd": "example/master_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "master_app (release mode)",
+            "cwd": "example/master_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}

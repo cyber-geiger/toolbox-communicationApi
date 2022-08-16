@@ -12,6 +12,7 @@ class GeigerCommunicator {
   final CommunicationApi api;
 
   ServerSocket? _server;
+  bool receivedData = false;
 
   bool get isActive {
     return _server != null;
@@ -28,7 +29,14 @@ class GeigerCommunicator {
     final server = await ServerSocket.bind(
         InternetAddress.loopbackIPv4, api.isMaster ? masterPort : 0);
     server.listen((socket) async {
-      await api.receivedMessage(await Message.fromByteArray(ByteStream(socket)));
+      final bs = ByteStream(socket);
+      final bytes = await bs.peekBytes(2);
+      print('NUM BYTES: ' + bytes.length.toString());
+      if(bytes.length > 1){
+        await api.receivedMessage(await Message.fromByteArray(bs));
+      }
+      socket.add(List.from({1}));
+      await socket.flush();
     });
 
     _server = server;
@@ -42,11 +50,29 @@ class GeigerCommunicator {
   Future<void> sendMessage(PluginInformation plugin, Message message) async {
     final socket =
         await Socket.connect(InternetAddress.loopbackIPv4, plugin.port);
+
+    
+    var subscription = socket.listen((event) {
+      print('DATA RECEIVED :' + event.length.toString());
+      receivedData = true;
+    });
+
     ByteSink sink = ByteSink();
     message.toByteArrayStream(sink, plugin.secret);
     sink.close();
     socket.add(await sink.bytes);
     await socket.flush();
+    var res = await socket.toList();
+    if(res.length > 0){
+      print("success");
+      receivedData = true;
+    }
+    await Future.delayed(const Duration(milliseconds: 500));
     socket.destroy();
+    if(!receivedData){
+      await subscription.cancel();
+      throw TimeoutException('Did not respond in time.');
+    }
+    await subscription.cancel();
   }
 }

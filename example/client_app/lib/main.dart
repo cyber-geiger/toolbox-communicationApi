@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -21,6 +23,15 @@ GeigerUrl? url;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  GeigerApi.masterExecutor = masterExecutor;
+  api = (await getGeigerApi(pluginExecutor, pluginId))!;
+  api.registerListener([MessageType.allEvents], logger);
+
+  print("---------- REGISTER & ACTIVATE --------------");
+  await api.registerPlugin();
+  await api.activatePlugin();
+  print("---------- END REGISTER & ACTIVATE--------------");
+
   runApp(const App());
 }
 
@@ -39,16 +50,6 @@ void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
   Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
   await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
   await api.storage.addOrUpdate(node);
-}
-
-Future<void> initGeiger() async{
-  GeigerApi.masterExecutor = masterExecutor;
-  api = (await getGeigerApi(pluginExecutor, pluginId))!;
-  api.registerListener([MessageType.allEvents], logger);
-
-  /// IMPORTANT: register and activate plugin after registering event listeners
-  await api.registerPlugin();
-  await api.activatePlugin();
 }
 
 class App extends StatelessWidget {
@@ -76,7 +77,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => initGeiger());
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),

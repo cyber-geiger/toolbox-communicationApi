@@ -27,6 +27,7 @@ class MessageLogger implements PluginListener {
 
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {
+    print(msg.toString());
     if (messages.length == bufferSize) {
       messages.removeAt(0);
       messageWidgets.removeAt(0);
@@ -110,6 +111,7 @@ class _MessageViewState extends State<MessageView> {
 
   @override
   Widget build(BuildContext context) {
+    print('_MessageViewState');
     return GestureDetector(
         onTap: _showDetails,
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -137,7 +139,9 @@ class MessageLogView extends StatefulWidget {
 class _MessageLogViewState extends State<MessageLogView> {
   @override
   void initState() {
+    print('before initstate');
     super.initState();
+    print('addListener');
     widget.logger.addListener(_onMessage);
   }
 
@@ -148,11 +152,13 @@ class _MessageLogViewState extends State<MessageLogView> {
   }
 
   void _onMessage(Message _) {
+    print('message');
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    print('_MessageLogViewState');
     return Column(
       children: [
         const Text('Received messages:'),

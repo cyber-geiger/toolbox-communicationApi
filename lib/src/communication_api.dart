@@ -198,6 +198,31 @@ class CommunicationApi extends GeigerApi {
     await activatePlugin();
   }
 
+  Future<void> launchiOSPlugin(pluginId, inBackground) async {
+    var clientUniversalLink = executor.split(';')[3];
+    if (inBackground) {
+      if (pluginId == GeigerApi.masterId) { // if target is master
+        // launch master and then return to the plugin since its a background message
+        await platform.invokeMethod('url',
+            '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$clientUniversalLink/returningcontrol');
+      } else {
+        // launch client and return to master since its a background message
+        await platform.invokeMethod('url',
+            '$clientUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
+      }
+    } else {
+      if (pluginId == GeigerApi.masterId) {
+        // bring master to foreground
+        await platform.invokeMethod(
+            'url', '${GeigerApi.masterUniversalLink}/returningcontrol');
+      } else {
+        // bring client to foreground
+        await platform.invokeMethod(
+            'url', '$clientUniversalLink/returningcontrol');
+      }
+    }
+  }
+
   @override
   Future<void> registerPlugin() async {
     starting = true;
@@ -390,21 +415,8 @@ class CommunicationApi extends GeigerApi {
       if (Platform.isAndroid) {
         await PluginStarter.startPlugin(plugin, inBackground);
       } else if (Platform.isIOS) {
-        if (inBackground) {
-          // launch client app and quickly return to the master app
-          await platform.invokeMethod(
-              'url',
-              plugin.executable!.split(';')[3] +
-                  '/launchandreturn?redirect=' +
-                  GeigerApi.masterUniversalLink +
-                  '/returningcontrol');
-        } else {
-          // launch client app and keep in foreground
-          await platform.invokeMethod(
-              'url', plugin.executable!.split(';')[3] + '/returningcontrol');
-        }
+        await launchiOSPlugin(pluginId, inBackground);
       }
-
       // wait for startup
       await _StartupWaiter(this, plugin.id).wait();
       plugin = plugins[StorableString(plugin.id)]!;
@@ -423,17 +435,17 @@ class CommunicationApi extends GeigerApi {
           // try send the ping
           try {
             await _communicator.sendMessage(plugin, message, () async {
-              await launchMasterAndRegister();
+              // on timeout, launch master and register plugin again
+              await launchMasterAndRegister(); 
             });
-            //
-            await platform.invokeMethod(
-                'url', '${GeigerApi.masterUniversalLink}/returningcontrol');
+            // launch normally if the ping does not time out, or no exception is thrown
+            await platform.invokeMethod('url', '${GeigerApi.masterUniversalLink}/returningcontrol'); 
           } catch (_) {
+            // on exception, launch master and register plugin again 
             await launchMasterAndRegister();
           }
         } else {
-          await platform.invokeMethod(
-              'url', '$clientUniversalLink/returningcontrol');
+          await platform.invokeMethod('url', '$clientUniversalLink/returningcontrol');
         }
       }
     }
@@ -442,28 +454,13 @@ class CommunicationApi extends GeigerApi {
       try {
         await _communicator.sendMessage(plugin!, message, () async {
           if (Platform.isIOS) {
-            var clientUniversalLink = executor.split(';')[3];
-            if (inBackground) {
-              if (pluginId == GeigerApi.masterId) {
-                await platform.invokeMethod('url',
-                    '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$clientUniversalLink/returningcontrol');
-              } else {
-                await platform.invokeMethod('url',
-                    '$clientUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
-              }
-            } else {
-              if (pluginId == GeigerApi.masterId) {
-                await platform.invokeMethod(
-                    'url', '${GeigerApi.masterUniversalLink}/returningcontrol');
-              } else {
-                await platform.invokeMethod(
-                    'url', '$clientUniversalLink/returningcontrol');
-              }
-            }
+            await launchiOSPlugin(pluginId, inBackground);
           }
+          // wait a bit for the master to start up
           if (plugin!.id == GeigerApi.masterId) {
             await Future.delayed(masterStartWaitTime);
           } else {
+            // wait until the plugin is activated
             await _StartupWaiter(this, plugin!.id).wait();
             plugin = plugins[StorableString(plugin!.id)]!;
           }
@@ -475,26 +472,7 @@ class CommunicationApi extends GeigerApi {
           // Temporary solution for android
           await PluginStarter.startPlugin(plugin!, inBackground);
         } else if (Platform.isIOS) {
-          var clientUniversalLink = executor.split(';')[3];
-          if (inBackground) {
-            if (pluginId == GeigerApi.masterId) {
-              await platform.invokeMethod('url',
-                  '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$clientUniversalLink/returningcontrol');
-            } else {
-              await platform.invokeMethod('url',
-                  '$clientUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
-            }
-          } else {
-            if (pluginId == GeigerApi.masterId) {
-              await platform.invokeMethod(
-                'url',
-                '${GeigerApi.masterUniversalLink}/returningcontrol',
-              );
-            } else {
-              await platform.invokeMethod(
-                  'url', '$clientUniversalLink/returningcontrol');
-            }
-          }
+          await launchiOSPlugin(pluginId, inBackground);
         }
         if (plugin!.id == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
@@ -643,8 +621,7 @@ class CommunicationApi extends GeigerApi {
               pluginInfo.getExecutable(),
               port,
               pluginInfo.declaration,
-              pluginInfo.secret,
-              pluginInfo.getUniversalLink());
+              pluginInfo.secret);
           await sendMessage(Message(
               id,
               msg.sourceId,
@@ -669,8 +646,7 @@ class CommunicationApi extends GeigerApi {
               pluginInfo.getExecutable(),
               0,
               pluginInfo.declaration,
-              pluginInfo.secret,
-              pluginInfo.getUniversalLink());
+              pluginInfo.secret);
           break;
         }
       case MessageType.scanPressed:

@@ -141,13 +141,7 @@ void main() {
     testMasterBasic('testSearch', 3, setup: addNode);
   });
   group('TestClose', () {
-    testMaster('testCloseStillOpen', (master, collector) async {
-      final node = await createNode();
-      await master.storage.add(node);
-      await collector.awaitCount(3);
-      expect(await master.storage.get(nodePath), node);
-    });
-    testMasterBasic('testCloseAlreadyClosed', 3);
+    testMasterBasic('testClose', 3);
   });
   group('TestFlush', () {
     testMasterBasic('testFlush', 2);

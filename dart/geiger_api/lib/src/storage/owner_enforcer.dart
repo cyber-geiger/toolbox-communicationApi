@@ -84,8 +84,7 @@ class OwnerEnforcerWrapper extends StorageController {
 
   @override
   Future<void> close() async {
-    // nothing to do
-    return await _controller.close();
+    throw StorageException('access denied');
   }
 
   @override

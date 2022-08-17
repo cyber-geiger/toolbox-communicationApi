@@ -511,18 +511,8 @@ public class TestPassthroughController extends DartTest {
   @Nested
   class TestClose {
     @Test
-    public void testCloseStillOpen() throws IOException {
+    public void testClose() throws IOException {
       try (GeigerApi api = createPlugin()) {
-        api.getStorage().close();
-        assertThatThrownBy(() -> api.getStorage().get(NODE_PATH))
-          .isInstanceOf(StorageException.class);
-      }
-    }
-
-    @Test
-    public void testCloseAlreadyClosed() throws IOException {
-      try (GeigerApi api = createPlugin()) {
-        api.getStorage().close();
         assertThatThrownBy(() -> api.getStorage().close())
           .isInstanceOf(StorageException.class);
       }

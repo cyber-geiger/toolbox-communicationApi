@@ -32,7 +32,6 @@ public class PassthroughController implements StorageController, PluginListener,
 
 
   private final PluginApi api;
-  private boolean isClosed = false;
 
   private final Map<String, StorageListener> idToListener = new HashMap<>();
   private final Map<SearchCriteria, String> listenerCriteriaToId = new HashMap<>();
@@ -79,16 +78,11 @@ public class PassthroughController implements StorageController, PluginListener,
     }
   }
 
-  private void checkIsClosed() throws StorageException  {
-    if (isClosed) throw new StorageException("Controller is closed.");
-  }
-
   private ByteArrayInputStream callRemote(String name) throws StorageException {
     return callRemote(name, null);
   }
 
   private ByteArrayInputStream callRemote(String name, PayloadSerializer serializer) throws StorageException {
-    checkIsClosed();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     if (serializer != null) {
       try {
@@ -253,7 +247,6 @@ public class PassthroughController implements StorageController, PluginListener,
   @Override
   public void close() throws StorageException {
     callRemote("close");
-    isClosed = true;
   }
 
   @Override

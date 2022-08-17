@@ -67,7 +67,6 @@ class _PingAwaiter implements PluginListener {
   Future wait([Duration timeout = const Duration(seconds: 5)]) {
     return _completer.future.timeout(timeout, onTimeout: () {
       deregister();
-      //onTimeout();
       throw TimeoutException('Plugin "$pluginId" did not respond in time.');
     }).then((_) => deregister());
   }
@@ -196,31 +195,6 @@ class CommunicationApi extends GeigerApi {
         'url', GeigerApi.masterUniversalLink + '/returningcontrol');
     await registerPlugin();
     await activatePlugin();
-  }
-
-  Future<void> launchiOSPlugin(pluginId, inBackground) async {
-    var clientUniversalLink = executor.split(';')[3];
-    if (inBackground) {
-      if (pluginId == GeigerApi.masterId) { // if target is master
-        // launch master and then return to the plugin since its a background message
-        await platform.invokeMethod('url',
-            '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$clientUniversalLink/returningcontrol');
-      } else {
-        // launch client and return to master since its a background message
-        await platform.invokeMethod('url',
-            '$clientUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
-      }
-    } else {
-      if (pluginId == GeigerApi.masterId) {
-        // bring master to foreground
-        await platform.invokeMethod(
-            'url', '${GeigerApi.masterUniversalLink}/returningcontrol');
-      } else {
-        // bring client to foreground
-        await platform.invokeMethod(
-            'url', '$clientUniversalLink/returningcontrol');
-      }
-    }
   }
 
   @override
@@ -412,50 +386,23 @@ class CommunicationApi extends GeigerApi {
     GeigerApi.logger.log(
         Level.INFO, '## Sending message to plugin ${plugin.id} ($message)');
     if (plugin.port == 0) {
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid || Platform.isIOS) {
         await PluginStarter.startPlugin(plugin, inBackground);
-      } else if (Platform.isIOS) {
-        await launchiOSPlugin(pluginId, inBackground);
       }
       // wait for startup
       await _StartupWaiter(this, plugin.id).wait();
       plugin = plugins[StorableString(plugin.id)]!;
     } else if (!inBackground) {
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid || Platform.isIOS) {
         // Temporary solution for android
         await PluginStarter.startPlugin(plugin, inBackground);
-      } else if (Platform.isIOS) {
-        var clientUniversalLink = executor.split(';')[3];
-        if (pluginId == GeigerApi.masterId) {
-          // send a ping, on timeout or error, plugin has to be registered again
-          final GeigerUrl url = GeigerUrl(null, GeigerApi.masterId, 'null');
-          Message message = Message(
-              GeigerApi.masterId, GeigerApi.masterId, MessageType.ping, url);
-          await Future.delayed(masterStartWaitTime);
-          // try send the ping
-          try {
-            await _communicator.sendMessage(plugin, message, () async {
-              // on timeout, launch master and register plugin again
-              await launchMasterAndRegister(); 
-            });
-            // launch normally if the ping does not time out, or no exception is thrown
-            await platform.invokeMethod('url', '${GeigerApi.masterUniversalLink}/returningcontrol'); 
-          } catch (_) {
-            // on exception, launch master and register plugin again 
-            await launchMasterAndRegister();
-          }
-        } else {
-          await platform.invokeMethod('url', '$clientUniversalLink/returningcontrol');
-        }
+        await activatePlugin();
       }
     }
 
     for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
       try {
         await _communicator.sendMessage(plugin!, message, () async {
-          if (Platform.isIOS) {
-            await launchiOSPlugin(pluginId, inBackground);
-          }
           // wait a bit for the master to start up
           if (plugin!.id == GeigerApi.masterId) {
             await Future.delayed(masterStartWaitTime);
@@ -468,11 +415,9 @@ class CommunicationApi extends GeigerApi {
         break;
       } on SocketException catch (e) {
         if (e.osError?.message != 'Connection refused') rethrow;
-        if (Platform.isAndroid) {
+        if (Platform.isAndroid || Platform.isIOS) {
           // Temporary solution for android
           await PluginStarter.startPlugin(plugin!, inBackground);
-        } else if (Platform.isIOS) {
-          await launchiOSPlugin(pluginId, inBackground);
         }
         if (plugin!.id == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
@@ -502,12 +447,6 @@ class CommunicationApi extends GeigerApi {
     if (!ignoreMessageSignature &&
         !skipAuth &&
         msg.type != MessageType.authError &&
-        msg.type != MessageType.registerPlugin &&
-        msg.type != MessageType.ping &&
-        msg.type != MessageType.pong &&
-        msg.type != MessageType.comapiSuccess &&
-        msg.type != MessageType.authSuccess &&
-        msg.type != MessageType.returningControl &&
         ((isMaster &&
                 (pluginInfo == null ||
                     msg.hash != msg.integrityHash(pluginInfo.secret))) ||

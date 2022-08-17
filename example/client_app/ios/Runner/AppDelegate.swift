@@ -52,7 +52,7 @@ import AVFoundation
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         controller = window?.rootViewController as? FlutterViewController
-        messageChannel = FlutterMethodChannel(name: "geiger.fhnw.ch/messages", binaryMessenger: controller!.binaryMessenger)
+        messageChannel = FlutterMethodChannel(name: "cyber-geiger.eu/communication", binaryMessenger: controller!.binaryMessenger)
 
         messageChannel!.setMethodCallHandler({
             (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in

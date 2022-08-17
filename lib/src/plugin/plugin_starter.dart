@@ -25,8 +25,29 @@ class PluginStarter {
         'component': componentName!,
         'inBackground': inBackground
       });
-    } else if (Platform.isIOS) { 
-      //_channel.invokeMethod('url', '')
+    } else if (Platform.isIOS) {
+      if (inBackground) {
+        if (pi.id == GeigerApi.masterId) {
+          // if target is master
+          // launch master and then return to the plugin since its a background message
+          await _channel.invokeMethod('url',
+              '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$iosUniversalLink/returningcontrol');
+        } else {
+          // launch client and return to master since its a background message
+          await _channel.invokeMethod('url',
+              '$iosUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
+        }
+      } else {
+        if (pi.id == GeigerApi.masterId) {
+          // bring master to foreground
+          await _channel.invokeMethod(
+              'url', '${GeigerApi.masterUniversalLink}/returningcontrol');
+        } else {
+          // bring client to foreground
+          await _channel.invokeMethod(
+              'url', '$iosUniversalLink/returningcontrol');
+        }
+      }
     } else if (Platform.isWindows) {
       await Process.run(windowsExecutable!, []);
     } else {

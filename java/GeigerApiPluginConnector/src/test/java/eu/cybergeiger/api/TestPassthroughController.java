@@ -219,9 +219,8 @@ public class TestPassthroughController extends DartTest {
     @Test
     public void testDelete_Tombstone() throws IOException {
       try (GeigerApi api = createPlugin()) {
-        // TODO: check validity. Expected it to throw a StorageException.
-        assertNode(api.getStorage().delete(NODE_PATH), true);
-        assertNode(api.getStorage().getNodeOrTombstone(NODE_PATH), true);
+        assertThatThrownBy(() -> api.getStorage().delete(NODE_PATH))
+          .isInstanceOf(StorageException.class);
       }
     }
   }
@@ -330,10 +329,8 @@ public class TestPassthroughController extends DartTest {
     @Test
     public void testRenameWithParent_Tombstone() throws IOException {
       try (GeigerApi api = createPlugin()) {
-        // TODO: check validity. Expected it to throw a StorageException.
-        api.getStorage().rename(NODE_PATH, CHILD_NODE_PATH);
-        assertNode(api.getStorage().getNodeOrTombstone(NODE_PATH), true);
-        assertNode(api.getStorage().get(CHILD_NODE_PATH), CHILD_NODE_PATH);
+        assertThatThrownBy(() -> api.getStorage().rename(NODE_PATH, CHILD_NODE_PATH))
+          .isInstanceOf(StorageException.class);
       }
     }
   }

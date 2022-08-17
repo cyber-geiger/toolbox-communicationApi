@@ -100,8 +100,7 @@ void main() {
     testNodeExistence('testUpdate', existentMessageCount: 5);
   });
   group('TestDelete', () {
-    testNodeExistence('testDelete',
-        existentMessageCount: 4, tombstoneMessageCount: 4);
+    testNodeExistence('testDelete', existentMessageCount: 4);
   });
   group('TestAddOrUpdate', () {
     testNodeExistence('testAddOrUpdate',
@@ -113,8 +112,7 @@ void main() {
     testNodeExistence('testRenameByPath', existentMessageCount: 5);
     testMasterBasic('testRenameByName', 5, setup: addNode);
     testOtherNodeExistence('testRenameTo', tombstoneMessageCount: 5);
-    testOtherNodeExistence('testRenameWithParent',
-        existentMessageCount: 5, tombstoneMessageCount: 5);
+    testOtherNodeExistence('testRenameWithParent', existentMessageCount: 5);
   });
   group('TestGetValue', () {
     testValueExistence('testGetValue');

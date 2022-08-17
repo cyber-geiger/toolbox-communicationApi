@@ -251,9 +251,7 @@ public class PassthroughController implements StorageController, PluginListener,
 
   @Override
   public void flush() throws StorageException {
-    // Do nothing except check if controller is closed.
-    // Client cannot control the master's flushing behavior.
-    checkIsClosed();
+    callRemote("flush");
   }
 
   @Override

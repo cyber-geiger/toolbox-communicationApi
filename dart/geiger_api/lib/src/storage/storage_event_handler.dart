@@ -133,6 +133,10 @@ class StorageEventHandler with PluginListener {
         await controller.close();
         return null;
       }),
+      _CallProcessor('flush', 'Could not flush', (controller, _, __) async {
+        await controller.flush();
+        return null;
+      }),
       _CallProcessor('zap', 'Could not zap', (controller, stream, _) async {
         await controller.zap();
         return null;

@@ -144,7 +144,7 @@ void main() {
     testMasterBasic('testClose', 3);
   });
   group('TestFlush', () {
-    testMasterBasic('testFlush', 2);
+    testMasterBasic('testFlush', 3);
   });
   group('TestZap', () {
     testMasterBasic('testZap', 3);

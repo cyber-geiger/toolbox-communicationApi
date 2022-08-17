@@ -521,6 +521,7 @@ public class TestPassthroughController extends DartTest {
 
   @Nested
   class TestFlush {
+    // TODO: test if it actually flushes
     @Test
     public void testFlush() throws IOException {
       try (GeigerApi api = createPlugin()) {

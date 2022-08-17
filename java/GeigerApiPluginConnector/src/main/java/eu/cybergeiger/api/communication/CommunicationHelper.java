@@ -11,7 +11,6 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * A helper class for sending and waiting on Messages.
- * TODO should this only be used for Testing?
  */
 public class CommunicationHelper {
   private static class Listener implements PluginListener {

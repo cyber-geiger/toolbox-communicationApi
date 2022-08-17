@@ -17,6 +17,7 @@ import java.io.*;
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -28,8 +29,9 @@ import static eu.cybergeiger.api.communication.CommunicationHelper.sendAndWait;
  * <p>Offers an API for all plugins to access the local toolbox.</p>
  */
 public class PluginApi implements GeigerApi {
-  static final int MAX_SEND_TRIES = 10;
-  static final int MASTER_START_WAIT_TIME_MILLIS = 1000;
+  private static final int MAX_SEND_TRIES = 10;
+  private static final int MASTER_START_WAIT_TIME_MILLIS = 1000;
+  private static final String INITIAL_STATE_SAVE_DIRECTORY = "./";
 
   private final StorableHashMap<StorableString, PluginInformation> plugins = new StorableHashMap<>();
 
@@ -37,6 +39,7 @@ public class PluginApi implements GeigerApi {
   private final String id;
   private final Declaration declaration;
   private final PassthroughController storage;
+  private String stateSaveDirectory = INITIAL_STATE_SAVE_DIRECTORY;
 
   private final Map<MessageType, List<PluginListener>> listeners = Collections.synchronizedMap(new HashMap<>());
 
@@ -156,36 +159,76 @@ public class PluginApi implements GeigerApi {
     }
   }
 
+  private String getAlternativeStateStoreDirectory() {
+    String baseDirectory;
+    String platform = System.getProperty("os.name").toLowerCase();
+    if (platform.contains("mac")) {
+      baseDirectory = "~/Library/Application Support";
+    } else if (platform.contains("win")) {
+      baseDirectory = System.getenv("AppData");
+    } else if (platform.contains("nix") ||
+      platform.contains("nux") ||
+      platform.contains("aix")) {
+      baseDirectory = System.getenv("XDG_DATA_HOME");
+    } else {
+      throw new RuntimeException("Unknown platform \"" + platform + "\".");
+    }
+    if (baseDirectory == null)
+      baseDirectory = System.getProperty("user.home");
+    if (baseDirectory == null)
+      throw new RuntimeException("Could not find alternative state store directory.");
+    return Paths.get(baseDirectory, "geiger").toString();
+  }
+
   private String getStateSaveLocation() {
-    return "GeigerApi." + id + ".state";
+    return Paths.get(stateSaveDirectory, "GeigerApi." + id + ".state").toString();
+  }
+
+  private interface IOOperation {
+    void execute(String path) throws IOException;
+  }
+
+  private void tryStateIO(IOOperation operation, String errorMessage) {
+    if (stateSaveDirectory.equals(INITIAL_STATE_SAVE_DIRECTORY))
+      try {
+        operation.execute(getStateSaveLocation());
+        return;
+      } catch (IOException e) {
+        logger.log(Level.WARNING, "State IO operation failed. Switching to alternative save location.");
+      }
+    stateSaveDirectory = getAlternativeStateStoreDirectory();
+    try {
+      operation.execute(getStateSaveLocation());
+    } catch (IOException e) {
+      logger.log(Level.SEVERE, errorMessage, e);
+    }
   }
 
   private void storeState() {
-    try {
+    tryStateIO((path) -> {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
       synchronized (plugins) {
         plugins.toByteArrayStream(out);
       }
-      // TODO: match file location of Dart version
       try (FileOutputStream file = new FileOutputStream(getStateSaveLocation())) {
         file.write(out.toByteArray());
       }
-    } catch (Throwable e) {
-      logger.log(Level.SEVERE, "Unable to store state.", e);
-    }
+    }, "Unable to store state.");
   }
 
   private void restoreState() {
-    try {
+    tryStateIO((path) -> {
       byte[] buffer = Files.readAllBytes(new File(getStateSaveLocation()).toPath());
       ByteArrayInputStream in = new ByteArrayInputStream(buffer);
-      synchronized (plugins) {
-        StorableHashMap.fromByteArrayStream(in, plugins);
+      try {
+        synchronized (plugins) {
+          StorableHashMap.fromByteArrayStream(in, plugins);
+        }
+      } catch (IOException e) {
+        logger.log(Level.WARNING, "Unable to deserialize state. Storing current state.", e);
+        storeState();
       }
-    } catch (Throwable e) {
-      logger.log(Level.WARNING, "Unable to restore state. Rewriting...", e);
-      storeState();
-    }
+    }, "Unable to restore state.");
   }
 
   /**
@@ -230,6 +273,8 @@ public class PluginApi implements GeigerApi {
       receivedMessage(message);
       return;
     }
+    if (!message.getTargetId().equals(GeigerApi.MASTER_ID))
+      throw new CommunicationException("PluginApi cannot send messages to non-master plugins.");
 
     StorableString storableTargetId = new StorableString(message.getTargetId());
     PluginInformation pluginInformation = plugins.computeIfAbsent(
@@ -237,17 +282,12 @@ public class PluginApi implements GeigerApi {
       k -> new PluginInformation(
         message.getTargetId(),
         GeigerApi.MASTER_EXECUTOR,
-        message.getTargetId().equals(GeigerApi.MASTER_ID) ? GeigerCommunicator.MASTER_PORT : 0
+        GeigerCommunicator.MASTER_PORT
       )
     );
     boolean inBackground = message.getType() != MessageType.RETURNING_CONTROL;
-    if (pluginInformation.getPort() == 0) {
-      PluginStarter.startPlugin(pluginInformation, inBackground);
-      // TODO: wait for startup
-      pluginInformation = plugins.get(storableTargetId);
-    } else if (!inBackground) {
+    if (!inBackground)
       PluginStarter.startPlugin(pluginInformation, false);
-    }
 
     int tries = 1;
     while (true) {
@@ -262,14 +302,10 @@ public class PluginApi implements GeigerApi {
         tries++;
 
         PluginStarter.startPlugin(pluginInformation, inBackground);
-        if (message.getTargetId().equals(MASTER_ID)) {
-          try {
-            Thread.sleep(MASTER_START_WAIT_TIME_MILLIS);
-          } catch (InterruptedException ignored) {
-          }
-        } else {
-          // TODO: wait for startup
-          pluginInformation = plugins.get(storableTargetId);
+        try {
+          Thread.sleep(MASTER_START_WAIT_TIME_MILLIS);
+        } catch (InterruptedException ignored) {
+          throw new CommunicationException("Wait for master to start was interrupted.");
         }
       }
     }

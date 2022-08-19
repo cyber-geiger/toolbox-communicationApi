@@ -7,10 +7,10 @@ import 'main.dart';
 
 class StorageView extends StatefulWidget {
   @override
-  StorageViewState createState() => StorageViewState();
+  State<StatefulWidget> createState() => StorageViewState();
 }
 
-class StorageViewState extends State {
+class StorageViewState extends State<StorageView> {
   final log = Logger('StorageViewStateLogger');
 
   initTree() async {}

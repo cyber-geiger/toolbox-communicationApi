@@ -1,5 +1,6 @@
 package eu.cybergeiger.api.communication;
 
+import eu.cybergeiger.api.GeigerApi;
 import eu.cybergeiger.api.PluginApi;
 import eu.cybergeiger.api.message.Message;
 
@@ -10,6 +11,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 /**
  * Abstract class to define common methods for GeigerCommunicators.
@@ -50,8 +52,8 @@ public class GeigerCommunicator {
         } catch (IOException e) {
           if (e instanceof SocketException &&
             e.getMessage().equals("socket closed"))
-            return;
-          e.printStackTrace();
+            return; // If serverSocket was closed exit thread.
+          GeigerApi.logger.log(Level.WARNING, "Encountered exception while listening for messages.", e);
         }
       }
     });

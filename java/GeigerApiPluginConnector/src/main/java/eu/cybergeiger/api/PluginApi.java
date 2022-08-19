@@ -17,6 +17,7 @@ import java.io.*;
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
@@ -53,7 +54,7 @@ public class PluginApi implements GeigerApi {
    * @param declaration declaration of data sharing
    * @throws StorageException if the StorageController could not be initialized
    */
-  protected PluginApi(String executor, String id, Declaration declaration) throws IOException {
+  public PluginApi(String executor, String id, Declaration declaration) throws IOException {
     this.executor = executor;
     this.id = id;
     this.declaration = declaration;
@@ -218,7 +219,14 @@ public class PluginApi implements GeigerApi {
 
   private void restoreState() {
     tryStateIO((path) -> {
-      byte[] buffer = Files.readAllBytes(new File(getStateSaveLocation()).toPath());
+      byte[] buffer;
+      try {
+        buffer = Files.readAllBytes(Paths.get(getStateSaveLocation()));
+      } catch (NoSuchFileException ignored) {
+        // No save file is equal to an empty save file.
+        plugins.clear();
+        return;
+      }
       ByteArrayInputStream in = new ByteArrayInputStream(buffer);
       try {
         synchronized (plugins) {

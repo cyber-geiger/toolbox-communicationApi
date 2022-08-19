@@ -1,3 +1,7 @@
+## 0.8.0 Java and iOS support
+Changes:
+- GeigerApi does no longer do automatic plugin registration and activation
+
 ## 0.7.10 Bugfixing Release and first iOS support
 Added:
 - iOS support added (nasty and experimental) 

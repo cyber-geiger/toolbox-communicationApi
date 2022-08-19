@@ -18,7 +18,7 @@ import 'package:logging/logging.dart';
 import 'plugin/plugin_starter.dart';
 
 class _StartupWaiter implements PluginListener {
-  static const _events = [MessageType.activatePlugin];
+  static const _events = [MessageType.activatePlugin, MessageType.registerPlugin];
   final String pluginId;
 
   final CommunicationApi _api;
@@ -38,36 +38,6 @@ class _StartupWaiter implements PluginListener {
     return _completer.future.timeout(timeout, onTimeout: () {
       deregister();
       throw TimeoutException('Plugin "$pluginId" did not start in time.');
-    }).then((_) => deregister());
-  }
-
-  void deregister() {
-    _api.deregisterListener(_events, this);
-  }
-}
-
-class _PingAwaiter implements PluginListener {
-  static const _events = [MessageType.pong];
-  final String pluginId;
-  //final Function onTimeout;
-
-  final CommunicationApi _api;
-  final Completer _completer = Completer();
-
-  _PingAwaiter(this._api, this.pluginId) {
-    _api.registerListener(_events, this);
-  }
-
-  @override
-  void pluginEvent(GeigerUrl? _, Message msg) {
-    if (msg.sourceId != pluginId) return;
-    _completer.complete();
-  }
-
-  Future wait([Duration timeout = const Duration(seconds: 5)]) {
-    return _completer.future.timeout(timeout, onTimeout: () {
-      deregister();
-      throw TimeoutException('Plugin "$pluginId" did not respond in time.');
     }).then((_) => deregister());
   }
 

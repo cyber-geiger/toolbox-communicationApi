@@ -599,8 +599,6 @@ class CommunicationApi extends GeigerApi {
           await sendMessage(
             Message(id, msg.sourceId, MessageType.pong,
                 GeigerUrl(null, msg.sourceId, ''), msg.payload, msg.requestId),
-            pluginInfo!.id,
-            pluginInfo,
           );
           break;
         }

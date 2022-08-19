@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
-import 'bd_tree_view.dart';
 import 'message_logger.dart';
 
 const pluginExecutor = 'com.example.master_app;'

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_simple_treeview/flutter_simple_treeview.dart';
-import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 import 'package:logging/logging.dart';
 
@@ -19,7 +18,7 @@ class StorageViewState extends State {
   getNodeChildren(String key) async {
     Node node = await api.storage.getNodeOrTombstone(key);
     Map<String, Node> children = await node.getChildren();
-    return children!.keys
+    return children.keys
         .map((k) => TreeNode(content: Text(children[k]!.name), children: []))
         .toList();
   }

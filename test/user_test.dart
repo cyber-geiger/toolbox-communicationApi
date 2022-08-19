@@ -151,6 +151,8 @@ Future<void> isolatePluginTest1a(SendPort ext) async {
   print('## Getting storage');
   GeigerApi api =
       (await getGeigerApi('', 'testplugin', Declaration.doNotShareData))!;
+  await api.registerPlugin();
+  await api.activatePlugin();
   StorageController geigerToolboxStorageController = api.storage;
 
   print('## adding value');
@@ -295,9 +297,10 @@ Future<String> isolatePluginTest2(SendPort ext) async {
   print('## Initializing expander');
   await StorageMapper.initDatabaseExpander();
   print('## Getting storage');
-  StorageController geigerToolboxStorageController =
-      (await getGeigerApi('', 'testplugin', Declaration.doNotShareData))!
-          .storage;
+  GeigerApi? testPlugin = await getGeigerApi('', 'testplugin', Declaration.doNotShareData);
+  await testPlugin!.registerPlugin();
+  await testPlugin.activatePlugin();
+  StorageController geigerToolboxStorageController =testPlugin.storage;
 
   // create huge String by exponenting and truncating
   print('## creating huge value');
@@ -433,9 +436,12 @@ Future<void> reuvenTests() async {
       await api.storage.zap();
       GeigerApi papi1 =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
+      await papi1.registerPlugin();
+      await papi1.activatePlugin();
       GeigerApi papi2 =
           (await getGeigerApi('', 'plugin2', Declaration.doNotShareData))!;
-
+      await papi2.registerPlugin();
+      await papi2.activatePlugin();
       // setup listeners
       CollectingListener l = CollectingListener();
       await api.storage
@@ -486,6 +492,8 @@ Future<void> isolatePluginTest3(_) async {
   const owner = 'testOwner';
   final GeigerApi? pluginApi =
       await getGeigerApi(';;./plugin1', owner, Declaration.doNotShareData);
+  await pluginApi?.registerPlugin();
+  await pluginApi?.activatePlugin();
   final StorageController controller = pluginApi!.storage;
 
   final node = NodeImpl('testNode', owner, ':');

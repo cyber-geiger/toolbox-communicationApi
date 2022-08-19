@@ -128,6 +128,8 @@ void main() {
     // check plugin
     final GeigerApi? pluginApi =
         await getGeigerApi('./plugin1', 'plugin1', Declaration.doNotShareData);
+    await pluginApi?.registerPlugin();
+    await pluginApi?.activatePlugin();
     final StorageController pluginController = pluginApi!.storage;
     expect(pluginController is PassthroughController, isTrue,
         reason: 'Expected controller is not wrapped');

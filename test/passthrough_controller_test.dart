@@ -402,6 +402,8 @@ void main() async {
   const owner = 'testOwner';
   final GeigerApi? pluginApi =
       await getGeigerApi(';;./plugin1', owner, Declaration.doNotShareData);
+  await pluginApi?.registerPlugin();
+  await pluginApi?.activatePlugin();
   final StorageController controller = pluginApi!.storage;
 
   // all tests related to updates of nodes and values

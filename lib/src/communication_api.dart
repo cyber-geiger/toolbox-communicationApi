@@ -417,6 +417,7 @@ class CommunicationApi extends GeigerApi {
     if (!ignoreMessageSignature &&
         !skipAuth &&
         msg.type != MessageType.authError &&
+        msg.type != MessageType.registerPlugin &&
         ((isMaster &&
                 (pluginInfo == null ||
                     msg.hash != msg.integrityHash(pluginInfo.secret))) ||

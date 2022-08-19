@@ -9,6 +9,4 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
 rootProject.name = 'GeigerApiPluginConnector'
-

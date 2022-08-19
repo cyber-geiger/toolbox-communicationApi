@@ -7,6 +7,7 @@ import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.message.MessageType;
 import eu.cybergeiger.api.plugin.*;
 import eu.cybergeiger.api.storage.PassthroughController;
+import eu.cybergeiger.api.utils.Platform;
 import eu.cybergeiger.api.utils.StorableHashMap;
 import eu.cybergeiger.api.utils.StorableString;
 import eu.cybergeiger.serialization.SerializerHelper;
@@ -37,6 +38,7 @@ public class PluginApi implements GeigerApi {
   private final StorableHashMap<StorableString, PluginInformation> plugins = new StorableHashMap<>();
 
   private final String executor;
+  private final String masterExecutor;
   private final String id;
   private final Declaration declaration;
   private final PassthroughController storage;
@@ -55,9 +57,23 @@ public class PluginApi implements GeigerApi {
    * @throws StorageException if the StorageController could not be initialized
    */
   public PluginApi(String executor, String id, Declaration declaration) throws IOException {
+    this(executor, id, declaration, GeigerApi.MASTER_EXECUTOR);
+  }
+
+  /**
+   * <p>Constructor called by LocalApiFactory.</p>
+   *
+   * @param executor       the executor string of the plugin
+   * @param id             the id of the plugin
+   * @param declaration    declaration of data sharing
+   * @param masterExecutor Alternative master executor string.
+   * @throws StorageException if the StorageController could not be initialized
+   */
+  public PluginApi(String executor, String id, Declaration declaration, String masterExecutor) throws IOException {
     this.executor = executor;
     this.id = id;
     this.declaration = declaration;
+    this.masterExecutor = masterExecutor;
 
     restoreState();
     communicator = new GeigerCommunicator(this);
@@ -161,18 +177,17 @@ public class PluginApi implements GeigerApi {
   }
 
   private String getAlternativeStateStoreDirectory() {
-    String baseDirectory;
-    String platform = System.getProperty("os.name").toLowerCase();
-    if (platform.contains("mac")) {
-      baseDirectory = "~/Library/Application Support";
-    } else if (platform.contains("win")) {
-      baseDirectory = System.getenv("AppData");
-    } else if (platform.contains("nix") ||
-      platform.contains("nux") ||
-      platform.contains("aix")) {
-      baseDirectory = System.getenv("XDG_DATA_HOME");
-    } else {
-      throw new RuntimeException("Unknown platform \"" + platform + "\".");
+    String baseDirectory = null;
+    switch (Platform.getPlatform()) {
+      case WINDOWS:
+        baseDirectory = System.getenv("AppData");
+        break;
+      case LINUX:
+        baseDirectory = System.getenv("XDG_DATA_HOME");
+        break;
+      case MAC:
+        baseDirectory = "~/Library/Application Support";
+        break;
     }
     if (baseDirectory == null)
       baseDirectory = System.getProperty("user.home");
@@ -289,7 +304,7 @@ public class PluginApi implements GeigerApi {
       storableTargetId,
       k -> new PluginInformation(
         message.getTargetId(),
-        GeigerApi.MASTER_EXECUTOR,
+        masterExecutor,
         GeigerCommunicator.MASTER_PORT
       )
     );
@@ -303,9 +318,7 @@ public class PluginApi implements GeigerApi {
         communicator.sendMessage(pluginInformation.getPort(), message);
         break;
       } catch (IOException e) {
-        if (tries == MAX_SEND_TRIES ||
-          !(e instanceof ConnectException &&
-            e.getMessage().startsWith("Connection refused")))
+        if (tries == MAX_SEND_TRIES || !(e instanceof ConnectException))
           throw e;
         tries++;
 

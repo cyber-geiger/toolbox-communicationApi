@@ -29,4 +29,7 @@
             android:name="eu.cybergeiger.communication.GeigerService"
             android:exported="true" />
     </application>
+    <queries>
+        <package android:name="com.example.master_app"/>
+    </queries>
 </manifest>

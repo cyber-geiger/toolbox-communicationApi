@@ -8,11 +8,11 @@ import 'message_logger.dart';
 const masterExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
     'TODO;'
-    'https://master.hostwizard.ch';
+    'https://master.cyber-geiger.eu';
 const pluginExecutor = 'com.example.client_app;'
     'com.example.client_app.MainActivity;'
     'TODO;'
-    'https://client.hostwizard.ch';
+    'https://client.cyber-geiger.eu';
 
 const pluginId = 'client-plugin';
 

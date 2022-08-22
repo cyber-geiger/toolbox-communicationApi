@@ -7,7 +7,7 @@ import 'message_logger.dart';
 const pluginExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
     'TODO;'
-    'https://client.hostwizard.ch';
+    'https://client.cyber-geiger.eu';
 const clientPluginId = 'client-plugin';
 
 late GeigerApi api;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
+import 'bd_tree_view.dart';
 import 'message_logger.dart';
 
 const pluginExecutor = 'com.example.master_app;'
@@ -116,7 +117,7 @@ class LoadFromStorageState extends State {
                 child: const Text("Call client in foreground")),
             Expanded(child: logger.view()),
             Expanded(child: LoggerView()),
-            // Expanded(child: StorageView())
+            //Expanded(child: StorageView())
           ],
         ),
       ),

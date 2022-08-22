@@ -2,6 +2,9 @@
 Changes:
 - GeigerApi does no longer do automatic plugin registration and activation
 
+Improvements:
+- Better iOS support
+
 ## 0.7.10 Bugfixing Release and first iOS support
 Added:
 - iOS support added (nasty and experimental) 

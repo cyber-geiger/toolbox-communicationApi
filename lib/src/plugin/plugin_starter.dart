@@ -29,12 +29,12 @@ class PluginStarter {
       if (inBackground) {
         if (pi.id == GeigerApi.masterId) {
           // if target is master
-          // launch master and then return to the plugin since its a background message
+          // launch master and then return to the source plugin since its a background message
           await _channel.invokeMethod('url',
               '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$iosUniversalLink/returningcontrol');
               await api.activatePlugin();
         } else {
-          // launch client and return to master since its a background message
+          // launch target client and return to master since its a background message
           await _channel.invokeMethod('url',
               '$iosUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
         }
@@ -45,7 +45,7 @@ class PluginStarter {
               'url', '${GeigerApi.masterUniversalLink}/returningcontrol');
           await api.activatePlugin();
         } else {
-          // bring client to foreground
+          // bring target client to foreground
           await _channel.invokeMethod(
               'url', '$iosUniversalLink/returningcontrol');
         }

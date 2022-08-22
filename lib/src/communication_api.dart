@@ -352,7 +352,6 @@ class CommunicationApi extends GeigerApi {
       if (Platform.isAndroid || Platform.isIOS) {
         await PluginStarter.startPlugin(plugin, inBackground, this);
       }
-      await PluginStarter.startPlugin(plugin, inBackground, this);
       // wait for startup
       await _StartupWaiter(this, plugin.id).wait();
       plugin = plugins[StorableString(plugin.id)]!;
@@ -360,13 +359,14 @@ class CommunicationApi extends GeigerApi {
       if (Platform.isAndroid || Platform.isIOS) {
         await PluginStarter.startPlugin(plugin, inBackground, this);
       }
-      await PluginStarter.startPlugin(plugin, inBackground, this);
     }
 
     for (var retryCount = 0; retryCount < maxSendRetries; retryCount++) {
       try {
         await _communicator.sendMessage(plugin!, message, () async {
-          await PluginStarter.startPlugin(plugin!, inBackground, this);
+          if (Platform.isAndroid || Platform.isIOS) {
+            await PluginStarter.startPlugin(plugin!, inBackground, this);
+          }
           // wait a bit for the master to start up
           if (plugin!.id == GeigerApi.masterId) {
             await Future.delayed(masterStartWaitTime);
@@ -378,14 +378,13 @@ class CommunicationApi extends GeigerApi {
         });
         break;
       } on SocketException catch (e) {
-          if (Platform.isAndroid || Platform.isIOS) {
-            await PluginStarter.startPlugin(plugin!, inBackground, this);
-        }
         if (e.osError?.message != 'Connection refused') {
           rethrow;
         }
         // plugin is not running
-        await PluginStarter.startPlugin(plugin!, inBackground, this);
+        if (Platform.isAndroid || Platform.isIOS) {
+          await PluginStarter.startPlugin(plugin!, inBackground, this);
+        }
         if (plugin!.id == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
         } else {

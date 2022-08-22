@@ -358,7 +358,6 @@ class CommunicationApi extends GeigerApi {
       plugin = plugins[StorableString(plugin.id)]!;
     } else if (!inBackground) {
       if (Platform.isAndroid || Platform.isIOS) {
-        // Temporary solution for android
         await PluginStarter.startPlugin(plugin, inBackground, this);
       }
       await PluginStarter.startPlugin(plugin, inBackground, this);
@@ -380,8 +379,8 @@ class CommunicationApi extends GeigerApi {
         break;
       } on SocketException catch (e) {
           if (Platform.isAndroid || Platform.isIOS) {
-            // Temporary solution for android
             await PluginStarter.startPlugin(plugin!, inBackground, this);
+        }
         if (e.osError?.message != 'Connection refused') {
           rethrow;
         }

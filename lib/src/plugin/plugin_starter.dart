@@ -10,7 +10,7 @@ class PluginStarter {
       MethodChannel('cyber-geiger.eu/communication');
 
   static Future<void> startPlugin(
-      PluginInformation pi, bool inBackground) async {
+      PluginInformation pi, bool inBackground, GeigerApi api) async {
     // TODO(mgwerder): write executable spec into communication_api_factory
     // expected executable String: "package;component_name;windows_executable"
     final executables = pi.executable?.split(';');
@@ -32,6 +32,7 @@ class PluginStarter {
           // launch master and then return to the plugin since its a background message
           await _channel.invokeMethod('url',
               '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$iosUniversalLink/returningcontrol');
+              await api.activatePlugin();
         } else {
           // launch client and return to master since its a background message
           await _channel.invokeMethod('url',
@@ -42,6 +43,7 @@ class PluginStarter {
           // bring master to foreground
           await _channel.invokeMethod(
               'url', '${GeigerApi.masterUniversalLink}/returningcontrol');
+          await api.activatePlugin();
         } else {
           // bring client to foreground
           await _channel.invokeMethod(

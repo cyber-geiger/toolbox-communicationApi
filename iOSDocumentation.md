@@ -166,8 +166,13 @@ an example would be: `applinks:client.cyber-geiger.eu`
 
 ## Add the Dart package
 
-In the pubspec.yml add `geiger_api` as a dependency
+In the pubspec.yml add `geiger_api` as a dependency and run `flutter pub get` in the terminal in your project root
 
+## Install iOS dependencies (CocoaPods)
+
+Using the terminal, navigate to the ios folder of the app and run the following command: `pod install`
+
+Optionally run `pod update` to update the dependecies
 
 ## Dart Geiger API Usage
 
@@ -182,7 +187,9 @@ const pluginExecutor = 'com.example.client_app;'
 const pluginId = 'my-plugin';
 ```
 
-and then get the geiger api:
+In the example above, 'https://client.cyber-geiger.eu' is the associated domain
+
+Then you can get the geiger api:
 
 ```
 await getGeigerApi(pluginExecutor, pluginId)

@@ -115,7 +115,6 @@ class LoadFromStorageState extends State {
                 child: const Text("Call client in foreground")),
             Expanded(child: logger.view()),
             Expanded(child: LoggerView()),
-            //Expanded(child: StorageView())
           ],
         ),
       ),

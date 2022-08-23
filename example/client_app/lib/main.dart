@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 
@@ -36,11 +34,11 @@ void main() async {
 
 void callMasterPlugin(MessageType type) async {
   /// Save geigerURl in Storage
-  if(logger.messages.isNotEmpty) {
+  if (logger.messages.isNotEmpty) {
     getAndStoreGeigerURLInStorage(logger.messages.last.action);
   }
   // Send Message to master
-  Message message = Message(pluginId,GeigerApi.masterId, type, null);
+  Message message = Message(pluginId, GeigerApi.masterId, type, null);
   await api.sendMessage(message, GeigerApi.masterId);
 }
 
@@ -55,7 +53,7 @@ class App extends StatelessWidget {
   const App({Key? key}) : super(key: key);
 
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Geiger Client App',
       home: HomePage(title: 'Geiger Client App'),
@@ -73,7 +71,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,4 +92,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-

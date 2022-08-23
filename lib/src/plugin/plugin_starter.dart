@@ -32,7 +32,7 @@ class PluginStarter {
           // launch master and then return to the source plugin since its a background message
           await _channel.invokeMethod('url',
               '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$iosUniversalLink/returningcontrol');
-              await api.activatePlugin();
+          await api.activatePlugin();
         } else {
           // launch target client and return to master since its a background message
           await _channel.invokeMethod('url',

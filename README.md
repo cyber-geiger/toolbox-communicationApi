@@ -14,7 +14,6 @@ when the feature is implemented. The plugin ID ('myPluginIdentifier') needs to b
 ecosystem. Failure to choose a unique ID will result in unreliable communication behavior.
 
 ### Running tests
-
 Run tests with `--concurrency=1`. Else some tests will try to get the same port simultaneously.
 
 ### iOS

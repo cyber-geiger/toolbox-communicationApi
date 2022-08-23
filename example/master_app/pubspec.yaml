@@ -11,7 +11,7 @@ dependencies:
     path: ../../
   flutter:
     sdk: flutter
-  flutter_simple_treeview: ^3.0.1
+  flutter_treeview: ^1.0.7+1
 
 dev_dependencies:
   flutter_lints: ^1.0.1

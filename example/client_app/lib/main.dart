@@ -2,8 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
-
-import 'message_logger.dart';
+import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 const masterExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
@@ -26,11 +25,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GeigerApi.masterExecutor = masterExecutor;
   api = (await getGeigerApi(pluginExecutor, pluginId))!;
-  api.registerListener([MessageType.allEvents], logger);
-
-  await api.registerPlugin();
-  await api.activatePlugin();
-
   runApp(const App());
 }
 
@@ -46,9 +40,18 @@ void callMasterPlugin(MessageType type) async {
 
 /// Save geigerURl in Storage
 void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
-  // Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
-  // await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
-  //await api.storage.addOrUpdate(node);
+  Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
+  await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
+  await api.storage.addOrUpdate(node);
+}
+
+Future<void> initGeiger() async{
+  GeigerApi.masterExecutor = masterExecutor;
+  api.registerListener([MessageType.allEvents], logger);
+
+  /// IMPORTANT: register and activate plugin after registering event listeners
+  await api.registerPlugin();
+  await api.activatePlugin();
 }
 
 class App extends StatelessWidget {
@@ -85,7 +88,7 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('Connected to master.'),
-            Expanded(child: logger.view()),
+            Expanded(child: DebugToolsView(logger, api)),
             TextButton(
                 onPressed: () => callMasterPlugin(MessageType.returningControl),
                 child: const Text("Return Control")),

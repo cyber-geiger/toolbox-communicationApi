@@ -18,7 +18,10 @@ import 'package:logging/logging.dart';
 import 'plugin/plugin_starter.dart';
 
 class _StartupWaiter implements PluginListener {
-  static const _events = [MessageType.activatePlugin, MessageType.registerPlugin];
+  static const _events = [
+    MessageType.activatePlugin,
+    MessageType.registerPlugin
+  ];
   final String pluginId;
 
   final CommunicationApi _api;

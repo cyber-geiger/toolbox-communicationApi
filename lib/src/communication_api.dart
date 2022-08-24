@@ -17,6 +17,7 @@ import 'package:logging/logging.dart';
 
 import 'plugin/plugin_starter.dart';
 
+// Waits for an activate plugin event, times out after 15sec if it does not receive an active plugin event
 class _StartupWaiter implements PluginListener {
   static const _events = [
     MessageType.activatePlugin,
@@ -49,6 +50,7 @@ class _StartupWaiter implements PluginListener {
   }
 }
 
+// Waits indefenitely for a authSuccess or authError event
 class _RegisterResultWaiter implements PluginListener {
   static const _events = [MessageType.authSuccess, MessageType.authError];
   final Completer<bool> _completer = Completer();

@@ -8,8 +8,8 @@ import eu.cybergeiger.storage.node.value.DefaultNodeValue;
 import eu.cybergeiger.storage.node.value.NodeValue;
 import eu.cybergeiger.storage.utils.SwitchableBoolean;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -606,7 +606,7 @@ public class DefaultNode implements Node {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeInt(out, skeleton.get() ? 1 : 0);
     SerializerHelper.writeString(out, getPath());
@@ -650,7 +650,7 @@ public class DefaultNode implements Node {
    * @return the deserialized NodeValue
    * @throws IOException if an exception happens deserializing the stream
    */
-  public static DefaultNode fromByteArrayStream(ByteArrayInputStream in, StorageController controller) throws IOException {
+  public static DefaultNode fromByteArrayStream(InputStream in, StorageController controller) throws IOException {
     SerializerHelper.testMarker(in, serialVersionUID);
     boolean skel = SerializerHelper.readInt(in) == 1;
     DefaultNode n = new DefaultNode(SerializerHelper.readString(in), "NONE");

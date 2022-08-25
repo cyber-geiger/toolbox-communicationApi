@@ -3,14 +3,11 @@ package eu.cybergeiger.api.plugin;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Random;
 
 
 /**
@@ -44,14 +41,14 @@ public class CommunicationSecret implements Serializable {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeString(out, Base64.getEncoder().encodeToString(bytes));
     SerializerHelper.writeMarker(out, serialVersionUID);
   }
 
 
-  public static CommunicationSecret fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public static CommunicationSecret fromByteArrayStream(InputStream in) throws IOException {
     SerializerHelper.testMarker(in, serialVersionUID);
     byte[] secret = Base64.getDecoder().decode(SerializerHelper.readString(in));
     SerializerHelper.testMarker(in, serialVersionUID);
@@ -60,6 +57,19 @@ public class CommunicationSecret implements Serializable {
 
   @Override
   public String toString() {
-    return Integer.toString(Arrays.hashCode(bytes));
+    return Integer.toString(hashCode());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    CommunicationSecret that = (CommunicationSecret) o;
+    return Arrays.equals(bytes, that.bytes);
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(bytes);
   }
 }

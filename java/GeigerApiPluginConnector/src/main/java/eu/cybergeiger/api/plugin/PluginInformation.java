@@ -3,24 +3,29 @@ package eu.cybergeiger.api.plugin;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.Objects;
 
 /**
  * <p>Object for storing vital plugin information.</p>
  */
 public class PluginInformation implements Serializable {
-
   private static final long serialVersionUID = 48032940912340L;
 
   private final String id;
   private final String executable;
   private final int port;
+  private final Declaration declaration;
   private final CommunicationSecret secret;
 
+  // TODO: make declaration declaration explicit
+
   public PluginInformation(String id, String executable, int port) {
-    this(id, executable, port, null);
+    this(id, executable, port, Declaration.DO_NOT_SHARE_DATA);
+  }
+
+  public PluginInformation(String id, String executable, int port, Declaration declaration) {
+    this(id, executable, port, declaration, null);
   }
 
   /**
@@ -32,9 +37,22 @@ public class PluginInformation implements Serializable {
    * @param secret     the secret required for communicating (if null a new secret is generated)
    */
   public PluginInformation(String id, String executable, int port, CommunicationSecret secret) {
+    this(id, executable, port, Declaration.DO_NOT_SHARE_DATA, secret);
+  }
+
+  /**
+   * <p>Constructor for plugin information.</p>
+   *
+   * @param id         ID of the plugin this information is about
+   * @param executable the string required for platform specific wakeup of a plugin
+   * @param port       the port of the plugin to be contacted on
+   * @param secret     the secret required for communicating (if null a new secret is generated)
+   */
+  public PluginInformation(String id, String executable, int port, Declaration declaration, CommunicationSecret secret) {
     this.id = id;
     this.executable = executable;
     this.port = port;
+    this.declaration = declaration;
     this.secret = secret == null ? new CommunicationSecret() : secret;
   }
 
@@ -60,6 +78,10 @@ public class PluginInformation implements Serializable {
     return this.executable;
   }
 
+  public Declaration getDeclaration() {
+    return declaration;
+  }
+
   /**
    * <p>The communication secret required for sending securely between two instances.</p>
    *
@@ -69,35 +91,39 @@ public class PluginInformation implements Serializable {
     return this.secret;
   }
 
+  public PluginInformation withSecret(CommunicationSecret secret) {
+    return new PluginInformation(id, executable, port, declaration, secret);
+  }
+
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, id);
     SerializerHelper.writeString(out, executable);
     SerializerHelper.writeInt(out, port);
+    SerializerHelper.writeInt(out, declaration.equals(Declaration.DO_NOT_SHARE_DATA) ? 0 : 1);
     secret.toByteArrayStream(out);
     SerializerHelper.writeLong(out, serialVersionUID);
   }
 
   /**
-   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+   * <p>Reads objects from InputStream and stores them in map.</p>
    *
-   * @param in ByteArrayInputStream to be used
+   * @param in InputStream to be used
    * @return the deserialized Storable String
    * @throws IOException if value cannot be read
    */
-  public static PluginInformation fromByteArrayStream(ByteArrayInputStream in) throws IOException {
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException();
-    }
+  public static PluginInformation fromByteArrayStream(InputStream in) throws IOException {
+    SerializerHelper.testMarker(in, serialVersionUID);
     String id = SerializerHelper.readString(in);
     String executable = SerializerHelper.readString(in);
     int port = SerializerHelper.readInt(in);
+    Declaration declaration = SerializerHelper.readInt(in) == 0
+      ? Declaration.DO_NOT_SHARE_DATA
+      : Declaration.DO_SHARE_DATA;
     CommunicationSecret secret = CommunicationSecret.fromByteArrayStream(in);
-    if (SerializerHelper.readLong(in) != serialVersionUID) {
-      throw new ClassCastException();
-    }
-    return new PluginInformation(id, executable, port, secret);
+    SerializerHelper.testMarker(in, serialVersionUID);
+    return new PluginInformation(id, executable, port, declaration, secret);
   }
 
   /**
@@ -123,8 +149,7 @@ public class PluginInformation implements Serializable {
    */
   public static PluginInformation fromByteArray(byte[] buf) {
     try {
-      ByteArrayInputStream in = new ByteArrayInputStream(buf);
-      return fromByteArrayStream(in);
+      return fromByteArrayStream(new ByteArrayInputStream(buf));
     } catch (IOException ioe) {
       ioe.printStackTrace();
       return null;
@@ -133,7 +158,7 @@ public class PluginInformation implements Serializable {
 
   @Override
   public int hashCode() {
-    return (executable + ":" + port + ":" + secret.toString()).hashCode();
+    return Objects.hash(id, executable, port, declaration, secret);
   }
 
 }

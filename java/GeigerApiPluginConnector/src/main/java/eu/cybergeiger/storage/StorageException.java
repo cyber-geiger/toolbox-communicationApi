@@ -3,8 +3,8 @@ package eu.cybergeiger.storage;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 
 /**
@@ -33,7 +33,7 @@ public class StorageException extends IOException implements Serializable {
     }
 
     @Override
-    public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+    public void toByteArrayStream(OutputStream out) throws IOException {
       SerializerHelper.writeMarker(out, serialVersionUID);
       SerializerHelper.writeString(out, name);
       SerializerHelper.writeString(out, getMessage());
@@ -47,7 +47,7 @@ public class StorageException extends IOException implements Serializable {
       SerializerHelper.writeMarker(out, serialVersionUID);
     }
 
-    public static SerializedException fromByteArrayStream(ByteArrayInputStream in)
+    public static SerializedException fromByteArrayStream(InputStream in)
       throws IOException {
       SerializerHelper.testMarker(in, serialVersionUID);
       String name = SerializerHelper.readString(in);
@@ -79,11 +79,11 @@ public class StorageException extends IOException implements Serializable {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     new SerializedException(this).toByteArrayStream(out);
   }
 
-  public static StorageException fromByteArrayStream(ByteArrayInputStream in)
+  public static StorageException fromByteArrayStream(InputStream in)
     throws IOException {
     SerializedException originalException = SerializedException.fromByteArrayStream(in);
     StorageException storageException = new StorageException(

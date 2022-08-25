@@ -108,7 +108,7 @@ public class TestMessage {
 
       byte[] blarr = pl != null ? pl.getBytes(StandardCharsets.UTF_8) : null;
       m.setPayload(blarr);
-      assertThat(blarr).containsExactly(m.getPayload());
+      assertThat(blarr == null ? new byte[0] : blarr).containsExactly(m.getPayload());
     }
   }
 }

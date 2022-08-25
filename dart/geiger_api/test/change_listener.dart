@@ -47,9 +47,9 @@ class CollectingListener with StorageListener {
   }
 
   Future<List<ChangeEvent>> awaitCount(int count,
-      [Duration timeLimit = const Duration(seconds: 1)]) {
-    canComplete(List events) => events.length >= count;
-    createResult(List<ChangeEvent> events) =>
+      [Duration timeLimit = const Duration(seconds: 30)]) {
+    bool canComplete(List events) => events.length >= count;
+    List<ChangeEvent> createResult(List<ChangeEvent> events) =>
         List<ChangeEvent>.from(events.getRange(0, count));
     if (canComplete(events)) {
       return Future.value(createResult(events));
@@ -57,7 +57,13 @@ class CollectingListener with StorageListener {
 
     final completer = _ConditionalCompleter(canComplete, createResult);
     completers.add(completer);
-    return completer.future.timeout(timeLimit, onTimeout: () {
+    return completer.future.then((value) {
+      completers.remove(completer);
+      return value;
+    }, onError: (error) {
+      completers.remove(completer);
+      throw error;
+    }).timeout(timeLimit, onTimeout: () {
       completers.remove(completer);
       throw TimeoutException(
           'Did not receive enough change events before timeout.', timeLimit);

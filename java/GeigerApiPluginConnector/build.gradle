@@ -25,7 +25,6 @@ dependencies {
 }
 
 test {
-    systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
     useJUnitPlatform()
 }
 

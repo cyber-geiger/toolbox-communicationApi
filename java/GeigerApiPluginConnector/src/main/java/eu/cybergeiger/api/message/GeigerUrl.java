@@ -3,8 +3,8 @@ package eu.cybergeiger.api.message;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Objects;
@@ -118,7 +118,7 @@ public class GeigerUrl implements Serializable {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, protocol);
     SerializerHelper.writeString(out, pluginId);
@@ -127,13 +127,13 @@ public class GeigerUrl implements Serializable {
   }
 
   /**
-   * <p>Convert ByteArrayInputStream to GeigerUrl.</p>
+   * <p>Convert InputStream to GeigerUrl.</p>
    *
-   * @param in ByteArrayInputStream to read from
+   * @param in InputStream to read from
    * @return the converted GeigerUrl
    * @throws IOException if GeigerUrl cannot be read
    */
-  public static GeigerUrl fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public static GeigerUrl fromByteArrayStream(InputStream in) throws IOException {
     if (SerializerHelper.readLong(in) != serialVersionUID)
       throw new ClassCastException();
     GeigerUrl url = new GeigerUrl(

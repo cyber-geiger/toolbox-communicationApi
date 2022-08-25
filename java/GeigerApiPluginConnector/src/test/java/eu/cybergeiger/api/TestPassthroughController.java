@@ -40,7 +40,10 @@ public class TestPassthroughController extends DartTest {
     return new PluginApi(
       "",
       PLUGIN_ID,
-      Declaration.DO_NOT_SHARE_DATA
+      Declaration.DO_NOT_SHARE_DATA,
+      GeigerApi.MASTER_EXECUTOR,
+      false,
+      true
     );
   }
 

@@ -9,9 +9,7 @@ import eu.cybergeiger.storage.node.Node;
 import eu.cybergeiger.storage.node.value.DefaultNodeValue;
 import eu.cybergeiger.storage.node.value.NodeValue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Objects;
 
 /**
@@ -114,7 +112,7 @@ public class MenuItem implements Serializable {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeMarker(out, serialVersionUID);
     menu.toByteArrayStream(out);
     action.toByteArrayStream(out);
@@ -123,13 +121,13 @@ public class MenuItem implements Serializable {
   }
 
   /**
-   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+   * <p>Reads objects from InputStream and stores them in map.</p>
    *
-   * @param in ByteArrayInputStream to be used
+   * @param in InputStream to be used
    * @return the deserialized Storable String
    * @throws IOException if value cannot be read
    */
-  public static MenuItem fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public static MenuItem fromByteArrayStream(InputStream in) throws IOException {
     SerializerHelper.testMarker(in, serialVersionUID);
     Node menu = DefaultNode.fromByteArrayStream(in, null);
     GeigerUrl url = GeigerUrl.fromByteArrayStream(in);

@@ -69,7 +69,11 @@ public class CommunicationHelper {
    */
   public static Message sendAndWait(GeigerApi api, Message message)
     throws InterruptedException, TimeoutException, IOException {
-    return sendAndWait(api, message, new MessageType[]{MessageType.COMAPI_SUCCESS, MessageType.COMAPI_ERROR});
+    return sendAndWait(api, message, new MessageType[]{
+      MessageType.COMAPI_SUCCESS,
+      MessageType.COMAPI_ERROR,
+      MessageType.AUTH_ERROR
+    });
   }
 
   /**

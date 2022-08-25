@@ -16,11 +16,11 @@ void main() {
     localMaster.registerListener(MessageType.values, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
+    await plugin.registerPlugin();
+    await plugin.activatePlugin();
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
     plugin.registerListener(MessageType.values, pluginListener);
     List<Message> receivedEventsMaster = masterListener.getEvents();
-    //print(receivedEventsMaster.toString());
-    //print(pluginListener.toString());
     expect(receivedEventsMaster.length, 2);
     Message rcvdMessage = receivedEventsMaster[0];
     expect(rcvdMessage.type, MessageType.registerPlugin);
@@ -41,10 +41,11 @@ void main() {
     localMaster.registerListener(MessageType.values, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
+        await plugin.registerPlugin();
+        await plugin.activatePlugin();
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
     plugin.registerListener(MessageType.values, pluginListener);
     List<Message> receivedEventsMaster = masterListener.getEvents();
-    //print(masterListener.toString());
     expect(receivedEventsMaster.length, 2);
     Message rcvdMessage = receivedEventsMaster[1];
     expect(rcvdMessage.type, MessageType.activatePlugin);
@@ -65,6 +66,8 @@ void main() {
     localMaster.registerListener(MessageType.values, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
+    await plugin.registerPlugin();
+    await plugin.activatePlugin();
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
     plugin.registerListener(MessageType.values, pluginListener);
 
@@ -72,7 +75,6 @@ void main() {
     await plugin.deregisterPlugin();
 
     List<Message> receivedEventsMaster = masterListener.getEvents();
-    //print(masterListener);
     expect(receivedEventsMaster.length, 3);
     Message rcvdMessage = receivedEventsMaster[2];
     expect(rcvdMessage.type, MessageType.deregisterPlugin);
@@ -81,7 +83,6 @@ void main() {
     expect(rcvdMessage.action?.plugin, GeigerApi.masterId);
     expect(rcvdMessage.action?.path, 'deregisterPlugin');
 
-    //print(pluginListener);
     List<Message> receivedEventsPlugin = pluginListener.getEvents();
     expect(receivedEventsPlugin.length, 1);
     rcvdMessage = receivedEventsPlugin[0];
@@ -104,6 +105,8 @@ void main() {
       localMaster.registerListener(MessageType.values, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
+      await plugin.registerPlugin();
+      await plugin.activatePlugin();
       SimpleEventListener pluginListener = SimpleEventListener('plugin');
       plugin.registerListener(MessageType.values, pluginListener);
 
@@ -153,6 +156,8 @@ void main() {
       localMaster.registerListener(MessageType.values, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
+      await plugin.registerPlugin();
+      await plugin.activatePlugin();
       SimpleEventListener pluginListener = SimpleEventListener('plugin');
       plugin.registerListener(MessageType.values, pluginListener);
 
@@ -199,6 +204,8 @@ void main() {
       localMaster.registerListener(MessageType.values, masterListener);
       var plugin =
           (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
+      await plugin.registerPlugin();
+      await plugin.activatePlugin();
       SimpleEventListener pluginListener = SimpleEventListener('plugin');
       plugin.registerListener(MessageType.values, pluginListener);
 

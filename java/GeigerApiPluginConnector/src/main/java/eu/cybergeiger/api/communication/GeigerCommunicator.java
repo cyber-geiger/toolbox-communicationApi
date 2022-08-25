@@ -3,8 +3,8 @@ package eu.cybergeiger.api.communication;
 import eu.cybergeiger.api.GeigerApi;
 import eu.cybergeiger.api.PluginApi;
 import eu.cybergeiger.api.message.Message;
+import eu.cybergeiger.api.plugin.PluginInformation;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -18,6 +18,7 @@ import java.util.logging.Level;
  */
 public class GeigerCommunicator {
   public static final int MASTER_PORT = 12348;
+  static final long RESPONSE_UID = 5643142302L;
 
   private final PluginApi api;
 
@@ -50,9 +51,8 @@ public class GeigerCommunicator {
         try {
           executor.execute(new MessageHandler(serverSocket.accept(), api));
         } catch (IOException e) {
-          if (e instanceof SocketException &&
-            e.getMessage().equals("socket closed"))
-            return; // If serverSocket was closed exit thread.
+          if (e instanceof SocketException)
+            return; // If serverSocket was closed. Exit thread.
           GeigerApi.logger.log(Level.WARNING, "Encountered exception while listening for messages.", e);
         }
       }
@@ -61,12 +61,12 @@ public class GeigerCommunicator {
     client.start();
   }
 
-  public void sendMessage(int port, Message message) throws IOException {
-    try (Socket socket = new Socket("localhost", port)) {
-      ByteArrayOutputStream bos = new ByteArrayOutputStream();
-      message.toByteArrayStream(bos);
-      socket.getOutputStream().write(bos.toByteArray());
+  public void sendMessage(PluginInformation info, Message message) throws IOException {
+    try (Socket socket = new Socket("localhost", info.getPort())) {
+      message.toByteArrayStream(socket.getOutputStream(), info.getSecret());
       socket.getOutputStream().flush();
+
+      // TODO: check for response UID
     }
   }
 

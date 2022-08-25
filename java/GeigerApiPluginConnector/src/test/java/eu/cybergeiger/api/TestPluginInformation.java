@@ -1,6 +1,7 @@
 package eu.cybergeiger.api;
 
 import eu.cybergeiger.api.plugin.CommunicationSecret;
+import eu.cybergeiger.api.plugin.Declaration;
 import eu.cybergeiger.api.plugin.PluginInformation;
 import org.junit.jupiter.api.Test;
 
@@ -23,9 +24,11 @@ public class TestPluginInformation {
   static final CommunicationSecret OTHER_SECRET =
     new CommunicationSecret("other_test".getBytes(StandardCharsets.UTF_8));
 
+  // TODO: test declaration property
+
   @Test
   public void testConstructor() {
-    PluginInformation info = new PluginInformation(ID, EXECUTABLE, PORT, SECRET);
+    PluginInformation info = new PluginInformation(ID, EXECUTABLE, PORT, Declaration.DO_NOT_SHARE_DATA, SECRET);
     assertThat(info.getId()).isEqualTo(ID);
     assertThat(info.getPort()).isEqualTo(PORT);
     assertThat(info.getExecutable()).isEqualTo(EXECUTABLE);

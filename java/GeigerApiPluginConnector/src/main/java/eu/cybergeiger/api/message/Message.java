@@ -1,11 +1,16 @@
 package eu.cybergeiger.api.message;
 
+import eu.cybergeiger.api.plugin.CommunicationSecret;
+import eu.cybergeiger.api.utils.Hash;
+import eu.cybergeiger.api.utils.HashType;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.UUID;
@@ -14,6 +19,8 @@ import java.util.UUID;
  * <p>Representation of a message.</p>
  */
 public class Message implements Serializable {
+  private static final HashType HASH_TYPE = HashType.SHA512;
+
   private static final long serialVersionUID = 143287432L;
 
   private final String sourceId;
@@ -21,6 +28,7 @@ public class Message implements Serializable {
   private final MessageType type;
   private final String requestId;
   private final GeigerUrl action;
+  private Hash hash;
   private String payloadString = "";
 
   /**
@@ -32,7 +40,7 @@ public class Message implements Serializable {
    * @param action   the url of the event
    */
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action) {
-    this(sourceId, targetId, type, action, UUID.randomUUID().toString());
+    this(sourceId, targetId, type, action, null, null);
   }
 
   /**
@@ -45,11 +53,7 @@ public class Message implements Serializable {
    * @param action    the url of the event
    */
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action, String requestId) {
-    this.sourceId = sourceId;
-    this.targetId = targetId;
-    this.type = type;
-    this.requestId = requestId;
-    this.action = action;
+    this(sourceId, targetId, type, action, null, requestId);
   }
 
   /**
@@ -63,8 +67,7 @@ public class Message implements Serializable {
    */
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action,
                  byte[] payload) {
-    this(sourceId, targetId, type, action);
-    setPayload(payload);
+    this(sourceId, targetId, type, action, payload, null);
   }
 
   /**
@@ -79,8 +82,14 @@ public class Message implements Serializable {
    */
   public Message(String sourceId, String targetId, MessageType type, GeigerUrl action,
                  byte[] payload, String requestId) {
-    this(sourceId, targetId, type, action, requestId);
-    setPayload(payload);
+    this.sourceId = sourceId;
+    this.targetId = targetId;
+    this.type = type;
+    this.requestId = requestId == null ? UUID.randomUUID().toString() : requestId;
+    this.action = action;
+    if (payload != null)
+      setPayload(payload);
+    hash = integrityHash(new CommunicationSecret());
   }
 
   /**
@@ -126,16 +135,41 @@ public class Message implements Serializable {
     return this.action;
   }
 
+  public Hash getHash() {
+    return hash;
+  }
+
+  public boolean isHashValid(CommunicationSecret secret) {
+    return integrityHash(secret).equals(hash);
+  }
+
+  private Hash integrityHash(CommunicationSecret secret) {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try {
+      out.write(
+        (sourceId +
+          (targetId == null ? "null" : targetId) +
+          type.getId() +
+          (action == null ? "null" : action.toString()) +
+          requestId)
+          .getBytes(StandardCharsets.UTF_8)
+      );
+      out.write(getPayload());
+      out.write(secret.getBytes());
+    } catch (IOException e) {
+      throw new RuntimeException("Got unexpected IO exception.", e);
+    }
+    return HASH_TYPE.digest(out.toByteArray());
+  }
+
   /**
    * <p>Returns the payload as array of bytes.</p>
    *
    * @return a byte array representing the payload
    */
   public byte[] getPayload() {
-    if (payloadString == null) {
-      return null;
-    }
-    return Base64.getDecoder().decode(payloadString);
+    return payloadString == null ? new byte[0] :
+      Base64.getDecoder().decode(payloadString);
   }
 
   /**
@@ -167,15 +201,14 @@ public class Message implements Serializable {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
+    toByteArrayStream(out, null);
+  }
+
+  public void toByteArrayStream(OutputStream out, CommunicationSecret secret) throws IOException {
     SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeString(out, sourceId);
-    if (targetId != null) {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, targetId);
-    } else {
-      SerializerHelper.writeInt(out, 0);
-    }
+    SerializerHelper.writeString(out, targetId);
     SerializerHelper.writeInt(out, type.getId());
     if (action == null) {
       SerializerHelper.writeInt(out, 0);
@@ -184,32 +217,29 @@ public class Message implements Serializable {
       action.toByteArrayStream(out);
     }
     SerializerHelper.writeString(out, requestId);
-    if (payloadString == null) {
-      SerializerHelper.writeInt(out, 0);
-    } else {
-      SerializerHelper.writeInt(out, 1);
-      SerializerHelper.writeString(out, payloadString);
-    }
+    SerializerHelper.writeString(out, payloadString);
+    integrityHash(secret == null ? new CommunicationSecret() : secret).toByteArrayStream(out);
     SerializerHelper.writeMarker(out, serialVersionUID);
   }
 
   /**
-   * <p>Convert ByteArrayInputStream to Message.</p>
+   * <p>Convert InputStream to Message.</p>
    *
-   * @param in the ByteArrayInputStream to use
+   * @param in the InputStream to use
    * @return the converted Message
    * @throws IOException if bytes cannot be read
    */
-  public static Message fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public static Message fromByteArrayStream(InputStream in) throws IOException {
     SerializerHelper.testMarker(in, serialVersionUID);
     Message m = new Message(
       SerializerHelper.readString(in),
-      SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null,
+      SerializerHelper.readString(in),
       Objects.requireNonNull(MessageType.getById(SerializerHelper.readInt(in))),
       SerializerHelper.readInt(in) == 1 ? GeigerUrl.fromByteArrayStream(in) : null,
       SerializerHelper.readString(in)
     );
-    m.setPayloadString(SerializerHelper.readInt(in) == 1 ? SerializerHelper.readString(in) : null);
+    m.setPayloadString(SerializerHelper.readString(in));
+    m.hash = Hash.fromByteArrayStream(in);
     SerializerHelper.testMarker(in, serialVersionUID);
     return m;
   }
@@ -228,16 +258,20 @@ public class Message implements Serializable {
       && type == message.type
       && Objects.equals(action, message.action)
       && Objects.equals(requestId, message.requestId)
+      && Objects.equals(hash, message.hash)
       && Objects.equals(payloadString, message.payloadString);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(sourceId, targetId, type, action, payloadString);
+    return Objects.hash(sourceId, targetId, type, action, hash, payloadString);
   }
 
   @Override
   public String toString() {
-    return getSourceId() + "=" + requestId + ">" + getTargetId() + "{[" + getType() + "] " + getAction() + "}";
+    return getSourceId() + "=" + requestId + ">" + getTargetId() + "" +
+      "{[" + getType() + "] (" + (getAction() == null ? "" : getAction()) + ")" +
+      (hash == null ? "" : "[" + hash.getType() + ": " + hash + "]")
+      + "}";
   }
 }

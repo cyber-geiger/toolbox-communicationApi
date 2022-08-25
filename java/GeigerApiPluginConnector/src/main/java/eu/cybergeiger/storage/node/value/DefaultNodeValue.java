@@ -3,8 +3,8 @@ package eu.cybergeiger.storage.node.value;
 
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -267,7 +267,7 @@ public class DefaultNodeValue implements NodeValue {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeString(out, key);
     SerializerHelper.writeInt(out, value.size());
@@ -296,7 +296,7 @@ public class DefaultNodeValue implements NodeValue {
    * @return the deserialized NodeValue
    * @throws IOException if an exception happens deserializing the stream
    */
-  public static DefaultNodeValue fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public static DefaultNodeValue fromByteArrayStream(InputStream in) throws IOException {
     SerializerHelper.testMarker(in, serialVersionUID);
     DefaultNodeValue value = new DefaultNodeValue(SerializerHelper.readString(in), "");
     int valueCount = SerializerHelper.readInt(in);

@@ -16,11 +16,11 @@ public class PluginStarter {
   }
 
   public static void startPlugin(PluginInformation pi, boolean inBackground) {
-    String[] executables = pi.getExecutable().split(";");
-    String packageName = executables[0];
-    String componentName = executables[1];
-    String windowsExecutable = executables[2];
     try {
+      String[] executables = pi.getExecutable().split(";");
+      String packageName = executables[0];
+      String componentName = executables[1];
+      String windowsExecutable = executables[2];
       switch (Platform.getPlatform()) {
         case WINDOWS:
           Runtime.getRuntime().exec(windowsExecutable);

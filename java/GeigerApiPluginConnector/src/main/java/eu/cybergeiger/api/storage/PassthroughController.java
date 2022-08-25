@@ -14,9 +14,7 @@ import eu.cybergeiger.storage.node.Node;
 import eu.cybergeiger.storage.node.value.DefaultNodeValue;
 import eu.cybergeiger.storage.node.value.NodeValue;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -29,7 +27,6 @@ public class PassthroughController implements StorageController, PluginListener,
   private interface PayloadSerializer {
     void serialize(ByteArrayOutputStream out) throws IOException;
   }
-
 
   private final PluginApi api;
 
@@ -58,7 +55,7 @@ public class PassthroughController implements StorageController, PluginListener,
   }
 
   private void processChangeEvent(Message message) throws IOException {
-    ByteArrayInputStream in = new ByteArrayInputStream(message.getPayload());
+    InputStream in = new ByteArrayInputStream(message.getPayload());
     String id = Objects.requireNonNull(SerializerHelper.readString(in));
     StorageListener listener = idToListener.get(id);
     if (listener == null)
@@ -123,7 +120,7 @@ public class PassthroughController implements StorageController, PluginListener,
   }
 
   private Node callRemoteReturnNode(String name, String path) throws StorageException {
-    ByteArrayInputStream in = callRemote(name, out -> SerializerHelper.writeString(out, path));
+    InputStream in = callRemote(name, out -> SerializerHelper.writeString(out, path));
     try {
       return DefaultNode.fromByteArrayStream(in, this);
     } catch (IOException e) {

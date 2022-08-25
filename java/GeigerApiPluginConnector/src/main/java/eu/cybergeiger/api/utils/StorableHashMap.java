@@ -3,8 +3,8 @@ package eu.cybergeiger.api.utils;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,10 +21,10 @@ public class StorableHashMap<K extends Serializable, V extends Serializable>
   private static final long serialVersionUID = 14231491232L;
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeInt(out, size());
-    for (Map.Entry e : entrySet()) {
+    for (Map.Entry<?, ?> e : entrySet()) {
       SerializerHelper.writeObject(out, e.getKey());
       SerializerHelper.writeObject(out, e.getValue());
     }
@@ -32,13 +32,13 @@ public class StorableHashMap<K extends Serializable, V extends Serializable>
   }
 
   /**
-   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+   * <p>Reads objects from InputStream and stores them in map.</p>
    *
-   * @param in  ByteArrayInputStream to be used
+   * @param in  InputStream to be used
    * @param map Map to store objects
    * @throws IOException if value cannot be read
    */
-  public static void fromByteArrayStream(ByteArrayInputStream in, StorableHashMap map)
+  public static void fromByteArrayStream(InputStream in, StorableHashMap map)
     throws IOException {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new ClassCastException();

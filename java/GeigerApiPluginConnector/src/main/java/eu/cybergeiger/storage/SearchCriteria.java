@@ -4,8 +4,8 @@ import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 import eu.cybergeiger.storage.node.Field;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -125,7 +125,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeMarker(out, serialVersionUID);
     SerializerHelper.writeInt(out, values.size());
     for (Map.Entry<Field, String> e : values.entrySet()) {
@@ -144,7 +144,7 @@ public class SearchCriteria implements Serializable, Comparable<SearchCriteria> 
    * @return the object parsed from the input stream by the respective class
    * @throws IOException if not overridden or reached unexpectedly the end of stream
    */
-  public static SearchCriteria fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public static SearchCriteria fromByteArrayStream(InputStream in) throws IOException {
     SerializerHelper.testMarker(in, serialVersionUID);
     SearchCriteria criteria = new SearchCriteria();
     int size = SerializerHelper.readInt(in);

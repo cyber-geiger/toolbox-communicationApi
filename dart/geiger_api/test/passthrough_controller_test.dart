@@ -375,8 +375,8 @@ class CollectingListener with StorageListener {
 
   Future<List<ChangeEvent>> awaitCount(int count,
       [Duration timeLimit = const Duration(seconds: 1)]) {
-    canComplete(List events) => events.length >= count;
-    createResult(List<ChangeEvent> events) =>
+    bool canComplete(List events) => events.length >= count;
+    List<ChangeEvent> createResult(List<ChangeEvent> events) =>
         List<ChangeEvent>.from(events.getRange(0, count));
     if (canComplete(events)) {
       return Future.value(createResult(events));
@@ -398,10 +398,11 @@ void main() async {
   final GeigerApi localMaster =
       (await getGeigerApi('', GeigerApi.masterId, Declaration.doNotShareData))!;
   await localMaster.zapState();
-  await localMaster.storage.zap();
   const owner = 'testOwner';
   final GeigerApi? pluginApi =
       await getGeigerApi(';;./plugin1', owner, Declaration.doNotShareData);
+  await pluginApi?.registerPlugin();
+  await pluginApi?.activatePlugin();
   final StorageController controller = pluginApi!.storage;
 
   // all tests related to updates of nodes and values
@@ -412,6 +413,11 @@ void main() async {
 
   // all tests related to the removal of nodes
   await removeTests(controller);
+
+  setUp(() async {
+    await localMaster.storage.zap();
+    await ExtendedTimestamp.initializeTimestamp(localMaster.storage);
+  });
 
   test('Check addOrUpdateValue', () async {
     String nodeName = ':addOrDeleteValueTest';
@@ -439,11 +445,6 @@ void main() async {
         isFalse);
   });
   group('change listener', () {
-    setUp(() async {
-      await controller.zap();
-      await ExtendedTimestamp.initializeTimestamp(controller);
-    });
-
     test('register/deregister', () async {
       final listener = CollectingListener();
       final criteria = SearchCriteria();
@@ -462,7 +463,7 @@ void main() async {
     });
 
     group('event types', () {
-      testEventType(
+      void testEventType(
           EventType expectedType,
           Node? expectedOldNode,
           Future<void> Function(StorageController) setup,

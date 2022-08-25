@@ -5,6 +5,7 @@ class MessageType {
   static const List<MessageType> values = [
     registerPlugin,
     deregisterPlugin,
+    authorizePlugin,
     activatePlugin,
     deactivatePlugin,
     registerMenu,
@@ -22,7 +23,9 @@ class MessageType {
     storageSuccess,
     storageError,
     comapiSuccess,
-    comapiError
+    comapiError,
+    authSuccess,
+    authError
   ];
 
   final String _value;
@@ -31,6 +34,7 @@ class MessageType {
   /* Events related to plugin registration */
   static const registerPlugin = MessageType._('REGISTER_PLUGIN', 100);
   static const deregisterPlugin = MessageType._('DEREGISTER_PLUGIN', 130);
+  static const authorizePlugin = MessageType._('AUTHORIZE_PLUGIN', 140);
 
   /* Activate plugin events */
   static const activatePlugin = MessageType._('ACTIVATE_PLUGIN', 150);
@@ -74,11 +78,13 @@ class MessageType {
   /* response messages*/
   static const comapiSuccess = MessageType._('COMAPI_SUCCESS', 30100);
   static const comapiError = MessageType._('COMAPI_ERROR', 30400);
+  static const authSuccess = MessageType._('AUTH_SUCCESS', 30700);
+  static const authError = MessageType._('AUTH_ERROR', 30900);
 
   const MessageType._(final this._value, final this._num);
 
   @override
-  toString() => _value;
+  String toString() => _value;
 
   int get id {
     return _num;
@@ -96,7 +102,7 @@ class MessageType {
     return null;
   }
 
-  @Deprecated("Use [values]")
+  @Deprecated('Use [values]')
   static List<MessageType> getAllValues() {
     List<MessageType> ret = <MessageType>[];
     for (MessageType mt in values) {

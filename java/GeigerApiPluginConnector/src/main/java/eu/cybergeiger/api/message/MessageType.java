@@ -45,7 +45,9 @@ public enum MessageType {
   /* response messages*/
 
   COMAPI_SUCCESS(30100),
-  COMAPI_ERROR(30400);
+  COMAPI_ERROR(30400),
+  AUTH_SUCCESS(30700),
+  AUTH_ERROR(30900);
 
   private final int id;
 
@@ -96,6 +98,8 @@ public enum MessageType {
       STORAGE_ERROR,
       COMAPI_SUCCESS,
       COMAPI_ERROR,
+      AUTH_SUCCESS,
+      AUTH_ERROR
     };
   }
 }

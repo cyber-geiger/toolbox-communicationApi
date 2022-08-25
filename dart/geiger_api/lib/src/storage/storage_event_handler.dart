@@ -79,7 +79,8 @@ class StorageEventHandler with PluginListener {
       }),
       _SerializerCallProcessor('deleteNode', 'Could not delete node',
           (controller, stream, _) async {
-        return controller.delete((await SerializerHelper.readString(stream))!);
+        return await controller
+            .delete((await SerializerHelper.readString(stream))!);
       }),
       _SerializerCallProcessor('getValue', 'Could not get node value',
           (controller, stream, _) async {
@@ -216,12 +217,11 @@ class StorageEventHandler with PluginListener {
 
     var controller = _controllers[msg.sourceId];
     if (controller == null) {
-      if (msg.sourceId == GeigerApi.masterId) {
-        _controllers[msg.sourceId] = controller!;
-      } else {
-        _controllers[msg.sourceId] =
-            controller = OwnerEnforcerWrapper(_masterController, msg.sourceId);
-      }
+      _controllers[msg.sourceId] = controller = msg.sourceId ==
+              GeigerApi.masterId
+          ? _masterController
+          : OwnerEnforcerWrapper(
+              _masterController, _api.plugins[StorableString(msg.sourceId)]!);
     }
 
     try {
@@ -233,7 +233,7 @@ class StorageEventHandler with PluginListener {
         serializer(sink);
         sink.close();
       }
-      _api.sendMessage(Message(_api.id, msg.sourceId,
+      await _api.sendMessage(Message(_api.id, msg.sourceId,
           MessageType.storageSuccess, null, await sink?.bytes, msg.requestId));
     } on Exception catch (e) {
       try {

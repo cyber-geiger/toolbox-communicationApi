@@ -3,8 +3,8 @@ package eu.cybergeiger.api.utils;
 import eu.cybergeiger.serialization.Serializable;
 import eu.cybergeiger.serialization.SerializerHelper;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 
 /**
@@ -46,18 +46,18 @@ public class StorableString implements Serializable {
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeString(out, this.value);
   }
 
   /**
-   * <p>Reads objects from ByteArrayInputStream and stores them in map.</p>
+   * <p>Reads objects from InputStream and stores them in map.</p>
    *
-   * @param in ByteArrayInputStream to be used
+   * @param in InputStream to be used
    * @return the deserialized Storable String
    * @throws IOException if value cannot be read
    */
-  public StorableString fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  public StorableString fromByteArrayStream(InputStream in) throws IOException {
     return new StorableString(SerializerHelper.readString(in));
   }
 }

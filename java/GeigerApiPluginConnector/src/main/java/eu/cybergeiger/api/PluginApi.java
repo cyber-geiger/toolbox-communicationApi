@@ -8,18 +8,21 @@ import eu.cybergeiger.api.message.MessageType;
 import eu.cybergeiger.api.plugin.*;
 import eu.cybergeiger.api.storage.PassthroughController;
 import eu.cybergeiger.api.utils.Platform;
-import eu.cybergeiger.api.utils.StorableHashMap;
-import eu.cybergeiger.api.utils.StorableString;
 import eu.cybergeiger.serialization.SerializerHelper;
 import eu.cybergeiger.storage.StorageController;
 import eu.cybergeiger.storage.StorageException;
+import sun.security.util.BitArray;
+import sun.security.util.DerOutputStream;
+import sun.security.util.DerValue;
 
+import javax.crypto.KeyAgreement;
 import java.io.*;
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -34,15 +37,23 @@ public class PluginApi implements GeigerApi {
   private static final int MAX_SEND_TRIES = 10;
   private static final int MASTER_START_WAIT_TIME_MILLIS = 1000;
   private static final String INITIAL_STATE_SAVE_DIRECTORY = "./";
+  private static final String KEY_EXCHANGE_ALGORITHM = "X25519";
+  private static final MessageType[] NO_AUTH_MESSAGE_TYPES = new MessageType[]{
+    MessageType.AUTH_ERROR
+  };
+  private static final MessageType[] TEMP_NO_AUTH_MESSAGE_TYPES = new MessageType[]{
+    MessageType.COMAPI_SUCCESS,
+    MessageType.COMAPI_ERROR
+  };
 
-  private final StorableHashMap<StorableString, PluginInformation> plugins = new StorableHashMap<>();
 
   private final String executor;
-  private final String masterExecutor;
   private final String id;
   private final Declaration declaration;
   private final PassthroughController storage;
   private String stateSaveDirectory = INITIAL_STATE_SAVE_DIRECTORY;
+  private final boolean ignoreMessageSignature;
+  private PluginInformation masterInfo;
 
   private final Map<MessageType, List<PluginListener>> listeners = Collections.synchronizedMap(new HashMap<>());
 
@@ -57,7 +68,7 @@ public class PluginApi implements GeigerApi {
    * @throws StorageException if the StorageController could not be initialized
    */
   public PluginApi(String executor, String id, Declaration declaration) throws IOException {
-    this(executor, id, declaration, GeigerApi.MASTER_EXECUTOR);
+    this(executor, id, declaration, GeigerApi.MASTER_EXECUTOR, false, false);
   }
 
   /**
@@ -69,16 +80,26 @@ public class PluginApi implements GeigerApi {
    * @param masterExecutor Alternative master executor string.
    * @throws StorageException if the StorageController could not be initialized
    */
-  public PluginApi(String executor, String id, Declaration declaration, String masterExecutor) throws IOException {
+  public PluginApi(String executor, String id, Declaration declaration,
+                   String masterExecutor, boolean ignoreMessageSignature,
+                   boolean skipInitialStateRestore) throws IOException {
     this.executor = executor;
     this.id = id;
     this.declaration = declaration;
-    this.masterExecutor = masterExecutor;
+    this.ignoreMessageSignature = ignoreMessageSignature;
+    masterInfo = new PluginInformation(
+      GeigerApi.MASTER_ID,
+      masterExecutor,
+      GeigerCommunicator.MASTER_PORT,
+      Declaration.DO_NOT_SHARE_DATA
+    );
 
-    restoreState();
+    if (!skipInitialStateRestore)
+      restoreState();
     communicator = new GeigerCommunicator(this);
     communicator.start();
-    registerPlugin();
+    if (masterInfo.getSecret().getBytes().length == 0)
+      registerPlugin(); // Only register if not already.
     activatePlugin();
 
     storage = new PassthroughController(this);
@@ -107,21 +128,110 @@ public class PluginApi implements GeigerApi {
     return storage;
   }
 
+  private static class RegisterResultWaiter implements PluginListener, AutoCloseable {
+    static final MessageType[] TYPES = new MessageType[]{
+      MessageType.AUTH_SUCCESS,
+      MessageType.AUTH_ERROR
+    };
+
+    private final Object receivedResponse = new Object();
+    private Message result;
+    private final GeigerApi api;
+
+    RegisterResultWaiter(GeigerApi api) {
+      this.api = api;
+      api.registerListener(TYPES, this);
+    }
+
+    @Override
+    public void pluginEvent(Message msg) {
+      synchronized (receivedResponse) {
+        if (result != null ||
+          msg.getAction() == null ||
+          !msg.getAction().getPath().equals("registerPlugin")) return;
+        result = msg;
+        receivedResponse.notifyAll();
+      }
+    }
+
+    boolean waitForResult() throws InterruptedException, TimeoutException {
+      synchronized (receivedResponse) {
+        receivedResponse.wait(30000);
+      }
+      if (result == null)
+        throw new TimeoutException("Did not receive register result in time.");
+      return result.getType() == MessageType.AUTH_SUCCESS;
+    }
+
+    @Override
+    public void close() {
+      api.deregisterListener(TYPES, this);
+    }
+  }
+
   @Override
   public void registerPlugin() throws CommunicationException {
-    PluginInformation pluginInformation = new PluginInformation(id, this.executor, communicator.getPort());
     try {
-      sendAndWait(
-        this,
-        new Message(
+      KeyPair pair = KeyPairGenerator
+        .getInstance(KEY_EXCHANGE_ALGORITHM)
+        .generateKeyPair();
+
+      // Extract raw public key
+      DerValue ownPubKeyEncoded = new DerValue(pair.getPublic().getEncoded());
+      DerValue algoId = ownPubKeyEncoded.data.getDerValue();
+      byte[] ownPubKeyRaw = ownPubKeyEncoded.data.getUnalignedBitString().toByteArray();
+
+      // Register result waiter before sending registration request in case
+      // result is sent immediately.
+      try (RegisterResultWaiter resultWaiter = new RegisterResultWaiter(this)) {
+        PluginInformation ownPluginInfo = new PluginInformation(
           id,
-          MASTER_ID,
-          MessageType.REGISTER_PLUGIN,
-          new GeigerUrl(MASTER_ID, "registerPlugin"),
-          pluginInformation.toByteArray()
-        )
-      );
-    } catch (TimeoutException | InterruptedException | IOException e) {
+          executor,
+          communicator.getPort(),
+          new CommunicationSecret(ownPubKeyRaw)
+        );
+        Message result = sendAndWait(
+          this,
+          new Message(
+            id,
+            MASTER_ID,
+            MessageType.REGISTER_PLUGIN,
+            new GeigerUrl(MASTER_ID, "registerPlugin"),
+            ownPluginInfo.toByteArray()
+          )
+        );
+        if (result.getType().equals(MessageType.COMAPI_ERROR))
+          throw new CommunicationException("Key exchange failed.");
+
+        // Construct foreign public key
+        DerOutputStream foreignPubKeyEncoded = new DerOutputStream();
+        foreignPubKeyEncoded.write(DerValue.tag_Sequence);
+        // Our own public key is structurally the same, so we can use its length.
+        foreignPubKeyEncoded.putLength(ownPubKeyEncoded.length());
+        algoId.encode(foreignPubKeyEncoded);
+        foreignPubKeyEncoded.putUnalignedBitString(new BitArray(
+          result.getPayload().length * 8,
+          result.getPayload()
+        ));
+        PublicKey foreignPubKey = KeyFactory.getInstance(KEY_EXCHANGE_ALGORITHM)
+          .generatePublic(new X509EncodedKeySpec(foreignPubKeyEncoded.toByteArray()));
+
+        // Compute shared secret and save in master's plugin information.
+        KeyAgreement agreement = KeyAgreement.getInstance(KEY_EXCHANGE_ALGORITHM);
+        agreement.init(pair.getPrivate());
+        agreement.doPhase(foreignPubKey, true);
+        masterInfo = masterInfo.withSecret(
+          new CommunicationSecret(agreement.generateSecret())
+        );
+        if (!resultWaiter.waitForResult()) {
+          masterInfo = masterInfo.withSecret(null);
+          throw new CommunicationException("Plugin registration was denied.");
+        }
+        storeState();
+      }
+    } catch (TimeoutException | InterruptedException | IOException | NoSuchAlgorithmException |
+             InvalidKeySpecException | InvalidKeyException e) {
+      masterInfo = masterInfo.withSecret(null);
       throw new CommunicationException("Failed to register plugin.", e);
     }
   }
@@ -196,62 +306,56 @@ public class PluginApi implements GeigerApi {
     return Paths.get(baseDirectory, "geiger").toString();
   }
 
-  private String getStateSaveLocation() {
-    return Paths.get(stateSaveDirectory, "GeigerApi." + id + ".state").toString();
+  private File getStateSaveLocation() throws IOException {
+    File file = new File(Paths.get(stateSaveDirectory, "GeigerApi." + id + ".state").toUri());
+    file.getParentFile().mkdirs();
+    file.createNewFile();
+    return file;
   }
 
   private interface IOOperation {
-    void execute(String path) throws IOException;
+    void execute(File file, boolean lastTry) throws IOException;
   }
 
   private void tryStateIO(IOOperation operation, String errorMessage) {
     if (stateSaveDirectory.equals(INITIAL_STATE_SAVE_DIRECTORY))
       try {
-        operation.execute(getStateSaveLocation());
+        operation.execute(getStateSaveLocation(), false);
         return;
       } catch (IOException e) {
-        logger.log(Level.WARNING, "State IO operation failed. Switching to alternative save location.");
+        logger.log(Level.WARNING, "State IO operation failed. Switching to alternative save location.", e);
       }
     stateSaveDirectory = getAlternativeStateStoreDirectory();
     try {
-      operation.execute(getStateSaveLocation());
+      operation.execute(getStateSaveLocation(), true);
     } catch (IOException e) {
       logger.log(Level.SEVERE, errorMessage, e);
     }
   }
 
   private void storeState() {
-    tryStateIO((path) -> {
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
-      synchronized (plugins) {
-        plugins.toByteArrayStream(out);
-      }
-      try (FileOutputStream file = new FileOutputStream(getStateSaveLocation())) {
-        file.write(out.toByteArray());
+    tryStateIO((path, ignored) -> {
+      try (FileOutputStream out = new FileOutputStream(getStateSaveLocation())) {
+        masterInfo.toByteArrayStream(out);
       }
     }, "Unable to store state.");
   }
 
   private void restoreState() {
-    tryStateIO((path) -> {
-      byte[] buffer;
-      try {
-        buffer = Files.readAllBytes(Paths.get(getStateSaveLocation()));
-      } catch (NoSuchFileException ignored) {
-        // No save file is equal to an empty save file.
-        plugins.clear();
-        return;
-      }
-      ByteArrayInputStream in = new ByteArrayInputStream(buffer);
-      try {
-        synchronized (plugins) {
-          StorableHashMap.fromByteArrayStream(in, plugins);
+    try {
+      tryStateIO((path, lastTry) -> {
+        try (FileInputStream in = new FileInputStream(getStateSaveLocation())) {
+          masterInfo = PluginInformation.fromByteArrayStream(in);
+        } catch (FileNotFoundException e) {
+          if (!lastTry) throw e;
+          // No saved state should be treated like a reset state.
+          zapState();
         }
-      } catch (IOException e) {
-        logger.log(Level.WARNING, "Unable to deserialize state. Storing current state.", e);
-        storeState();
-      }
-    }, "Unable to restore state.");
+      }, "Unable to restore state.");
+    } catch (ClassCastException ignored) {
+      // Found invalid state save. Reset and overwrite to recover.
+      zapState();
+    }
   }
 
   /**
@@ -291,38 +395,25 @@ public class PluginApi implements GeigerApi {
   }
 
   @Override
-  public void sendMessage(Message message) throws IOException {
-    if (id.equals(message.getTargetId())) {
-      receivedMessage(message);
-      return;
-    }
+  public void sendMessage(Message message) throws CommunicationException {
     if (!message.getTargetId().equals(GeigerApi.MASTER_ID))
       throw new CommunicationException("PluginApi cannot send messages to non-master plugins.");
 
-    StorableString storableTargetId = new StorableString(message.getTargetId());
-    PluginInformation pluginInformation = plugins.computeIfAbsent(
-      storableTargetId,
-      k -> new PluginInformation(
-        message.getTargetId(),
-        masterExecutor,
-        GeigerCommunicator.MASTER_PORT
-      )
-    );
     boolean inBackground = message.getType() != MessageType.RETURNING_CONTROL;
     if (!inBackground)
-      PluginStarter.startPlugin(pluginInformation, false);
+      PluginStarter.startPlugin(masterInfo, false);
 
     int tries = 1;
     while (true) {
       try {
-        communicator.sendMessage(pluginInformation.getPort(), message);
+        communicator.sendMessage(masterInfo, message);
         break;
       } catch (IOException e) {
         if (tries == MAX_SEND_TRIES || !(e instanceof ConnectException))
-          throw e;
+          throw new CommunicationException("Failed to send message.", e);
         tries++;
 
-        PluginStarter.startPlugin(pluginInformation, inBackground);
+        PluginStarter.startPlugin(masterInfo, inBackground);
         try {
           Thread.sleep(MASTER_START_WAIT_TIME_MILLIS);
         } catch (InterruptedException ignored) {
@@ -333,6 +424,21 @@ public class PluginApi implements GeigerApi {
   }
 
   public void receivedMessage(Message message) throws CommunicationException {
+    if (!message.getSourceId().equals(GeigerApi.MASTER_ID)) return;
+    if (!ignoreMessageSignature &&
+      !Arrays.asList(NO_AUTH_MESSAGE_TYPES).contains(message.getType()) &&
+      !(masterInfo.getSecret().getBytes().length == 0 &&
+        Arrays.asList(TEMP_NO_AUTH_MESSAGE_TYPES).contains(message.getType())) &&
+      !message.isHashValid(masterInfo.getSecret())) {
+      sendMessage(new Message(
+        id, message.getSourceId(),
+        MessageType.AUTH_ERROR,
+        null, null,
+        message.getRequestId()
+      ));
+      return;
+    }
+
     // all other messages are not handled internally
     if (message.getType() == MessageType.PING) {
       try {
@@ -430,9 +536,7 @@ public class PluginApi implements GeigerApi {
    * <p>Deletes all current registered items.</p>
    */
   public void zapState() {
-    synchronized (plugins) {
-      plugins.clear();
-    }
+    masterInfo = masterInfo.withSecret(null);
     storeState();
   }
 

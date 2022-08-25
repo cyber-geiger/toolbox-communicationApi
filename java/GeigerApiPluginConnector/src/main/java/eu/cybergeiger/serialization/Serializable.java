@@ -1,8 +1,6 @@
 package eu.cybergeiger.serialization;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * <p>Serializer interface for the serialization of value related objects.</p>
@@ -18,7 +16,7 @@ public interface Serializable {
    * @return the object parsed from the input stream by the respective class
    * @throws IOException if not overridden or reached unexpectedly the end of stream
    */
-  static Serializable fromByteArrayStream(ByteArrayInputStream in) throws IOException {
+  static Serializable fromByteArrayStream(InputStream in) throws IOException {
     throw new IOException("Not implemented... ");
   }
 
@@ -28,7 +26,7 @@ public interface Serializable {
    * @param out the output stream receiving the object
    * @throws IOException if  an exception occurs while writing to the stream
    */
-  void toByteArrayStream(ByteArrayOutputStream out) throws IOException;
+  void toByteArrayStream(OutputStream out) throws IOException;
 
   /**
    * Convenience class to serialize to a bytearray.
@@ -54,8 +52,7 @@ public interface Serializable {
    */
   static Serializable fromByteArray(byte[] buf) {
     try {
-      ByteArrayInputStream in = new ByteArrayInputStream(buf);
-      return fromByteArrayStream(in);
+      return fromByteArrayStream(new ByteArrayInputStream(buf));
     } catch (IOException ioe) {
       ioe.printStackTrace();
       return null;

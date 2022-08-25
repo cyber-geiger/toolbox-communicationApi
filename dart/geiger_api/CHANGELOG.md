@@ -1,23 +1,56 @@
-## 0.7.4 Bugfixing Release (pre-release)
+## 0.8.0 Java and iOS support
+Changes:
+- GeigerApi does no longer do automatic plugin registration and activation
+
+Improvements:
+- Better iOS support
+
+## 0.7.10 Bugfixing Release and first iOS support
+Added:
+- iOS support added (nasty and experimental) 
+
+## 0.7.9 Bugfixing Release
+Improvements:
+- Additional linter rules to improve code quality.
+- Better example app.
 
 Fixes:
+- Improved stability when an app or plugin is unexpectedly closed.
 
+## 0.7.8 Bugfixing Release
+Fixes:
+- Fixes visibility rules of listener in the owner enforcer.
+- Take the plugin's sharing declaration into account in the owner enforcer. 
+- Added more test to hunt down issue #22
+- Adresses visibility issue of event nodes when secured (related to issue #22).
+
+## 0.7.7 Bugfixing Release
+Fixes:
+- Fix `Node` deserialization when only a `PassthroughController` has been created.
+
+## 0.7.6 Bugfixing Release
+Fixes:
+- Apply visibility rules for `newNode` in a storage change event to `newNode` instead of `oldNode`.
+
+## 0.7.5 Bugfixing Release
+Fixes:
+- Removes the asset dependency from the GEIGER localstorage
+
+## 0.7.4 Bugfixing Release [Minor Breaking Changes]
+Fixes:
 - Listening to `MessageType.allEvents` no longer returns internal messages.
-    - Internal message types have an ID higher than `MessageType.allEvents`
+- Internal message types have an ID higher than `MessageType.allEvents`
+- Fixes GitHub issue #20 (Returning control is not possible in geiger_api:0.7.3)
 
-Breaking Changes:
-
+Changes:
 - `GeigerApi.registerListener` is no longer async.
 - `MessageType.registerListener` and `MessageType.deregisterListener` were removed.
 - The `timeout` optional parameter in `CommunicationHelper.sendAndWait` is now a named parameter.
 - `CommunicationHelper.sendAndWait` now by default only listens for `MessageType.comapiSuccess`
-  and `MessageType.comapiError`.
-    - This behavior can be changed using the `responseTypes` named parameter.
+  and `MessageType.comapiError`. This behavior can be changed using the `responseTypes` named parameter.
 
 ## 0.7.3 Bugfixing Release
-
 Fixes:
-
 - Various improvments to stabilize the connection between plugin and toolbox master
 - Various fixes regarding speed and size constraints
 

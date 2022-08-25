@@ -16,3 +16,7 @@ ecosystem. Failure to choose a unique ID will result in unreliable communication
 ### Running tests
 
 Run tests with `--concurrency=1`. Else some tests will try to get the same port simultaneously.
+
+### iOS
+
+To get started with iOS, checkout the [iOS documentation](iOSDocumentation.md)

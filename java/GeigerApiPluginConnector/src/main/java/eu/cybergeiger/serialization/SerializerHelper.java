@@ -13,21 +13,21 @@ public class SerializerHelper {
   private static final long INT_UID = 122134568793L;
   private static final long STACKTRACES_UID = 9012350123956L;
 
-  public static void writeRawLong(ByteArrayOutputStream out, Long l) throws IOException {
+  public static void writeRawLong(OutputStream out, Long l) throws IOException {
     out.write(longToByteArray(l));
   }
 
-  public static Long readRawLong(ByteArrayInputStream in) throws IOException {
+  public static Long readRawLong(InputStream in) throws IOException {
     byte[] bytes = new byte[Long.BYTES];
     in.read(bytes);
     return byteArrayToLong(bytes);
   }
 
-  public static void writeRawInt(ByteArrayOutputStream out, Integer l) throws IOException {
+  public static void writeRawInt(OutputStream out, Integer l) throws IOException {
     out.write(intToByteArray(l));
   }
 
-  public static Integer readRawInt(ByteArrayInputStream in) throws IOException {
+  public static Integer readRawInt(InputStream in) throws IOException {
     byte[] bytes = new byte[Integer.BYTES];
     in.read(bytes);
     return byteArrayToInt(bytes);
@@ -85,7 +85,7 @@ public class SerializerHelper {
    * @param l   the value to be deserialized
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static void writeLong(ByteArrayOutputStream out, Long l) throws IOException {
+  public static void writeLong(OutputStream out, Long l) throws IOException {
     writeRawLong(out, LONG_UID);
     writeRawLong(out, l);
   }
@@ -97,8 +97,9 @@ public class SerializerHelper {
    * @return the deserialized long value
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static Long readLong(ByteArrayInputStream in) throws IOException {
-    if (readRawLong(in) != LONG_UID) {
+  public static Long readLong(InputStream in) throws IOException {
+    long raw = readRawLong(in);
+    if (raw != LONG_UID) {
       throw new ClassCastException();
     }
     return readRawLong(in);
@@ -111,7 +112,7 @@ public class SerializerHelper {
    * @param i   the value to be deserialized
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static void writeInt(ByteArrayOutputStream out, Integer i) throws IOException {
+  public static void writeInt(OutputStream out, Integer i) throws IOException {
     writeRawLong(out, INT_UID);
     writeRawInt(out, i);
   }
@@ -123,7 +124,7 @@ public class SerializerHelper {
    * @return the deserialized integer value
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static Integer readInt(ByteArrayInputStream in) throws IOException {
+  public static Integer readInt(InputStream in) throws IOException {
     long marker = readRawLong(in);
     if (marker != INT_UID) {
       throw new ClassCastException();
@@ -138,7 +139,7 @@ public class SerializerHelper {
    * @param value the value to be serialized
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static void writeString(ByteArrayOutputStream out, String value) throws IOException {
+  public static void writeString(OutputStream out, String value) throws IOException {
     writeRawLong(out, STRING_UID);
     if (value == null) {
       writeRawInt(out, -1);
@@ -156,14 +157,25 @@ public class SerializerHelper {
    * @return the deserialized string
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static String readString(ByteArrayInputStream in) throws IOException {
+  public static String readString(InputStream in) throws IOException {
     if (readRawLong(in) != STRING_UID)
       throw new ClassCastException();
     int length = readRawInt(in);
     if (length == -1) return null;
-    byte[] arr = new byte[length];
-    in.read(arr);
-    return new String(arr, StandardCharsets.UTF_8);
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream(length);
+    byte[] buffer = new byte[4096];
+    int bytesRead;
+    while ((bytesRead = in.read(
+      buffer,
+      0,
+      Math.min(length - out.size(), buffer.length)
+    )) > 0)
+      out.write(buffer, 0, bytesRead);
+    if (out.size() != length) {
+      throw new IOException("Insufficient data to deserialize String.");
+    }
+    return new String(out.toByteArray(), StandardCharsets.UTF_8);
   }
 
   /**
@@ -173,7 +185,7 @@ public class SerializerHelper {
    * @param throwable the throwable to serialize the stack trace of
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static void writeStackTraces(ByteArrayOutputStream out, Throwable throwable)
+  public static void writeStackTraces(OutputStream out, Throwable throwable)
     throws IOException {
     StringWriter writer = new StringWriter();
     throwable.printStackTrace(new PrintWriter(writer));
@@ -187,7 +199,7 @@ public class SerializerHelper {
    * @param stackTrace the value to be deserialized
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static void writeStackTraces(ByteArrayOutputStream out, String stackTrace)
+  public static void writeStackTraces(OutputStream out, String stackTrace)
     throws IOException {
     writeRawLong(out, STACKTRACES_UID);
     writeString(out, stackTrace);
@@ -200,7 +212,7 @@ public class SerializerHelper {
    * @return The stack trace
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static String readStackTraces(ByteArrayInputStream in) throws IOException {
+  public static String readStackTraces(InputStream in) throws IOException {
     if (readRawLong(in) != STACKTRACES_UID) {
       throw new ClassCastException();
     }
@@ -214,7 +226,7 @@ public class SerializerHelper {
    * @return The stack trace
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static StackTraceElement[] readStackTracesWrapped(ByteArrayInputStream in) throws IOException {
+  public static StackTraceElement[] readStackTracesWrapped(InputStream in) throws IOException {
     String trace = SerializerHelper.readStackTraces(in);
     if (trace == null) return null;
     return new StackTraceElement[]{
@@ -223,13 +235,13 @@ public class SerializerHelper {
   }
 
   /**
-   * Read an object from ByteArrayInputStream.
+   * Read an object from InputStream.
    *
-   * @param in the byteArrayInputStream to use
+   * @param in the InputStream to use
    * @return return the object read
    * @throws IOException if object cannot be read
    */
-  public static Object readObject(ByteArrayInputStream in) throws IOException {
+  public static Object readObject(InputStream in) throws IOException {
     switch ("" + readRawLong(in)) {
       case "" + STRING_UID:
         byte[] arr = new byte[readRawInt(in)];
@@ -243,13 +255,13 @@ public class SerializerHelper {
   }
 
   /**
-   * Write an object to ByteArrayOutputStream.
+   * Write an object to OutputStream.
    *
-   * @param out the ByteArrayOutputStream to use
+   * @param out the OutputStream to use
    * @param o   the Object to write
    * @throws IOException if object cannot be written
    */
-  public static void writeObject(ByteArrayOutputStream out, Object o) throws IOException {
+  public static void writeObject(OutputStream out, Object o) throws IOException {
     switch (o.getClass().getName()) {
       case "String":
         writeString(out, (String) (o));
@@ -265,14 +277,14 @@ public class SerializerHelper {
     }
   }
 
-  public static void writeMarker(ByteArrayOutputStream out, long marker) throws IOException {
+  public static void writeMarker(OutputStream out, long marker) throws IOException {
     writeLong(out, marker);
   }
 
-  public static void testMarker(ByteArrayInputStream in, long marker) throws IOException {
+  public static void testMarker(InputStream in, long marker) throws IOException {
     long actual = readLong(in);
     if (marker != actual)
-      throw new InvalidObjectException(
+      throw new ClassCastException(
         "Actual marker value " + actual + " does not match expected value " + marker + "."
       );
   }

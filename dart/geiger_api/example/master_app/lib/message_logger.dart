@@ -95,6 +95,11 @@ class _MessageViewState extends State<MessageView> {
                                     ? 'No'
                                     : 'Yes'))
                           ]),
+                          TableRow(children: [
+                            const TableCell(child: Text("Hash:")),
+                            TableCell(
+                                child: Text(widget.message.hash.toString()))
+                          ]),
                         ],
                       )
                     ],

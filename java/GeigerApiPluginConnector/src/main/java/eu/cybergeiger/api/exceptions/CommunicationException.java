@@ -36,7 +36,7 @@ public class CommunicationException extends IOException implements Serializable 
     }
 
     @Override
-    public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+    public void toByteArrayStream(OutputStream out) throws IOException {
       SerializerHelper.writeLong(out, serialVersionUID);
       SerializerHelper.writeString(out, exceptionName);
       SerializerHelper.writeString(out, message);
@@ -54,7 +54,7 @@ public class CommunicationException extends IOException implements Serializable 
       SerializerHelper.writeLong(out, serialVersionUID);
     }
 
-    public static SerializedException fromByteArrayStream(ByteArrayInputStream in)
+    public static SerializedException fromByteArrayStream(InputStream in)
       throws IOException {
       if (SerializerHelper.readLong(in) != serialVersionUID) {
         throw new IOException("failed to parse StorageException (bad stream?)");
@@ -112,7 +112,7 @@ public class CommunicationException extends IOException implements Serializable 
   }
 
   @Override
-  public void toByteArrayStream(ByteArrayOutputStream out) throws IOException {
+  public void toByteArrayStream(OutputStream out) throws IOException {
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, getMessage());
 
@@ -147,7 +147,7 @@ public class CommunicationException extends IOException implements Serializable 
    * @return the object parsed from the input stream by the respective class
    * @throws IOException if not overridden or reached unexpectedly the end of stream
    */
-  public static CommunicationException fromByteArrayStream(ByteArrayInputStream in)
+  public static CommunicationException fromByteArrayStream(InputStream in)
     throws IOException {
     if (SerializerHelper.readLong(in) != serialVersionUID) {
       throw new IOException("failed to parse StorageException (bad stream?)");

@@ -1,5 +1,6 @@
 library geiger_api;
 
+import 'package:geiger_api/src/plugin/declaration.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 import 'communication_secret.dart';
@@ -10,6 +11,7 @@ class PluginInformation with Serializer {
   final String id;
   final String? executable;
   final int port;
+  final Declaration declaration;
   late CommunicationSecret secret;
 
   /// Creates a [PluginInformation] with the given properties:
@@ -17,9 +19,9 @@ class PluginInformation with Serializer {
   /// - [executable] the string required for platform specific wakeup of a plugin
   /// - [port]       the port of the plugin to be contacted on
   /// - [secret]     the secret required for communicating (if null a new secret is generated)
-  PluginInformation(this.id, this.executable, this.port,
+  PluginInformation(this.id, this.executable, this.port, this.declaration,
       [CommunicationSecret? secret]) {
-    this.secret = secret ?? CommunicationSecret.empty();
+    this.secret = secret ?? CommunicationSecret.random();
   }
 
   /// Gets the port of the plugin.
@@ -43,6 +45,8 @@ class PluginInformation with Serializer {
     SerializerHelper.writeString(out, id);
     SerializerHelper.writeString(out, executable);
     SerializerHelper.writeInt(out, port);
+    SerializerHelper.writeInt(
+        out, declaration == Declaration.doNotShareData ? 0 : 1);
     secret.toByteArrayStream(out);
     SerializerHelper.writeLong(out, serialVersionUID);
   }
@@ -57,11 +61,14 @@ class PluginInformation with Serializer {
     String id = await SerializerHelper.readString(in_) ?? '';
     String executable = await SerializerHelper.readString(in_) ?? '';
     int port = await SerializerHelper.readInt(in_);
+    Declaration declaration = await SerializerHelper.readInt(in_) == 0
+        ? Declaration.doNotShareData
+        : Declaration.doShareData;
     CommunicationSecret secret =
         await CommunicationSecret.fromByteArrayStream(in_);
     SerializerHelper.castTest('PluginInformation', serialVersionUID,
         await SerializerHelper.readLong(in_), 1);
-    return PluginInformation(id, executable, port, secret);
+    return PluginInformation(id, executable, port, declaration, secret);
   }
 
   /// Wrapper function to simplify serialization.

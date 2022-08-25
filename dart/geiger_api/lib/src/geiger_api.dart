@@ -13,7 +13,8 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
 
   // Is writable to allow examples to specify another master.
   static String masterExecutor = 'FIXME';
-  static final Logger logger = Logger("GeigerApi");
+  static String masterUniversalLink = 'https://master.cyber-geiger.eu';
+  static final Logger logger = Logger('GeigerApi');
 
   /// Identifier of plugin.
   String get id;
@@ -47,11 +48,12 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
   /// Set [events] to `null` to remove the [listener] from all events.
   void deregisterListener(List<MessageType>? events, PluginListener listener);
 
-  /// Send a [message] to a another plugin with the id [pluginId].
+  /// Send a [message] to a another [plugin].
   ///
-  /// If [pluginId] is not specified, [message.targetId] is used.
-  /// Non-master plugins can only send messages to the master.
-  Future<void> sendMessage(Message message, [String? pluginId]);
+  /// If [plugin] is not provided, [message.targetId] is used to
+  /// retrieve the registered plugin information.
+  Future<void> sendMessage(Message message,
+      [String? pluginId, PluginInformation? plugin]);
 
   /// Notify plugin about a [MenuItem] with a specific [url] being pressed.
   Future<void> menuPressed(GeigerUrl url);

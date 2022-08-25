@@ -5,21 +5,48 @@ import 'message_logger.dart';
 
 const masterExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
-    'TODO';
+    'TODO;'
+    'https://master.cyber-geiger.eu';
 const pluginExecutor = 'com.example.client_app;'
     'com.example.client_app.MainActivity;'
-    'TODO';
+    'TODO;'
+    'https://client.cyber-geiger.eu';
+
 const pluginId = 'client-plugin';
 
 late GeigerApi api;
 final MessageLogger logger = MessageLogger();
+
+///Geiger url received from Master through Message
+GeigerUrl? url;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GeigerApi.masterExecutor = masterExecutor;
   api = (await getGeigerApi(pluginExecutor, pluginId))!;
   api.registerListener([MessageType.allEvents], logger);
+
+  await api.registerPlugin();
+  await api.activatePlugin();
+
   runApp(const App());
+}
+
+void callMasterPlugin(MessageType type) async {
+  /// Save geigerURl in Storage
+  if (logger.messages.isNotEmpty) {
+    getAndStoreGeigerURLInStorage(logger.messages.last.action);
+  }
+  // Send Message to master
+  Message message = Message(pluginId, GeigerApi.masterId, type, null);
+  await api.sendMessage(message, GeigerApi.masterId);
+}
+
+/// Save geigerURl in Storage
+void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
+  // Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
+  // await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
+  //await api.storage.addOrUpdate(node);
 }
 
 class App extends StatelessWidget {
@@ -55,7 +82,10 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('Connected to master.'),
-            Expanded(child: logger.view())
+            Expanded(child: logger.view()),
+            TextButton(
+                onPressed: () => callMasterPlugin(MessageType.returningControl),
+                child: const Text("Return Control")),
           ],
         ),
       ),

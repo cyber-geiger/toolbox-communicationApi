@@ -1,9 +1,14 @@
 ## 0.8.0 Java and iOS support
-Changes:
-- GeigerApi does no longer do automatic plugin registration and activation
-
 Improvements:
 - Better iOS support
+- Complete Java client-only implementation
+
+Changes:
+- GeigerApi does no longer do automatic plugin registration and activation
+- Client plugins can no longer close or zap the storage.
+- Throw error on unauthorized value addition.
+- Add action to `activatePlugin` call for consistency.
+- 
 
 ## 0.7.10 Bugfixing Release and first iOS support
 Added:

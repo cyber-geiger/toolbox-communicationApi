@@ -80,20 +80,21 @@ public class TestMessage {
     MessageType messageType = MessageType.ALL_EVENTS;
     GeigerUrl url = GeigerUrl.parse("geiger://plugin/path");
     byte[] payload = "payload".getBytes(StandardCharsets.UTF_8);
+    String requestId = "requestId";
 
     // without payload
-    Message msg = new Message(sourceId, targetId, messageType, url);
-    Message msg2 = new Message(sourceId, targetId, messageType, url);
+    Message msg = new Message(sourceId, targetId, messageType, url, requestId);
+    Message msg2 = new Message(sourceId, targetId, messageType, url, requestId);
     assertThat(msg2.hashCode()).isEqualTo(msg.hashCode());
 
     // with payload
-    Message msg3 = new Message(sourceId, targetId, messageType, url, payload);
-    Message msg4 = new Message(sourceId, targetId, messageType, url, payload);
+    Message msg3 = new Message(sourceId, targetId, messageType, url, payload, requestId);
+    Message msg4 = new Message(sourceId, targetId, messageType, url, payload, requestId);
     assertThat(msg4.hashCode()).isEqualTo(msg3.hashCode());
 
     // negative tests
     assertThat(msg3.hashCode()).isNotEqualTo(msg.hashCode());
-    Message msg5 = new Message(targetId, sourceId, messageType, url);
+    Message msg5 = new Message(targetId, sourceId, messageType, url, requestId);
     assertThat(msg5.hashCode()).isNotEqualTo(msg.hashCode());
   }
 

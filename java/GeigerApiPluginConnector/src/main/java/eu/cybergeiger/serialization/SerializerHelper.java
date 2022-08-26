@@ -234,49 +234,6 @@ public class SerializerHelper {
     };
   }
 
-  /**
-   * Read an object from InputStream.
-   *
-   * @param in the InputStream to use
-   * @return return the object read
-   * @throws IOException if object cannot be read
-   */
-  public static Object readObject(InputStream in) throws IOException {
-    switch ("" + readRawLong(in)) {
-      case "" + STRING_UID:
-        byte[] arr = new byte[readRawInt(in)];
-        in.read(arr);
-        return new String(arr, StandardCharsets.UTF_8);
-      case "" + LONG_UID:
-        return readRawLong(in);
-      default:
-        throw new ClassCastException();
-    }
-  }
-
-  /**
-   * Write an object to OutputStream.
-   *
-   * @param out the OutputStream to use
-   * @param o   the Object to write
-   * @throws IOException if object cannot be written
-   */
-  public static void writeObject(OutputStream out, Object o) throws IOException {
-    switch (o.getClass().getName()) {
-      case "String":
-        writeString(out, (String) (o));
-        break;
-      case "Long":
-        writeLong(out, (Long) (o));
-        break;
-      case "Integer":
-        writeInt(out, (Integer) (o));
-        break;
-      default:
-        throw new ClassCastException();
-    }
-  }
-
   public static void writeMarker(OutputStream out, long marker) throws IOException {
     writeLong(out, marker);
   }

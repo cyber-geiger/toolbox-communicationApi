@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import eu.cybergeiger.api.message.GeigerUrl;
 import eu.cybergeiger.api.message.Message;
@@ -13,7 +12,6 @@ import eu.cybergeiger.api.plugin.CommunicationSecret;
 import eu.cybergeiger.api.plugin.Declaration;
 import eu.cybergeiger.api.plugin.MenuItem;
 import eu.cybergeiger.api.plugin.PluginInformation;
-import eu.cybergeiger.api.utils.StorableHashMap;
 import eu.cybergeiger.storage.Visibility;
 import eu.cybergeiger.storage.node.DefaultNode;
 import eu.cybergeiger.storage.node.Node;
@@ -101,20 +99,6 @@ public class TestSerialization {
       CommunicationSecret p2 = CommunicationSecret.fromByteArrayStream(bin);
       assertThat(p.toString()).isEqualTo(p2.toString());
     }
-  }
-
-  /**
-   * <p>Tests the serialization of the a serializable Hashmap object.</p>
-   */
-  @Test
-  public void storableMapSerializationTest() throws IOException {
-    StorableHashMap hm = new StorableHashMap();
-    ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    hm.toByteArrayStream(bout);
-    ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-    StorableHashMap hm2 = new StorableHashMap();
-    StorableHashMap.fromByteArrayStream(bin, hm2);
-    assertThat(hm).isEqualTo(hm2);
   }
 
   /**

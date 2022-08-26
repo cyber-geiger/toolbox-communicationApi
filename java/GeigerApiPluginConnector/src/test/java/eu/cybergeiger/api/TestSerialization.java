@@ -10,6 +10,7 @@ import eu.cybergeiger.api.message.GeigerUrl;
 import eu.cybergeiger.api.message.Message;
 import eu.cybergeiger.api.message.MessageType;
 import eu.cybergeiger.api.plugin.CommunicationSecret;
+import eu.cybergeiger.api.plugin.Declaration;
 import eu.cybergeiger.api.plugin.MenuItem;
 import eu.cybergeiger.api.plugin.PluginInformation;
 import eu.cybergeiger.api.utils.StorableHashMap;
@@ -72,7 +73,7 @@ public class TestSerialization {
    */
   @Test
   public void pluginInformationSerializationTest() throws IOException {
-    PluginInformation p = new PluginInformation("", "exec", 1234);
+    PluginInformation p = new PluginInformation("", "exec", 1234, Declaration.DO_NOT_SHARE_DATA);
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     p.toByteArrayStream(bout);
     ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());

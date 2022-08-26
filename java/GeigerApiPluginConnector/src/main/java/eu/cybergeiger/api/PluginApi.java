@@ -188,6 +188,7 @@ public class PluginApi implements GeigerApi {
           id,
           executor,
           communicator.getPort(),
+          declaration,
           new CommunicationSecret(ownPubKeyRaw)
         );
         Message result = sendAndWait(

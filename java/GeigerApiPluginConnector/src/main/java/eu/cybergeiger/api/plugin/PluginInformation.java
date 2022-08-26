@@ -18,12 +18,14 @@ public class PluginInformation implements Serializable {
   private final Declaration declaration;
   private final CommunicationSecret secret;
 
-  // TODO: make declaration declaration explicit
-
-  public PluginInformation(String id, String executable, int port) {
-    this(id, executable, port, Declaration.DO_NOT_SHARE_DATA);
-  }
-
+  /**
+   * <p>Constructor for plugin information.</p>
+   *
+   * @param id          ID of the plugin this information is about
+   * @param executable  the string required for platform specific wakeup of a plugin
+   * @param port        the port of the plugin to be contacted on
+   * @param declaration Declaration how this plugins shares the data it receives.
+   */
   public PluginInformation(String id, String executable, int port, Declaration declaration) {
     this(id, executable, port, declaration, null);
   }
@@ -31,22 +33,11 @@ public class PluginInformation implements Serializable {
   /**
    * <p>Constructor for plugin information.</p>
    *
-   * @param id         ID of the plugin this information is about
-   * @param executable the string required for platform specific wakeup of a plugin
-   * @param port       the port of the plugin to be contacted on
-   * @param secret     the secret required for communicating (if null a new secret is generated)
-   */
-  public PluginInformation(String id, String executable, int port, CommunicationSecret secret) {
-    this(id, executable, port, Declaration.DO_NOT_SHARE_DATA, secret);
-  }
-
-  /**
-   * <p>Constructor for plugin information.</p>
-   *
-   * @param id         ID of the plugin this information is about
-   * @param executable the string required for platform specific wakeup of a plugin
-   * @param port       the port of the plugin to be contacted on
-   * @param secret     the secret required for communicating (if null a new secret is generated)
+   * @param id          ID of the plugin this information is about
+   * @param executable  the string required for platform specific wakeup of a plugin
+   * @param port        the port of the plugin to be contacted on
+   * @param declaration Declaration how this plugins shares the data it receives.
+   * @param secret      the secret required for communicating (if null a new secret is generated)
    */
   public PluginInformation(String id, String executable, int port, Declaration declaration, CommunicationSecret secret) {
     this.id = id;

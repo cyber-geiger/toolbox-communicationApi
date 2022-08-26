@@ -68,7 +68,7 @@ public class PluginStarter {
     Class<?> serviceConnectionClass = Class.forName("android.content.ServiceConnection");
     Class<?> contextClass = Class.forName("android.content.Context");
 
-    Object intent = intentClass.newInstance();
+    Object intent = intentClass.getConstructor().newInstance();
     Object component = componentClass
       .getConstructor(String.class, String.class)
       .newInstance(packageName, inBackground ? SERVICE_NAME : componentName);

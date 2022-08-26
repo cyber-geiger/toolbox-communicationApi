@@ -8,19 +8,33 @@ import java.nio.charset.StandardCharsets;
  * <p>Helper class for serialization serializes important java primitives.</p>
  */
 public class SerializerHelper {
+  private static final int BUFFER_SIZE = 4096;
   private static final long STRING_UID = 123798371293L;
   private static final long LONG_UID = 1221312393L;
   private static final long INT_UID = 122134568793L;
   private static final long STACKTRACES_UID = 9012350123956L;
+
+  public static byte[] readBytes(InputStream in, int amount) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream(amount);
+    byte[] buffer = new byte[BUFFER_SIZE];
+    int bytesRead;
+    while ((bytesRead = in.read(
+      buffer,
+      0,
+      Math.min(amount - out.size(), buffer.length)
+    )) > 0)
+      out.write(buffer, 0, bytesRead);
+    if (out.size() != amount)
+      throw new IOException("Insufficient data for deserialization.");
+    return out.toByteArray();
+  }
 
   public static void writeRawLong(OutputStream out, Long l) throws IOException {
     out.write(longToByteArray(l));
   }
 
   public static Long readRawLong(InputStream in) throws IOException {
-    byte[] bytes = new byte[Long.BYTES];
-    in.read(bytes);
-    return byteArrayToLong(bytes);
+    return byteArrayToLong(readBytes(in, Long.BYTES));
   }
 
   public static void writeRawInt(OutputStream out, Integer l) throws IOException {
@@ -28,9 +42,7 @@ public class SerializerHelper {
   }
 
   public static Integer readRawInt(InputStream in) throws IOException {
-    byte[] bytes = new byte[Integer.BYTES];
-    in.read(bytes);
-    return byteArrayToInt(bytes);
+    return byteArrayToInt(readBytes(in, Integer.BYTES));
   }
 
   /**
@@ -97,11 +109,9 @@ public class SerializerHelper {
    * @return the deserialized long value
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static Long readLong(InputStream in) throws IOException {
+  public static Long readLong(InputStream in) throws IOException, ClassCastException {
     long raw = readRawLong(in);
-    if (raw != LONG_UID) {
-      throw new ClassCastException();
-    }
+    if (raw != LONG_UID) throw new ClassCastException();
     return readRawLong(in);
   }
 
@@ -124,11 +134,9 @@ public class SerializerHelper {
    * @return the deserialized integer value
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static Integer readInt(InputStream in) throws IOException {
+  public static Integer readInt(InputStream in) throws IOException, ClassCastException {
     long marker = readRawLong(in);
-    if (marker != INT_UID) {
-      throw new ClassCastException();
-    }
+    if (marker != INT_UID) throw new ClassCastException();
     return readRawInt(in);
   }
 
@@ -157,25 +165,11 @@ public class SerializerHelper {
    * @return the deserialized string
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static String readString(InputStream in) throws IOException {
-    if (readRawLong(in) != STRING_UID)
-      throw new ClassCastException();
+  public static String readString(InputStream in) throws IOException, ClassCastException {
+    if (readRawLong(in) != STRING_UID) throw new ClassCastException();
     int length = readRawInt(in);
     if (length == -1) return null;
-
-    ByteArrayOutputStream out = new ByteArrayOutputStream(length);
-    byte[] buffer = new byte[4096];
-    int bytesRead;
-    while ((bytesRead = in.read(
-      buffer,
-      0,
-      Math.min(length - out.size(), buffer.length)
-    )) > 0)
-      out.write(buffer, 0, bytesRead);
-    if (out.size() != length) {
-      throw new IOException("Insufficient data to deserialize String.");
-    }
-    return new String(out.toByteArray(), StandardCharsets.UTF_8);
+    return new String(readBytes(in, length), StandardCharsets.UTF_8);
   }
 
   /**
@@ -212,10 +206,8 @@ public class SerializerHelper {
    * @return The stack trace
    * @throws IOException if an exception occurs while writing to the stream
    */
-  public static String readStackTraces(InputStream in) throws IOException {
-    if (readRawLong(in) != STACKTRACES_UID) {
-      throw new ClassCastException();
-    }
+  public static String readStackTraces(InputStream in) throws IOException, ClassCastException {
+    if (readRawLong(in) != STACKTRACES_UID) throw new ClassCastException();
     return readString(in);
   }
 
@@ -238,7 +230,7 @@ public class SerializerHelper {
     writeLong(out, marker);
   }
 
-  public static void testMarker(InputStream in, long marker) throws IOException {
+  public static void testMarker(InputStream in, long marker) throws IOException, ClassCastException {
     long actual = readLong(in);
     if (marker != actual)
       throw new ClassCastException(

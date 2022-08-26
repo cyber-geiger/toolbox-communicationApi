@@ -26,8 +26,9 @@ class Message {
   /// Returns the action URL of the message.
   final GeigerUrl? action;
 
+  // TODO: change hash so it cannot be miss matched with message content.
   /// Hash of the data
-  Hash? hash;
+  late Hash hash;
 
   String? _payloadString = '';
 
@@ -78,7 +79,6 @@ class Message {
   }
 
   void toByteArrayStream(ByteSink out, [CommunicationSecret? secret]) {
-    secret ??= CommunicationSecret([]);
     SerializerHelper.writeLong(out, serialVersionUID);
     SerializerHelper.writeString(out, sourceId);
     SerializerHelper.writeString(out, targetId);
@@ -91,7 +91,7 @@ class Message {
     }
     SerializerHelper.writeString(out, requestId);
     SerializerHelper.writeString(out, payloadString);
-    integrityHash(secret).toByteArrayStream(out);
+    (secret == null ? hash : integrityHash(secret)).toByteArrayStream(out);
     SerializerHelper.writeLong(out, serialVersionUID);
   }
 
@@ -142,16 +142,14 @@ class Message {
             action.hashCode.toString() +
             requestId +
             (payloadString ?? 'null') +
-            (hash?.toString() ?? 'null'))
+            hash.toString())
         .hashCode;
   }
 
   @override
   String toString() {
-    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})' +
-        (hash != null
-            ? '[${hash!.hashType.toString()}: ${hash.toString()}]'
-            : '') +
+    return '$sourceId=$requestId>${targetId ?? 'null'}{[$type] (${action ?? ""})'
+        '[${hash.hashType.toString()}: ${hash.toString()}]'
         '}';
   }
 }

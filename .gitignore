@@ -26,3 +26,5 @@ pubspec.lock
 **/ios/Runner/GeneratedPluginRegistrant.*
 **/ios/Flutter/flutter_export_environment.sh
 **/ios/Flutter/Generated.xcconfig
+**/.DS_Store
+**/Podfile.lock

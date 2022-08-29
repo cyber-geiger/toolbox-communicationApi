@@ -1,7 +1,9 @@
+
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
-import 'message_logger.dart';
 
 const pluginExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
@@ -10,7 +12,7 @@ const pluginExecutor = 'com.example.master_app;'
 const clientPluginId = 'client-plugin';
 
 late GeigerApi api;
-final MessageLogger logger = MessageLogger();
+final MessageLogger messageLogger = MessageLogger();
 final LoadFromStorageState state = LoadFromStorageState();
 
 ///Listener for Storage Updates
@@ -18,9 +20,11 @@ final SimpleStorageListener storageListener = SimpleStorageListener(state);
 
 /// Send Message to Client Plugin
 void callClientPlugin(MessageType type) async {
+  var rng = Random();
   ///Geiger URL gets passed to Plugin
-  final GeigerUrl url = GeigerUrl(null, clientPluginId, 'null');
-  Message message = Message(GeigerApi.masterId, clientPluginId, type, url);
+  String messageContent = clientPluginId + rng.nextInt(100).toString();
+  final GeigerUrl url = GeigerUrl(null, messageContent, 'null');
+  Message message = Message(GeigerApi.masterId, clientPluginId, type,  url);
   await api.sendMessage(message, clientPluginId);
 }
 
@@ -29,7 +33,7 @@ void main() async {
 
   /// init Master and Add Listeners
   api = (await getGeigerApi(pluginExecutor, GeigerApi.masterId))!;
-  api.registerListener([MessageType.allEvents], logger);
+  api.registerListener([MessageType.allEvents], messageLogger);
   api.registerListener([MessageType.storageEvent], storageListener);
 
   // IMPORTANT: register and activate plugin after registering event listeners
@@ -75,7 +79,7 @@ class SimpleStorageListener implements PluginListener {
   Future<void> pluginEvent(GeigerUrl? url, Message msg) async {
     // Update Text on Storage Event(Plugin saved geigerURl in the Storage)
     if (msg.type == MessageType.storageEvent) {
-      Node node = await api.storage.get(":geiger_url_test");
+      Node node = await api.storage.get(":Keys:geiger_url_test");
       NodeValue? nodeValue = (await node.getValue("geigerUrl"));
       if (nodeValue != null) {
         _state.changeText(nodeValue.value);
@@ -104,7 +108,7 @@ class LoadFromStorageState extends State {
     return Scaffold(
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Text(geigerURLHolder),
             TextButton(
@@ -113,8 +117,8 @@ class LoadFromStorageState extends State {
             TextButton(
                 onPressed: () => callClientPlugin(MessageType.returningControl),
                 child: const Text("Call client in foreground")),
-            Expanded(child: logger.view()),
             Expanded(child: LoggerView()),
+            Expanded(child: DebugToolsView(messageLogger,api))
           ],
         ),
       ),

@@ -27,6 +27,7 @@ class MessageLogger implements PluginListener {
 
   @override
   void pluginEvent(GeigerUrl? url, Message msg) {
+    print(msg.toString());
     if (messages.length == bufferSize) {
       messages.removeAt(0);
       messageWidgets.removeAt(0);
@@ -61,7 +62,7 @@ class _MessageViewState extends State<MessageView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        "Message ${widget.message.type}",
+                        'Message ${widget.message.type}',
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w500),
                       ),
@@ -69,34 +70,34 @@ class _MessageViewState extends State<MessageView> {
                       Table(
                         children: [
                           TableRow(children: [
-                            const TableCell(child: Text("Source:")),
+                            const TableCell(child: Text('Source:')),
                             TableCell(child: Text(widget.message.sourceId))
                           ]),
                           TableRow(children: [
-                            const TableCell(child: Text("Target:")),
+                            const TableCell(child: Text('Target:')),
                             TableCell(
                                 child:
-                                    Text(widget.message.targetId ?? "Unknown"))
+                                    Text(widget.message.targetId ?? 'Unknown'))
                           ]),
                           TableRow(children: [
-                            const TableCell(child: Text("Request ID:")),
+                            const TableCell(child: Text('Request ID:')),
                             TableCell(child: Text(widget.message.requestId))
                           ]),
                           TableRow(children: [
-                            const TableCell(child: Text("Action:")),
+                            const TableCell(child: Text('Action:')),
                             TableCell(
                                 child: Text(widget.message.action?.toString() ??
-                                    "None"))
+                                    'None'))
                           ]),
                           TableRow(children: [
-                            const TableCell(child: Text("Has payload:")),
+                            const TableCell(child: Text('Has payload:')),
                             TableCell(
                                 child: Text(widget.message.payload.isEmpty
                                     ? 'No'
                                     : 'Yes'))
                           ]),
                           TableRow(children: [
-                            const TableCell(child: Text("Hash:")),
+                            const TableCell(child: Text('Hash:')),
                             TableCell(
                                 child: Text(widget.message.hash.toString()))
                           ]),
@@ -109,6 +110,7 @@ class _MessageViewState extends State<MessageView> {
 
   @override
   Widget build(BuildContext context) {
+    print('_MessageViewState');
     return GestureDetector(
         onTap: _showDetails,
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -118,7 +120,7 @@ class _MessageViewState extends State<MessageView> {
                 text: widget.message.sourceId,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             const WidgetSpan(child: Icon(Icons.arrow_right_alt)),
-            TextSpan(text: " " + widget.message.type.toString())
+            TextSpan(text: ' ' + widget.message.type.toString())
           ])))
         ]));
   }
@@ -136,7 +138,9 @@ class MessageLogView extends StatefulWidget {
 class _MessageLogViewState extends State<MessageLogView> {
   @override
   void initState() {
+    print('before initstate');
     super.initState();
+    print('addListener');
     widget.logger.addListener(_onMessage);
   }
 
@@ -147,19 +151,27 @@ class _MessageLogViewState extends State<MessageLogView> {
   }
 
   void _onMessage(Message _) {
+    print('message');
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Text('Received messages:'),
-        Expanded(
-            child: ListView(
-          children: widget.logger.messageWidgets.toList(),
-        ))
-      ],
+    return Container(
+      margin: const EdgeInsets.all(5.0),
+      padding: const EdgeInsets.all(3.0),
+      decoration: BoxDecoration(
+          border: Border.all(color: Colors.black),
+          borderRadius: BorderRadius.circular(5)),
+      child: Column(
+        children: [
+          const Text('Received messages:'),
+          Expanded(
+              child: ListView(
+            children: widget.logger.messageWidgets.toList(),
+          ))
+        ],
+      ),
     );
   }
 }

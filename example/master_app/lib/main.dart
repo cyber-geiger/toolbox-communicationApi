@@ -1,6 +1,3 @@
-
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:geiger_localstorage/geiger_localstorage.dart';
@@ -20,10 +17,8 @@ final SimpleStorageListener storageListener = SimpleStorageListener(state);
 
 /// Send Message to Client Plugin
 void callClientPlugin(MessageType type) async {
-  var rng = Random();
   ///Geiger URL gets passed to Plugin
-  String messageContent = clientPluginId + rng.nextInt(100).toString();
-  final GeigerUrl url = GeigerUrl(null, messageContent, 'null');
+  final GeigerUrl url = GeigerUrl(null, clientPluginId, 'null');
   Message message = Message(GeigerApi.masterId, clientPluginId, type,  url);
   await api.sendMessage(message, clientPluginId);
 }

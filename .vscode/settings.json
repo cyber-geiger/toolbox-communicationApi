@@ -1,5 +1,0 @@
-{
-    "dart.flutterTestAdditionalArgs": [
-        "--concurrency=1"
-    ]
-}

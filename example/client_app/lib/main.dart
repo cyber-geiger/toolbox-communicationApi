@@ -23,6 +23,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GeigerApi.masterExecutor = masterExecutor;
   api = (await getGeigerApi(pluginExecutor, pluginId))!;
+
+  // IMPORTANT: register and activate plugin after registering event listeners
+  await api.registerPlugin();
+  await api.activatePlugin();
   runApp(const App());
 }
 

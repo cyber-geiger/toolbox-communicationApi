@@ -85,7 +85,6 @@ class GeigerCommunicator {
     Future.delayed(Duration(milliseconds: timeout), (() {
       if (!responseReceived) {
         onTimeout();
-        socket.destroy();
       }
     }));
 

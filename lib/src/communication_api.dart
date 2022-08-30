@@ -355,14 +355,14 @@ class CommunicationApi extends GeigerApi {
         Level.INFO, '## Sending message to plugin ${plugin.id} ($message)');
     if (plugin.port == 0) {
       if (Platform.isAndroid || Platform.isIOS) {
-        await PluginStarter.startPlugin(plugin, inBackground, this);
+        await PluginStarter.startPlugin(plugin, inBackground, this, _communicator);
       }
       // wait for startup
       await _StartupWaiter(this, plugin.id).wait();
       plugin = plugins[StorableString(plugin.id)]!;
     } else if (!inBackground) {
       if (Platform.isAndroid || Platform.isIOS) {
-        await PluginStarter.startPlugin(plugin, inBackground, this);
+        await PluginStarter.startPlugin(plugin, inBackground, this, _communicator);
       }
     }
 
@@ -370,7 +370,7 @@ class CommunicationApi extends GeigerApi {
       try {
         await _communicator.sendMessage(plugin!, message, () async {
           if (Platform.isAndroid || Platform.isIOS) {
-            await PluginStarter.startPlugin(plugin!, inBackground, this);
+            await PluginStarter.startPlugin(plugin!, inBackground, this, _communicator);
           }
           // wait a bit for the master to start up
           if (plugin!.id == GeigerApi.masterId) {
@@ -388,7 +388,7 @@ class CommunicationApi extends GeigerApi {
         }
         // plugin is not running
         if (Platform.isAndroid || Platform.isIOS) {
-          await PluginStarter.startPlugin(plugin!, inBackground, this);
+          await PluginStarter.startPlugin(plugin!, inBackground, this, _communicator);
         }
         if (plugin!.id == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);

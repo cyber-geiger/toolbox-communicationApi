@@ -5,7 +5,7 @@ import 'package:geiger_localstorage/geiger_localstorage.dart';
 const pluginExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
     'TODO;'
-    'https://client.cyber-geiger.eu';
+    'https://master.cyber-geiger.eu';
 const clientPluginId = 'client-plugin';
 
 late GeigerApi api;
@@ -112,7 +112,6 @@ class LoadFromStorageState extends State {
             TextButton(
                 onPressed: () => callClientPlugin(MessageType.returningControl),
                 child: const Text("Call client in foreground")),
-            Expanded(child: LoggerView()),
             Expanded(child: DebugToolsView(messageLogger,api))
           ],
         ),

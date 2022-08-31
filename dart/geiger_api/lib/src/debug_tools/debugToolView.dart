@@ -5,7 +5,7 @@ import 'package:geiger_api/geiger_api.dart';
 class DebugToolsView extends StatefulWidget {
   late final MessageLogger logger;
   late final GeigerApi geigerApi;
-  DebugToolsView(this.logger,this.geigerApi);
+  const DebugToolsView(this.logger,this.geigerApi);
   @override
   DebugToolsViewState createState() => DebugToolsViewState(logger,geigerApi);
 }

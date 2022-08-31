@@ -9,7 +9,7 @@ class DBTreeView extends StatefulWidget {
   late final String rootNodeKey;
   ///Communication api of the app this widget is displayed in
   late final GeigerApi api;
-  DBTreeView(this.rootNodeKey, this.api);
+  const DBTreeView(this.rootNodeKey, this.api);
   @override
   DBTreeViewState createState() => DBTreeViewState(rootNodeKey,api);
 }

@@ -16,7 +16,6 @@ class LoggerViewState extends State {
   int logCount = 0;
   String activeLevel = Level.INFO.name;
 
-
   void initOrUpdateLogListener(Level warningLevel) {
     ///register Logger at specified level
     Logger.root.level = warningLevel;

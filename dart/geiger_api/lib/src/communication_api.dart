@@ -388,7 +388,8 @@ class CommunicationApi extends GeigerApi {
         });
         break;
       } on SocketException catch (e) {
-        if (tries == maxSendTries || e.osError?.message != 'Connection refused') {
+        if (tries == maxSendTries ||
+            e.osError?.message != 'Connection refused') {
           rethrow;
         }
         if (Platform.isAndroid || Platform.isIOS) {

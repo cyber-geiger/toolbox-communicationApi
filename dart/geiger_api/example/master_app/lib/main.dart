@@ -19,7 +19,7 @@ final SimpleStorageListener storageListener = SimpleStorageListener(state);
 void callClientPlugin(MessageType type) async {
   ///Geiger URL gets passed to Plugin
   final GeigerUrl url = GeigerUrl(null, clientPluginId, 'null');
-  Message message = Message(GeigerApi.masterId, clientPluginId, type,  url);
+  Message message = Message(GeigerApi.masterId, clientPluginId, type, url);
   await api.sendMessage(message, clientPluginId);
 }
 
@@ -109,7 +109,7 @@ class LoadFromStorageState extends State {
             TextButton(
                 onPressed: () => callClientPlugin(MessageType.returningControl),
                 child: const Text("Call client in foreground")),
-            Expanded(child: DebugToolsView(messageLogger,api))
+            Expanded(child: DebugToolsView(messageLogger, api))
           ],
         ),
       ),

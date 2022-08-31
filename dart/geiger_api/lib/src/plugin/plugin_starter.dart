@@ -18,10 +18,11 @@ class PluginStarter {
     final executables = target.executable?.split(';');
     final packageName = executables?.elementAt(0);
     final componentName = executables?.elementAt(1);
-    final windowsExecutable = executables?.elementAt(2); // extract the windows executable link from the executor
-    String iosUniversalLink = 'NONE'; // extract the ios universal link from the executor
+    final windowsExecutable = executables
+        ?.elementAt(2); // extract the windows executable link from the executor
+    String iosUniversalLink =
+        'NONE'; // extract the ios universal link from the executor
 
-    
     if (Platform.isAndroid) {
       await _channel.invokeMethod('', {
         'package': packageName!,
@@ -31,20 +32,20 @@ class PluginStarter {
     } else if (Platform.isIOS) {
       iosUniversalLink = executables!.elementAt(3);
       if (inBackground) {
-          // if target is master
+        // if target is master
         if (target.id == GeigerApi.masterId) {
           // launch master and then return to the source plugin since its a background message
           await _channel.invokeMethod('url',
               '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$iosUniversalLink/returningcontrol');
-          // wait a bit to prevent a loop, since activate plugin 
+          // wait a bit to prevent a loop, since activate plugin
           await Future.delayed(CommunicationApi.masterStartWaitTime);
           // after launching the master, try activating the plugin if it has already been registered
           await api.activatePlugin();
         } else {
           // launch target client and return to master since its a background message
           await _channel.invokeMethod('url',
-            '$iosUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
-          }
+              '$iosUniversalLink/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
+        }
       } else {
         if (target.id == GeigerApi.masterId) {
           // bring master to foreground

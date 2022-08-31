@@ -1,6 +1,6 @@
 ## 0.8.0 Java and iOS support
 Improvements:
-- Better iOS support
+- Improved iOS support
 - Complete Java client-only implementation
 
 Changes:
@@ -8,7 +8,6 @@ Changes:
 - Client plugins can no longer close or zap the storage.
 - Throw error on unauthorized value addition.
 - Add action to `activatePlugin` call for consistency.
-- 
 
 ## 0.7.10 Bugfixing Release and first iOS support
 Added:

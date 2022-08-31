@@ -36,7 +36,9 @@ public class GeigerService extends Service {
                         PLUGIN_EXECUTOR,
                         PLUGIN_ID,
                         Declaration.DO_NOT_SHARE_DATA,
-                        MASTER_EXECUTOR
+                        MASTER_EXECUTOR,
+                        false,
+                        false
                 );
             } catch (IOException e) {
                 throw new RuntimeException("Failed to initialize plugin.", e);

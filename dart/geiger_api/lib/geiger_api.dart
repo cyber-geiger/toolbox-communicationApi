@@ -28,4 +28,4 @@ export 'src/geiger_api.dart';
 export 'src/debug_tools/logger_view.dart';
 export 'src/debug_tools/db_tree_view.dart';
 export 'src/debug_tools/message_logger.dart';
-export 'src/debug_tools/debugToolView.dart';
+export 'src/debug_tools/debug_tool_view.dart';

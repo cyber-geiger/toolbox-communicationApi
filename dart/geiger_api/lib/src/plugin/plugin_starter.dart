@@ -5,8 +5,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:geiger_api/geiger_api.dart';
 
-import '../communication/geiger_communicator.dart';
-
 class PluginStarter {
   static const MethodChannel _channel =
       MethodChannel('cyber-geiger.eu/communication');
@@ -15,7 +13,6 @@ class PluginStarter {
   //
   static Future<void> startPlugin(
       PluginInformation target, bool inBackground, GeigerApi api) async {
-        print(target.id);
     // TODO(mgwerder): write executable spec into communication_api_factory
     // expected executable String: "package;component_name;windows_executable"
     final executables = target.executable?.split(';');

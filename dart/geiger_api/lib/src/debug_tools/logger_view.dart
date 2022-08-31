@@ -35,8 +35,8 @@ class LoggerViewState extends State {
 
   @override
   void initState() {
+    super.initState();
     initOrUpdateLogListener(Level.INFO);
-
   }
 
   @override

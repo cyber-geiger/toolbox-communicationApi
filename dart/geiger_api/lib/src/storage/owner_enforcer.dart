@@ -70,7 +70,7 @@ class OwnerEnforcerWrapper extends StorageController {
     final actualOwner = (await _controller.getNodeOrTombstone(path)).owner;
     if (actualOwner != owner.id) {
       throw StorageException(
-          "Cannot add node value to foreign node (owned by $actualOwner).");
+          'Cannot add node value to foreign node (owned by $actualOwner).');
     }
     return await _controller.addValue(path, value);
   }

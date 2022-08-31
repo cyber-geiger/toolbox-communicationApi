@@ -18,26 +18,24 @@ class DebugToolsViewState extends State {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Flexible(
-                  child: logger.view(),
-                ),
-                const Flexible(
-                  child: LoggerView(),
-                  fit: FlexFit.tight,
-                )
-              ],
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: logger.view(),
+              ),
+              const Flexible(
+                child: LoggerView(),
+                fit: FlexFit.tight,
+              )
+            ],
           ),
-          Flexible(child: DBTreeView(':', geigerApi))
-        ],
-      ),
+        ),
+        Flexible(child: DBTreeView(':', geigerApi))
+      ],
     );
   }
 }

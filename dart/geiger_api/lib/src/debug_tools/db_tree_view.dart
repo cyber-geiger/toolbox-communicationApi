@@ -28,7 +28,7 @@ class DBTreeViewState extends State {
   }
 
   @override
-  initState() {
+  void initState() {
     ///create array with root node and init the TreeViewController
     nodes = [rootNode];
     _controller = TreeViewController(children: nodes);
@@ -38,7 +38,7 @@ class DBTreeViewState extends State {
   }
 
   ///Update opend Node(Deskeletonize and load children skeleton nodes
-  updateChildren(String key) async {
+  void updateChildren(String key) async {
     Node parentNode = _controller.getNode(key)!;
     gls.Node storageNode =
         await api.storage.getNodeOrTombstone(parentNode.data);
@@ -90,9 +90,9 @@ class DBTreeViewState extends State {
 
 
   ///TODO(MauriceMeier): Filter
-  showSensorValues() {}
+  void showSensorValues() {}
 
-  showRecomendations() async {
+  void showRecomendations() async {
     gls.Node recomandations =
         await api.storage.getNodeOrTombstone(':Global:Recommendations');
     Map<String, gls.Node> childrenNodes = await recomandations.getChildren();
@@ -111,7 +111,7 @@ class DBTreeViewState extends State {
   }
 
   ///Deskeletonize Node with no Children on beeing Taped
-  handleNodeTap(String key) async{
+  void handleNodeTap(String key) async{
     Node node = _controller.getNode(key)!;
     gls.Node storageNode =
         await api.storage.getNodeOrTombstone(node.data);

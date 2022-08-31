@@ -134,7 +134,6 @@ class DBTreeViewState extends State {
         children: [
           Flexible(
             child: Scrollbar(
-              thumbVisibility: true,
               controller: _firstController,
               child: TreeView(
                  controller: _controller,

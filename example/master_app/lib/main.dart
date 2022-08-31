@@ -31,9 +31,6 @@ void main() async {
   api.registerListener([MessageType.allEvents], messageLogger);
   api.registerListener([MessageType.storageEvent], storageListener);
 
-  // IMPORTANT: register and activate plugin after registering event listeners
-  await api.registerPlugin();
-  await api.activatePlugin();
   runApp(const App());
 }
 

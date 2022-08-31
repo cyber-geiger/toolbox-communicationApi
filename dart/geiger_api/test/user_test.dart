@@ -297,10 +297,11 @@ Future<String> isolatePluginTest2(SendPort ext) async {
   print('## Initializing expander');
   await StorageMapper.initDatabaseExpander();
   print('## Getting storage');
-  GeigerApi? testPlugin = await getGeigerApi('', 'testplugin', Declaration.doNotShareData);
+  GeigerApi? testPlugin =
+      await getGeigerApi('', 'testplugin', Declaration.doNotShareData);
   await testPlugin!.registerPlugin();
   await testPlugin.activatePlugin();
-  StorageController geigerToolboxStorageController =testPlugin.storage;
+  StorageController geigerToolboxStorageController = testPlugin.storage;
 
   // create huge String by exponenting and truncating
   print('## creating huge value');

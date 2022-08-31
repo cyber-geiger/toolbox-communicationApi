@@ -41,8 +41,8 @@ void main() {
     localMaster.registerListener(MessageType.values, masterListener);
     var plugin =
         (await getGeigerApi('', 'plugin1', Declaration.doNotShareData))!;
-        await plugin.registerPlugin();
-        await plugin.activatePlugin();
+    await plugin.registerPlugin();
+    await plugin.activatePlugin();
     SimpleEventListener pluginListener = SimpleEventListener('plugin');
     plugin.registerListener(MessageType.values, pluginListener);
     List<Message> receivedEventsMaster = masterListener.getEvents();

@@ -17,6 +17,7 @@ import 'package:logging/logging.dart';
 
 import 'plugin/plugin_starter.dart';
 
+// Waits for an activate plugin event, times out after 15sec if it does not receive an active plugin event
 class _StartupWaiter implements PluginListener {
   static const _events = [
     MessageType.activatePlugin,
@@ -49,6 +50,7 @@ class _StartupWaiter implements PluginListener {
   }
 }
 
+// Waits indefenitely for a authSuccess or authError event
 class _RegisterResultWaiter implements PluginListener {
   static const _events = [MessageType.authSuccess, MessageType.authError];
   final Completer<bool> _completer = Completer();
@@ -364,7 +366,6 @@ class CommunicationApi extends GeigerApi {
       plugin = plugins[StorableString(plugin.id)]!;
     } else if (!inBackground) {
       if (Platform.isAndroid || Platform.isIOS) {
-        // Temporary solution for android
         await PluginStarter.startPlugin(plugin, inBackground, this);
       }
     }
@@ -373,7 +374,9 @@ class CommunicationApi extends GeigerApi {
     while (true) {
       try {
         await _communicator.sendMessage(plugin!, message, () async {
-          await PluginStarter.startPlugin(plugin!, inBackground, this);
+          if (Platform.isAndroid || Platform.isIOS) {
+            await PluginStarter.startPlugin(plugin!, inBackground, this);
+          }
           // wait a bit for the master to start up
           if (plugin!.id == GeigerApi.masterId) {
             await Future.delayed(masterStartWaitTime);
@@ -385,14 +388,16 @@ class CommunicationApi extends GeigerApi {
         });
         break;
       } on SocketException catch (e) {
-        if (tries == maxSendTries || e.osError?.message != 'Connection refused')
+        if (tries == maxSendTries ||
+            e.osError?.message != 'Connection refused') {
           rethrow;
+        }
         if (Platform.isAndroid || Platform.isIOS) {
           // Temporary solution for android
           await PluginStarter.startPlugin(plugin!, inBackground, this);
         }
         tries++;
-        PluginStarter.startPlugin(plugin!, inBackground, this);
+        await PluginStarter.startPlugin(plugin!, inBackground, this);
         if (pluginId == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
         } else {
@@ -582,10 +587,9 @@ class CommunicationApi extends GeigerApi {
         break;
     }
     _notifyListeners(msg.type, msg);
-    // TODO: should this be commented out?
-    //if (msg.type.id < MessageType.allEvents.id) {
-    _notifyListeners(MessageType.allEvents, msg);
-    //}
+    if (msg.type.id < MessageType.allEvents.id) {
+      _notifyListeners(MessageType.allEvents, msg);
+    }
   }
 
   void _notifyListeners(MessageType type, Message message) {

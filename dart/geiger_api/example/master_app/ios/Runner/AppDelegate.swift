@@ -15,35 +15,35 @@ import AVFoundation
         if let url = URL(string: toOpen!) {
             if UIApplication.shared.canOpenURL(url) {
                 if #available(iOS 10.0, *) {
-                        UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 } else {
-                        UIApplication.shared.openURL(url);
+                    UIApplication.shared.openURL(url);
                 }
             }
         }
     }
-
+    
     override func application(_ application: UIApplication,
-                         continue userActivity: NSUserActivity,
-                         restorationHandler: @escaping ([UIUserActivityRestoring]) -> Void) -> Bool
+                              continue userActivity: NSUserActivity,
+                              restorationHandler: @escaping ([UIUserActivityRestoring]) -> Void) -> Bool
     {
         dispatchQueue = DispatchQueue.global()
         dispatchQueue!.async(execute: {
-                do{
-                    self.session = AVAudioSession.sharedInstance()
-
-                    try self.session!.setCategory(AVAudioSession.Category.playback)
-                    try self.session!.setActive(true)
-                }
-                catch{
-                    print("\(error)")
-                }
+            do{
+                self.session = AVAudioSession.sharedInstance()
+                
+                try self.session!.setCategory(AVAudioSession.Category.playback)
+                try self.session!.setActive(true)
+            }
+            catch{
+                print("\(error)")
+            }
         });
         
         // Get URL components from the incoming user activity.
         guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
-            let incomingURL = userActivity.webpageURL,
-            let components = NSURLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
+              let incomingURL = userActivity.webpageURL,
+              let components = NSURLComponents(url: incomingURL, resolvingAgainstBaseURL: true) else {
             return false
         }
         
@@ -60,7 +60,7 @@ import AVFoundation
     }
     
     override func application(_ application: UIApplication,
-                     open url: URL,
+                              open url: URL,
                               options: [UIApplication.OpenURLOptionsKey : Any] = [:] ) -> Bool {
         // Process the URL.
         guard let components = NSURLComponents(url: url, resolvingAgainstBaseURL: true),
@@ -81,32 +81,32 @@ import AVFoundation
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-        ) -> Bool {
-            dispatchQueue = DispatchQueue.global()
-            dispatchQueue!.async(execute: {
-                    do{
-                        self.session = AVAudioSession.sharedInstance()
-
-                        try self.session!.setCategory(AVAudioSession.Category.playback)
-                        try self.session!.setActive(true)
-                    }
-                    catch{
-                        print("\(error)")
-                    }
-            });
-            
-            controller = window?.rootViewController as? FlutterViewController
-            messageChannel = FlutterMethodChannel(name: "cyber-geiger.eu/communication", binaryMessenger: controller!.binaryMessenger)
-
-            messageChannel?.setMethodCallHandler({
-           (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+    ) -> Bool {
+        dispatchQueue = DispatchQueue.global()
+        dispatchQueue!.async(execute: {
+            do{
+                self.session = AVAudioSession.sharedInstance()
+                
+                try self.session!.setCategory(AVAudioSession.Category.playback)
+                try self.session!.setActive(true)
+            }
+            catch{
+                print("\(error)")
+            }
+        });
+        
+        controller = window?.rootViewController as? FlutterViewController
+        messageChannel = FlutterMethodChannel(name: "cyber-geiger.eu/communication", binaryMessenger: controller!.binaryMessenger)
+        
+        messageChannel?.setMethodCallHandler({
+            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
             if (call.method == "url") {
                 let args = call.arguments as! Optional<String>
                 self.openUrl(toOpen: args);
                 result(nil);
             }
         });
-
+        
         GeneratedPluginRegistrant.register(with: self)
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }

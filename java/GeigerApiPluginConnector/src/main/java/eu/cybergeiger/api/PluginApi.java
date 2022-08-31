@@ -11,9 +11,7 @@ import eu.cybergeiger.api.utils.Platform;
 import eu.cybergeiger.serialization.SerializerHelper;
 import eu.cybergeiger.storage.StorageController;
 import eu.cybergeiger.storage.StorageException;
-import sun.security.util.BitArray;
-import sun.security.util.DerOutputStream;
-import sun.security.util.DerValue;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.KeyAgreement;
 import java.io.*;
@@ -172,14 +170,15 @@ public class PluginApi implements GeigerApi {
   @Override
   public void registerPlugin() throws CommunicationException {
     try {
+      Provider provider = new BouncyCastleProvider();
       KeyPair pair = KeyPairGenerator
-        .getInstance(KEY_EXCHANGE_ALGORITHM)
+        .getInstance(KEY_EXCHANGE_ALGORITHM, provider)
         .generateKeyPair();
 
       // Extract raw public key
-      DerValue ownPubKeyEncoded = new DerValue(pair.getPublic().getEncoded());
-      DerValue algoId = ownPubKeyEncoded.data.getDerValue();
-      byte[] ownPubKeyRaw = ownPubKeyEncoded.data.getUnalignedBitString().toByteArray();
+      byte[] ownPubKeyEncoded = pair.getPublic().getEncoded();
+      byte[] pubKeyHeader = Arrays.copyOfRange(ownPubKeyEncoded, 0, 12);
+      byte[] ownPubKeyRaw = Arrays.copyOfRange(ownPubKeyEncoded, 12, 44);
 
       // Register result waiter before sending registration request in case
       // result is sent immediately.
@@ -205,20 +204,14 @@ public class PluginApi implements GeigerApi {
           throw new CommunicationException("Key exchange failed.");
 
         // Construct foreign public key
-        DerOutputStream foreignPubKeyEncoded = new DerOutputStream();
-        foreignPubKeyEncoded.write(DerValue.tag_Sequence);
-        // Our own public key is structurally the same, so we can use its length.
-        foreignPubKeyEncoded.putLength(ownPubKeyEncoded.length());
-        algoId.encode(foreignPubKeyEncoded);
-        foreignPubKeyEncoded.putUnalignedBitString(new BitArray(
-          result.getPayload().length * 8,
-          result.getPayload()
-        ));
-        PublicKey foreignPubKey = KeyFactory.getInstance(KEY_EXCHANGE_ALGORITHM)
+        ByteArrayOutputStream foreignPubKeyEncoded = new ByteArrayOutputStream(44);
+        foreignPubKeyEncoded.write(pubKeyHeader);
+        foreignPubKeyEncoded.write(result.getPayload());
+        PublicKey foreignPubKey = KeyFactory.getInstance(KEY_EXCHANGE_ALGORITHM, provider)
           .generatePublic(new X509EncodedKeySpec(foreignPubKeyEncoded.toByteArray()));
 
         // Compute shared secret and save in master's plugin information.
-        KeyAgreement agreement = KeyAgreement.getInstance(KEY_EXCHANGE_ALGORITHM);
+        KeyAgreement agreement = KeyAgreement.getInstance(KEY_EXCHANGE_ALGORITHM, provider);
         agreement.init(pair.getPrivate());
         agreement.doPhase(foreignPubKey, true);
         masterInfo = masterInfo.withSecret(

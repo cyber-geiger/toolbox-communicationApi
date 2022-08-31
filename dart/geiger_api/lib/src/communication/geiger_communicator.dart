@@ -56,14 +56,17 @@ class GeigerCommunicator {
     _server = null;
   }
 
+  // Sends a message to a target plugin.
+  // iOS: If the target gets killed by the OS, onTimeout is called after 20sec if its a register or active plugin event
+  // for any other event its a 5sec timeout
   Future<void> sendMessage(
-      PluginInformation plugin, Message message, Function onTimeout) async {
+      PluginInformation target, Message message, Function onTimeout) async {
     final socket =
-        await Socket.connect(InternetAddress.loopbackIPv4, plugin.port);
+        await Socket.connect(InternetAddress.loopbackIPv4, target.port);
 
     _logger.log(Level.INFO, 'Sending message');
     ByteSink sink = ByteSink();
-    message.toByteArrayStream(sink, plugin.secret);
+    message.toByteArrayStream(sink, target.secret);
     sink.close();
     socket.add(await sink.bytes);
     await socket.flush();
@@ -81,6 +84,7 @@ class GeigerCommunicator {
       timeout = 20000;
     }
 
+    // If not response bytes are received after a certain time, call the on timeout function
     Future.delayed(Duration(milliseconds: timeout), (() {
       if (!responseReceived) {
         onTimeout();

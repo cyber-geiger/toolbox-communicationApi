@@ -23,14 +23,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  geiger_localstorage: ^0.6.42
-    #path: ../geiger_localstorage
+  geiger_localstorage: ^0.8.0
   logging: ^1.0.2
   meta: ^1.7.0
   uuid: ^3.0.6
   collection: ^1.15.0
   cryptography: ^2.0.5
   convert: ^3.0.1
+  flutter_treeview: ^1.0.7+1
 
 dev_dependencies:
   flutter_test:

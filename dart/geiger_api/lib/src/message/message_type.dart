@@ -81,7 +81,7 @@ class MessageType {
   static const authSuccess = MessageType._('AUTH_SUCCESS', 30700);
   static const authError = MessageType._('AUTH_ERROR', 30900);
 
-  const MessageType._(final this._value, final this._num);
+  const MessageType._(this._value, this._num);
 
   @override
   String toString() => _value;

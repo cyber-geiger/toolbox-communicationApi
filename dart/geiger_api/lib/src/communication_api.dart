@@ -388,15 +388,14 @@ class CommunicationApi extends GeigerApi {
         });
         break;
       } on SocketException catch (e) {
-        if (tries == maxSendTries || e.osError?.message != 'Connection refused') {
+        if (tries == maxSendTries || e.osError?.message != 'Connection refused')
           rethrow;
-        }
         if (Platform.isAndroid || Platform.isIOS) {
           // Temporary solution for android
           await PluginStarter.startPlugin(plugin!, inBackground, this);
         }
         tries++;
-        await PluginStarter.startPlugin(plugin!, inBackground, this);
+        PluginStarter.startPlugin(plugin!, inBackground, this);
         if (pluginId == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
         } else {

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:geiger_api/geiger_api.dart';
 
+import '../communication/geiger_communicator.dart';
 
 class PluginStarter {
   static const MethodChannel _channel =

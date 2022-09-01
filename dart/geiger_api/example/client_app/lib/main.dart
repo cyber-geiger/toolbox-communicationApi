@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
-import 'package:geiger_localstorage/geiger_localstorage.dart';
 
 const masterExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
@@ -32,20 +31,9 @@ void main() async {
 }
 
 void callMasterPlugin(MessageType type) async {
-  /// Save geigerURl in Storage
-  if (logger.messages.isNotEmpty) {
-    getAndStoreGeigerURLInStorage(logger.messages.last.action);
-  }
   // Send Message to master
   Message message = Message(pluginId, GeigerApi.masterId, type, null);
   await api.sendMessage(message, GeigerApi.masterId);
-}
-
-/// Save geigerURl in Storage
-void getAndStoreGeigerURLInStorage(GeigerUrl? url) async {
-  Node node = NodeImpl(":Keys:geiger_url_test", GeigerApi.masterId);
-  await node.addValue(NodeValueImpl("geigerUrl", url.toString()));
-  await api.storage.addOrUpdate(node);
 }
 
 class App extends StatelessWidget {

@@ -20,8 +20,7 @@ final MessageLogger logger = MessageLogger();
 
 ///Geiger url received from Master through Message
 GeigerUrl? url;
-String geigerURLValue =
-    'should be replace by geigerURL'; // To keep track of the data sent by the master app
+String geigerURLValue = ''; // To keep track of the data sent by the master app
 
 /// To handle the returning control message from the master app
 class PluginEventListener implements PluginListener {
@@ -97,6 +96,9 @@ class _HomePageState extends State<HomePage> {
       geigerURLValue; // To visualize the value of data sent from the master app
   @override
   Widget build(BuildContext context) {
+    if (receivedData.isNotEmpty) {
+      return SecondScreen();
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),

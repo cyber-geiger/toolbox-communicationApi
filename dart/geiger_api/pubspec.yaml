@@ -1,5 +1,5 @@
 name: geiger_api
-description: >-
+description: >- 
   A Communication API for the GEIGER ecosystem. It provides a unified interface for all plugins to
   communicate and transfer control between the components of the ecosystem.
 version: 0.8.1

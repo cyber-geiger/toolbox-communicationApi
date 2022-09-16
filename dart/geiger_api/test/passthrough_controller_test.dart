@@ -7,54 +7,53 @@ import 'package:test/test.dart';
 
 import 'print_logger.dart';
 
-Future<void> updateTests(final StorageController controller) async {
+Future<void> updateTests() async {
   group('controller update tests', () {
-    test('Owner Update On Node', () async {
+    storageTest('Owner Update On Node', (controller, _) async {
       print('## Testing controller in UNKNOWN');
-      await controller.add(NodeImpl(':testNodeOwner1', 'testOwner'));
+      await controller.add(NodeImpl(':testNodeOwner1', owner));
       Node node = await controller.get(':testNodeOwner1');
-      expect(node.owner, 'testOwner');
+      expect(node.owner, owner);
     });
 
-    test('Storage Node Create', () async {
-      await controller.add(NodeImpl(':StorageNodeCreate1', 'testOwner'));
+    storageTest('Storage Node Create', (controller, _) async {
+      await controller.add(NodeImpl(':StorageNodeCreate1', owner));
       // fetch stored node
       Node storedNode = await controller.get(':StorageNodeCreate1');
 
       // check results
-      expect(storedNode.owner, 'testOwner');
+      expect(storedNode.owner, owner);
       expect(storedNode.name, 'StorageNodeCreate1');
       expect(storedNode.path, ':StorageNodeCreate1');
       expect(storedNode.visibility, Visibility.red);
     });
 
-    test('Test Storage Node Add', () async {
-      await controller.add(NodeImpl('parent1', 'testOwner', ':'));
-      await controller.add(NodeImpl('name2', 'testOwner', ':parent1'));
+    storageTest('Test Storage Node Add', (controller, _) async {
+      await controller.add(NodeImpl('parent1', owner, ':'));
+      await controller.add(NodeImpl('name2', owner, ':parent1'));
 
       // get the record
       Node storedNode = await controller.get(':parent1:name2');
 
       // check results
-      expect(storedNode.owner, 'testOwner');
+      expect(storedNode.owner, owner);
       expect(storedNode.name, 'name2');
       expect(storedNode.path, ':parent1:name2');
       expect(storedNode.visibility, Visibility.red);
     });
 
     // depends on correct functionality of the StorageController.create() function
-    test('test storage node update', () async {
+    storageTest('test storage node update', (controller, _) async {
       // create original node
-      await controller.add(NodeImpl(':nodeUpdateTest', 'testOwner'));
+      await controller.add(NodeImpl(':nodeUpdateTest', owner));
 
       // updated Node with different visibility children
-      Node node = NodeImpl(
-          'testNode1', 'testOwner', ':nodeUpdateTest', Visibility.green);
+      Node node =
+          NodeImpl('testNode1', owner, ':nodeUpdateTest', Visibility.green);
       await controller.add(node);
-      expect(node.owner, 'testOwner');
+      expect(node.owner, owner);
 
-      Node sn =
-          NodeImpl('testChild1', 'testOwner', ':nodeUpdateTest:testNode1');
+      Node sn = NodeImpl('testChild1', owner, ':nodeUpdateTest:testNode1');
       await controller.add(sn);
       node.visibility = Visibility.red;
       await node.addChild(sn);
@@ -66,24 +65,22 @@ Future<void> updateTests(final StorageController controller) async {
       Node storedNode = await controller.get(':nodeUpdateTest:testNode1');
 
       // check results
-      expect(storedNode.owner, 'testOwner');
+      expect(storedNode.owner, owner);
       expect(storedNode.name, 'testNode1');
       expect(storedNode.path, ':nodeUpdateTest:testNode1');
       expect(await storedNode.getChildNodesCsv(), 'testChild1');
       expect(storedNode.visibility, Visibility.red);
     });
 
-    test('add node with missing parent', () {
-      expect(
-          () async => await controller
-              .add(NodeImpl('testNode1', 'testOwner', ':nodeUpdateTest2')),
-          throwsA(TypeMatcher<StorageException>()));
-    });
+    storageTest(
+        'add node with missing parent',
+        (controller, _) => expectFutureThrowsException<StorageException>(() =>
+            controller.add(NodeImpl('testNode1', owner, ':nodeUpdateTest2'))));
 
-    test('create new node', () async {
+    storageTest('create new node', (controller, _) async {
       List<Node> n = <Node>[
-        NodeImpl(':nodeCreateTest', 'testOwner'),
-        NodeImpl(':nodeCreateTest:testNode1', 'testOwner')
+        NodeImpl(':nodeCreateTest', owner),
+        NodeImpl(':nodeCreateTest:testNode1', owner)
       ];
 
       for (final Node tn in n) {
@@ -126,11 +123,11 @@ Future<void> updateTests(final StorageController controller) async {
   });
 }
 
-Future<void> removeTests(StorageController controller) async {
+Future<void> removeTests() async {
   group('remove tests', () {
-    test('remove node from storage', () async {
-      await controller.add(NodeImpl('removalNode1', 'testOwner', ':'));
-      Node node = NodeImpl('name1', 'testOwner', ':removalNode1');
+    storageTest('remove node from storage', (controller, _) async {
+      await controller.add(NodeImpl('removalNode1', owner, ':'));
+      Node node = NodeImpl('name1', owner, ':removalNode1');
       NodeValue nv = NodeValueImpl('key', 'value');
       await node.addValue(nv);
       await controller.add(node);
@@ -138,20 +135,20 @@ Future<void> removeTests(StorageController controller) async {
 
       // check nodes
       expect(node, removed, reason: 'removed node does not match added node');
-      expect(() async => await controller.get(removed.path),
-          throwsA(TypeMatcher<StorageException>()));
+      await expectFutureThrowsException<StorageException>(
+          () async => await controller.get(removed.path));
 
       // check values
       expect(await removed.getValue('key'), nv);
-      expect(() async => await controller.getValue(removed.path, 'key'),
-          throwsA(TypeMatcher<StorageException>()));
+      await expectFutureThrowsException<StorageException>(
+          () => controller.getValue(removed.path, 'key'));
     });
 
-    test('Remove node with children', () async {
-      await controller.add(NodeImpl(':removalNode3', 'testOwner'));
-      Node node = NodeImpl('name1', 'testOwner', ':removalNode3');
+    storageTest('Remove node with children', (controller, _) async {
+      await controller.add(NodeImpl(':removalNode3', owner));
+      Node node = NodeImpl('name1', owner, ':removalNode3');
       // add child
-      var nodeImpl = NodeImpl('child1', 'testOwner', ':removalNode3:name1');
+      var nodeImpl = NodeImpl('child1', owner, ':removalNode3:name1');
       Node childNode = nodeImpl;
       await node.addChild(childNode);
       await controller.addOrUpdate(node);
@@ -166,16 +163,16 @@ Future<void> removeTests(StorageController controller) async {
   });
 }
 
-Future<void> renameTests(StorageController controller) async {
+Future<void> renameTests() async {
   group('rename tests', () {
-    test('rename node', () async {
+    storageTest('rename node', (controller, _) async {
       List<Node> nodes = <Node>[
-        NodeImpl(':renameTests', 'testOwner'),
-        NodeImpl('name1', 'testOwner', ':renameTests'),
-        NodeImpl('name11', 'testOwner', ':renameTests:name1'),
-        NodeImpl('name2', 'testOwner', ':renameTests'),
-        NodeImpl('name21', 'testOwner', ':renameTests:name2'),
-        NodeImpl('name3', 'testOwner', ':renameTests')
+        NodeImpl(':renameTests', owner),
+        NodeImpl('name1', owner, ':renameTests'),
+        NodeImpl('name11', owner, ':renameTests:name1'),
+        NodeImpl('name2', owner, ':renameTests'),
+        NodeImpl('name21', owner, ':renameTests:name2'),
+        NodeImpl('name3', owner, ':renameTests')
       ];
       for (Node n in nodes) {
         await controller.add(n);
@@ -238,31 +235,25 @@ Future<void> renameTests(StorageController controller) async {
           reason: 'renaming node seems unsuccessful (sub-node path wrong)');
 
       // test rename of non existing nodes
-      expect(
-          () async => await controller.rename(
-              ':renameTests:name4', ':renameTests:name4a'),
-          throwsA(TypeMatcher<StorageException>()));
-      expect(
-          () async => await controller.rename(':renameTests:name4', 'name4a'),
-          throwsA(TypeMatcher<StorageException>()));
+      await expectFutureThrowsException<StorageException>(
+          () => controller.rename(':renameTests:name4', ':renameTests:name4a'));
+      await expectFutureThrowsException<StorageException>(
+          () => controller.rename(':renameTests:name4', 'name4a'));
 
       // test rename to an existing node
-      expect(
-          () async => await controller.rename(
-              ':renameTests:name2a', ':renameTests:name3'),
-          throwsA(TypeMatcher<StorageException>()));
-      expect(
-          () async => await controller.rename(':renameTests:name2a', 'name3'),
-          throwsA(TypeMatcher<StorageException>()));
+      await expectFutureThrowsException<StorageException>(
+          () => controller.rename(':renameTests:name2a', ':renameTests:name3'));
+      await expectFutureThrowsException<StorageException>(
+          () => controller.rename(':renameTests:name2a', 'name3'));
     });
 
-    test('Rename node with values', () async {
+    storageTest('Rename node with values', (controller, _) async {
       List<Node> nodes = <Node>[
-        NodeImpl(':renameTests3', 'testOwner'),
-        NodeImpl('name1', 'testOwner', ':renameTests3'),
-        NodeImpl('name2', 'testOwner', ':renameTests3'),
-        NodeImpl('name21', 'testOwner', ':renameTests3:name2'),
-        NodeImpl('name3', 'testOwner', ':renameTests3')
+        NodeImpl(':renameTests3', owner),
+        NodeImpl('name1', owner, ':renameTests3'),
+        NodeImpl('name2', owner, ':renameTests3'),
+        NodeImpl('name21', owner, ':renameTests3:name2'),
+        NodeImpl('name3', owner, ':renameTests3')
       ];
 
       NodeValue nv = NodeValueImpl('key', 'value');
@@ -319,13 +310,10 @@ Future<void> renameTests(StorageController controller) async {
           reason: 'value lost on sub-node');
 
       // check old values
-      expect(
-          () async => await controller.getValue(':renameTests3:name2', 'key2'),
-          throwsA(TypeMatcher<StorageException>()));
-      expect(
-          () async =>
-              await controller.getValue(':renameTests3:name2:name21', 'key2'),
-          throwsA(TypeMatcher<StorageException>()));
+      await expectFutureThrowsException<StorageException>(
+          () => controller.getValue(':renameTests3:name2', 'key2'));
+      await expectFutureThrowsException<StorageException>(
+          () => controller.getValue(':renameTests3:name2:name21', 'key2'));
     });
   });
 }
@@ -392,34 +380,51 @@ class CollectingListener with StorageListener {
   }
 }
 
+const owner = 'test-owner';
+
+void storageTest(String name,
+    Future Function(StorageController controller, GeigerApi master) body) {
+  test(name, () async {
+    flushGeigerApiCache();
+    final master = (await getGeigerApi(
+        '', GeigerApi.masterId, Declaration.doNotShareData))!;
+    await master.zapState();
+    await master.storage.zap();
+    final plugin =
+        (await getGeigerApi(';;', owner, Declaration.doNotShareData))!;
+    await plugin.registerPlugin();
+    await plugin.activatePlugin();
+    try {
+      await body(plugin.storage, master);
+    } finally {
+      await plugin.close();
+      await master.close();
+    }
+  });
+}
+
+Future expectFutureThrowsException<TException>(Future Function() body) async {
+  try {
+    await body();
+    fail('Expected exception was not thrown.');
+  } catch (e) {
+    expect(e, isA<TException>());
+  }
+}
+
 void main() async {
   printLogger();
-  flushGeigerApiCache();
-  final GeigerApi localMaster =
-      (await getGeigerApi('', GeigerApi.masterId, Declaration.doNotShareData))!;
-  await localMaster.zapState();
-  const owner = 'testOwner';
-  final GeigerApi? pluginApi =
-      await getGeigerApi(';;./plugin1', owner, Declaration.doNotShareData);
-  await pluginApi?.registerPlugin();
-  await pluginApi?.activatePlugin();
-  final StorageController controller = pluginApi!.storage;
 
   // all tests related to updates of nodes and values
-  await updateTests(controller);
+  await updateTests();
 
   // all tests related to rename of nodes
-  await renameTests(controller);
+  await renameTests();
 
   // all tests related to the removal of nodes
-  await removeTests(controller);
+  await removeTests();
 
-  setUp(() async {
-    await localMaster.storage.zap();
-    await ExtendedTimestamp.initializeTimestamp(localMaster.storage);
-  });
-
-  test('Check addOrUpdateValue', () async {
+  storageTest('Check addOrUpdateValue', (controller, _) async {
     String nodeName = ':addOrDeleteValueTest';
     // make sure that node does not exist
     try {
@@ -432,7 +437,7 @@ void main() async {
             nodeName, NodeValueImpl('key', 'value')),
         throwsA(const TypeMatcher<StorageException>()),
         reason: 'unexpectedly successful missing node');
-    await controller.add(NodeImpl(nodeName, 'testOwner'));
+    await controller.add(NodeImpl(nodeName, owner));
     expect(await controller.getValue(nodeName, 'key'), isNull);
     expect(
         await controller.addOrUpdateValue(
@@ -445,7 +450,7 @@ void main() async {
         isFalse);
   });
   group('change listener', () {
-    test('register/deregister', () async {
+    storageTest('register/deregister', (controller, _) async {
       final listener = CollectingListener();
       final criteria = SearchCriteria();
 
@@ -468,7 +473,7 @@ void main() async {
           Node? expectedOldNode,
           Future<void> Function(StorageController) setup,
           Future<Node?> Function(StorageController) execute) {
-        test(expectedType.toValueString(), () async {
+        storageTest(expectedType.toValueString(), (controller, _) async {
           final listener = CollectingListener();
           final criteria = SearchCriteria();
 
@@ -527,7 +532,7 @@ void main() async {
       }
     });
 
-    test('with criteria', () async {
+    storageTest('with criteria', (controller, _) async {
       const path = ':testNode';
       final node = NodeImpl(path, owner);
       final otherNode = NodeImpl(':otherTestNode', owner);
@@ -547,12 +552,12 @@ void main() async {
           reason: 'Received event for the wrong node.');
     });
 
-    test('listen on master', () async {
+    storageTest('listen on master', (controller, master) async {
       final node = NodeImpl(':testNode', owner);
 
       final listener = CollectingListener();
       final criteria = SearchCriteria();
-      final masterController = localMaster.storage;
+      final masterController = master.storage;
 
       await masterController.registerChangeListener(listener, criteria);
       await controller.add(node);

@@ -1,3 +1,6 @@
+## 0.8.1 Emergency Bump of Build to SDK 33 upon request
+Emergency bump to build on SDK 33 and min SDK 23. Should be a drop in replacement. No code was changed.
+
 ## 0.8.0 Java and iOS support
 Improvements:
 - Improved iOS support

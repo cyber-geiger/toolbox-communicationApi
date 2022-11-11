@@ -1,5 +1,5 @@
 name: geiger_api
-description: >- 
+description: >-
   A Communication API for the GEIGER ecosystem. It provides a unified interface for all plugins to
   communicate and transfer control between the components of the ecosystem.
 version: 0.8.1
@@ -31,6 +31,7 @@ dependencies:
   cryptography: ^2.0.5
   convert: ^3.0.1
   flutter_treeview: ^1.0.7+1
+  path_provider: ^2.0.9
 
 dev_dependencies:
   flutter_test:

@@ -70,7 +70,7 @@ class CommunicationSecret with Serializer {
     SerializerHelper.castTest('CommunicationSecret', serialVersionUID,
         await SerializerHelper.readLong(in_), 1);
     final List<int> secret =
-        base64.decode(await SerializerHelper.readString(in_) ?? '');
+        base64.decode((await SerializerHelper.readString(in_))!);
     CommunicationSecret ret = CommunicationSecret(secret);
     SerializerHelper.castTest('CommunicationSecret', serialVersionUID,
         await SerializerHelper.readLong(in_), 2);

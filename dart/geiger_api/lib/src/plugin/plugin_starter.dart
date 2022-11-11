@@ -9,12 +9,12 @@ import 'package:path_provider/path_provider.dart';
 
 class PluginStarter {
   static const MethodChannel _channel =
-  MethodChannel('cyber-geiger.eu/communication');
+      MethodChannel('cyber-geiger.eu/communication');
 
   // Starts a plugin based on its PluginInformation and whether the event is a background event or not
   //
-  static Future<void> startPlugin(PluginInformation target, bool inBackground,
-      GeigerApi api) async {
+  static Future<void> startPlugin(
+      PluginInformation target, bool inBackground, GeigerApi api) async {
     // TODO(mgwerder): write executable spec into communication_api_factory
     // Should be
     // 0: <android package name>
@@ -37,8 +37,8 @@ class PluginStarter {
     }
   }
 
-  static Future<void> _startPluginAndroid(String package, String component,
-      bool inBackground) async {
+  static Future<void> _startPluginAndroid(
+      String package, String component, bool inBackground) async {
     await _channel.invokeMethod('', {
       'package': package,
       'component': component,
@@ -54,8 +54,7 @@ class PluginStarter {
       if (target.id == GeigerApi.masterId) {
         // launch master and then return to the source plugin since its a background message
         await _channel.invokeMethod('url',
-            '${GeigerApi
-                .masterUniversalLink}/launchandreturn?redirect=$link/returningcontrol');
+            '${GeigerApi.masterUniversalLink}/launchandreturn?redirect=$link/returningcontrol');
         // wait a bit to prevent a loop, since activate plugin
         await Future.delayed(CommunicationApi.masterStartWaitTime);
         // after launching the master, try activating the plugin if it has already been registered
@@ -63,8 +62,7 @@ class PluginStarter {
       } else {
         // launch target client and return to master since its a background message
         await _channel.invokeMethod('url',
-            '$link/launchandreturn?redirect=${GeigerApi
-                .masterUniversalLink}/returningcontrol');
+            '$link/launchandreturn?redirect=${GeigerApi.masterUniversalLink}/returningcontrol');
       }
     } else {
       if (target.id == GeigerApi.masterId) {
@@ -98,7 +96,11 @@ class PluginStarter {
       await startFile.create();
     } catch (_) {}
     await startFile.writeAsString(script);
-    await Process.run('explorer.exe', [startFile.path], runInShell: true,);
+    await Process.run(
+      'explorer.exe',
+      [startFile.path],
+      runInShell: true,
+    );
     // Give explorer time to execute file
     await Future.delayed(const Duration(milliseconds: 500));
     await startFile.delete();

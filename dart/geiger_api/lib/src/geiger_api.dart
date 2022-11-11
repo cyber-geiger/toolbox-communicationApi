@@ -50,9 +50,19 @@ abstract class GeigerApi implements PluginRegistrar, MenuRegistrar {
 
   /// Send a [message] to a another [plugin].
   ///
-  /// If [plugin] is not provided, [message.targetId] is used to
-  /// retrieve the registered plugin information.
+  /// If [plugin] is not provided, [pluginId] or alternatively
+  /// [message.targetId] is used to retrieve the registered plugin information.
+  ///
+  /// The messages are sent in the order this function is called.
   Future<void> sendMessage(Message message,
+      [String? pluginId, PluginInformation? plugin]);
+
+  /// Send a [message] to a another [plugin] without waiting
+  /// for previous dispatches to finish.
+  ///
+  /// If [plugin] is not provided, [pluginId] or alternatively
+  /// [message.targetId] is used to retrieve the registered plugin information.
+  Future<void> sendMessageDirect(Message message,
       [String? pluginId, PluginInformation? plugin]);
 
   /// Notify plugin about a [MenuItem] with a specific [url] being pressed.

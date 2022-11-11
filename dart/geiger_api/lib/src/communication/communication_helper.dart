@@ -48,8 +48,9 @@ class Listener with PluginListener {
 class CommunicationHelper {
   /// Sends [msg] and waits for the first message matching the provided [filter].
   ///
-  /// Will communication using the provided [api] and waits maximum [timeout]
+  /// Will communicate using the provided [api] and waits maximum [timeout]
   /// milliseconds. Specify `-1` to remove any time limit.
+  /// Call and send order is preserved unless [preserveOrder] is set to `false`;
   ///
   /// Throws [CommunicationException] if communication with master fails
   static Future<Message> sendAndWait(GeigerApi api, Message msg,
@@ -58,9 +59,10 @@ class CommunicationHelper {
         MessageType.comapiSuccess,
         MessageType.comapiError,
         MessageType.authError
-      ]}) async {
+      ],
+      bool preserveOrder = true}) async {
     var l = Listener(api, msg, responseTypes);
-    await api.sendMessage(msg);
+    await (preserveOrder ? api.sendMessage : api.sendMessageDirect)(msg);
     var result = await l.waitForResult(timeout);
     l.dispose();
     return result;

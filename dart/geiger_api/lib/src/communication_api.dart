@@ -122,6 +122,8 @@ class CommunicationApi extends GeigerApi {
   /// All registered [PluginListener]s mapped by their [MessageType] filter.
   final Map<MessageType, List<PluginListener>> _listeners = {};
 
+  Future _lastMessageDispatch = Future.value();
+
   /// Creates a [CommunicationApi] with the given [executor] and plugin [id].
   ///
   /// Whether this api [isMaster] and its privacy [declaration] must also be provided.
@@ -213,16 +215,18 @@ class CommunicationApi extends GeigerApi {
   }
 
   @override
-  Future<void> activatePlugin() async {
+  Future<void> activatePlugin() => _activatePlugin(false);
+
+  Future<void> _activatePlugin(bool direct) async {
     await CommunicationHelper.sendAndWait(
-      this,
-      Message(
-          id,
-          GeigerApi.masterId,
-          MessageType.activatePlugin,
-          GeigerUrl(null, GeigerApi.masterId, 'activatePlugin'),
-          SerializerHelper.intToByteArray(_communicator.port)),
-    );
+        this,
+        Message(
+            id,
+            GeigerApi.masterId,
+            MessageType.activatePlugin,
+            GeigerUrl(null, GeigerApi.masterId, 'activatePlugin'),
+            SerializerHelper.intToByteArray(_communicator.port)),
+        preserveOrder: !direct);
   }
 
   @override
@@ -340,6 +344,15 @@ class CommunicationApi extends GeigerApi {
 
   @override
   Future<void> sendMessage(Message message,
+      [String? pluginId, PluginInformation? plugin]) {
+    final dispatch = _lastMessageDispatch
+        .then((_) => sendMessageDirect(message, pluginId, plugin));
+    _lastMessageDispatch = dispatch.catchError((_) {});
+    return dispatch;
+  }
+
+  @override
+  Future<void> sendMessageDirect(Message message,
       [String? pluginId, PluginInformation? plugin]) async {
     pluginId ??= message.targetId;
     plugin ??= plugins[StorableString(pluginId)] ??
@@ -350,7 +363,7 @@ class CommunicationApi extends GeigerApi {
             Declaration.doNotShareData,
             null);
     if (id == plugin.id) {
-      await receivedMessage(message, skipAuth: true);
+      unawaited(receivedMessage(message, skipAuth: true));
       return;
     }
 
@@ -358,51 +371,42 @@ class CommunicationApi extends GeigerApi {
     GeigerApi.logger.log(
         Level.INFO, '## Sending message to plugin ${plugin.id} ($message)');
     if (plugin.port == 0) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        await PluginStarter.startPlugin(plugin, inBackground, this);
-      }
+      await PluginStarter.startPlugin(plugin, inBackground, this);
       // wait for startup
       await _StartupWaiter(this, plugin.id).wait();
       plugin = plugins[StorableString(plugin.id)]!;
-    } else if (!inBackground) {
-      if (Platform.isAndroid || Platform.isIOS) {
-        await PluginStarter.startPlugin(plugin, inBackground, this);
-      }
+    } else if (!inBackground && (Platform.isAndroid || Platform.isIOS)) {
+      // On mobile devices an app cannot refocus itself
+      await PluginStarter.startPlugin(plugin, inBackground, this);
     }
 
     var tries = 1;
     while (true) {
       try {
-        await _communicator.sendMessage(plugin!, message, () async {
-          if (Platform.isAndroid || Platform.isIOS) {
-            await PluginStarter.startPlugin(plugin!, inBackground, this);
-          }
-          // wait a bit for the master to start up
-          if (plugin!.id == GeigerApi.masterId) {
-            await Future.delayed(masterStartWaitTime);
-          } else {
-            // wait until the plugin is activated
-            await _StartupWaiter(this, plugin!.id).wait();
-            plugin = plugins[StorableString(plugin!.id)]!;
-          }
-        });
+        await _communicator.sendMessage(plugin!, message);
         break;
       } on SocketException catch (e) {
         if (tries == maxSendTries ||
-            e.osError?.message != 'Connection refused') {
+            e.osError?.message
+                    .contains(RegExp('refused', caseSensitive: false)) !=
+                true) {
           rethrow;
-        }
-        if (Platform.isAndroid || Platform.isIOS) {
-          // Temporary solution for android
-          await PluginStarter.startPlugin(plugin!, inBackground, this);
         }
         tries++;
         await PluginStarter.startPlugin(plugin!, inBackground, this);
         if (pluginId == GeigerApi.masterId) {
           await Future.delayed(masterStartWaitTime);
+          // At start the master marks all plugins as inactive.
+          // First need to reactivate this plugin.
+          if (message.type != MessageType.activatePlugin &&
+              message.type != MessageType.registerPlugin) {
+            await _activatePlugin(true);
+            // Activate plugin already waits max tries.
+            tries = maxSendTries;
+          }
         } else {
-          await _StartupWaiter(this, plugin!.id).wait();
-          plugin = plugins[StorableString(plugin!.id)]!;
+          await _StartupWaiter(this, plugin.id).wait();
+          plugin = plugins[StorableString(plugin.id)]!;
         }
       }
     }
@@ -492,7 +496,7 @@ class CommunicationApi extends GeigerApi {
         info.toByteArrayStream(sink);
         sink.close();
         msg.payload = await sink.bytes;
-        await sendMessage(
+        await sendMessageDirect(
             Message(
                 id,
                 msg.sourceId,
@@ -504,7 +508,7 @@ class CommunicationApi extends GeigerApi {
             info);
         if (autoAcceptRegistration) {
           await _registerPlugin(info);
-          await sendMessage(Message(id, info.id, MessageType.authSuccess,
+          await sendMessageDirect(Message(id, info.id, MessageType.authSuccess,
               GeigerUrl(null, info.id, 'registerPlugin')));
         }
         break;
@@ -522,7 +526,7 @@ class CommunicationApi extends GeigerApi {
             id, info.id, type, GeigerUrl(null, info.id, 'registerPlugin')));
         break;
       case MessageType.deregisterPlugin:
-        await sendMessage(Message(
+        await sendMessageDirect(Message(
             id,
             msg.sourceId,
             MessageType.comapiSuccess,

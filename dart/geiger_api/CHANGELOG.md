@@ -1,3 +1,14 @@
+## 0.8.2 Fix Windows Support
+
+Improvements:
+- Add Windows support to example apps.
+- Support for Universal Windows Platform apps.
+- More flexible Win32 start configuration.
+- Respect call order of `api.sendMessage`.
+
+Fixes:
+- Various plugin start bugs
+
 ## 0.8.1 Emergency Bump of Build to SDK 33 upon request
 Emergency bump to build on SDK 33 and min SDK 23. Should be a drop in replacement. No code was changed.
 

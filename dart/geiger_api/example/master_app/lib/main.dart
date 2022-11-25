@@ -1,16 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:window_manager/window_manager.dart';
 
-final currentPath = Directory.current.path;
-final pluginExecutor = 'com.example.master_app;'
-    'com.example.master_app.MainActivity;'
-    'cd /d $currentPath\nstart .\\build\\windows\\runner\\Debug\\master_app.exe;'
-    'https://master.cyber-geiger.eu;'
-    'cd /d $currentPath\nstart .\\build\\windows\\runner\\Debug\\master_app.exe hidden';
+const isMsixPackage = kReleaseMode;
 const clientPluginId = 'client-plugin';
 
 late GeigerApi api;
@@ -26,8 +22,11 @@ Future<void> callClientPlugin(MessageType type) async {
 }
 
 void main(List<String> args) async {
-  if (Platform.isWindows && !Directory.current.path.endsWith('master_app')) {
+  if (!isMsixPackage &&
+      Platform.isWindows &&
+      !Directory.current.path.endsWith('master_app')) {
     print('App must run in it\'s source code directory.');
+    sleep(const Duration(seconds: 10));
     exit(1);
   }
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,8 +38,9 @@ void main(List<String> args) async {
     }
   }
 
-  /// init Master and Add Listeners
-  api = (await getGeigerApi(pluginExecutor, GeigerApi.masterId))!;
+  // init Master and Add Listeners
+  // Master doesn't need to know it's own executor.
+  api = (await getGeigerApi(';;;', GeigerApi.masterId))!;
   if (Platform.isWindows) ReturnControlListener(api);
   api.registerListener([MessageType.allEvents], messageLogger);
 

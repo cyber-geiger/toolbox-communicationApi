@@ -1,21 +1,31 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geiger_api/geiger_api.dart';
 import 'package:window_manager/window_manager.dart';
 
+const isMasterMsixPackage = kReleaseMode;
+const isMsixPackage = kReleaseMode;
+
 final currentPath = Directory.current.path;
+final masterWindowsScript = isMasterMsixPackage
+    ? 'cd /d C:\\Windows\\System32\nstart geiger-master-example.exe'
+    : 'cd /d $currentPath\\..\\master_app\nstart .\\build\\windows\\runner\\Debug\\master_app.exe';
 final masterExecutor = 'com.example.master_app;'
     'com.example.master_app.MainActivity;'
-    'cd /d $currentPath\\..\\master_app\nstart .\\build\\windows\\runner\\Debug\\master_app.exe;'
+    '$masterWindowsScript;'
     'https://master.cyber-geiger.eu;'
-    'cd /d $currentPath\\..\\master_app\nstart .\\build\\windows\\runner\\Debug\\master_app.exe hidden';
+    '$masterWindowsScript hidden';
+final pluginWindowsScript = isMsixPackage
+    ? 'cd /d C:\\Windows\\System32\nstart geiger-client-example.exe'
+    : 'cd /d $currentPath\nstart .\\build\\windows\\runner\\Debug\\client_app.exe';
 final pluginExecutor = 'com.example.client_app;'
     'com.example.client_app.MainActivity;'
-    'cd /d $currentPath\nstart .\\build\\windows\\runner\\Debug\\client_app.exe;'
+    '$pluginWindowsScript;'
     'https://client.cyber-geiger.eu;'
-    'cd /d $currentPath\nstart .\\build\\windows\\runner\\Debug\\client_app.exe hidden';
+    '$pluginWindowsScript hidden';
 
 const pluginId = 'client-plugin';
 
@@ -26,8 +36,11 @@ final MessageLogger logger = MessageLogger();
 GeigerUrl? url;
 
 void main(List<String> args) async {
-  if (Platform.isWindows && !Directory.current.path.endsWith('client_app')) {
+  if (!isMsixPackage &&
+      Platform.isWindows &&
+      !Directory.current.path.endsWith('client_app')) {
     print('App must run in it\'s source code directory.');
+    sleep(const Duration(seconds: 10));
     exit(1);
   }
   WidgetsFlutterBinding.ensureInitialized();

@@ -18,6 +18,14 @@ dev_dependencies:
   flutter_test: 
     sdk: flutter
     version: ^0.0.0
+  msix: ^3.7.0
 
 flutter:
   uses-material-design: true
+
+msix_config:
+  display_name: Geiger Master Example
+  publisher_display_name: Cyber Geiger
+  identity_name: CyberGeiger.MasterExample
+  msix_version: 0.0.0.1
+  capabilities: internetClient

@@ -12,7 +12,8 @@ dependencies:
     sdk: flutter
   geiger_api:
     path: ../../../../../dart/geiger_api/
-  geiger_localstorage: ^0.8.0
+  geiger_localstorage:
+    path: ../../../../../../toolbox-storage
   flutter_test:
     sdk: flutter
   test: ^1.19.5

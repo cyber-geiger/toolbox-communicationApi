@@ -23,7 +23,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  geiger_localstorage: ^0.8.0
+  geiger_localstorage:
+    path: ../../../toolbox-storage
   logging: ^1.0.2
   meta: ^1.7.0
   uuid: ^3.0.6

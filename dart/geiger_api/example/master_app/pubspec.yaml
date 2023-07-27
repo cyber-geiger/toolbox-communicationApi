@@ -1,0 +1,31 @@
+name: master_app
+description: App with master geiger plugin.
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ">=2.16.0 <3.0.0"
+
+dependencies:
+  geiger_api:
+    path: ../../
+  flutter:
+    sdk: flutter
+  window_manager: ^0.2.7
+
+dev_dependencies:
+  flutter_lints: ^1.0.1
+  flutter_test: 
+    sdk: flutter
+    version: ^0.0.0
+  msix: ^3.7.0
+
+flutter:
+  uses-material-design: true
+
+msix_config:
+  display_name: Geiger Master Example
+  publisher_display_name: Cyber Geiger
+  identity_name: CyberGeiger.MasterExample
+  msix_version: 0.0.0.1
+  capabilities: internetClient

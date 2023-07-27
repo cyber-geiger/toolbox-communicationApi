@@ -1,0 +1,6 @@
+name: External Dart Action Flow
+on: workflow_dispatch
+
+jobs:
+  base:
+    uses: ./.github/workflows/dart-base.yaml
